@@ -99,7 +99,7 @@ are done in SQL. We implement them as Python/DuckDB helpers where feasible.
 - [x] `query_table` (`where`, `order`, `limit`, `qualify`, `date_range`)
 - [x] `date_range` presets (`last 12 months`, `month to date`, …)
 - [ ] `having` (applied inside the base query; not a display-layer clause)
-- [ ] `comparison` (prior year / prior period → delta + % columns)
+- [x] `comparison` (prior year/quarter/month/week/day → prior + delta + % columns)
 - [ ] `total_agg` / `total_fmt` / weighted mean
 - [ ] `order` initial sort (use `default_sort`)
 
@@ -129,6 +129,7 @@ are done in SQL. We implement them as Python/DuckDB helpers where feasible.
 - [x] `notebooks/08_column_options.py` (column formatting/content types)
 - [x] `notebooks/09_pivots.py` (pivoted columns)
 - [x] `notebooks/10_query_options.py` (query_table/date_range)
+- [x] `notebooks/11_comparisons.py` (prior-period comparisons)
 - [ ] a per-feature gallery notebook as things land
 - [x] README feature/API docs
 

@@ -30,6 +30,7 @@ Quick start::
 """
 
 from . import duck
+from .comparison import comparison_table
 from .data import make_column
 from .grouped import grouped_table, simple_table
 from .live import LiveEvidenceTable, query_values
@@ -42,6 +43,7 @@ __all__ = [
     "LiveEvidenceTable",
     "grouped_table",
     "pivot_table",
+    "comparison_table",
     "query_table",
     "date_range_sql",
     "simple_table",

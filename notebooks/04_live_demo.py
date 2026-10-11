@@ -106,7 +106,7 @@ def _(connection, mo, query_values):
     return min_fare, part, payment
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(LiveEvidenceTable, connection):
     # Created once, with no references to the controls, so changing a control
     # never recreates the widget (and never resets sort/search/page).
@@ -136,7 +136,7 @@ def _(LiveEvidenceTable, connection):
         WHERE fare_amount >= {min_fare}
           AND ({payment} = 'All' OR payment = {payment})
           AND ({part} = 'All' OR part_of_day = {part})
-        ORDER BY fare_amount DESC
+        ORDER BY enriched.pickup DESC
         LIMIT 500
         """,
         auto_run=False,

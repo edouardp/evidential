@@ -111,7 +111,7 @@ def _(LiveEvidenceTable, connection):
         FROM trips
         WHERE fare_amount >= {min_fare}
           AND ({payment} = 'All' OR payment = {payment})
-        ORDER BY fare_amount DESC
+        ORDER BY tpep_pickup_datetime DESC
         LIMIT 500
         """,
         auto_run=False,

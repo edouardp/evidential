@@ -5,7 +5,7 @@
 #   make <target>     Run a specific target
 
 HOST     ?= 127.0.0.1
-PORT     ?= 2718
+PORT     ?= 2728
 NOTEBOOK ?= notebooks/01_taxi_explore.py
 
 # ============================================================================
@@ -59,7 +59,7 @@ frontend-test: ## Run the JavaScript formatting/colour/renderer tests
 
 .PHONY: run-marimo
 run-marimo: ## Open the notebooks in the marimo editor (HOST=127.0.0.1 PORT=2718)
-	uv run marimo edit --watch --no-sandbox --host $(HOST) --port $(PORT) notebooks
+	uv run marimo edit --watch --no-sandbox --host $(HOST) notebooks
 
 .PHONY: run-notebook
 run-notebook: ## Run NOTEBOOK (default notebooks/01_taxi_explore.py) non-interactively

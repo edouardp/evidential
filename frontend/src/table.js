@@ -220,6 +220,8 @@ export class EvidenceTableRenderer {
 
   // ---------------------------------------------------------------- state ---
   _defaultCollapsed() {
+    // Section groups are always fully expanded (their cells are merged).
+    if (this.options.group_type === "section") return false;
     return this.options.collapsible && this.options.collapsed !== false;
   }
 
@@ -399,6 +401,13 @@ export class EvidenceTableRenderer {
     const { rows, pageCount, page, total } = this._paginate(visible);
     this._pageCount = pageCount;
 
+    // Section-style groups merge each group's dimension cell across its rows.
+    const dimCount = rows.reduce((max, row) => Math.max(max, row.__level ?? 0), 0);
+    const section = opts.group_type === "section" && hasGroups && dimCount > 0;
+    const rowspans = section
+      ? this._computeRowspans(rows, dimCount, opts.subtotal_position !== "bottom")
+      : null;
+
     const ranges = calculateVizRanges(columns, sorted);
     const formatRanges = calculateFormatRanges(columns, sorted);
     const colorScales = new Map();
@@ -423,6 +432,9 @@ export class EvidenceTableRenderer {
           headerRowCount,
           rowNumbers: !!opts.row_numbers,
           rowNumberBase: page * (Number(this._effectivePageSize()) || 0),
+          section,
+          dimCount,
+          rowspans,
         }),
       );
     }
@@ -651,6 +663,23 @@ export class EvidenceTableRenderer {
     this.render();
   }
 
+  /** Rowspan each subtotal's dimension cell should span in section mode. */
+  _computeRowspans(rows, dimCount, top) {
+    const spans = new Array(rows.length).fill(1);
+    rows.forEach((row, index) => {
+      if (row.render_type !== "row_subtotal") return;
+      const level = row.__level ?? dimCount;
+      let count = 1;
+      if (top) {
+        for (let j = index + 1; j < rows.length && (rows[j].__level ?? dimCount) > level; j++) count++;
+      } else {
+        for (let j = index - 1; j >= 0 && (rows[j].__level ?? dimCount) > level; j--) count++;
+      }
+      spans[index] = count;
+    });
+    return spans;
+  }
+
   _renderRow(row, columns, ctx, index) {
     const opts = this.options;
     const renderType = row.render_type || "cell_data";
@@ -688,8 +717,16 @@ export class EvidenceTableRenderer {
       tr.append(numberCell);
     }
 
+    const rowIndex = index;
     columns.forEach((col, index) => {
       const td = h("td", { class: "et-td", style: this._alignStyle(col) });
+      if (ctx.section && index < ctx.dimCount) {
+        const dimIndex = (row.__level ?? ctx.dimCount) - 1;
+        const renders =
+          isTotal ? index === 0 : isSubtotal ? index === dimIndex : index === ctx.dimCount - 1;
+        if (!renders) return;
+        if (isSubtotal) td.rowSpan = ctx.rowspans?.[rowIndex] ?? 1;
+      }
       if (rowColorStyles) {
         td.style.backgroundColor = rowColorStyles.backgroundColor;
         td.style.color = rowColorStyles.color;
@@ -698,7 +735,7 @@ export class EvidenceTableRenderer {
 
       // Collapsible chevron in the subtotal's own dimension column.
       const dimIndex = (row.__level ?? 0) - 1;
-      if (isSubtotal && index === dimIndex) {
+      if (isSubtotal && index === dimIndex && !ctx.section) {
         const chev = h("span", { class: `et-chevron${isCollapsed ? "" : " et-chevron-open"}` }, "▶");
         td.append(chev);
         td.dataset.groupKey = row.__group_key;

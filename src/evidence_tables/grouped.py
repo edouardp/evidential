@@ -207,6 +207,8 @@ def grouped_table(
 
     table_options.setdefault("show_total_row", total)
     table_options.setdefault("collapsible", subtotals)
+    if table_options.get("group_type") == "section":
+        table_options["collapsible"] = False
     if table_options.get("subtotal_position") is None:
         table_options["subtotal_position"] = subtotal_position
     return EvidenceTable(rows=ordered, columns=columns, **table_options)

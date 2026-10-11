@@ -85,11 +85,11 @@ are done in SQL. We implement them as Python/DuckDB helpers where feasible.
 - [x] grouped subtotals via DuckDB `GROUPING SETS` (`grouped_table`)
 - [x] collapsible accordion groups
 - [x] subtotal/total positions
-- [ ] client-side `group_by` column (Evidence legacy `groupBy`)
-- [ ] `group_type="section"` (merged group cells vs accordion)
+- [x] `group_type="section"` (merged group cells via rowspan) / `accordion`
 - [x] `groups_open` (alias for the inverse of `collapsed`)
-- [ ] `subtotal_fmt`
-- [ ] `repeat_values` (our renderer already repeats dimension values)
+- [x] `subtotal_fmt` / `total_fmt`
+- [x] `repeat_values` (our renderer already repeats dimension values)
+- [ ] client-side `group_by` column (Evidence legacy `groupBy`)
 - [ ] `show_total_column` / `show_subtotal_columns` (pivoted)
 - [ ] `measures_first` (pivoted)
 - [ ] `repeat_values` (rowspan vs repeat)
@@ -134,6 +134,7 @@ are done in SQL. We implement them as Python/DuckDB helpers where feasible.
 - [x] `notebooks/10_query_options.py` (query_table/date_range)
 - [x] `notebooks/11_comparisons.py` (prior-period comparisons)
 - [x] `notebooks/12_color_scales.py` (colour scales & conditional formatting)
+- [x] `notebooks/13_hierarchical_rows.py` (accordion/section groups)
 - [ ] a per-feature gallery notebook as things land
 - [x] README feature/API docs
 

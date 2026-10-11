@@ -478,6 +478,33 @@ test("total_fmt and subtotal_fmt override row formats", () => {
   renderer.destroy();
 });
 
+test("section groups merge the dimension cell with rowspan", () => {
+  const columns = [
+    { name: "country", type: "string", align: "left" },
+    { name: "city", type: "string", align: "left" },
+    { name: "revenue", type: "number", fmt: "usd0", align: "right" },
+  ];
+  const rows = [
+    { country: "USA", city: "", revenue: 350, render_type: "row_subtotal", __level: 1, __group_key: '"USA"', __ancestors: [] },
+    { country: "USA", city: "NYC", revenue: 100, render_type: "cell_data", __level: 2, __ancestors: ['"USA"'], __parent_key: '"USA"' },
+    { country: "USA", city: "LA", revenue: 250, render_type: "cell_data", __level: 2, __ancestors: ['"USA"'], __parent_key: '"USA"' },
+    { country: "Canada", city: "", revenue: 200, render_type: "row_subtotal", __level: 1, __group_key: '"Canada"', __ancestors: [] },
+    { country: "Canada", city: "Toronto", revenue: 200, render_type: "cell_data", __level: 2, __ancestors: ['"Canada"'], __parent_key: '"Canada"' },
+  ];
+  const renderer = new EvidenceTableRenderer(
+    makeModel(rows, columns, { group_type: "section", subtotal_position: "top" }, el),
+    el,
+  );
+  const bodyRows = el.querySelectorAll("tbody tr");
+  const usaCells = bodyRows[0].querySelectorAll("td");
+  assert.equal(usaCells.length, 2); // city cell is covered by the rowspan
+  assert.equal(usaCells[0].getAttribute("rowspan"), "3");
+  const detailCells = bodyRows[1].querySelectorAll("td");
+  assert.equal(detailCells.length, 2); // country cell is covered
+  assert.equal(detailCells[0].textContent, "NYC");
+  renderer.destroy();
+});
+
 test("theme.background drives the opaque expanded surface", () => {
   const renderer = new EvidenceTableRenderer(
     makeModel(ROWS, COLUMNS, { theme: { background: "#123456" } }, el),

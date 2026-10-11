@@ -51,6 +51,12 @@ function h(tag, attrs = {}, children = []) {
   return el;
 }
 
+function _isNumeric(value) {
+  if (typeof value === "number") return Number.isFinite(value);
+  if (typeof value === "string") return value.trim() !== "" && !isNaN(Number(value));
+  return false;
+}
+
 function compareValues(a, b, type) {
   if (a === null || a === undefined) return b === null || b === undefined ? 0 : 1;
   if (b === null || b === undefined) return -1;
@@ -751,15 +757,28 @@ export class EvidenceTableRenderer {
 
   _renderSparkline(col, value) {
     const opts = col.sparkline_options || {};
-    const values = Array.isArray(value) ? value.map(Number).filter((n) => !isNaN(n)) : [];
-    if (!values.length) return h("span", { class: "et-null" }, "–");
-    const width = opts.width || 80;
-    const height = opts.height || 22;
-    const min = opts.fit_to_data ? Math.min(...values) : Math.min(0, ...values);
-    const max = opts.fit_to_data ? Math.max(...values) : Math.max(0, ...values);
+    const points = this._sparklinePoints(value, opts);
+    if (!points.length) return h("span", { class: "et-null" }, "–");
+
+    const width = opts.width || 64;
+    const height = opts.height || 18;
+    const pad = 1.5;
+    const ys = points.map((point) => point[1]);
+    let min = Math.min(...ys);
+    let max = Math.max(...ys);
+    if (!opts.fit_to_data) {
+      min = Math.min(0, min);
+      max = Math.max(0, max);
+    }
     const span = max - min || 1;
-    const step = values.length > 1 ? width / (values.length - 1) : width;
-    const points = values.map((v, i) => [i * step, height - ((v - min) / span) * height]);
+    const step = points.length > 1 ? (width - pad * 2) / (points.length - 1) : 0;
+    const baseline = pad + (height - pad * 2) * (1 - (Math.max(0, min) - min) / span);
+    const scaled = points.map(([x, y], index) => ({
+      x: points.length > 1 ? pad + index * step : width / 2,
+      y: pad + (height - pad * 2) * (1 - (y - min) / span),
+      raw: [x, y],
+    }));
+
     const color = opts.color || "var(--et-accent, #2563eb)";
     const svgNS = "http://www.w3.org/2000/svg";
     const svg = document.createElementNS(svgNS, "svg");
@@ -767,35 +786,106 @@ export class EvidenceTableRenderer {
     svg.setAttribute("width", String(width));
     svg.setAttribute("height", String(height));
     svg.setAttribute("viewBox", `0 0 ${width} ${height}`);
+
+    const tooltip = ([x, y]) => {
+      const title = document.createElementNS(svgNS, "title");
+      const yText = formatValue(y, opts.y_fmt, { type: "number", fallback: String(y) });
+      title.textContent = x === undefined || x === null || x === "" ? yText : `${x}: ${yText}`;
+      return title;
+    };
+
+    // Zero baseline when the scale crosses zero (matching Evidence's defaults).
+    if (!opts.fit_to_data && min < 0 && max > 0) {
+      const zero = document.createElementNS(svgNS, "line");
+      zero.setAttribute("x1", "0");
+      zero.setAttribute("x2", String(width));
+      zero.setAttribute("y1", String(baseline));
+      zero.setAttribute("y2", String(baseline));
+      zero.setAttribute("stroke", "color-mix(in srgb, CanvasText 20%, transparent)");
+      zero.setAttribute("stroke-width", "1");
+      svg.append(zero);
+    }
+
     const type = opts.type || "line";
     if (type === "bar") {
-      const barW = Math.max(1, width / values.length - 1);
-      values.forEach((v, i) => {
-        const bh = ((v - min) / span) * height;
+      const slot = width / scaled.length;
+      const barWidth = Math.max(1, slot * 0.7);
+      scaled.forEach((point) => {
+        const top = Math.min(point.y, baseline);
         const rect = document.createElementNS(svgNS, "rect");
-        rect.setAttribute("x", String(i * (barW + 1)));
-        rect.setAttribute("y", String(height - bh));
-        rect.setAttribute("width", String(barW));
-        rect.setAttribute("height", String(Math.max(0, bh)));
+        rect.setAttribute("x", String(Math.max(0, point.x - barWidth / 2)));
+        rect.setAttribute("y", String(top));
+        rect.setAttribute("width", String(barWidth));
+        rect.setAttribute("height", String(Math.max(1, Math.abs(baseline - point.y))));
+        rect.setAttribute("rx", "0.5");
         rect.setAttribute("fill", color);
+        rect.append(tooltip(point.raw));
         svg.append(rect);
       });
     } else {
+      const linePoints = scaled.map((point) => `${point.x},${point.y}`).join(" ");
       if (type === "area") {
         const area = document.createElementNS(svgNS, "polygon");
-        area.setAttribute("points", `${points.map((p) => p.join(",")).join(" ")} ${width},${height} 0,${height}`);
+        area.setAttribute(
+          "points",
+          `${linePoints} ${scaled[scaled.length - 1].x},${baseline} ${scaled[0].x},${baseline}`,
+        );
         area.setAttribute("fill", color);
-        area.setAttribute("opacity", "0.15");
+        area.setAttribute("opacity", "0.18");
         svg.append(area);
       }
       const poly = document.createElementNS(svgNS, "polyline");
-      poly.setAttribute("points", points.map((p) => p.join(",")).join(" "));
+      poly.setAttribute("points", linePoints);
       poly.setAttribute("fill", "none");
       poly.setAttribute("stroke", color);
-      poly.setAttribute("stroke-width", "1.5");
+      poly.setAttribute("stroke-width", "1.25");
+      poly.setAttribute("stroke-linejoin", "round");
+      poly.setAttribute("stroke-linecap", "round");
       svg.append(poly);
+      scaled.forEach((point) => {
+        const dot = document.createElementNS(svgNS, "circle");
+        dot.setAttribute("cx", String(point.x));
+        dot.setAttribute("cy", String(point.y));
+        dot.setAttribute("r", "2.5");
+        dot.setAttribute("fill", "transparent");
+        dot.append(tooltip(point.raw));
+        svg.append(dot);
+      });
     }
     return svg;
+  }
+
+  /** Normalise a cell value into ``[x, y]`` sparkline points.
+   *
+   * Accepts an array of numbers, an array of ``[x, y]`` pairs, or an array of
+   * objects (e.g. DuckDB ``ARRAY_AGG({'date': date, 'sales': sales})``). For
+   * objects, ``sparkline_options.x`` / ``.y`` name the fields; otherwise the
+   * first numeric field is used for y and the first non-numeric field for x. */
+  _sparklinePoints(value, opts) {
+    if (!Array.isArray(value)) return [];
+    const xKey = opts.x;
+    const yKey = opts.y;
+    const points = [];
+    value.forEach((item, index) => {
+      if (item === null || item === undefined) return;
+      let x = index;
+      let y;
+      if (Array.isArray(item)) {
+        x = item[0];
+        y = Number(item[1]);
+      } else if (typeof item === "object") {
+        const keys = Object.keys(item);
+        const yField = yKey && yKey in item ? yKey : keys.find((key) => _isNumeric(item[key]));
+        const xField =
+          xKey && xKey in item ? xKey : keys.find((key) => key !== yField && !_isNumeric(item[key]));
+        x = xField ? item[xField] : index;
+        y = Number(yField ? item[yField] : NaN);
+      } else {
+        y = Number(item);
+      }
+      if (y !== null && !isNaN(y)) points.push([x, y]);
+    });
+    return points;
   }
 
   _renderFooter(page, pageCount, total) {

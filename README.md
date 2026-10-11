@@ -26,7 +26,8 @@ themed with `theme={"surface": "#0b1220"}`.
   base formats that pick units (`k`, `M`, `B`) from the data range.
 - **Conditional visualisations** — `viz="bar"`, `viz="color"` (heatmap with
   custom colour scales, stops, midpoints and conditional-colour columns),
-  `viz="sparkline"` (line/area/bar) and `viz="delta"`.
+  `viz="sparkline"` (line/area/bar from an array in a cell, incl.
+  `ARRAY_AGG({'date': ..., 'value': ...})`), and `viz="delta"`.
 - **Grouped tables** — `grouped_table` runs one DuckDB `GROUPING SETS` query
   and produces collapsible groups, subtotals and a grand total.
 - **Hierarchical columns** — `column_groups={"Payment type": ["credit_card",
@@ -209,7 +210,7 @@ See `notebooks/02_s3_tables.py` for a full example (it gracefully stops if
 | `bar_options` | `bar_color`, `bar_color_negative`, `hide_labels`, `fit_to_data`. |
 | `color_options` | `color_scale`, `color_stops`, `conditional_colors`, `scale_column`, `scale_mode`, `min`, `max`, `midpoint`. |
 | `delta_options` | `down_is_good`, `show_symbol`, `symbol_position`, `neutral_range`. |
-| `sparkline_options` | `type` (`line`/`area`/`bar`), `color`, `fit_to_data`, `width`, `height`. |
+| `sparkline_options` | `type` (`line`/`area`/`bar`), `x`/`y` (field names for struct arrays), `color`, `fit_to_data`, `width`, `height`, `y_fmt`. |
 | `link`, `link_label`, `link_new_tab` | Per-cell links. |
 | `html`, `image`, `image_options` | Custom cell content. |
 | `column_group`, `info`, `repeat_values`, `viz_include_subtotals` | Additional metadata. |

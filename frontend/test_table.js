@@ -325,6 +325,40 @@ test("baseline height prevents the table shrinking when rows decrease", () => {
   renderer.destroy();
 });
 
+test("renders line, area and bar sparklines from point arrays", () => {
+  const columns = [
+    { name: "category", type: "string" },
+    { name: "s1", type: "array", viz: "sparkline", sparkline_options: { x: "date", y: "sales", type: "line" } },
+    { name: "s2", type: "array", viz: "sparkline", sparkline_options: { x: "date", y: "sales", type: "area", color: "#53768a" } },
+    { name: "s3", type: "array", viz: "sparkline", sparkline_options: { x: "date", y: "sales", type: "bar" } },
+  ];
+  const series = [
+    { date: "2024-01-01", sales: 10 },
+    { date: "2024-02-01", sales: 20 },
+    { date: "2024-03-01", sales: 15 },
+  ];
+  const rows = [{ category: "A", s1: series, s2: series, s3: series }];
+  const renderer = new EvidenceTableRenderer(makeModel(rows, columns, {}, el), el);
+  assert.equal(el.querySelectorAll("svg.et-sparkline").length, 3);
+  assert.equal(el.querySelectorAll("svg.et-sparkline polyline").length, 2); // line + area outline
+  assert.equal(el.querySelectorAll("svg.et-sparkline polygon").length, 1); // area fill
+  assert.equal(el.querySelectorAll("svg.et-sparkline rect").length, 3); // bars
+  renderer.destroy();
+});
+
+test("sparklines accept plain numbers and [x, y] pairs", () => {
+  const columns = [{ name: "s", type: "array", viz: "sparkline" }];
+  const renderer = new EvidenceTableRenderer(
+    makeModel([{ s: [1, 2, 3] }, { s: [["a", 4], ["b", 6]] }], columns, {}, el),
+    el,
+  );
+  const sparklines = el.querySelectorAll("svg.et-sparkline");
+  assert.equal(sparklines.length, 2);
+  assert.equal(sparklines[0].querySelectorAll("circle").length, 3);
+  assert.equal(sparklines[1].querySelectorAll("circle").length, 2);
+  renderer.destroy();
+});
+
 test("theme.background drives the opaque expanded surface", () => {
   const renderer = new EvidenceTableRenderer(
     makeModel(ROWS, COLUMNS, { theme: { background: "#123456" } }, el),

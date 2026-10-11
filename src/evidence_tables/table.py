@@ -24,6 +24,8 @@ _OPTION_KEYS = {
     "null_text",
     "stub",
     "stub_head",
+    "footnote_marks",
+    "all_caps",
     "footnote_column",
     "footnotes",
     "info",
@@ -73,6 +75,8 @@ _OPTION_DEFAULTS: dict[str, Any] = {
     "null_text": None,
     "stub": None,
     "stub_head": None,
+    "footnote_marks": None,
+    "all_caps": False,
     "footnote_column": None,
     "footnotes": None,
     "info": None,
@@ -268,6 +272,14 @@ def _coerce_columns(
         columns = []
     result = [_coerce_column(column) for column in columns]
     merged = _merge_column_config(result, column_config)
+    # Template columns (cols_merge*) may not exist in the data; synthesise them.
+    if column_config:
+        existing = {column["name"] for column in merged}
+        for name, config in column_config.items():
+            if name in existing or not isinstance(config, Mapping):
+                continue
+            if config.get("template"):
+                merged.append(_coerce_column({"name": name, **config}))
     # column_config overrides bypass _coerce_column, so normalise them too, and
     # drop Python callables (e.g. `blank`) that can't cross the JSON boundary.
     return [

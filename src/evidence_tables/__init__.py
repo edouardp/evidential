@@ -38,7 +38,22 @@ from .grouped import grouped_table, simple_table
 from .live import LiveEvidenceTable, query_values
 from .pivot import pivot_table
 from .query import date_range_sql, query_table
-from .rules import cells_body, resolve_rules, tab_format, tab_style, text_transform
+from .rules import (
+    cells_body,
+    cols_merge,
+    cols_merge_n_pct,
+    cols_merge_range,
+    cols_merge_uncert,
+    resolve_rules,
+    sub_large_vals,
+    sub_missing,
+    sub_small_vals,
+    sub_values,
+    sub_zero,
+    tab_format,
+    tab_style,
+    text_transform,
+)
 from .table import EvidenceTable, section_row
 
 __all__ = [
@@ -58,6 +73,15 @@ __all__ = [
     "tab_style",
     "tab_format",
     "text_transform",
+    "sub_missing",
+    "sub_zero",
+    "sub_small_vals",
+    "sub_large_vals",
+    "sub_values",
+    "cols_merge",
+    "cols_merge_range",
+    "cols_merge_uncert",
+    "cols_merge_n_pct",
     "resolve_rules",
     "simple_table",
     "query_values",

@@ -21,7 +21,22 @@ from __future__ import annotations
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from typing import Any
 
-__all__ = ["cells_body", "tab_style", "tab_format", "text_transform", "resolve_rules"]
+__all__ = [
+    "cells_body",
+    "tab_style",
+    "tab_format",
+    "text_transform",
+    "sub_missing",
+    "sub_zero",
+    "sub_small_vals",
+    "sub_large_vals",
+    "sub_values",
+    "cols_merge",
+    "cols_merge_range",
+    "cols_merge_uncert",
+    "cols_merge_n_pct",
+    "resolve_rules",
+]
 
 
 def _columns(value: Any) -> list[str] | str:
@@ -71,6 +86,132 @@ def text_transform(
         "rows": locations.get("rows"),
         "fn": fn,
     }
+
+
+def sub_missing(
+    columns: str | Sequence[str] = "*",
+    rows: Sequence[int] | Callable[[Mapping[str, Any]], bool] | None = None,
+    missing_text: str = "—",
+) -> dict[str, Any]:
+    """Replace missing values with ``missing_text``."""
+    return _sub(columns, rows, "missing", missing_text)
+
+
+def sub_zero(
+    columns: str | Sequence[str] = "*",
+    rows: Sequence[int] | Callable[[Mapping[str, Any]], bool] | None = None,
+    zero_text: str = "—",
+) -> dict[str, Any]:
+    """Replace zero values with ``zero_text``."""
+    return _sub(columns, rows, "zero", zero_text)
+
+
+def sub_small_vals(
+    columns: str | Sequence[str] = "*",
+    threshold: float = 0.01,
+    small_text: str = "small",
+    rows: Sequence[int] | Callable[[Mapping[str, Any]], bool] | None = None,
+) -> dict[str, Any]:
+    """Replace values below ``threshold`` with ``small_text``."""
+    return _sub(columns, rows, "small", small_text, threshold=threshold)
+
+
+def sub_large_vals(
+    columns: str | Sequence[str] = "*",
+    threshold: float = 1_000_000,
+    large_text: str = "large",
+    rows: Sequence[int] | Callable[[Mapping[str, Any]], bool] | None = None,
+) -> dict[str, Any]:
+    """Replace values above ``threshold`` with ``large_text``."""
+    return _sub(columns, rows, "large", large_text, threshold=threshold)
+
+
+def sub_values(
+    columns: str | Sequence[str] = "*",
+    values: Sequence[Any] = (),
+    replacement: str = "—",
+    rows: Sequence[int] | Callable[[Mapping[str, Any]], bool] | None = None,
+) -> dict[str, Any]:
+    """Replace any of ``values`` with ``replacement``."""
+    return _sub(columns, rows, "values", replacement, values=list(values))
+
+
+def _sub(
+    columns: Any,
+    rows: Any,
+    kind: str,
+    text: str,
+    **extra: Any,
+) -> dict[str, Any]:
+    return {
+        "type": "substitute",
+        "columns": _columns(columns),
+        "rows": rows,
+        "kind": kind,
+        "text": text,
+        **extra,
+    }
+
+
+def cols_merge(
+    template: str,
+    *,
+    template_fmt: Mapping[str, str] | None = None,
+    **options: Any,
+) -> dict[str, Any]:
+    """Column config that renders ``template`` filled from other columns.
+
+    Example: ``cols_merge("{low}–{high}", template_fmt={"low": "num0", "high": "num0"})``.
+    """
+    config: dict[str, Any] = {"template": template, **options}
+    if template_fmt:
+        config["template_fmt"] = dict(template_fmt)
+    return config
+
+
+def cols_merge_range(
+    col_begin: str,
+    col_end: str,
+    *,
+    sep: str = "–",
+    fmt: str | None = None,
+    **options: Any,
+) -> dict[str, Any]:
+    """Merge a begin/end pair into ``"begin–end"``."""
+    template_fmt = {col_begin: fmt, col_end: fmt} if fmt else None
+    return cols_merge(f"{{{col_begin}}}{sep}{{{col_end}}}", template_fmt=template_fmt, **options)
+
+
+def cols_merge_uncert(
+    col_val: str,
+    col_uncert: str,
+    *,
+    sep: str = " ± ",
+    fmt: str | None = None,
+    **options: Any,
+) -> dict[str, Any]:
+    """Merge a value and its uncertainty into ``"value ± uncert"``."""
+    template_fmt = {col_val: fmt, col_uncert: fmt} if fmt else None
+    return cols_merge(f"{{{col_val}}}{sep}{{{col_uncert}}}", template_fmt=template_fmt, **options)
+
+
+def cols_merge_n_pct(
+    col_n: str,
+    col_pct: str,
+    *,
+    fmt: str | None = None,
+    pct_fmt: str | None = "pct1",
+    **options: Any,
+) -> dict[str, Any]:
+    """Merge a count and percentage into ``"n (pct)"``."""
+    template_fmt: dict[str, str] = {}
+    if fmt:
+        template_fmt[col_n] = fmt
+    if pct_fmt:
+        template_fmt[col_pct] = pct_fmt
+    return cols_merge(
+        f"{{{col_n}}} ({{{col_pct}}})", template_fmt=template_fmt or None, **options
+    )
 
 
 def _matches_column(rule_columns: Any, name: str) -> bool:
@@ -125,4 +266,10 @@ def resolve_rules(
             client_rules.append(
                 {"columns": columns, "rows": row_ids, "style": rule["style"]}
             )
+        elif rule_type == "substitute":
+            client = {"type": "substitute", "columns": columns, "rows": row_ids}
+            for key in ("kind", "text", "threshold", "values"):
+                if key in rule:
+                    client[key] = rule[key]
+            client_rules.append(client)
     return working, client_rules

@@ -139,6 +139,7 @@ are done in SQL. We implement them as Python/DuckDB helpers where feasible.
 - [x] `notebooks/15_client_grouping.py` (in-memory `grouped_records`)
 - [x] `notebooks/16_tech_giants.py` (gt-style table: sections, blanks, footnotes)
 - [x] `notebooks/17_gt_features.py` (nested spanners, stub, rules)
+- [x] `notebooks/18_great_tables.py` (merging, substitutions, formatters)
 - [x] `notebooks/README.md` index of all demos
 - [x] README feature/API docs
 
@@ -156,6 +157,18 @@ are done in SQL. We implement them as Python/DuckDB helpers where feasible.
 - [x] Markdown in titles/subtitles/captions (inline `**bold**`, `*italic*`, `` `code` ``)
 - [x] Location-based styling/formatting/transforms (`cells_body` + `tab_style` / `tab_format` / `text_transform`)
 - [x] Row groups and summary rows (`grouped_table`, `group_type`)
+
+## Great Tables-inspired (Python gt)
+
+- [x] Column merging (`cols_merge_range`, `cols_merge_uncert`, `cols_merge_n_pct`, `cols_merge`)
+- [x] Substitutions (`sub_missing`, `sub_zero`, `sub_small_vals`, `sub_large_vals`, `sub_values`)
+- [x] Special formatters (`bytes`, `duration`, `roman`, `flag`)
+- [x] Cell markdown (`{"markdown": True}`)
+- [x] `opt_footnote_marks` (`footnote_marks="letters" | "symbols"`)
+- [x] `opt_all_caps` (`all_caps=True`)
+- [ ] `opt_stylize` named style presets
+- [ ] `tab_style` locations beyond `cells_body` (labels/stub/summary/footer)
+- [ ] `from_column` style values / Google Fonts
 
 ## Testing
 

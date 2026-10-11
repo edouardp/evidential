@@ -635,12 +635,13 @@ export class EvidenceTableRenderer {
         "aria-sort": sorted ? (dir === "asc" ? "ascending" : "descending") : "none",
       });
       const inner = h("span", { class: "et-th-inner" });
-      const title =
+      let title =
         isStub && opts.stub_head
           ? opts.stub_head
           : opts.format_titles === false
             ? col.name
             : col.title || formatTitle(col.name);
+      if (opts.all_caps) title = String(title).toUpperCase();
       inner.append(h("span", { class: "et-th-title" }, title));
       if (col.info) {
         inner.append(
@@ -692,6 +693,40 @@ export class EvidenceTableRenderer {
       spans[index] = count;
     });
     return spans;
+  }
+
+  /** Substitute a displayed value per `sub_*` rules (returns text or null). */
+  _matchSubstitution(col, row, value) {
+    const rules = this.options.rules;
+    if (!rules) return null;
+    for (const rule of rules) {
+      if (rule.type !== "substitute") continue;
+      if (rule.columns !== "*" && !rule.columns.includes(col.name)) continue;
+      if (rule.rows && !rule.rows.includes(row.__row_id)) continue;
+      if (rule.kind === "missing") {
+        if (value === null || value === undefined) return rule.text;
+        continue;
+      }
+      if (value === null || value === undefined) continue;
+      if (rule.kind === "zero" && Number(value) === 0) return rule.text;
+      if (rule.kind === "values" && (rule.values || []).includes(value)) return rule.text;
+      if (!isNaN(Number(value))) {
+        const numeric = Number(value);
+        if (rule.kind === "small" && numeric < rule.threshold) return rule.text;
+        if (rule.kind === "large" && numeric > rule.threshold) return rule.text;
+      }
+    }
+    return null;
+  }
+
+  /** Footnote mark for a 1-based index under the chosen scheme. */
+  _footnoteMark(index) {
+    const scheme = this.options.footnote_marks || "numbers";
+    if (scheme === "letters") return String.fromCharCode(96 + ((index - 1) % 26) + 1);
+    if (scheme === "symbols") {
+      return ["*", "†", "‡", "§", "¶", "#"][(index - 1) % 6];
+    }
+    return String(index);
   }
 
   /** Merge the style/format rules matching a cell (last match wins). */
@@ -786,7 +821,29 @@ export class EvidenceTableRenderer {
         return;
       }
 
+      // Data-driven column merge / template (e.g. "10–20", "5 ± 0.2").
+      if (col.template) {
+        const merged = String(col.template).replace(/\{(\w+)\}/g, (_, field) => {
+          const fieldValue = row[field];
+          if (fieldValue === null || fieldValue === undefined) return "";
+          const fieldFormat = (col.template_fmt || {})[field];
+          return formatValue(fieldValue, fieldFormat, {
+            type: col.type,
+            fallback: optString(fieldValue),
+          });
+        });
+        td.append(h("span", { class: "et-cell-value" }, merged));
+        tr.append(td);
+        return;
+      }
+
       let value = row[col.name];
+      const substituted = this._matchSubstitution(col, row, value);
+      if (substituted != null) {
+        td.append(h("span", { class: "et-cell-value et-substituted" }, substituted));
+        tr.append(td);
+        return;
+      }
       // Optional cutoffs: values outside the range are treated as blank.
       if (
         value !== null &&
@@ -838,6 +895,9 @@ export class EvidenceTableRenderer {
         content = this._renderSparkline(col, value);
       } else if (col.html) {
         content = h("span", { html: String(value) });
+      } else if (col.markdown) {
+        content = h("span", { class: "et-cell-value" });
+        content.append(inlineMarkdown(String(value)));
       } else if (col.logo && row[col.logo]) {
         const domain = String(row[col.logo]);
         const logoOptions = col.logo_options || {};
@@ -900,7 +960,9 @@ export class EvidenceTableRenderer {
             ctx.footnotes.push(note);
           }
           note.rows.add((ctx.rowNumberBase || 0) + rowIndex + 1);
-          td.append(h("sup", { class: "et-footnote-mark", title: noteText }, String(note.index)));
+          td.append(
+            h("sup", { class: "et-footnote-mark", title: noteText }, this._footnoteMark(note.index)),
+          );
         }
       }
       if (matched.style) {
@@ -1095,7 +1157,7 @@ export class EvidenceTableRenderer {
   _renderFootnotes(footnotes, staticFootnotes) {
     this.footnotesEl.replaceChildren();
     const items = footnotes.map((note) => ({
-      mark: String(note.index),
+      mark: this._footnoteMark(note.index),
       text: note.text,
       rows: [...note.rows].sort((a, b) => a - b),
     }));

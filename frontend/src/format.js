@@ -201,6 +201,12 @@ export function formatValue(value, formatCode, opts = {}) {
     return fallbackValue;
   }
 
+  // Special formatters (Great Tables-style).
+  if (code === "bytes") return formatBytes(Number(value));
+  if (code === "duration") return formatDuration(Number(value));
+  if (code === "roman") return formatRoman(Number(value));
+  if (code === "flag") return formatFlag(String(value));
+
   try {
     let processed = convertDatePart(value, code, firstDayOfWeek);
 
@@ -246,6 +252,63 @@ export function formatValue(value, formatCode, opts = {}) {
     if (typeof value === "object") return JSON.stringify(value);
     return fallbackValue;
   }
+}
+
+const BYTE_UNITS = ["B", "KB", "MB", "GB", "TB", "PB"];
+
+function formatBytes(value) {
+  if (!isFinite(value)) return String(value);
+  let amount = Math.abs(value);
+  let unit = 0;
+  while (amount >= 1024 && unit < BYTE_UNITS.length - 1) {
+    amount /= 1024;
+    unit += 1;
+  }
+  const sign = value < 0 ? "-" : "";
+  const decimals = amount >= 100 || unit === 0 ? 0 : amount >= 10 ? 1 : 2;
+  return `${sign}${amount.toFixed(decimals)} ${BYTE_UNITS[unit]}`;
+}
+
+function formatDuration(value) {
+  if (!isFinite(value)) return String(value);
+  const sign = value < 0 ? "-" : "";
+  let seconds = Math.round(Math.abs(value));
+  const days = Math.floor(seconds / 86400);
+  seconds %= 86400;
+  const hours = Math.floor(seconds / 3600);
+  seconds %= 3600;
+  const minutes = Math.floor(seconds / 60);
+  seconds %= 60;
+  const parts = [];
+  if (days) parts.push(`${days}d`);
+  if (hours) parts.push(`${hours}h`);
+  if (minutes) parts.push(`${minutes}m`);
+  if (seconds || parts.length === 0) parts.push(`${seconds}s`);
+  return sign + parts.join(" ");
+}
+
+const ROMAN = [
+  [1000, "M"], [900, "CM"], [500, "D"], [400, "CD"], [100, "C"], [90, "XC"],
+  [50, "L"], [40, "XL"], [10, "X"], [9, "IX"], [5, "V"], [4, "IV"], [1, "I"],
+];
+
+function formatRoman(value) {
+  if (!Number.isInteger(value) || value <= 0 || value >= 4000) return String(value);
+  let remaining = value;
+  let out = "";
+  for (const [number, symbol] of ROMAN) {
+    while (remaining >= number) {
+      out += symbol;
+      remaining -= number;
+    }
+  }
+  return out;
+}
+
+function formatFlag(code) {
+  const text = String(code).trim().toUpperCase();
+  if (!/^[A-Z]{2}$/.test(text)) return code;
+  return String.fromCodePoint(...[...text].map((letter) => 0x1f1e6 + letter.charCodeAt(0) - 65));
 }
 
 /** Human-friendly column title from a snake_case / expression-ish name. */

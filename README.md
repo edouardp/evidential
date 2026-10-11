@@ -213,6 +213,21 @@ EvidenceTable(
 
 See `notebooks/16_tech_giants.py` and `notebooks/17_gt_features.py`.
 
+### Merging, substitutions and special formatters (Great Tables-inspired)
+
+- **Column merging** — combine source columns into one rendered column; the
+  sources can be hidden helper columns built in SQL:
+  `cols_merge_range("low", "high", fmt="num0")`,
+  `cols_merge_uncert("value", "uncert")`, `cols_merge_n_pct("n", "pct")`, or a
+  raw `cols_merge("{a}–{b}", template_fmt={"a": "num0"})`.
+- **Substitutions** — replace values at display time: `sub_missing`,
+  `sub_zero`, `sub_small_vals`, `sub_large_vals`, `sub_values`.
+- **Special formatters** — format codes `bytes`, `duration`, `roman`, `flag`,
+  and a cell `markdown` option.
+- **Options** — `footnote_marks` (`numbers`/`letters`/`symbols`), `all_caps`.
+
+See `notebooks/18_great_tables.py`.
+
 ## Live, parameterised tables
 
 `LiveEvidenceTable` keeps a parameterised query and re-runs it when its

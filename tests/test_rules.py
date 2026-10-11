@@ -3,6 +3,10 @@ from __future__ import annotations
 from evidence_tables import (
     EvidenceTable,
     cells_body,
+    cols_merge_range,
+    sub_missing,
+    sub_small_vals,
+    sub_values,
     tab_format,
     tab_style,
     text_transform,
@@ -45,3 +49,40 @@ def test_text_transform_applied() -> None:
 def test_rows_get_stable_id_when_rules_present() -> None:
     table = EvidenceTable([{"a": 1}, {"a": 2}], rules=[tab_format(cells_body("a"), "id")])
     assert [row["__row_id"] for row in table.rows] == [0, 1]
+
+
+def test_sub_small_vals_rule() -> None:
+    table = EvidenceTable(
+        [{"v": 0.001}, {"v": 10}],
+        rules=[sub_small_vals(columns="v", threshold=0.01, small_text="small")],
+    )
+    rule = table.options["rules"][0]
+    assert rule["type"] == "substitute"
+    assert rule["kind"] == "small"
+    assert rule["threshold"] == 0.01
+    assert rule["text"] == "small"
+
+
+def test_sub_missing_and_values() -> None:
+    table = EvidenceTable(
+        [{"v": None}, {"v": 0}, {"v": 7}],
+        rules=[sub_missing(columns="v", missing_text="n/a"), sub_values(columns="v", values=[0], replacement="-")],
+    )
+    kinds = {rule["kind"] for rule in table.options["rules"]}
+    assert kinds == {"missing", "values"}
+
+
+def test_cols_merge_range_creates_template_column() -> None:
+    table = EvidenceTable(
+        [{"low": 1, "high": 2}],
+        column_config={"range": cols_merge_range("low", "high", fmt="num0")},
+    )
+    column = next(column for column in table.columns if column["name"] == "range")
+    assert column["template"] == "{low}\u2013{high}"
+    assert column["template_fmt"] == {"low": "num0", "high": "num0"}
+
+
+def test_footnote_marks_and_all_caps() -> None:
+    table = EvidenceTable([{"a": 1}], footnote_marks="letters", all_caps=True)
+    assert table.options["footnote_marks"] == "letters"
+    assert table.options["all_caps"] is True

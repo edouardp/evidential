@@ -634,6 +634,62 @@ test("stub head label is used for the stub column", () => {
   renderer.destroy();
 });
 
+test("substitution rules replace displayed values", () => {
+  const columns = [{ name: "v", type: "number", fmt: "num0" }];
+  const rows = [
+    { v: 0, __row_id: 0 },
+    { v: 5, __row_id: 1 },
+    { v: 0.001, __row_id: 2 },
+  ];
+  const rules = [
+    { type: "substitute", columns: ["v"], rows: null, kind: "zero", text: "—" },
+    { type: "substitute", columns: ["v"], rows: null, kind: "small", threshold: 0.01, text: "small" },
+  ];
+  const renderer = new EvidenceTableRenderer(makeModel(rows, columns, { rules }, el), el);
+  const cells = [...el.querySelectorAll("tbody .et-cell-value")].map((cell) => cell.textContent);
+  assert.deepEqual(cells, ["—", "5", "small"]);
+  renderer.destroy();
+});
+
+test("column templates merge rendered values", () => {
+  const columns = [
+    { name: "low", type: "number", fmt: "num0" },
+    { name: "high", type: "number", fmt: "num0" },
+    { name: "range", type: "string", template: "{low}–{high}", template_fmt: { low: "num0", high: "num0" } },
+  ];
+  const rows = [{ low: 10, high: 20 }];
+  const renderer = new EvidenceTableRenderer(makeModel(rows, columns, {}, el), el);
+  const cells = [...el.querySelectorAll("tbody .et-cell-value")].map((cell) => cell.textContent);
+  assert.equal(cells[2], "10–20");
+  renderer.destroy();
+});
+
+test("markdown columns render inline markdown", () => {
+  const columns = [{ name: "label", type: "string", markdown: true }];
+  const rows = [{ label: "**Hi** there" }];
+  const renderer = new EvidenceTableRenderer(makeModel(rows, columns, {}, el), el);
+  assert.ok(el.querySelector("tbody .et-cell-value strong"));
+  renderer.destroy();
+});
+
+test("footnote_marks letters uses letter marks", () => {
+  const columns = [
+    { name: "city", type: "string", footnote: "note" },
+    { name: "note", type: "string", hide: true },
+  ];
+  const rows = [
+    { city: "A", note: "first" },
+    { city: "B", note: "second" },
+  ];
+  const renderer = new EvidenceTableRenderer(
+    makeModel(rows, columns, { footnote_marks: "letters" }, el),
+    el,
+  );
+  const marks = [...el.querySelectorAll("tbody .et-footnote-mark")].map((mark) => mark.textContent);
+  assert.deepEqual(marks, ["a", "b"]);
+  renderer.destroy();
+});
+
 test("theme.background drives the opaque expanded surface", () => {
   const renderer = new EvidenceTableRenderer(
     makeModel(ROWS, COLUMNS, { theme: { background: "#123456" } }, el),

@@ -30,6 +30,13 @@ test("nulls and fallbacks", () => {
   assert.equal(formatValue(undefined, "usd", { fallback: "-" }), "-");
 });
 
+test("special formatters (bytes, duration, roman, flag)", () => {
+  assert.equal(formatValue(1536, "bytes"), "1.50 KB");
+  assert.equal(formatValue(90000, "duration"), "1d 1h");
+  assert.equal(formatValue(2024, "roman"), "MMXXIV");
+  assert.equal(formatValue("AU", "flag"), "\u{1F1E6}\u{1F1FA}");
+});
+
 test("titles", () => {
   assert.equal(formatTitle("total_revenue"), "Total Revenue");
   assert.equal(formatTitle("sum(trip_distance)"), "Sum(Trip Distance)");

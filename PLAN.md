@@ -141,6 +141,7 @@ are done in SQL. We implement them as Python/DuckDB helpers where feasible.
 - [x] `notebooks/17_gt_features.py` (nested spanners, stub, rules)
 - [x] `notebooks/18_great_tables.py` (merging, substitutions, formatters)
 - [x] `notebooks/19_typography.py` (readable table typography)
+- [x] `notebooks/20_whitespace_grouping.py` (white space and stripes for grouping)
 - [x] `notebooks/README.md` index of all demos
 - [x] README feature/API docs
 
@@ -181,6 +182,8 @@ are done in SQL. We implement them as Python/DuckDB helpers where feasible.
 - [x] Minimise furniture (`row_lines=False`, no fills, no frame)
 - [x] Caption / provenance
 - [x] Consistent number precision per column (auto formats)
+- [x] Grouping with white space (`group_gap`), section dividers, and group-size striping (`row_shading=n` / `[shaded, unshaded]`)
+- [x] Rotated headings (`rotate_titles="vertical"` 90° CCW, or oblique degrees)
 
 ## Testing
 

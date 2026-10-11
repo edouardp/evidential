@@ -92,3 +92,10 @@ def test_stretch_and_align_decimals_options() -> None:
     table = EvidenceTable([{"a": 1.5}], stretch=False, align_decimals=True)
     assert table.options["stretch"] is False
     assert table.options["align_decimals"] is True
+
+
+def test_rotate_titles_option() -> None:
+    table = EvidenceTable([{"a": 1}], rotate_titles="vertical")
+    assert table.options["rotate_titles"] == "vertical"
+    oblique = EvidenceTable([{"a": 1}], rotate_titles=-45)
+    assert oblique.options["rotate_titles"] == -45

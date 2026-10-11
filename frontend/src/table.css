@@ -186,6 +186,12 @@
 .et-root:not(.et-wrap) .et-td { white-space: nowrap; }
 /* Don't stretch the table: size columns to their content (ALA). */
 .et-root.et-stretch-off .et-table { width: auto; }
+/* White space as a grouping device (proximity): extra room around group
+   boundaries instead of rules or fills. */
+.et-root.et-group-gap .et-row-subtotal .et-td,
+.et-root.et-group-gap .et-row-total .et-td {
+  padding-top: 0.85rem;
+}
 .et-root.et-nowrap-titles .et-th-title { white-space: nowrap; }
 /* compact density */
 .et-root.et-compact .et-td,
@@ -307,6 +313,35 @@
 .et-bar-label { position: relative; z-index: 1; }
 .et-hidden { visibility: hidden; }
 .et-no-viz .et-bar-cell { display: none; }
+
+/* Rotated headers (ALA): vertical 90° CCW, or oblique at a given angle. */
+.et-th-vertical {
+  vertical-align: bottom;
+  white-space: nowrap;
+}
+.et-th-vertical .et-th-inner {
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  align-items: flex-start;
+}
+.et-th-oblique {
+  vertical-align: bottom;
+  height: var(--et-th-oblique-height, 6rem);
+  white-space: nowrap;
+  position: relative;
+  overflow: visible;
+}
+.et-th-oblique .et-th-inner {
+  position: absolute;
+  left: 0.4rem;
+  bottom: 0.5rem;
+  display: inline-flex;
+  transform-origin: left bottom;
+  transform: rotate(var(--et-th-angle, -60deg));
+  white-space: nowrap;
+}
+/* Give oblique headings room so the rightmost one is not clipped. */
+.et-root.et-oblique .et-scroller { padding-right: 6rem; }
 
 .et-row-section .et-section-cell {
   font-weight: 600;

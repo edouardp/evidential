@@ -389,6 +389,7 @@ export class EvidenceTableRenderer {
     this.root.classList.toggle("et-row-shading", !!opts.row_shading);
     this.root.classList.toggle("et-compact", !!opts.compact);
     this.root.classList.toggle("et-stretch-off", opts.stretch === false);
+    this.root.classList.toggle("et-group-gap", !!opts.group_gap);
     this._renderTitle();
     this._renderToolbar();
 
@@ -422,6 +423,28 @@ export class EvidenceTableRenderer {
           .filter((value) => value != null);
         if (places.length) decimals.set(col.name, Math.max(...places));
       }
+    }
+
+    // Oblique headings need a taller header and a little right padding.
+    let obliqueAngle = null;
+    let longestLabel = 0;
+    for (const col of columns) {
+      const rotation = col.rotate_title ?? (opts.stub === col.name ? null : opts.rotate_titles);
+      if (typeof rotation !== "number") continue;
+      obliqueAngle = rotation;
+      const label = opts.format_titles === false ? col.name : col.title || formatTitle(col.name);
+      longestLabel = Math.max(longestLabel, String(label).length);
+    }
+    if (obliqueAngle != null) {
+      const sine = Math.abs(Math.sin((Math.abs(obliqueAngle) * Math.PI) / 180));
+      this.root.style.setProperty(
+        "--et-th-oblique-height",
+        `${Math.max(4, longestLabel * 0.62 * sine + 1.5).toFixed(2)}em`,
+      );
+      this.root.classList.add("et-oblique");
+    } else {
+      this.root.classList.remove("et-oblique");
+      this.root.style.removeProperty("--et-th-oblique-height");
     }
     const colorScales = new Map();
     for (const col of columns) {
@@ -598,6 +621,7 @@ export class EvidenceTableRenderer {
     const table = h("table", { class: "et-table" });
     table.append(this._renderHeader(columns, ctx));
     const tbody = h("tbody");
+    ctx.shadingCounter = { value: 0 };
     rows.forEach((row, index) => tbody.append(this._renderRow(row, columns, ctx, index)));
     table.append(tbody);
     return table;
@@ -641,11 +665,18 @@ export class EvidenceTableRenderer {
       const sorted = this._state.sort?.column === col.name;
       const dir = sorted ? this._state.sort.direction : null;
       const isStub = opts.stub === col.name;
+      const rotation = col.rotate_title ?? (isStub ? null : opts.rotate_titles);
+      let thClass = `et-th${sorted ? " et-th-sorted" : ""}${isStub ? " et-stub-head" : ""}`;
+      if (rotation === "vertical") thClass += " et-th-vertical";
+      else if (typeof rotation === "number") thClass += " et-th-oblique";
       const th = h("th", {
-        class: `et-th${sorted ? " et-th-sorted" : ""}${isStub ? " et-stub-head" : ""}`,
+        class: thClass,
         style: this._alignStyle(col),
         "aria-sort": sorted ? (dir === "asc" ? "ascending" : "descending") : "none",
       });
+      if (typeof rotation === "number") {
+        th.style.setProperty("--et-th-angle", `${rotation}deg`);
+      }
       const inner = h("span", { class: "et-th-inner" });
       let title =
         isStub && opts.stub_head
@@ -756,6 +787,23 @@ export class EvidenceTableRenderer {
     return { fmt, style };
   }
 
+  /** Whether the nth data row should be shaded, per `row_shading`.
+   * `true` = alternating (1,1); a number = groups (n,n); a pair = [shaded, unshaded]. */
+  _shaded(index) {
+    const shading = this.options.row_shading;
+    if (!shading) return false;
+    let shaded = 1;
+    let unshaded = 1;
+    if (Array.isArray(shading)) {
+      shaded = Math.max(1, Number(shading[0]) || 1);
+      unshaded = Math.max(1, Number(shading[1]) || shaded);
+    } else if (typeof shading === "number") {
+      shaded = Math.max(1, shading);
+      unshaded = shaded;
+    }
+    return index % (shaded + unshaded) >= unshaded;
+  }
+
   _renderRow(row, columns, ctx, index) {
     const opts = this.options;
     const renderType = row.render_type || "cell_data";
@@ -782,7 +830,7 @@ export class EvidenceTableRenderer {
         isSubtotal ? "et-row-subtotal" : "",
         hasLink ? "et-row-link" : "",
         isSubtotal ? "et-row-collapsible" : "",
-        renderType === "cell_data" && index % 2 === 1 ? "et-row-shaded" : "",
+        renderType === "cell_data" && this._shaded(ctx.shadingCounter.value++) ? "et-row-shaded" : "",
       ].filter(Boolean).join(" "),
     });
     if (hasLink) tr.addEventListener("click", () => { window.location.href = String(row[opts.link]); });

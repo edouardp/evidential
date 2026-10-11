@@ -194,6 +194,16 @@ footer with footnotes and source notes. `EvidenceTable` covers:
   `align_decimals=True` pads each numeric column to a common precision so the
   decimal points line up. `row_lines=False` / `row_shading=False` keep the
   furniture minimal. See `notebooks/19_typography.py`.
+- **Grouping with white space or stripes** — `group_gap=True` adds room around
+  group boundaries, `section_row(...)` inserts full-width dividers, and
+  `row_shading` accepts `True` (alternating), an integer for groups of *n*
+  (e.g. `3` = three shaded, three unshaded), or `[shaded, unshaded]`. See
+  `notebooks/20_whitespace_grouping.py`.
+- **Rotated headings** — `rotate_titles="vertical"` (90° counter-clockwise) or a
+  number for oblique headings (e.g. `-60`). The stub is not rotated by the
+  table-level setting; per-column `rotate_title` overrides. Oblique headings
+  anchor bottom-left, auto-size the header height, and reserve right padding so
+  they are not clipped.
 
 ### Location-based rules (gt's `tab_style` / `tab_format` / `text_transform`)
 

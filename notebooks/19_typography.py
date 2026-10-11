@@ -85,5 +85,65 @@ def _(EvidenceTable, mo, rows):
     return
 
 
+@app.cell
+def _(mo):
+    mo.md("""
+    ## Rotated headings
+
+    Long headings over narrow columns can be set **vertically**
+    (`rotate_titles="vertical"`, 90° counter-clockwise) or **obliquely**
+    (`rotate_titles=-60`). Set `rotate_title` on a single column to override.
+    """)
+    return
+
+
+@app.cell
+def _(EvidenceTable, mo):
+    months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+    monthly = [
+        {"metric": "Revenue", **{month: 1000 + index * 137 for index, month in enumerate(months)}},
+        {"metric": "Orders", **{month: 40 + index * 3 for index, month in enumerate(months)}},
+    ]
+    mo.ui.anywidget(
+        EvidenceTable(
+            monthly,
+            title="Monthly figures — vertical headings",
+            rotate_titles="vertical",
+            stretch=False,
+            row_lines=False,
+            align_decimals=True,
+            column_config={
+                "metric": {"align": "left"},
+                **{month: {"fmt": "num0"} for month in months},
+            },
+        )
+    )
+    return
+
+
+@app.cell
+def _(EvidenceTable, mo):
+    quarters = ["Q1 2024", "Q2 2024", "Q3 2024", "Q4 2024", "Q1 2025", "Q2 2025"]
+    per_quarter = [
+        {"metric": "Revenue", "metric_fmt": "usd0", **{quarter: 120000 + index * 9000 for index, quarter in enumerate(quarters)}},
+        {"metric": "Gross margin", "metric_fmt": "pct1", **{quarter: 0.4 + index * 0.01 for index, quarter in enumerate(quarters)}},
+    ]
+    mo.ui.anywidget(
+        EvidenceTable(
+            per_quarter,
+            title="Oblique headings (−60°)",
+            rotate_titles=-60,
+            stretch=False,
+            row_lines=False,
+            column_config={
+                "metric": {"align": "left"},
+                "metric_fmt": {"hide": True},
+                **{quarter: {"fmt_column": "metric_fmt"} for quarter in quarters},
+            },
+        )
+    )
+    return
+
+
 if __name__ == "__main__":
     app.run()

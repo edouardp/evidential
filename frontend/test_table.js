@@ -711,6 +711,50 @@ test("stretch=false keeps the table content-sized", () => {
   renderer.destroy();
 });
 
+test("row_shading supports group sizes (3,3)", () => {
+  const rows = Array.from({ length: 6 }, (_, i) => ({ city: `C${i}`, trips: i, revenue: i * 10 }));
+  const renderer = new EvidenceTableRenderer(makeModel(rows, COLUMNS, { row_shading: 3 }, el), el);
+  const shaded = [...el.querySelectorAll("tbody tr")].map((tr) =>
+    tr.classList.contains("et-row-shaded"),
+  );
+  assert.deepEqual(shaded, [false, false, false, true, true, true]);
+  renderer.destroy();
+});
+
+test("row_shading pair sets shaded/unshaded counts", () => {
+  const rows = Array.from({ length: 4 }, (_, i) => ({ city: `C${i}`, trips: i, revenue: i * 10 }));
+  const renderer = new EvidenceTableRenderer(makeModel(rows, COLUMNS, { row_shading: [1, 3] }, el), el);
+  const shaded = [...el.querySelectorAll("tbody tr")].map((tr) =>
+    tr.classList.contains("et-row-shaded"),
+  );
+  assert.deepEqual(shaded, [false, false, false, true]);
+  renderer.destroy();
+});
+
+test("rotated headers: vertical and oblique", () => {
+  const columns = [
+    { name: "a", type: "number" },
+    { name: "b", type: "number" },
+  ];
+  const rows = [{ a: 1, b: 2 }];
+
+  const vertical = new EvidenceTableRenderer(
+    makeModel(rows, columns, { rotate_titles: "vertical" }, el),
+    el,
+  );
+  assert.equal(el.querySelectorAll(".et-th-vertical").length, 2);
+  vertical.destroy();
+
+  const oblique = new EvidenceTableRenderer(
+    makeModel(rows, columns, { rotate_titles: -45 }, el),
+    el,
+  );
+  const obliqueTh = el.querySelector(".et-th-oblique");
+  assert.ok(obliqueTh);
+  assert.equal(obliqueTh.style.getPropertyValue("--et-th-angle"), "-45deg");
+  oblique.destroy();
+});
+
 test("theme.background drives the opaque expanded surface", () => {
   const renderer = new EvidenceTableRenderer(
     makeModel(ROWS, COLUMNS, { theme: { background: "#123456" } }, el),

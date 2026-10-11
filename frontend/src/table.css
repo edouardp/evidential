@@ -299,7 +299,7 @@
 /* ----------------------------------------------------------- bar viz ------ */
 /* Pull the bar into the cell's padding (right + top/bottom) and push the value
    back out by the same amount, so the value keeps its position but the bar fills
-   the row, leaving ~1px to the separators, without growing the cell. */
+   the row, leaving ~2px to the separators, without growing the cell. */
 .et-bar-cell {
   position: relative;
   display: block;
@@ -307,7 +307,7 @@
   margin: -0.25rem -0.75rem -0.25rem 0;
   padding: 0.25rem 0.75rem 0.25rem 0;
 }
-.et-bar-wrap { position: absolute; inset: 1px 4px 1px 0; }
+.et-bar-wrap { position: absolute; inset: 2px 4px 2px 0; }
 .et-bar-negative { left: 4px; right: 0; }
 .et-bar {
   position: absolute;

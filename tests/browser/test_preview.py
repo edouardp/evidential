@@ -79,9 +79,9 @@ def test_bar_fills_row_without_growing_it(page, live_server):
         page.locator("#raw tbody tr").first.locator("td").first.evaluate("el => el.clientHeight")
     )
     assert bar_cell.bounding_box()["height"] == pytest.approx(data_client, abs=1)
-    # the bar fills the row, leaving ~1px to the separators
+    # the bar fills the row, leaving ~2px to the separators
     bar_box = bar_cell.locator(".et-bar").first.bounding_box()
-    assert bar_box["height"] == pytest.approx(bar_cell.bounding_box()["height"] - 2, abs=1.5)
+    assert bar_box["height"] == pytest.approx(bar_cell.bounding_box()["height"] - 4, abs=1.5)
 
 
 def test_display_features(page, live_server):

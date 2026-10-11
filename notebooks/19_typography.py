@@ -145,5 +145,43 @@ def _(EvidenceTable, mo):
     return
 
 
+@app.cell
+def _(mo):
+    mo.md("""
+    ## Numerals: lining vs oldstyle
+
+    ALA recommends **lining tabular** figures in tables. The same numbers are
+    shown in each style — Georgia is used so the oldstyle variants exist; where
+    a font lacks them the browser falls back to lining.
+    """)
+    return
+
+
+@app.cell
+def _(EvidenceTable, mo):
+    numerals = [
+        {"glyphs": "Sequence", "lining": 1111111111, "oldstyle": 1111111111, "proportional": 1111111111, "oldstyle_prop": 1111111111},
+        {"glyphs": "Mixed", "lining": 104729.54, "oldstyle": 104729.54, "proportional": 104729.54, "oldstyle_prop": 104729.54},
+        {"glyphs": "Headings", "lining": 1234567890, "oldstyle": 1234567890, "proportional": 1234567890, "oldstyle_prop": 1234567890},
+    ]
+    mo.ui.anywidget(
+        EvidenceTable(
+            numerals,
+            title="Numerals",
+            theme={"font": "Georgia, 'Times New Roman', serif"},
+            stretch=False,
+            row_lines=False,
+            column_config={
+                "glyphs": {"align": "left"},
+                "lining": {"title": "Lining tabular", "fmt": "num2", "align": "right", "figure_style": "lining-tabular"},
+                "oldstyle": {"title": "Oldstyle", "fmt": "num2", "align": "right", "figure_style": "oldstyle"},
+                "proportional": {"title": "Lining proportional", "fmt": "num2", "align": "right", "figure_style": "proportional"},
+                "oldstyle_prop": {"title": "Oldstyle proportional", "fmt": "num2", "align": "right", "figure_style": "oldstyle-proportional"},
+            },
+        )
+    )
+    return
+
+
 if __name__ == "__main__":
     app.run()

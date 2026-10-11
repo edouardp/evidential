@@ -31,7 +31,7 @@ are done in SQL. We implement them as Python/DuckDB helpers where feasible.
 - [x] `show_link_column`
 - [x] `freeze_columns`
 - [x] `width` (px or a CSS length like `80%`)
-- [ ] `refresh_interval` (notebook-level; document)
+- [x] `refresh_interval` (notebook-level via `mo.ui.refresh`; documented in README)
 - [x] `show_total_row`, `total_label`
 - [x] `collapsible`, `collapsed`
 - [x] `subtotal_position`, `total_position`
@@ -89,7 +89,7 @@ are done in SQL. We implement them as Python/DuckDB helpers where feasible.
 - [x] `groups_open` (alias for the inverse of `collapsed`)
 - [x] `subtotal_fmt` / `total_fmt`
 - [x] `repeat_values` (our renderer already repeats dimension values)
-- [ ] client-side `group_by` column (Evidence legacy `groupBy`)
+- [x] client-side `group_by` (`grouped_records` for in-memory rows)
 - [ ] `show_total_column` / `show_subtotal_columns` (pivoted)
 - [ ] `measures_first` (pivoted)
 - [ ] `repeat_values` (rowspan vs repeat)
@@ -136,6 +136,7 @@ are done in SQL. We implement them as Python/DuckDB helpers where feasible.
 - [x] `notebooks/12_color_scales.py` (colour scales & conditional formatting)
 - [x] `notebooks/13_hierarchical_rows.py` (accordion/section groups)
 - [x] `notebooks/14_aggregations.py` (built-in + custom aggregations)
+- [x] `notebooks/15_client_grouping.py` (in-memory `grouped_records`)
 - [ ] a per-feature gallery notebook as things land
 - [x] README feature/API docs
 

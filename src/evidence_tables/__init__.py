@@ -31,6 +31,7 @@ Quick start::
 
 from . import duck
 from .aggregations import BUILTIN_AGGREGATIONS, apply_aggregations, resolve_aggregation
+from .client import grouped_records
 from .comparison import comparison_table
 from .data import make_column
 from .grouped import grouped_table, simple_table
@@ -43,6 +44,7 @@ __all__ = [
     "EvidenceTable",
     "LiveEvidenceTable",
     "grouped_table",
+    "grouped_records",
     "pivot_table",
     "comparison_table",
     "query_table",

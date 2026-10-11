@@ -151,6 +151,21 @@ grouped_table(..., aggregations={"sales": "weighted_mean"},
 `total_measures={"sales": "avg(sales)"}` is also available for a direct SQL
 override of the grand total. See `notebooks/14_aggregations.py`.
 
+### Client-side grouping
+
+For rows already in Python (a list of dicts, a DataFrame, …), `grouped_records`
+does the same grouping without a database — Evidence's legacy `groupBy`:
+
+```python
+from evidence_tables import grouped_records
+
+grouped_records(sales, group_by=["region", "category"],
+                measures=["sales", "orders"], aggregations={"sales": "mean"},
+                group_type="section")
+```
+
+See `notebooks/15_client_grouping.py`.
+
 ## Live, parameterised tables
 
 `LiveEvidenceTable` keeps a parameterised query and re-runs it when its
@@ -190,6 +205,20 @@ for populating dropdowns/multiselects from dimension queries. See
 > the widget and its controls in the same `mo.vstack([controls, live])` makes
 > that cell re-run on every change and recreate the widget — the table then
 > disappears and reappears. Display controls in their own cell instead.
+
+### Auto-refresh
+
+Evidence's `refresh_interval` is notebook-level in Marimo: combine
+`mo.ui.refresh` with a live table in the reactive cell.
+
+```python
+refresh = mo.ui.refresh(options=["5s", "30s"], default_interval="30s")
+refresh
+
+# reactive cell
+if refresh.value is not None:
+    live.run(sql)
+```
 
 ## Amazon S3 Tables
 

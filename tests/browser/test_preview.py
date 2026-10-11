@@ -84,6 +84,26 @@ def test_bar_fills_row_without_growing_it(page, live_server):
     assert bar_box["height"] == pytest.approx(bar_cell.bounding_box()["height"] - 4, abs=1.5)
 
 
+def test_accordion_indents_child_rows(page, live_server):
+    open_preview(page, live_server)
+    subtotal = page.locator("#grouped tbody tr.et-row-subtotal").first
+    detail = (
+        page.locator("#grouped tbody tr.et-row:not(.et-row-subtotal):not(.et-row-total)").first
+    )
+
+    def pad(cell):
+        return cell.evaluate("el => parseFloat(getComputedStyle(el).paddingLeft)")
+
+    # the parent (region) dimension is indented on detail rows...
+    parent_pad = pad(detail.locator("td").first)
+    # ...but the leaf dimension (city) and the subtotal label are not
+    leaf_pad = pad(detail.locator("td").nth(1))
+    subtotal_pad = pad(subtotal.locator("td").first)
+    assert parent_pad >= leaf_pad + 24  # ~2rem indent
+    assert leaf_pad <= 8  # base cell padding only
+    assert subtotal_pad <= 8
+
+
 def test_display_features(page, live_server):
     open_preview(page, live_server, "#features")
     page.wait_for_selector("#features tbody tr")

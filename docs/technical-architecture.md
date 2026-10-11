@@ -469,7 +469,9 @@ normalisation, Excel serial handling, quarters, and the special formatters
 - **Accordion groups** (`group_type="accordion"`, the default): subtotal rows
   render a chevron in their own dimension column; clicking toggles the group key
   in `_state.collapsed`, and `_visibleRows` drops rows whose `__ancestors`
-  include a collapsed key.
+  include a collapsed key. Dimension cells are indented to show nesting
+  (Evidence's `getIndentAmount`): detail rows indent their *parent* dimension
+  columns but not the leaf, and subtotal rows indent their ancestors.
 - **Section groups** (`group_type="section"`): `_computeRowspans` merges each
   subtotal's dimension cell across its members via `rowSpan`, giving the merged
   group cells of a classic sectioned table.

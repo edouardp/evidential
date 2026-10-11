@@ -406,8 +406,12 @@ export class EvidenceTableRenderer {
     this._pageCount = pageCount;
 
     // Section-style groups merge each group's dimension cell across its rows.
-    const dimCount = rows.reduce((max, row) => Math.max(max, row.__level ?? 0), 0);
+    // Count levels over all rows (not just the page) so a fully collapsed table
+    // still knows how many dimensions it has.
+    const dimCount = allRows.reduce((max, row) => Math.max(max, row.__level ?? 0), 0);
     const section = opts.group_type === "section" && hasGroups && dimCount > 0;
+    // Accordion groups indent child/parent dimension cells (Evidence parity).
+    const accordion = hasGroups && !section && dimCount > 0;
     const rowspans = section
       ? this._computeRowspans(rows, dimCount, opts.subtotal_position !== "bottom")
       : null;
@@ -470,6 +474,7 @@ export class EvidenceTableRenderer {
           rowNumbers: !!opts.row_numbers,
           rowNumberBase: page * (Number(this._effectivePageSize()) || 0),
           section,
+          accordion,
           dimCount,
           rowspans,
           footnotes,
@@ -737,6 +742,23 @@ export class EvidenceTableRenderer {
     return spans;
   }
 
+  /** Indent (in rem) for a dimension cell in accordion mode.
+   *
+   * Matches Evidence's `getIndentAmount`: detail rows indent their *parent*
+   * dimension columns but not the leaf dimension, and subtotal rows indent
+   * their ancestor columns. Non-dimension columns are never indented.
+   */
+  _indentForCell(row, columnIndex, ctx) {
+    if (columnIndex >= ctx.dimCount) return 0;
+    const level = row.__level ?? 0;
+    const renderType = row.render_type || "cell_data";
+    if (renderType === "cell_data") {
+      return columnIndex === ctx.dimCount - 1 ? 0 : 2;
+    }
+    if (renderType === "row_subtotal" && columnIndex < level - 1) return 2;
+    return 0;
+  }
+
   /** Substitute a displayed value per `sub_*` rules (returns text or null). */
   _matchSubstitution(col, row, value) {
     const rules = this.options.rules;
@@ -849,7 +871,14 @@ export class EvidenceTableRenderer {
 
     const rowIndex = index;
     columns.forEach((col, index) => {
-      const td = h("td", { class: `et-td${opts.stub === col.name ? " et-stub" : ""}`, style: withFigure(this._alignStyle(col), col, opts) });
+      const tdStyle = withFigure(this._alignStyle(col), col, opts);
+      // In accordion mode, indent dimension cells so children read as nested.
+      const indent = ctx.accordion ? this._indentForCell(row, index, ctx) : 0;
+      if (indent > 0) {
+        const base = index === 0 && !ctx.rowNumbers ? "0.25rem" : "0.375rem";
+        tdStyle.paddingLeft = `calc(${base} + ${indent}rem)`;
+      }
+      const td = h("td", { class: `et-td${opts.stub === col.name ? " et-stub" : ""}`, style: tdStyle });
       if (ctx.section && index < ctx.dimCount) {
         const dimIndex = (row.__level ?? ctx.dimCount) - 1;
         const renders =

@@ -155,6 +155,12 @@ widget re-run itself on control changes. `query_values(con, sql)` returns one
 column as a list, handy for populating dropdowns/multiselects from dimension
 queries. See `notebooks/03_live_drilldown.py` and `notebooks/04_live_demo.py`.
 
+> **Important:** the cell that creates the widget must **not** reference the
+> controls. Referencing a control registers a Marimo dependency, so wrapping
+> the widget and its controls in the same `mo.vstack([controls, live])` makes
+> that cell re-run on every change and recreate the widget — the table then
+> disappears and reappears. Display controls in their own cell instead.
+
 ## Amazon S3 Tables
 
 `evidence_tables.duck` can attach an S3 Tables Iceberg catalog to DuckDB using

@@ -101,7 +101,7 @@ def _(connection, mo, query_values):
 
 
 @app.cell
-def _(LiveEvidenceTable, connection, min_fare, mo, payment):
+def _(LiveEvidenceTable, connection):
     # Persistent widget: created once, with no references to the controls, so
     # changing a control never recreates it (and never resets sort/page).
     live = LiveEvidenceTable(
@@ -133,9 +133,7 @@ def _(LiveEvidenceTable, connection, min_fare, mo, payment):
             },
         },
     )
-    mo.vstack([mo.hstack([min_fare, payment], justify="start", gap=2),
     live
-               ])
     return (live,)
 
 

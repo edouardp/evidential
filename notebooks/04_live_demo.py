@@ -102,11 +102,12 @@ def _(connection, mo, query_values):
         value="All",
         label="Time of day",
     )
+    mo.hstack([min_fare, payment, part], justify="start", gap=2)
     return min_fare, part, payment
 
 
 @app.cell
-def _(LiveEvidenceTable, connection, min_fare, mo, part, payment):
+def _(LiveEvidenceTable, connection):
     # Created once, with no references to the controls, so changing a control
     # never recreates the widget (and never resets sort/search/page).
     live = LiveEvidenceTable(
@@ -160,10 +161,7 @@ def _(LiveEvidenceTable, connection, min_fare, mo, part, payment):
             },
         },
     )
-    mo.vstack([
-        mo.hstack([min_fare, payment, part], justify="start", gap=2),
-        live
-    ])
+    live
     return (live,)
 
 
@@ -184,8 +182,9 @@ def _(mo):
 
     - The widget is created in its own cell (`auto_run=False`) so it is **not**
       tied to the controls and is never recreated.
-    - The final cell reads the controls' values and calls `set_controls(...)`;
-      Marimo re-runs that cell whenever a control changes.
+    - A separate reactive cell reads the controls' values and calls
+      `set_controls(...)`; Marimo re-runs that cell whenever a control changes,
+      pushing fresh rows into the persistent widget.
     - `{min_fare}`, `{payment}` and `{part}` are placeholders filled with bound
       query parameters.
     - `query_values(connection, "SELECT DISTINCT ...")` populated the payment

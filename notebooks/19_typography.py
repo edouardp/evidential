@@ -184,7 +184,8 @@ def _(EvidenceTable, mo):
                     "title": "Lowercase — Hoefler Text",
                     "fmt": "num2",
                     "align": "right",
-                    "font": "'Hoefler Text'",
+                    "font": "'Hoefler Text', Georgia, serif",
+                    "figure_style": "default",
                 },
             },
         )

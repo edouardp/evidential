@@ -771,6 +771,13 @@ test("per-column font sets font-family", () => {
   renderer.destroy();
 });
 
+test("figure_style default uses the font's own figures", () => {
+  const columns = [{ name: "v", type: "number", figure_style: "default" }];
+  const renderer = new EvidenceTableRenderer(makeModel([{ v: 1234 }], columns, {}, el), el);
+  assert.equal(el.querySelector("tbody .et-td").style.fontVariantNumeric, "normal");
+  renderer.destroy();
+});
+
 test("theme.background drives the opaque expanded surface", () => {
   const renderer = new EvidenceTableRenderer(
     makeModel(ROWS, COLUMNS, { theme: { background: "#123456" } }, el),

@@ -1499,6 +1499,11 @@ function figureVariant(style) {
     case "tabular":
     case "lining-tabular":
       return "lining-nums tabular-nums";
+    case "default":
+    case "auto":
+    case "none":
+      // Use the font's own default figures (e.g. Hoefler Text's oldstyle).
+      return "normal";
     default:
       return null;
   }

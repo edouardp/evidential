@@ -132,7 +132,8 @@ the decisions we had to make where the inspirations disagreed.
 
 Each decision below is written as **what we chose**, **why**, and **what it
 costs**. The costs are real; they are listed so they can be revisited rather
-than rediscovered.
+than rediscovered. Every decision also has a dated, immutable ADR in
+[`docs/adr/`](adr/README.md); this section is the readable narrative around them.
 
 ### 4.1 Display-only, not a query builder
 

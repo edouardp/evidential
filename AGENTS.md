@@ -52,3 +52,16 @@ builds the wheel and sdist and verifies they contain every runtime module plus
 
 Commit as work progresses, with a descriptive message explaining the change and
 the reason. Never `git commit --amend` or force-push.
+
+## Architecture decisions
+
+Significant design decisions are recorded as ADRs in
+[`docs/adr/`](docs/adr/README.md) using the [MADR](https://adr.github.io/madr/)
+format.
+
+- Write a new ADR for a new design decision, and update the relevant ADR when
+  you change an existing one. A decision is not finished until its ADR is
+  written.
+- Number sequentially, fill in every section, and add a row to the
+  [index](docs/adr/README.md#adr-index). `tests/release/test_adrs.py` checks the
+  numbering, frontmatter and index stay consistent.

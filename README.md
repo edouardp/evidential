@@ -368,13 +368,15 @@ See `notebooks/02_s3_tables.py` for a full example (it gracefully stops if
 
 ## Architecture
 
-Two design documents go with the code:
+Three reference documents go with the code:
 
 - [**Design & DX**](docs/design-and-dx.md) — *why* the table works the way it
   does, the DX principles, and what we borrowed from Evidence, gt/Great Tables
   and A List Apart.
 - [**Technical architecture**](docs/technical-architecture.md) — *how* it is
   implemented, with the wire format, render pipeline and diagrams.
+- [**Architectural Decision Records**](docs/adr/README.md) — the dated, MADR-
+  format record of each decision, its alternatives and its consequences.
 
 The widget has two halves:
 

@@ -1,0 +1,20 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+dist/
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+__marimo__/
+
+# Node / frontend
+frontend/node_modules/
+
+# macOS
+.DS_Store
+
+# Local secrets
+.env

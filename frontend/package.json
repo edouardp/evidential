@@ -1,0 +1,18 @@
+{
+  "name": "evidence-tables-frontend",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "esbuild src/index.js --bundle --format=esm --minify --legal-comments=linked --outfile=../src/evidence_tables/static/table.js && cp src/table.css ../src/evidence_tables/static/table.css",
+    "dev": "esbuild src/index.js --bundle --format=esm --sourcemap --outfile=../src/evidence_tables/static/table.js --watch",
+    "test": "node --test test_*.js"
+  },
+  "dependencies": {
+    "chroma-js": "2.6.0",
+    "ssf": "0.11.2"
+  },
+  "devDependencies": {
+    "esbuild": "0.25.10",
+    "jsdom": "^26.1.0"
+  }
+}

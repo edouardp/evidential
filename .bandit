@@ -1,0 +1,9 @@
+exclude_dirs:
+  - tests
+  - notebooks
+  - .venv
+  - frontend
+# This library builds SQL from caller-supplied dimensions, measures and base
+# queries by design (it is an analytics helper, not a request handler).
+skips:
+  - B608

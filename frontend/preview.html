@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>EvidenceTable preview</title>
+  <link rel="stylesheet" href="/src/evidence_tables/static/table.css" />
+  <style>
+    body { font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif; margin: 24px; background: #f8fafc; color: #0f172a; }
+    h1 { font-size: 1.1rem; margin: 0 0 4px; }
+    .muted { color: #64748b; font-size: 0.8rem; margin-bottom: 16px; }
+    .panel { margin-bottom: 32px; }
+  </style>
+</head>
+<body>
+  <h1>EvidenceTable — renderer preview</h1>
+  <div class="muted">Sample data mounted directly against the bundled renderer.</div>
+  <div class="panel"><div id="raw"></div></div>
+  <div class="panel"><div id="grouped"></div></div>
+  <div class="panel"><div id="paged"></div></div>
+  <div class="panel"><div id="hier"></div></div>
+
+  <script type="module">
+    import widget from "/src/evidence_tables/static/table.js";
+
+    const makeModel = (rows, columns, options) => ({
+      _data: { rows, columns, options },
+      get(key) { return this._data[key]; },
+      on() {}, off() {}, save_changes() {},
+    });
+
+    const columns = [
+      { name: "region", type: "string", align: "left" },
+      { name: "city", type: "string", align: "left" },
+      { name: "trips", type: "number", fmt: "num0", align: "right" },
+      { name: "revenue", type: "number", fmt: "usd0", viz: "bar", bar_options: {}, align: "right" },
+      { name: "tip_rate", type: "number", fmt: "pct1", viz: "color", color_scale: ["#fee2e2", "#fef9c3", "#bbf7d0", "#15803d"], color_options: { min: 0, max: 0.4 }, align: "right" },
+      { name: "trend", type: "array", viz: "sparkline", sparkline_options: { type: "area", fit_to_data: true }, align: "center" },
+      { name: "change", type: "number", viz: "delta", delta_options: { down_is_good: false }, align: "right" },
+      { name: "notes", type: "string", align: "left" },
+    ];
+
+    const rows = [
+      { region: "Americas", city: "New York", trips: 12040, revenue: 412300, tip_rate: 0.21, trend: [3, 5, 4, 7, 9, 8, 12], change: 0.12, notes: "Strong week" },
+      { region: "Americas", city: "Los Angeles", trips: 8320, revenue: 287100, tip_rate: 0.16, trend: [8, 6, 7, 5, 6, 4, 5], change: -0.04, notes: null },
+      { region: "Americas", city: "Chicago", trips: 5310, revenue: 141900, tip_rate: 0.09, trend: [2, 3, 3, 4, 3, 5, 4], change: 0.02, notes: null },
+      { region: "Europe", city: "London", trips: 15600, revenue: 523400, tip_rate: 0.33, trend: [9, 11, 10, 13, 15, 14, 18], change: 0.27, notes: "Cards dominate" },
+      { region: "Europe", city: "Paris", trips: 6890, revenue: 198200, tip_rate: 0.07, trend: [5, 4, 6, 5, 4, 3, 4], change: -0.11, notes: null },
+      { region: "Asia", city: "Tokyo", trips: 9800, revenue: 355800, tip_rate: 0.0, trend: [6, 7, 8, 9, 9, 11, 12], change: 0.19, notes: "No tipping" },
+    ];
+
+    const tableColumns = [
+      { name: "region", type: "string", align: "left" },
+      { name: "city", type: "string", align: "left" },
+      { name: "trips", type: "number", fmt: "num0", align: "right" },
+      { name: "revenue", type: "number", fmt: "usd0", viz: "bar", bar_options: {}, align: "right" },
+      { name: "tip_rate", type: "number", fmt: "pct1", viz: "color", color_scale: ["#fee2e2", "#fef9c3", "#bbf7d0", "#15803d"], color_options: { min: 0, max: 0.4 }, align: "right" },
+      { name: "trend", type: "array", viz: "sparkline", sparkline_options: { type: "area", fit_to_data: true }, align: "center" },
+      { name: "change", type: "number", viz: "delta", align: "right" },
+    ];
+
+    const groupedRows = [
+      { region: "Americas", city: "", trips: 25670, revenue: 841300, tip_rate: 0.16, trend: [], change: null, render_type: "row_subtotal", __level: 1, __group_key: '"Americas"', __ancestors: [] },
+      { region: "Americas", city: "New York", trips: 12040, revenue: 412300, tip_rate: 0.21, trend: [3, 5, 4, 7, 9, 8, 12], change: 0.12, render_type: "cell_data", __level: 2, __ancestors: ['"Americas"'], __parent_key: '"Americas"' },
+      { region: "Americas", city: "Los Angeles", trips: 8320, revenue: 287100, tip_rate: 0.16, trend: [8, 6, 7, 5, 6, 4, 5], change: -0.04, render_type: "cell_data", __level: 2, __ancestors: ['"Americas"'], __parent_key: '"Americas"' },
+      { region: "Americas", city: "Chicago", trips: 5310, revenue: 141900, tip_rate: 0.09, trend: [2, 3, 3, 4, 3, 5, 4], change: 0.02, render_type: "cell_data", __level: 2, __ancestors: ['"Americas"'], __parent_key: '"Americas"' },
+      { region: "Europe", city: "", trips: 22490, revenue: 721600, tip_rate: 0.22, trend: [], change: null, render_type: "row_subtotal", __level: 1, __group_key: '"Europe"', __ancestors: [] },
+      { region: "Europe", city: "London", trips: 15600, revenue: 523400, tip_rate: 0.33, trend: [9, 11, 10, 13, 15, 14, 18], change: 0.27, render_type: "cell_data", __level: 2, __ancestors: ['"Europe"'], __parent_key: '"Europe"' },
+      { region: "Europe", city: "Paris", trips: 6890, revenue: 198200, tip_rate: 0.07, trend: [5, 4, 6, 5, 4, 3, 4], change: -0.11, render_type: "cell_data", __level: 2, __ancestors: ['"Europe"'], __parent_key: '"Europe"' },
+      { region: "All regions", city: "", trips: 48160, revenue: 1562900, tip_rate: 0.19, trend: [], change: null, render_type: "row_total", __level: 0, __group_key: "__total__", __ancestors: [] },
+    ];
+
+    widget.render({ model: makeModel(rows, columns, {
+      title: "Tipping by city",
+      subtitle: "Bars, colour scales, sparklines and deltas in one table",
+      search: true, page_size: 10, row_shading: true, freeze_columns: 2, download: true,
+    }), el: document.getElementById("raw") });
+
+    widget.render({ model: makeModel(groupedRows, tableColumns, {
+      title: "Grouped totals",
+      search: true, collapsible: true, collapsed: false, row_shading: true,
+    }), el: document.getElementById("grouped") });
+
+    // Use preview.html#hierarchy to show grouped/pivoted columns.
+    if (location.hash === "#hierarchy") {
+      const hierColumns = [
+        { name: "month", type: "date", fmt: "mmm-yy", align: "left" },
+        { name: "credit_card", type: "number", fmt: "num0", align: "right", column_group: "Payment type" },
+        { name: "cash", type: "number", fmt: "num0", align: "right", column_group: "Payment type" },
+        { name: "no_charge", type: "number", fmt: "num0", align: "right", column_group: "Payment type" },
+        { name: "dispute", type: "number", fmt: "num0", align: "right", column_group: "Payment type" },
+        { name: "total_trips", type: "number", fmt: "num0", align: "right", column_group: "Overall" },
+        { name: "total_revenue", type: "number", fmt: "usd0", viz: "bar", bar_options: {}, align: "right", column_group: "Overall" },
+      ];
+      const hierRows = [
+        { month: "2024-01-01", credit_card: 1820, cash: 640, no_charge: 40, dispute: 25, total_trips: 2560, total_revenue: 91900 },
+        { month: "2024-02-01", credit_card: 1710, cash: 700, no_charge: 35, dispute: 30, total_trips: 2505, total_revenue: 88700 },
+        { month: "2024-03-01", credit_card: 1950, cash: 580, no_charge: 42, dispute: 22, total_trips: 2620, total_revenue: 97300 },
+      ];
+      widget.render({ model: makeModel(hierRows, hierColumns, {
+        title: "Hierarchical columns (pivot by payment type)",
+        search: true, row_shading: true,
+      }), el: document.getElementById("hier") });
+    }
+
+    // Use preview.html#fullscreen to capture the expanded dialog.
+    if (location.hash === "#fullscreen") {
+      const expand = document.querySelector('#grouped .et-icon-btn');
+      if (expand) expand.click();
+    }
+
+    // Use preview.html#roundtrip to expand and immediately return inline.
+    if (location.hash === "#roundtrip") {
+      const expand = document.querySelector('#grouped .et-icon-btn');
+      if (expand) {
+        expand.click();
+        setTimeout(() => document.querySelector('dialog .et-icon-btn')?.click(), 100);
+      }
+    }
+
+    // Use preview.html#pages[-fullscreen] to exercise fullscreen row fitting.
+    if (location.hash.startsWith("#pages")) {
+      const manyRows = Array.from({ length: 500 }, (_, i) => ({
+        region: ["Americas", "Europe", "Asia"][i % 3],
+        city: `City ${i + 1}`,
+        trips: 100 + i * 7,
+        revenue: 1000 + i * 137,
+        tip_rate: (i % 20) / 100,
+      }));
+      widget.render({ model: makeModel(manyRows, tableColumns, {
+        title: "Paged table (500 rows)",
+        search: true, page_size: 8, row_shading: true, max_height: "300px",
+      }), el: document.getElementById("paged") });
+      if (location.hash === "#pages-fullscreen") {
+        const expand = document.querySelector('#paged .et-icon-btn');
+        if (expand) expand.click();
+      }
+    }
+  </script>
+</body>
+</html>

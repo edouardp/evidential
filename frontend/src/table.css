@@ -1,0 +1,287 @@
+/* Evidence-style table widget for Marimo. */
+
+.evidence-tables-widget {
+  width: 100%;
+  --et-bg: transparent;
+  /* Opaque surface used by the fullscreen dialog and frozen columns. `Canvas`
+     follows the active color-scheme, so it matches light/dark notebooks. */
+  --et-surface: Canvas;
+  --et-text: inherit;
+  --et-muted: #94a3b8;
+  --et-border: rgba(148, 163, 184, 0.3);
+  --et-row-border: rgba(148, 163, 184, 0.22);
+  --et-header-bg: var(--et-surface);
+  --et-header-border: color-mix(in srgb, CanvasText 40%, transparent);
+  --et-header-text: inherit;
+  --et-hover: color-mix(in srgb, CanvasText 8%, transparent);
+  --et-shading: color-mix(in srgb, CanvasText 4%, transparent);
+  --et-total-bg: rgba(148, 163, 184, 0.16);
+  --et-subtotal-bg: rgba(148, 163, 184, 0.1);
+  --et-pivot-bg: rgba(148, 163, 184, 0.1);
+  --et-link: #2563eb;
+  --et-negative: #dc2626;
+  --et-accent: #2563eb;
+  /* Evidence uses Tailwind's text-xs for the table. */
+  --et-font-size: 0.75rem;
+}
+
+.et-root {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  font-size: var(--et-font-size);
+  line-height: 1.25;
+  color: var(--et-text);
+  background: var(--et-bg);
+}
+
+.et-root.et-expanded {
+  height: 100%;
+  padding: 1.25rem 1.5rem;
+  box-sizing: border-box;
+  background: var(--et-surface);
+}
+
+.et-root.et-expanded .et-scroller {
+  flex: 1 1 auto;
+  min-height: 0;
+  max-height: none;
+}
+
+/* ------------------------------------------------------------- titlebar --- */
+.et-titlebar:empty { display: none; }
+.et-titlebar {
+  margin-bottom: 0.35rem;
+}
+.et-title {
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+.et-subtitle {
+  color: var(--et-muted);
+  font-size: 0.8rem;
+  margin-top: 0.1rem;
+}
+.et-info, .et-info-link {
+  color: var(--et-muted);
+  font-size: 0.8rem;
+  cursor: help;
+  text-decoration: none;
+}
+
+/* -------------------------------------------------------------- toolbar --- */
+.et-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.25rem 0 0.5rem;
+}
+.et-toolbar-empty { justify-content: flex-end; }
+.et-toolbar-left { flex: 1 1 auto; }
+.et-toolbar-right { display: flex; gap: 0.35rem; align-items: center; }
+.et-search {
+  width: 100%;
+  max-width: 260px;
+  padding: 0.3rem 0.55rem;
+  border: 1px solid var(--et-border);
+  border-radius: 6px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  outline: none;
+}
+.et-search:focus { border-color: var(--et-accent); }
+.et-btn, .et-icon-btn {
+  border: 1px solid var(--et-border);
+  background: transparent;
+  color: inherit;
+  border-radius: 6px;
+  padding: 0.28rem 0.6rem;
+  font: inherit;
+  cursor: pointer;
+  line-height: 1.2;
+  touch-action: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+.et-page-btn { min-width: 2rem; }
+.et-page-btn:active { transform: scale(0.94); }
+.et-icon-btn { padding: 0.22rem 0.5rem; font-size: 0.95rem; }
+.et-btn:hover, .et-icon-btn:hover { background: var(--et-hover); }
+.et-btn:disabled { opacity: 0.4; cursor: default; }
+
+/* -------------------------------------------------------------- scroller -- */
+.et-scroller {
+  position: relative;
+  width: 100%;
+  overflow: auto;
+  border: 1px solid var(--et-border);
+  border-radius: 8px;
+}
+.et-table {
+  border-collapse: separate;
+  border-spacing: 0;
+  width: 100%;
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+}
+.et-root.et-wrap .et-td { white-space: normal; }
+.et-root:not(.et-wrap) .et-td { white-space: nowrap; }
+.et-root.et-nowrap-titles .et-th-title { white-space: nowrap; }
+.et-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  background: var(--et-header-bg);
+  color: var(--et-header-text);
+}
+.et-header-groups th { top: 0; }
+.et-th {
+  text-align: left;
+  font-weight: 500;
+  /* Evidence: py-1, first column pl-1 pr-3, others pl-1.5 pr-3. */
+  padding: 0.25rem 0.75rem 0.25rem 0.375rem;
+  border-bottom: 1px solid var(--et-header-border);
+  white-space: nowrap;
+  user-select: none;
+  cursor: pointer;
+}
+.et-th:first-child { padding-left: 0.25rem; }
+.et-th-group {
+  text-align: center;
+  font-size: inherit;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  color: var(--et-muted);
+  border-bottom: 1px solid var(--et-row-border);
+}
+.et-th-group:not(:last-child) { border-right: 1px solid var(--et-row-border); }
+.et-th-group-blank { cursor: default; }
+.et-th:not(.et-th-group):hover { background: var(--et-hover); }
+.et-th-inner { display: inline-flex; align-items: center; gap: 0.3rem; }
+.et-th-sorted { color: var(--et-accent); }
+.et-sort-arrow { font-size: 0.6rem; }
+.et-viz-badge {
+  width: 10px; height: 10px; border-radius: 2px;
+  background: linear-gradient(135deg, var(--et-accent), transparent 80%);
+  display: inline-block; opacity: 0.6;
+}
+
+/* ----------------------------------------------------------------- rows --- */
+.et-td {
+  /* Evidence: py-1, first column pl-1 pr-3, others pl-1.5 pr-3. */
+  padding: 0.25rem 0.75rem 0.25rem 0.375rem;
+  border-bottom: 1px solid var(--et-row-border);
+  vertical-align: middle;
+  background: var(--et-bg);
+}
+.et-td:first-child { padding-left: 0.25rem; }
+.et-td:has(.et-sparkline) { padding-bottom: 0.125rem; }
+.et-root.et-no-row-lines .et-td { border-bottom: none; }
+.et-row-shaded .et-td { background: var(--et-shading); }
+.et-row:hover .et-td { background: var(--et-hover); }
+.et-row-total .et-td {
+  font-weight: 600;
+  background: var(--et-total-bg);
+  border-top: 1px solid var(--et-border);
+}
+.et-row-subtotal .et-td {
+  font-weight: 600;
+  background: var(--et-subtotal-bg);
+}
+.et-row-subtotal.et-row-collapsible { cursor: pointer; }
+.et-row-link { cursor: pointer; }
+.et-null { color: var(--et-muted); opacity: 0.75; }
+.et-negative { color: var(--et-negative); }
+.et-cell-link { color: var(--et-link); text-decoration: none; }
+.et-cell-link:hover { text-decoration: underline; }
+.et-cell-media { display: inline-flex; align-items: center; gap: 0.35rem; }
+.et-cell-image { height: 1.25em; width: auto; border-radius: 3px; }
+.et-td-chevron { width: 1.5rem; text-align: center; color: var(--et-muted); }
+.et-row-chevron { font-size: 1.1rem; }
+
+/* ------------------------------------------------------------ chevron --- */
+.et-chevron {
+  display: inline-block;
+  margin-right: 0.35rem;
+  font-size: 0.6rem;
+  color: var(--et-muted);
+  transition: transform 0.15s ease;
+}
+.et-chevron-open { transform: rotate(90deg); }
+
+/* ----------------------------------------------------------- bar viz ------ */
+.et-bar-cell { position: relative; display: flex; align-items: center; min-width: 60px; }
+.et-bar-wrap { position: absolute; inset: 0; display: flex; align-items: center; }
+.et-bar {
+  height: 70%;
+  min-width: 1px;
+  border-radius: 3px;
+  opacity: 0.35;
+}
+.et-bar-negative { justify-content: flex-end; }
+.et-bar-label { position: relative; z-index: 1; }
+.et-hidden { visibility: hidden; }
+.et-no-viz .et-bar-cell { display: none; }
+
+/* ----------------------------------------------------------- delta ------- */
+.et-delta { font-weight: 600; white-space: nowrap; }
+.et-delta-good { color: #16a34a; }
+.et-delta-bad { color: var(--et-negative); }
+.et-delta-neutral { color: var(--et-muted); }
+
+/* ----------------------------------------------------------- sparkline --- */
+.et-sparkline { display: inline-block; vertical-align: middle; overflow: visible; }
+
+/* --------------------------------------------------------- color cell ----- */
+.et-color-cell { position: relative; }
+
+/* ------------------------------------------------------------ frozen ----- */
+/* Frozen columns need an opaque backdrop, otherwise scrolled content shows
+   through. Layer translucent row backgrounds over the surface. */
+.et-frozen { background: var(--et-surface) !important; }
+.et-row-total .et-frozen { background: var(--et-total-bg), var(--et-surface) !important; }
+.et-row-subtotal .et-frozen { background: var(--et-subtotal-bg), var(--et-surface) !important; }
+.et-row-shaded .et-frozen { background: var(--et-shading), var(--et-surface) !important; }
+.et-row:hover .et-frozen { background: var(--et-hover), var(--et-surface) !important; }
+.et-frozen-last { box-shadow: 2px 0 4px -2px rgba(0, 0, 0, 0.25); }
+
+/* ------------------------------------------------------------ footer ----- */
+.et-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.45rem 0.15rem;
+  color: var(--et-muted);
+  font-size: 0.78rem;
+}
+.et-page-controls { display: flex; align-items: center; gap: 0.4rem; }
+.et-empty {
+  padding: 2rem;
+  text-align: center;
+  color: var(--et-muted);
+}
+
+/* ----------------------------------------------------------- fullscreen -- */
+.et-dialog {
+  border: none;
+  padding: 0;
+  /* Tailwind preflight resets `margin` to 0, which overrides the UA's
+     `dialog:modal { margin: auto }` and pins the modal to the top-left in
+     Marimo. Restore centering explicitly. */
+  inset: 0;
+  margin: auto;
+  box-sizing: border-box;
+  width: 96vw;
+  max-width: 96vw;
+  height: 94vh;
+  max-height: 94vh;
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--et-surface);
+  color: var(--et-text);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35);
+}
+.et-dialog::backdrop { background: rgba(15, 23, 42, 0.55); }

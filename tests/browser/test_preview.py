@@ -70,6 +70,20 @@ def test_sparklines_render(page, live_server):
     assert page.locator("#raw svg.et-sparkline").count() >= 6
 
 
+def test_bar_fills_row_without_growing_it(page, live_server):
+    open_preview(page, live_server)
+    bar_cell = page.locator("#raw .et-bar-cell").first
+    # the bar cell must not grow the row: it matches the padded content height
+    # of a normal cell in the same row (the td's own bounding box adds borders)
+    data_client = (
+        page.locator("#raw tbody tr").first.locator("td").first.evaluate("el => el.clientHeight")
+    )
+    assert bar_cell.bounding_box()["height"] == pytest.approx(data_client, abs=1)
+    # the bar fills the row, leaving ~1px to the separators
+    bar_box = bar_cell.locator(".et-bar").first.bounding_box()
+    assert bar_box["height"] == pytest.approx(bar_cell.bounding_box()["height"] - 2, abs=1.5)
+
+
 def test_display_features(page, live_server):
     open_preview(page, live_server, "#features")
     page.wait_for_selector("#features tbody tr")

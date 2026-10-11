@@ -140,6 +140,7 @@ are done in SQL. We implement them as Python/DuckDB helpers where feasible.
 - [x] `notebooks/16_tech_giants.py` (gt-style table: sections, blanks, footnotes)
 - [x] `notebooks/17_gt_features.py` (nested spanners, stub, rules)
 - [x] `notebooks/18_great_tables.py` (merging, substitutions, formatters)
+- [x] `notebooks/19_typography.py` (readable table typography)
 - [x] `notebooks/README.md` index of all demos
 - [x] README feature/API docs
 
@@ -169,6 +170,17 @@ are done in SQL. We implement them as Python/DuckDB helpers where feasible.
 - [ ] `opt_stylize` named style presets
 - [ ] `tab_style` locations beyond `cells_body` (labels/stub/summary/footer)
 - [ ] `from_column` style values / Google Fonts
+
+## Typography (A List Apart: Web Typography — Tables)
+
+- [x] Left-align text, right-align numbers (by column type)
+- [x] Match heading alignment to the data
+- [x] Tabular lining numerals (`font-variant-numeric: tabular-nums`)
+- [x] Align to the decimal point (`align_decimals`, consistent precision)
+- [x] Don't stretch tables (`stretch=False` sizes columns to content)
+- [x] Minimise furniture (`row_lines=False`, no fills, no frame)
+- [x] Caption / provenance
+- [x] Consistent number precision per column (auto formats)
 
 ## Testing
 

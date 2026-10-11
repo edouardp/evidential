@@ -86,3 +86,9 @@ def test_footnote_marks_and_all_caps() -> None:
     table = EvidenceTable([{"a": 1}], footnote_marks="letters", all_caps=True)
     assert table.options["footnote_marks"] == "letters"
     assert table.options["all_caps"] is True
+
+
+def test_stretch_and_align_decimals_options() -> None:
+    table = EvidenceTable([{"a": 1.5}], stretch=False, align_decimals=True)
+    assert table.options["stretch"] is False
+    assert table.options["align_decimals"] is True

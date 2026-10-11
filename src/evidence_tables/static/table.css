@@ -184,6 +184,8 @@
 }
 .et-root.et-wrap .et-td { white-space: normal; }
 .et-root:not(.et-wrap) .et-td { white-space: nowrap; }
+/* Don't stretch the table: size columns to their content (ALA). */
+.et-root.et-stretch-off .et-table { width: auto; }
 .et-root.et-nowrap-titles .et-th-title { white-space: nowrap; }
 /* compact density */
 .et-root.et-compact .et-td,

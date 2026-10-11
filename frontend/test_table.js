@@ -690,6 +690,27 @@ test("footnote_marks letters uses letter marks", () => {
   renderer.destroy();
 });
 
+test("align_decimals pads numeric columns to a common precision", () => {
+  const columns = [{ name: "v", type: "number", fmt: "num", align: "right" }];
+  const rows = [{ v: 1.5 }, { v: 12.25 }, { v: 3 }];
+  const renderer = new EvidenceTableRenderer(
+    makeModel(rows, columns, { align_decimals: true }, el),
+    el,
+  );
+  const cells = [...el.querySelectorAll("tbody .et-cell-value")].map((cell) => cell.textContent);
+  assert.deepEqual(cells, ["1.50", "12.25", "3.00"]);
+  renderer.destroy();
+});
+
+test("stretch=false keeps the table content-sized", () => {
+  const renderer = new EvidenceTableRenderer(
+    makeModel(ROWS, COLUMNS, { stretch: false }, el),
+    el,
+  );
+  assert.ok(el.querySelector(".et-root").classList.contains("et-stretch-off"));
+  renderer.destroy();
+});
+
 test("theme.background drives the opaque expanded surface", () => {
   const renderer = new EvidenceTableRenderer(
     makeModel(ROWS, COLUMNS, { theme: { background: "#123456" } }, el),

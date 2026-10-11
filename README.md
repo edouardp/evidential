@@ -188,6 +188,12 @@ footer with footnotes and source notes. `EvidenceTable` covers:
 - **Blanking / cutoffs** — `null_text=""` renders nulls as truly blank (the
   default is `–`); `blank_below` / `blank_above` suppress values outside a
   range; a Python `blank=lambda value: ...` predicate blanks individual cells.
+- **Readable typography** — text is left-aligned and numbers right-aligned by
+  default, headings follow their column, and figures are tabular. `stretch=False`
+  sizes columns to their content ("don't stretch tables"), and
+  `align_decimals=True` pads each numeric column to a common precision so the
+  decimal points line up. `row_lines=False` / `row_shading=False` keep the
+  furniture minimal. See `notebooks/19_typography.py`.
 
 ### Location-based rules (gt's `tab_style` / `tab_format` / `text_transform`)
 

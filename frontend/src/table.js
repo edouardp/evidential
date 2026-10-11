@@ -388,6 +388,7 @@ export class EvidenceTableRenderer {
     this.root.classList.toggle("et-no-row-lines", opts.row_lines === false);
     this.root.classList.toggle("et-row-shading", !!opts.row_shading);
     this.root.classList.toggle("et-compact", !!opts.compact);
+    this.root.classList.toggle("et-stretch-off", opts.stretch === false);
     this._renderTitle();
     this._renderToolbar();
 
@@ -412,6 +413,16 @@ export class EvidenceTableRenderer {
 
     const ranges = calculateVizRanges(columns, sorted);
     const formatRanges = calculateFormatRanges(columns, sorted);
+    const decimals = new Map();
+    if (opts.align_decimals) {
+      for (const col of columns) {
+        if (col.type !== "number" || col.align_decimals === false) continue;
+        const places = sorted
+          .map((row) => decimalPlaces(row[col.name]))
+          .filter((value) => value != null);
+        if (places.length) decimals.set(col.name, Math.max(...places));
+      }
+    }
     const colorScales = new Map();
     for (const col of columns) {
       if (col.viz === "color" && ranges.has(col.name)) {
@@ -439,6 +450,7 @@ export class EvidenceTableRenderer {
           dimCount,
           rowspans,
           footnotes,
+          decimals,
         }),
       );
     }
@@ -865,6 +877,11 @@ export class EvidenceTableRenderer {
       const baseFormat =
         col.fmt_column && row[col.fmt_column] != null ? String(row[col.fmt_column]) : col.fmt;
       const matched = this._matchingRules(col, row);
+      const alignDecimals =
+        (col.align_decimals ?? opts.align_decimals) && ctx.decimals.has(col.name);
+      const alignedBase = alignDecimals
+        ? withDecimals(baseFormat || "num", ctx.decimals.get(col.name))
+        : baseFormat;
       const formatCode =
         matched.fmt != null
           ? matched.fmt
@@ -872,7 +889,7 @@ export class EvidenceTableRenderer {
             ? col.total_fmt
             : isSubtotal && col.subtotal_fmt
               ? col.subtotal_fmt
-              : baseFormat;
+              : alignedBase;
       const formatted = formatValue(value, formatCode, {
         type: col.type,
         range: ctx.formatRanges.get(col.name),
@@ -1422,6 +1439,24 @@ function inlineMarkdown(text) {
 function groupPath(group) {
   if (!group) return [];
   return Array.isArray(group) ? group.map(String) : [String(group)];
+}
+
+function decimalPlaces(value) {
+  if (value === null || value === undefined || typeof value === "boolean") return null;
+  const text = String(value);
+  if (text.trim() === "" || isNaN(Number(text))) return null;
+  const dot = text.indexOf(".");
+  return dot === -1 ? 0 : text.length - dot - 1;
+}
+
+/** Force a base format (num/usd/pct/…) to a fixed number of decimals. */
+function withDecimals(format, decimals) {
+  const code = String(format || "num");
+  const base = code.replace(/\d+$/, "");
+  const bases = ["num", "usd", "eur", "gbp", "aud", "cad", "cny", "jpy", "inr", "krw", "ngn", "sek", "pct"];
+  if (!bases.includes(base)) return code;
+  const max = base === "pct" ? 3 : 4;
+  return base + Math.min(decimals, max);
 }
 
 /** Build one row of header cells per group level, nesting sub-groups. */

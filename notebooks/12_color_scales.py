@@ -76,7 +76,8 @@ def _(EvidenceTable, connection, mo):
                     value AS stops,
                     value AS scaled_by_other,
                     value AS conditional,
-                    other
+                    other,
+                    band
                 FROM demo
                 """
             ),
@@ -147,6 +148,7 @@ def _(EvidenceTable, connection, mo):
                     "color_options": {"conditional_colors": "band"},
                 },
                 "other": {"hide": True},
+                "band": {"hide": True},
             },
         )
     )

@@ -48,6 +48,18 @@ builds the wheel and sdist and verifies they contain every runtime module plus
   [docs/design-and-dx.md](docs/design-and-dx.md).
 - Notebooks are checked with `make check-notebooks`.
 
+## marimo Studio views
+
+- The Studio dashboard demo lives in `notebooks/21_studio_dashboard.py` with a
+  committed view in `notebooks/studio/21_studio_dashboard/dashboard/`.
+- Run it with `make studio-serve` (Server runtime) and validate the committed
+  view with `make studio-validate`.
+- Keep cells used as projection targets **named**; anonymous cells only get
+  positional `cell-N` aliases. `tests/release/test_studio_views.py` checks that
+  every `<marimo-cell>` / `mo-value` target resolves against the notebook.
+- See [docs/marimo-studio.md](docs/marimo-studio.md) and
+  [ADR-021](docs/adr/021-marimo-studio-projections.md).
+
 ## Commits
 
 Commit as work progresses, with a descriptive message explaining the change and

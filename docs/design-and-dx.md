@@ -401,6 +401,23 @@ Escape and the × all return the table to its inline position.
 
 ![Fullscreen: the table fills the viewport and fits the available rows](fullscreen.png)
 
+### 4.12 One notebook, many audiences (marimo Studio)
+
+**Chose.** Present the table to marimo Studio by **projection**: a view places
+the cell that displays the `EvidenceTable` (`<marimo-cell>`), native controls,
+and individual values (`mo-value`). The notebook stays the single source of
+truth; the view owns only presentation.
+
+**Why.** Studio already defines a projection contract, so a separate widget or
+provider would be redundant. Because the table is an interactive anywidget, the
+view uses Studio's **Server** runtime; the notebook computes, the view lays out,
+and every result still traces back to a cell. Studio views are delivered next
+to the notebook in a committed `view_root`, and the demo is guarded by a
+repository test that needs no Studio install.
+
+See [using EvidenceTable in Studio views](marimo-studio.md) and
+[ADR-021](adr/021-marimo-studio-projections.md).
+
 ---
 
 ## 5. A day in the life: three levels of use

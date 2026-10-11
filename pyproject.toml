@@ -23,9 +23,11 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-# Runtime extras: `pip install evidence-tables[duckdb]` / `[...][marimo]`.
+# Runtime extras: `pip install evidence-tables[duckdb]` / `[...][marimo]` / `[...][studio]`.
 duckdb = ["duckdb>=1.3", "pyarrow>=17", "pandas>=2.2"]
 marimo = ["marimo>=0.20"]
+# marimo Studio: build named views of a notebook (see docs/marimo-studio.md).
+studio = ["marimo-studio>=0.3,<0.4"]
 
 [dependency-groups]
 dev = [

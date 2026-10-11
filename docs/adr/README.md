@@ -39,6 +39,7 @@ dated, immutable record of the decisions behind them.
 | [018](018-dependency-update-lag.md) | One-Week Lag on Dependency Updates | Accepted |
 | [019](019-accordion-indentation.md) | Indent Dimension Cells in Accordion Groups | Accepted |
 | [020](020-bar-visualisation-geometry.md) | Bar Visualisation Geometry | Accepted |
+| [021](021-marimo-studio-projections.md) | Support marimo Studio Views by Projection | Accepted |
 
 ## Creating New ADRs
 

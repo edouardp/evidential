@@ -12,6 +12,7 @@ SECTIONS = (
     "Frontend",
     "Notebooks",
     "Preview",
+    "marimo Studio",
     "Code Quality",
     "Testing",
     "Dependencies",

@@ -24,7 +24,10 @@ and without network access.
 | [`16_tech_giants.py`](16_tech_giants.py) | gt-style table: section dividers, blanks, conditional colours, data-driven footnotes. |
 | [`17_gt_features.py`](17_gt_features.py) | Nested spanners, stub, markdown titles, location rules. |
 | [`18_great_tables.py`](18_great_tables.py) | Column merging, substitutions, special formatters. |
+| [`18_great_tables.py`](18_great_tables.py) | Column merging, substitutions, special formatters. |
 | [`19_typography.py`](19_typography.py) | Readable table typography: decimal alignment, no stretching, minimal furniture. |
+| [`20_whitespace_grouping.py`](20_whitespace_grouping.py) | Grouping with white space and group-size stripes. |
+| [`21_studio_dashboard.py`](21_studio_dashboard.py) | An `EvidenceTable` in a marimo Studio view: live dashboard, KPI strip, filter. |
 
 `sample_data/needful_things/orders.parquet` is Evidence's demo dataset, copied
 from the published docs site.

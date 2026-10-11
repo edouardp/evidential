@@ -619,6 +619,18 @@ and builds the wheel. `make test-browser` runs the Playwright suite.
 
 ## 11. Extending the widget
 
+### Studio projections
+
+marimo Studio views reach the widget through **projections**, not a plugin: a
+view projects the cell that displays the table (`<marimo-cell name="…">`),
+native controls, and single values (`mo-value="…"`). Studio injects the
+widget's ESM and CSS into the projection host exactly as it does in the
+notebook, so the renderer needs no Studio-specific code. The committed demo
+lives in `notebooks/21_studio_dashboard.py` and
+`notebooks/studio/21_studio_dashboard/dashboard/`; `tests/release/test_studio_views.py`
+validates its projections. See [marimo-studio.md](marimo-studio.md) and
+[ADR-021](adr/021-marimo-studio-projections.md).
+
 - **A new format code or special formatter** — add it in `format.js`
   (`formatValue`'s special cases), and add a JS test.
 - **A new visualisation** — add a `_renderX(col, value)` method in `table.js`,

@@ -8,6 +8,9 @@ HOST     ?= 127.0.0.1
 PORT     ?= 2728
 NOTEBOOK ?= notebooks/01_taxi_explore.py
 
+# marimo Studio demo (see docs/marimo-studio.md).
+STUDIO_NOTEBOOK ?= notebooks/21_studio_dashboard.py
+
 # 7-day publication lag for dependency updates (supply-chain protection).
 EXCLUDE_NEWER := $(shell date -u -v-7d +%Y-%m-%dT00:00:00Z 2>/dev/null || date -u -d '7 days ago' +%Y-%m-%dT00:00:00Z 2>/dev/null)
 
@@ -91,6 +94,18 @@ preview: frontend-build ## Serve the renderer preview at http://HOST:PORT/fronte
 .PHONY: screenshot
 screenshot: frontend-build ## Capture the preview to /tmp/evidence_preview.png (Chromium-based browser)
 	@bash scripts/screenshot.sh
+
+# ============================================================================
+# marimo Studio
+# ============================================================================
+
+.PHONY: studio-serve
+studio-serve: ## Open the Studio demo notebook with Studio installed (Server runtime)
+	uv run --with "marimo-studio[deno]" marimo edit $(STUDIO_NOTEBOOK)
+
+.PHONY: studio-validate
+studio-validate: ## Validate the committed Studio views against their notebook
+	uv run --with "marimo-studio[deno]" marimo-studio validate --target $(STUDIO_NOTEBOOK)
 
 # ============================================================================
 # Code Quality

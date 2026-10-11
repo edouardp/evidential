@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Revenue dashboard</title>
+    <style>
+      :root {
+        color-scheme: light dark;
+        --paper: #ffffff;
+        --card: #ffffff;
+        --ink: #0f172a;
+        --muted: #64748b;
+        --line: #e2e8f0;
+        --accent: #2563eb;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --paper: #0b1220;
+          --card: #111c2e;
+          --ink: #e2e8f0;
+          --muted: #94a3b8;
+          --line: #1e293b;
+          --accent: #60a5fa;
+        }
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        background: var(--paper);
+        color: var(--ink);
+        font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+      }
+      main { max-width: 72rem; margin: 0 auto; padding: 2.5rem 1.5rem 4rem; }
+      .eyebrow {
+        margin: 0;
+        color: var(--muted);
+        font-size: 0.72rem;
+        font-weight: 650;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+      }
+      h1 { margin: 0.4rem 0 0; font-size: clamp(1.8rem, 4vw, 2.6rem); letter-spacing: -0.02em; }
+      .lede { max-width: 52rem; color: var(--muted); line-height: 1.6; }
+      .kpis {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 1rem;
+        margin: 2rem 0;
+      }
+      @media (max-width: 48rem) { .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+      .kpi {
+        border: 1px solid var(--line);
+        background: var(--card);
+        border-radius: 0.75rem;
+        padding: 1rem 1.15rem;
+      }
+      .kpi .label {
+        display: block;
+        color: var(--muted);
+        font-size: 0.72rem;
+        font-weight: 650;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+      .kpi strong {
+        display: block;
+        margin-top: 0.5rem;
+        font-size: clamp(1.4rem, 3vw, 2rem);
+        font-variant-numeric: lining-nums tabular-nums;
+      }
+      .panel { display: grid; gap: 1.25rem; }
+      .toolbar { display: flex; align-items: center; gap: 1rem; }
+      marimo-cell { display: block; }
+      /* Projection placeholders while a host connects. */
+      :where(marimo-cell, [mo-value]):is(:not(:defined), [data-state="connecting"], [data-state="loading"]):empty::before {
+        content: "";
+        display: block;
+        height: 0.9em;
+        border-radius: 0.35rem;
+        background: color-mix(in srgb, currentColor 12%, transparent);
+      }
+    </style>
+  </head>
+  <body>
+    <main id="app-shell">
+      <header>
+        <p class="eyebrow">21 Studio Dashboard</p>
+        <h1>Revenue dashboard</h1>
+        <p class="lede">
+          One reactive notebook, one view. The KPI strip and the table read the
+          same filtered rows, so changing the region updates both together, and
+          the table stays a live, interactive <code>EvidenceTable</code>.
+        </p>
+      </header>
+
+      <section class="kpis" aria-label="Key figures">
+        <article class="kpi">
+          <span class="label">Cities</span>
+          <strong id="kpi-cities" mo-value="kpis.cities"></strong>
+        </article>
+        <article class="kpi">
+          <span class="label">Trips</span>
+          <strong id="kpi-trips" mo-value="kpis.trips"></strong>
+        </article>
+        <article class="kpi">
+          <span class="label">Revenue</span>
+          <strong id="kpi-revenue" mo-value="kpis.revenue"></strong>
+        </article>
+        <article class="kpi">
+          <span class="label">Avg tip</span>
+          <strong id="kpi-tip" mo-value="kpis.avg_tip"></strong>
+        </article>
+      </section>
+
+      <section class="panel" aria-label="Notebook results">
+        <div class="toolbar" aria-label="Filters">
+          <marimo-cell name="region_filter"></marimo-cell>
+        </div>
+        <marimo-cell name="revenue_table"></marimo-cell>
+      </section>
+    </main>
+
+    <script type="module">
+      /** Subscribe an explicit `mo-value` host to current values and later updates. */
+      const observeMarimoValue = (host, { onValue, onError = () => {} }) => {
+        const sync = (event) => onValue(event.detail.value);
+        const fail = (event) => onError(event.detail);
+        host.addEventListener("marimo-value-updated", sync);
+        host.addEventListener("marimo-value-error", fail);
+        if (host.dataset.marimoError !== undefined) {
+          onError({
+            selector: host.getAttribute("mo-value")?.trim() ?? "",
+            code: host.dataset.marimoErrorCode,
+            message: host.dataset.marimoError,
+            hint: host.dataset.marimoDiagnosticHint,
+          });
+        } else if (host.marimoValue !== undefined) {
+          onValue(host.marimoValue);
+        }
+        return () => {
+          host.removeEventListener("marimo-value-updated", sync);
+          host.removeEventListener("marimo-value-error", fail);
+        };
+      };
+
+      const count = new Intl.NumberFormat("en-US");
+      const money = new Intl.NumberFormat("en-US", {
+        style: "currency",
+        currency: "USD",
+        maximumFractionDigits: 0,
+      });
+      const percent = new Intl.NumberFormat("en-US", {
+        style: "percent",
+        maximumFractionDigits: 1,
+      });
+
+      // The raw projected value is formatted in the browser; the notebook owns
+      // the number, the view owns its presentation.
+      const bindKpi = (id, format) => {
+        const host = document.getElementById(id);
+        if (!host) return;
+        const render = (value) => {
+          host.textContent = value == null ? "—" : format(value);
+        };
+        observeMarimoValue(host, { onValue: render, onError: () => render(null) });
+      };
+      bindKpi("kpi-cities", (value) => count.format(value));
+      bindKpi("kpi-trips", (value) => count.format(value));
+      bindKpi("kpi-revenue", (value) => money.format(value));
+      bindKpi("kpi-tip", (value) => percent.format(value / 100));
+
+      document.querySelector("#app-shell")?.setAttribute("data-ready", "");
+    </script>
+  </body>
+</html>

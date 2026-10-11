@@ -300,6 +300,26 @@ if refresh.value is not None:
     live.run(sql)
 ```
 
+## marimo Studio views
+
+[marimo Studio](https://marimo.io/blog/introducing-marimo-studio) gives one
+notebook named views — a dashboard, article, slide deck or PDF — each a
+separate frontend project. An `EvidenceTable` is projected by the cell that
+displays it, so a view can place the live, interactive table next to native
+controls and notebook values:
+
+```html
+<marimo-cell name="revenue_table"></marimo-cell>   <!-- live EvidenceTable -->
+<marimo-cell name="region_filter"></marimo-cell>   <!-- native marimo control -->
+<strong mo-value="kpis.revenue"></strong>          <!-- one value, as data -->
+```
+
+The dashboard demo is [`notebooks/21_studio_dashboard.py`](notebooks/21_studio_dashboard.py)
+with a committed view under `notebooks/studio/21_studio_dashboard/`. Run it with
+`make studio-serve` (Server runtime) and validate the view with
+`make studio-validate`. See [docs/marimo-studio.md](docs/marimo-studio.md) for
+the projection recipes, runtime guidance and projection size limits.
+
 ## Amazon S3 Tables
 
 `evidence_tables.duck` can attach an S3 Tables Iceberg catalog to DuckDB using

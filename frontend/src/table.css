@@ -334,15 +334,17 @@
 }
 .et-th-oblique .et-th-inner {
   position: absolute;
-  left: 0.4rem;
+  /* The baseline sits above the line-box bottom, so rotating about `bottom`
+     shifts the glyphs left; offset enough to clear them. */
+  left: 0.95rem;
   bottom: 0.5rem;
   display: inline-flex;
   transform-origin: left bottom;
   transform: rotate(var(--et-th-angle, -60deg));
   white-space: nowrap;
 }
-/* Give oblique headings room so the rightmost one is not clipped. */
-.et-root.et-oblique .et-scroller { padding-right: 6rem; }
+/* Give oblique headings room so they are not clipped (incl. the rounded corner). */
+.et-root.et-oblique .et-scroller { padding-left: 0.5rem; padding-right: 6rem; }
 
 .et-row-section .et-section-cell {
   font-weight: 600;

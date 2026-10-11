@@ -165,6 +165,32 @@ test("fullscreen moves the widget into the dialog", () => {
   renderer.destroy();
 });
 
+test("leaving fullscreen restores the inline height", () => {
+  const renderer = new EvidenceTableRenderer(makeModel(ROWS, COLUMNS, { page_size: 2 }, el), el);
+  let natural = 120;
+  // Simulate layout: the measured height is at least min-height.
+  renderer.scroller.getBoundingClientRect = () => ({
+    height: Math.max(natural, parseFloat(renderer.scroller.style.minHeight) || 0),
+  });
+  renderer.render();
+  assert.equal(renderer.scroller.style.minHeight, "120px");
+
+  // Enter fullscreen: taller viewport, larger fitted page size.
+  renderer._expanded = true;
+  natural = 600;
+  renderer._pageSizeOverride = 20;
+  el.querySelector("dialog").append(el.querySelector(".et-root"));
+  renderer.render();
+  assert.equal(renderer.scroller.style.minHeight, "600px");
+
+  // Leave fullscreen: natural inline height again; must not keep 600px.
+  natural = 120;
+  renderer._restoreInline();
+  assert.equal(renderer._pageSizeOverride, null);
+  assert.equal(renderer.scroller.style.minHeight, "120px", "fullscreen height not retained");
+  renderer.destroy();
+});
+
 test("fullscreen page-size override applies and resets the inline size", () => {
   const renderer = new EvidenceTableRenderer(makeModel(ROWS, COLUMNS, { page_size: 2 }, el), el);
   assert.equal(el.querySelectorAll("tbody tr").length, 2);

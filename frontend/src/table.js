@@ -453,8 +453,12 @@ export class EvidenceTableRenderer {
   _updateBaselineHeight() {
     const pageSize = this._effectivePageSize();
     if (pageSize !== this._baselinePageSize) {
+      // Page size changed (e.g. entering/leaving fullscreen): drop the old
+      // baseline and clear min-height so we measure the natural new height
+      // instead of the previous layout's forced height.
       this._baselinePageSize = pageSize;
       this._baselineHeight = 0;
+      this.scroller.style.minHeight = "";
     }
     const height = this.scroller.getBoundingClientRect().height;
     if (height <= 0) return;
@@ -895,6 +899,7 @@ export class EvidenceTableRenderer {
     // Drop the inline max-height immediately so the first fit measurement sees
     // the real available height instead of the capped inline one.
     this.scroller.style.maxHeight = "none";
+    this._resetBaselineHeight();
     requestAnimationFrame(() => {
       this._applyFrozenOffsets();
       this._fitFullscreen();
@@ -916,9 +921,17 @@ export class EvidenceTableRenderer {
     this.expandBtn.title = "Expand table";
     this.expandBtn.setAttribute("aria-expanded", "false");
     this.expandBtn.focus({ preventScroll: true });
-    // Restore the notebook's configured page size.
+    // Restore the notebook's configured page size and drop the fullscreen
+    // height baseline so the inline table shrinks back to its natural size.
+    this._resetBaselineHeight();
     this.render();
     requestAnimationFrame(() => this._applyFrozenOffsets());
+  }
+
+  _resetBaselineHeight() {
+    this._baselineHeight = 0;
+    this._baselinePageSize = null;
+    this.scroller.style.minHeight = "";
   }
 
   // Size the fullscreen page so the rows fill the available viewport height.

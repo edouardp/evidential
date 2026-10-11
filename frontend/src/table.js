@@ -720,7 +720,15 @@ export class EvidenceTableRenderer {
         return;
       }
 
-      const formatted = formatValue(value, col.fmt_column && row[col.fmt_column] != null ? String(row[col.fmt_column]) : col.fmt, {
+      const baseFormat =
+        col.fmt_column && row[col.fmt_column] != null ? String(row[col.fmt_column]) : col.fmt;
+      const formatCode =
+        isTotal && col.total_fmt
+          ? col.total_fmt
+          : isSubtotal && col.subtotal_fmt
+            ? col.subtotal_fmt
+            : baseFormat;
+      const formatted = formatValue(value, formatCode, {
         type: col.type,
         range: ctx.formatRanges.get(col.name),
         fallback: optString(value),

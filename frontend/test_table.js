@@ -463,6 +463,21 @@ test("logo columns render a logo.dev image", () => {
   renderer.destroy();
 });
 
+test("total_fmt and subtotal_fmt override row formats", () => {
+  const columns = [{ name: "amount", type: "number", fmt: "num0", total_fmt: "usd0", subtotal_fmt: "usd2" }];
+  const rows = [
+    { amount: 1000, render_type: "cell_data" },
+    { amount: 1000, render_type: "row_subtotal" },
+    { amount: 2000, render_type: "row_total" },
+  ];
+  const renderer = new EvidenceTableRenderer(makeModel(rows, columns, {}, el), el);
+  const cells = [...el.querySelectorAll("tbody tr .et-cell-value")].map((c) => c.textContent);
+  assert.equal(cells[0], "1,000");
+  assert.equal(cells[1], "$1,000.00");
+  assert.equal(cells[2], "$2,000");
+  renderer.destroy();
+});
+
 test("theme.background drives the opaque expanded surface", () => {
   const renderer = new EvidenceTableRenderer(
     makeModel(ROWS, COLUMNS, { theme: { background: "#123456" } }, el),

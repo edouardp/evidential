@@ -163,7 +163,7 @@ def _(connection, grouped_table, mo):
             max_height="460px",
             dimension_config={"category": {"type": "string"}, "item": {"type": "string"}},
             measure_config={
-                "sales": {"fmt": "usd0", "viz": "bar"},
+                "sales": {"fmt": "usd0", "viz": "bar", "total_fmt": "usd2"},
                 "orders": {"fmt": "num0"},
             },
         )
@@ -210,11 +210,6 @@ def _(EvidenceTable, connection, mo):
         )
     )
     orders
-    return
-
-
-@app.cell
-def _():
     return
 
 

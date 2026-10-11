@@ -56,6 +56,7 @@ are done in SQL. We implement them as Python/DuckDB helpers where feasible.
 - [x] `wrap`, `wrap_title`
 - [x] `info` / `description` (header icon)
 - [~] `total_agg` via `total_measures`; `total_fmt`/`weight_col` pending
+- [x] `total_fmt` / `subtotal_fmt` per-row formats
 - [x] `hide`
 - [x] `red_negatives`
 - [x] `column_group` / `colGroup`
@@ -101,7 +102,8 @@ are done in SQL. We implement them as Python/DuckDB helpers where feasible.
 - [x] `date_range` presets (`last 12 months`, `month to date`, …)
 - [ ] `having` (applied inside the base query; not a display-layer clause)
 - [x] `comparison` (prior year/quarter/month/week/day → prior + delta + % columns)
-- [~] `total_agg` via `total_measures`; `total_fmt`/weighted mean pending
+- [~] `total_agg` via `total_measures`; weighted mean pending
+- [x] `total_fmt` / `subtotal_fmt` per-row formats
 - [ ] `order` initial sort (use `default_sort`)
 
 ## Interactivity / polish

@@ -204,6 +204,8 @@ See `notebooks/02_s3_tables.py` for a full example (it gracefully stops if
 | `name`, `title` | Row key and display title. |
 | `type` | `string`, `number`, `date`, `boolean`, `array`, `object`. |
 | `fmt` | Format code or preset (`usd2`, `pct1`, `num1m`, `mmm-yy`, …). |
+| `fmt_column` | Column of format codes used per row. |
+| `total_fmt`, `subtotal_fmt` | Format codes for total/subtotal rows. |
 | `align` | `left`, `right`, `center` (defaults by type). |
 | `wrap`, `hide`, `red_negatives` | Layout / value tweaks. |
 | `viz` | `bar`, `color`, `sparkline`, `delta`, or `None`. |
@@ -212,7 +214,7 @@ See `notebooks/02_s3_tables.py` for a full example (it gracefully stops if
 | `delta_options` | `down_is_good`, `show_symbol`, `symbol_position`, `neutral_range`. |
 | `sparkline_options` | `type` (`line`/`area`/`bar`), `x`/`y` (field names for struct arrays), `color`, `fit_to_data`, `width`, `height`, `y_fmt`. |
 | `link`, `link_label`, `link_new_tab` | Per-cell links. |
-| `html`, `image`, `image_options` | Custom cell content. |
+| `html`, `image`, `image_options`, `logo` | Custom cell content (HTML, image URL, or logo.dev domain). |
 | `column_group`, `info`, `repeat_values`, `viz_include_subtotals` | Additional metadata. |
 
 ### Table options

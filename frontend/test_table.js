@@ -359,6 +359,89 @@ test("sparklines accept plain numbers and [x, y] pairs", () => {
   renderer.destroy();
 });
 
+test("row numbers, compact density and empty message", () => {
+  const numbered = new EvidenceTableRenderer(
+    makeModel(ROWS, COLUMNS, { row_numbers: true }, el),
+    el,
+  );
+  assert.equal(el.querySelectorAll(".et-row-num").length, 4); // header + 3 rows
+  assert.equal(el.querySelector("tbody .et-row-num").textContent, "1");
+  numbered.destroy();
+
+  const compact = new EvidenceTableRenderer(makeModel(ROWS, COLUMNS, { compact: true }, el), el);
+  assert.ok(el.querySelector(".et-root").classList.contains("et-compact"));
+  compact.destroy();
+
+  const empty = new EvidenceTableRenderer(
+    makeModel([], COLUMNS, { empty_message: "Nothing here" }, el),
+    el,
+  );
+  assert.equal(el.querySelector(".et-empty").textContent, "Nothing here");
+  empty.destroy();
+});
+
+test("default_sort sorts on first render", () => {
+  const renderer = new EvidenceTableRenderer(
+    makeModel(ROWS, COLUMNS, { default_sort: { column: "trips", direction: "asc" } }, el),
+    el,
+  );
+  assert.match(el.querySelector("tbody tr").textContent, /SF/);
+  assert.ok(el.querySelector(".et-th-sorted"));
+  renderer.destroy();
+});
+
+test("row_conditional_colors tints the whole row", () => {
+  const columns = [{ name: "city", type: "string" }, { name: "tint", type: "string", hide: true }];
+  const rows = [{ city: "NYC", tint: "#ff0000" }];
+  const renderer = new EvidenceTableRenderer(
+    makeModel(rows, columns, { row_conditional_colors: "tint" }, el),
+    el,
+  );
+  const cell = el.querySelector("tbody .et-td");
+  assert.equal(cell.style.backgroundColor, "rgb(255, 0, 0)");
+  renderer.destroy();
+});
+
+test("fmt_column applies a per-row format code", () => {
+  const columns = [
+    { name: "value", type: "number", fmt_column: "fmt" },
+    { name: "fmt", type: "string" },
+  ];
+  const rows = [
+    { value: 0.1234, fmt: "pct1" },
+    { value: 1234, fmt: "usd0" },
+  ];
+  const renderer = new EvidenceTableRenderer(makeModel(rows, columns, {}, el), el);
+  const cells = [...el.querySelectorAll("tbody tr")].map(
+    (tr) => tr.querySelector(".et-cell-value").textContent,
+  );
+  assert.equal(cells[0], "12.3%");
+  assert.equal(cells[1], "$1,234");
+  renderer.destroy();
+});
+
+test("delta chip and show_value", () => {
+  const columns = [
+    { name: "change", type: "number", fmt: "pct1", viz: "delta", delta_options: { chip: true, show_value: true } },
+    { name: "only_arrow", type: "number", fmt: "pct1", viz: "delta", delta_options: { show_value: false } },
+  ];
+  const rows = [{ change: 0.12, only_arrow: 0.12 }];
+  const renderer = new EvidenceTableRenderer(makeModel(rows, columns, {}, el), el);
+  assert.ok(el.querySelector(".et-delta-chip"));
+  const arrows = [...el.querySelectorAll(".et-delta")];
+  assert.equal(arrows[1].textContent.trim(), "▲");
+  renderer.destroy();
+});
+
+test("column info renders a header icon", () => {
+  const columns = [{ name: "city", type: "string", info: "A helpful hint" }];
+  const renderer = new EvidenceTableRenderer(makeModel([{ city: "NYC" }], columns, {}, el), el);
+  const icon = el.querySelector(".et-th-info");
+  assert.ok(icon);
+  assert.equal(icon.getAttribute("title"), "A helpful hint");
+  renderer.destroy();
+});
+
 test("theme.background drives the opaque expanded surface", () => {
   const renderer = new EvidenceTableRenderer(
     makeModel(ROWS, COLUMNS, { theme: { background: "#123456" } }, el),

@@ -32,6 +32,7 @@ dev = [
     "marimo>=0.20",
     "boto3>=1.35",
     "bandit>=1.7",
+    "playwright>=1.40",
     "pytest>=8.3",
     "ruff>=0.8",
 ]
@@ -57,4 +58,7 @@ ignore = ["E501"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-addopts = "-q"
+addopts = "-q -m 'not browser'"
+markers = [
+    "browser: real-browser functional tests (need Playwright + a Chromium browser)",
+]

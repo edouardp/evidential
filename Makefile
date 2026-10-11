@@ -112,6 +112,10 @@ security: ## Run the bandit security scan (install with: uv add --dev bandit)
 test-python: ## Run the Python test suite
 	uv run pytest -v
 
+.PHONY: test-browser
+test-browser: frontend-build ## Run real-browser functional tests (Playwright + installed Edge/Chrome)
+	uv run pytest -m browser -v tests/browser
+
 .PHONY: test
 test: test-python frontend-test ## Run Python and JavaScript tests
 

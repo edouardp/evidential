@@ -18,6 +18,7 @@
   <div class="panel"><div id="grouped"></div></div>
   <div class="panel"><div id="paged"></div></div>
   <div class="panel"><div id="hier"></div></div>
+  <div class="panel"><div id="features"></div></div>
 
   <script type="module">
     import widget from "/src/evidence_tables/static/table.js";
@@ -100,6 +101,30 @@
         title: "Hierarchical columns (pivot by payment type)",
         search: true, row_shading: true,
       }), el: document.getElementById("hier") });
+    }
+
+    // Use preview.html#features to exercise the table-level display options.
+    if (location.hash === "#features") {
+      const featureColumns = [
+        { name: "city", type: "string", align: "left", info: "The city name" },
+        { name: "trips", type: "number", fmt: "num0", align: "right", viz: "bar" },
+        { name: "revenue", type: "number", fmt_column: "money_fmt", align: "right" },
+        { name: "change", type: "number", fmt: "pct1", viz: "delta", delta_options: { chip: true } },
+        { name: "tint", type: "string", hide: true },
+      ];
+      const featureRows = [
+        { city: "New York", trips: 12040, revenue: 412300, money_fmt: "usd0", change: 0.12, tint: "#fef9c3" },
+        { city: "Los Angeles", trips: 8320, revenue: 287100, money_fmt: "usd0", change: -0.04, tint: "" },
+        { city: "Chicago", trips: 5310, revenue: 141900, money_fmt: "usd0", change: 0.02, tint: "" },
+      ];
+      widget.render({ model: makeModel(featureRows, featureColumns, {
+        title: "Feature gallery",
+        row_numbers: true,
+        compact: true,
+        default_sort: { column: "trips", direction: "asc" },
+        row_conditional_colors: "tint",
+        page_size: 0,
+      }), el: document.getElementById("features") });
     }
 
     // Use preview.html#fullscreen to capture the expanded dialog.

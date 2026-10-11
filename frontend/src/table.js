@@ -10,6 +10,7 @@ import {
   calculateFormatRanges,
   buildColorVizScale,
   calculateColorStyles,
+  colorStylesFromHex,
 } from "./color.js";
 
 const ROW_HEIGHT = 28;
@@ -118,6 +119,13 @@ export class EvidenceTableRenderer {
     this.footer = h("div", { class: "et-footer" });
     this.root.append(this.titlebar, this.toolbar, this.body, this.footer);
     this._loading = !!this.model.get("loading");
+    const defaultSort = this.options.default_sort;
+    if (defaultSort && defaultSort.column) {
+      this._state.sort = {
+        column: defaultSort.column,
+        direction: defaultSort.direction === "asc" ? "asc" : "desc",
+      };
+    }
     this._loadingShown = false;
     this._showTimer = null;
     this._hideTimer = null;
@@ -166,21 +174,24 @@ export class EvidenceTableRenderer {
   }
 
   _applyTheme() {
-    const theme = this.options.theme || {};
-    const surface = theme.surface || theme.dialog_background || theme.background;
+    const opts = this.options;
+    const theme = opts.theme || {};
+    const surface =
+      theme.surface || theme.dialog_background || theme.background || opts.background_color;
     const vars = {
-      "--et-bg": theme.background,
+      "--et-bg": theme.background || opts.background_color,
       "--et-surface": surface,
       "--et-text": theme.text,
       "--et-muted": theme.muted,
       "--et-border": theme.border,
       "--et-row-border": theme.row_border,
-      "--et-header-bg": theme.header_bg || surface,
+      "--et-header-bg": theme.header_bg || opts.header_color || surface,
       "--et-header-border": theme.header_border,
-      "--et-header-text": theme.header_text,
+      "--et-header-text": theme.header_text || opts.header_font_color,
       "--et-hover": theme.hover,
       "--et-shading": theme.shading,
-      "--et-total-bg": theme.total_bg,
+      "--et-total-bg": theme.total_bg || opts.total_row_color,
+      "--et-total-text": theme.total_text || opts.total_font_color,
       "--et-subtotal-bg": theme.subtotal_bg,
       "--et-pivot-bg": theme.pivot_bg,
       "--et-link": theme.link,
@@ -352,7 +363,12 @@ export class EvidenceTableRenderer {
   // --------------------------------------------------------------- render ---
   render() {
     const opts = this.options;
-    this.root.style.maxWidth = opts.width ? `${opts.width}px` : "";
+    this.root.style.maxWidth =
+      opts.width == null
+        ? ""
+        : typeof opts.width === "number"
+          ? `${opts.width}px`
+          : String(opts.width);
     // Inline max_height is for the compact notebook view; fullscreen must be
     // free to grow to the dialog height.
     if (this._expanded) {
@@ -367,6 +383,7 @@ export class EvidenceTableRenderer {
     this.root.classList.toggle("et-nowrap-titles", opts.wrap_titles === false);
     this.root.classList.toggle("et-no-row-lines", opts.row_lines === false);
     this.root.classList.toggle("et-row-shading", !!opts.row_shading);
+    this.root.classList.toggle("et-compact", !!opts.compact);
     this._renderTitle();
     this._renderToolbar();
 
@@ -393,9 +410,21 @@ export class EvidenceTableRenderer {
 
     this.scroller.replaceChildren();
     if (!rows.length) {
-      this.scroller.append(h("div", { class: "et-empty" }, [h("span", {}, "No results")]));
+      this.scroller.append(
+        h("div", { class: "et-empty" }, [h("span", {}, opts.empty_message || "No records")]),
+      );
     } else {
-      this.scroller.append(this._renderTable(columns, rows, { ranges, formatRanges, colorScales, hasGroups, headerRowCount }));
+      this.scroller.append(
+        this._renderTable(columns, rows, {
+          ranges,
+          formatRanges,
+          colorScales,
+          hasGroups,
+          headerRowCount,
+          rowNumbers: !!opts.row_numbers,
+          rowNumberBase: page * (Number(this._effectivePageSize()) || 0),
+        }),
+      );
     }
     this._renderFooter(page, pageCount, total);
     this._updateBaselineHeight();
@@ -544,6 +573,9 @@ export class EvidenceTableRenderer {
     const groups = columns.some((c) => c.column_group);
     if (groups) {
       const groupRow = h("tr", { class: "et-header-groups" });
+      if (ctx.rowNumbers) {
+        groupRow.append(h("th", { class: "et-th et-th-group et-row-num" }, ""));
+      }
       let i = 0;
       while (i < columns.length) {
         const group = columns[i].column_group;
@@ -570,6 +602,9 @@ export class EvidenceTableRenderer {
     }
 
     const row = h("tr");
+    if (ctx.rowNumbers) {
+      row.append(h("th", { class: "et-th et-row-num", "aria-label": "Row number" }, "#"));
+    }
     for (const col of columns) {
       const sorted = this._state.sort?.column === col.name;
       const dir = sorted ? this._state.sort.direction : null;
@@ -581,6 +616,11 @@ export class EvidenceTableRenderer {
       const inner = h("span", { class: "et-th-inner" });
       const title = opts.format_titles === false ? col.name : (col.title || formatTitle(col.name));
       inner.append(h("span", { class: "et-th-title" }, title));
+      if (col.info) {
+        inner.append(
+          h("span", { class: "et-th-info", title: String(col.info), role: "img", "aria-label": String(col.info) }, "ⓘ"),
+        );
+      }
       if (col.viz && col.viz !== "sparkline") inner.append(h("span", { class: "et-viz-badge", title: `${col.viz} visualization` }, ""));
       if (sorted) inner.append(h("span", { class: "et-sort-arrow" }, dir === "asc" ? "▲" : "▼"));
       th.append(inner);
@@ -619,6 +659,9 @@ export class EvidenceTableRenderer {
     const isCollapsed = isSubtotal && row.__group_key && this._isCollapsed(row.__group_key);
     const hasLink = opts.link && row[opts.link];
     const hidden = row.__hide_cell || {};
+    const rowColorValue = opts.row_conditional_colors ? row[opts.row_conditional_colors] : null;
+    const rowColorStyles =
+      typeof rowColorValue === "string" ? colorStylesFromHex(rowColorValue) : null;
 
     const tr = h("tr", {
       class: [
@@ -632,8 +675,25 @@ export class EvidenceTableRenderer {
     });
     if (hasLink) tr.addEventListener("click", () => { window.location.href = String(row[opts.link]); });
 
+    if (ctx.rowNumbers) {
+      const numberCell = h(
+        "td",
+        { class: "et-td et-row-num" },
+        String((ctx.rowNumberBase || 0) + index + 1),
+      );
+      if (rowColorStyles) {
+        numberCell.style.backgroundColor = rowColorStyles.backgroundColor;
+        numberCell.style.color = rowColorStyles.color;
+      }
+      tr.append(numberCell);
+    }
+
     columns.forEach((col, index) => {
       const td = h("td", { class: "et-td", style: this._alignStyle(col) });
+      if (rowColorStyles) {
+        td.style.backgroundColor = rowColorStyles.backgroundColor;
+        td.style.color = rowColorStyles.color;
+      }
       if (col.viz_include_subtotals === false && isSubtotal && col.viz) td.classList.add("et-no-viz");
 
       // Collapsible chevron in the subtotal's own dimension column.
@@ -660,7 +720,7 @@ export class EvidenceTableRenderer {
         return;
       }
 
-      const formatted = formatValue(value, col.fmt, {
+      const formatted = formatValue(value, col.fmt_column && row[col.fmt_column] != null ? String(row[col.fmt_column]) : col.fmt, {
         type: col.type,
         range: ctx.formatRanges.get(col.name),
         fallback: optString(value),
@@ -683,8 +743,17 @@ export class EvidenceTableRenderer {
       } else if (col.html) {
         content = h("span", { html: String(value) });
       } else if (col.image && row[col.image]) {
+        const imageOptions = col.image_options || {};
         content = h("span", { class: "et-cell-media" }, [
-          h("img", { class: "et-cell-image", src: String(row[col.image]), alt: "" }),
+          h("img", {
+            class: "et-cell-image",
+            src: String(row[col.image]),
+            alt: String(imageOptions.alt || ""),
+            style: {
+              ...(imageOptions.height ? { height: `${imageOptions.height}px` } : {}),
+              ...(imageOptions.width ? { width: `${imageOptions.width}px` } : {}),
+            },
+          }),
           h("span", { class: "et-cell-media-label" }, formatted),
         ]);
       } else {
@@ -736,13 +805,17 @@ export class EvidenceTableRenderer {
     const bar = h("div", { class: "et-bar", style: { width: `${pct}%`, backgroundColor: color } });
     const wrap = h("div", { class: `et-bar-wrap${negative ? " et-bar-negative" : ""}` }, bar);
     const label = h("span", { class: `et-bar-label${opts.hide_labels ? " et-hidden" : ""}` }, formatted);
-    return h("div", { class: "et-bar-cell" }, [wrap, label]);
+    const cell = h("div", {
+      class: "et-bar-cell",
+      style: opts.background_color ? { backgroundColor: opts.background_color } : {},
+    }, [wrap, label]);
+    return cell;
   }
 
   _renderDelta(col, value) {
     const opts = col.delta_options || {};
     const num = Number(value);
-    const [lo, hi] = opts.neutral_range || [0, 0];
+    const [lo, hi] = opts.neutral_range || [opts.neutral_min ?? 0, opts.neutral_max ?? 0];
     const isNeutral = (lo == null || num >= lo) && (hi == null || num <= hi);
     const positive = num > 0;
     const good = isNeutral ? false : (opts.down_is_good ? !positive : positive);
@@ -751,8 +824,9 @@ export class EvidenceTableRenderer {
     const pct = Math.abs(num) <= 1 && col.fmt && col.fmt.startsWith("pct")
       ? Math.abs(num * 100).toFixed(1) + "%"
       : Math.abs(num).toLocaleString(undefined, { maximumFractionDigits: 1 });
-    const text = `${symbol}${symbol ? " " : ""}${pct}`;
-    return h("span", { class: `et-delta ${cls}` }, text);
+    const text = [symbol, opts.show_value === false ? "" : pct].filter(Boolean).join(" ");
+    const classes = ["et-delta", cls, opts.chip ? "et-delta-chip" : ""].filter(Boolean).join(" ");
+    return h("span", { class: classes }, text || "–");
   }
 
   _renderSparkline(col, value) {

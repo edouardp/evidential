@@ -42,6 +42,16 @@ _OPTION_KEYS = {
     "width",
     "max_height",
     "order_columns_by_group",
+    "row_numbers",
+    "compact",
+    "empty_message",
+    "default_sort",
+    "row_conditional_colors",
+    "header_color",
+    "header_font_color",
+    "total_row_color",
+    "total_font_color",
+    "background_color",
     "theme",
     "color_scale",
 }
@@ -72,8 +82,43 @@ _OPTION_DEFAULTS: dict[str, Any] = {
     "width": None,
     "max_height": None,
     "order_columns_by_group": True,
+    "row_numbers": False,
+    "compact": False,
+    "empty_message": "No records",
+    "default_sort": None,
+    "row_conditional_colors": None,
+    "header_color": None,
+    "header_font_color": None,
+    "total_row_color": None,
+    "total_font_color": None,
+    "background_color": None,
     "theme": None,
     "color_scale": None,
+}
+
+
+# Evidence `contentType` → (viz, sparkline type)
+_CONTENT_TYPES: dict[str, tuple[str | None, str | None]] = {
+    "sparkline": ("sparkline", "line"),
+    "sparkarea": ("sparkline", "area"),
+    "sparkbar": ("sparkline", "bar"),
+    "bar": ("bar", None),
+    "color": ("color", None),
+    "colorscale": ("color", None),
+    "delta": ("delta", None),
+}
+
+# Evidence camelCase column attributes → our snake_case keys.
+_COLUMN_ALIASES = {
+    "contentType": "content_type",
+    "colGroup": "column_group",
+    "col_group": "column_group",
+    "fmtColumn": "fmt_column",
+    "redNegatives": "red_negatives",
+    "linkLabel": "link_label",
+    "openInNewTab": "link_new_tab",
+    "wrapTitle": "wrap_title",
+    "description": "info",
 }
 
 
@@ -81,9 +126,27 @@ def _coerce_column(column: str | Mapping[str, Any]) -> dict[str, Any]:
     if isinstance(column, str):
         return make_column(column)
     data = dict(column)
+    for camel, snake in _COLUMN_ALIASES.items():
+        if camel in data and snake not in data:
+            data[snake] = data.pop(camel)
     name = data.pop("name", None)
     if not name:
         raise ValueError(f"column definition is missing a name: {column!r}")
+    content_type = data.pop("content_type", None)
+    if content_type:
+        viz, spark_type = _CONTENT_TYPES.get(str(content_type).lower(), (None, None))
+        if viz:
+            data.setdefault("viz", viz)
+        if spark_type:
+            spark = dict(data.get("sparkline_options") or {})
+            spark.setdefault("type", spark_type)
+            data["sparkline_options"] = spark
+        if content_type == "html":
+            data.setdefault("html", True)
+        if content_type == "link":
+            data.setdefault("link", str(name))
+        if content_type == "image":
+            data.setdefault("image", str(name))
     type_ = data.pop("type", "string")
     return make_column(str(name), type=type_, **data)
 

@@ -81,6 +81,50 @@ def test_column_groups_assign_group_without_reordering() -> None:
     assert groups["month"] is None
 
 
+def test_content_type_shorthand_maps_to_viz() -> None:
+    table = EvidenceTable(
+        [{"trend": [1, 2, 3]}],
+        columns=[{"name": "trend", "content_type": "sparkbar"}],
+    )
+    column = table.columns[0]
+    assert column["viz"] == "sparkline"
+    assert column["sparkline_options"]["type"] == "bar"
+
+
+def test_camelcase_column_aliases() -> None:
+    table = EvidenceTable(
+        [{"x": 1, "url": "https://example.com"}],
+        columns=[
+            {"name": "url", "contentType": "link"},
+            {"name": "x", "colGroup": "Group A", "redNegatives": True, "description": "hint"},
+        ],
+    )
+    url = next(column for column in table.columns if column["name"] == "url")
+    assert url["link"] == "url"
+    x = next(column for column in table.columns if column["name"] == "x")
+    assert x["column_group"] == "Group A"
+    assert x["red_negatives"] is True
+    assert x["info"] == "hint"
+
+
+def test_new_table_options_round_trip() -> None:
+    table = EvidenceTable(
+        [{"a": 1}],
+        row_numbers=True,
+        compact=True,
+        empty_message="Nothing here",
+        default_sort={"column": "a", "direction": "asc"},
+        row_conditional_colors="tint",
+        header_color="#eeeeee",
+    )
+    assert table.options["row_numbers"] is True
+    assert table.options["compact"] is True
+    assert table.options["empty_message"] == "Nothing here"
+    assert table.options["default_sort"] == {"column": "a", "direction": "asc"}
+    assert table.options["row_conditional_colors"] == "tint"
+    assert table.options["header_color"] == "#eeeeee"
+
+
 def test_make_column_defaults() -> None:
     column = make_column("trip_distance", type="number", fmt="num1")
     assert column["name"] == "trip_distance"

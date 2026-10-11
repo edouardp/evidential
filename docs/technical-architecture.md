@@ -43,7 +43,7 @@ flowchart LR
 
 ## 2. Repository map
 
-```
+```text
 src/evidence_tables/        Python package (the anywidget)
   __init__.py               public API re-exports
   table.py                  EvidenceTable, option keys, column coercion

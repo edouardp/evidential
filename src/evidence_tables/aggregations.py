@@ -106,9 +106,7 @@ def resolve_aggregation(spec: Any) -> Aggregation:
         key = spec.strip().lower()
         if key in BUILTIN_AGGREGATIONS:
             return BUILTIN_AGGREGATIONS[key]
-        raise ValueError(
-            f"Unknown aggregation {spec!r}; built-ins: {', '.join(sorted(BUILTIN_AGGREGATIONS))}"
-        )
+        raise ValueError(f"Unknown aggregation {spec!r}; built-ins: {', '.join(sorted(BUILTIN_AGGREGATIONS))}")
     raise TypeError(f"aggregation must be a built-in name or callable, got {spec!r}")
 
 
@@ -116,7 +114,7 @@ def _expand(aggregations: Any, measure_aliases: Iterable[str]) -> dict[str, Aggr
     aliases = list(measure_aliases)
     if callable(aggregations):
         resolved = resolve_aggregation(aggregations)
-        return {alias: resolved for alias in aliases}
+        return dict.fromkeys(aliases, resolved)
     if isinstance(aggregations, Mapping):
         return {str(alias): resolve_aggregation(spec) for alias, spec in aggregations.items()}
     raise TypeError("aggregations must be a callable or a mapping of measure -> aggregation")
@@ -148,11 +146,7 @@ def apply_aggregations(
             if row.get("render_type") == "row_total" or key == "__total__":
                 descendants = detail_rows
             else:
-                descendants = [
-                    candidate
-                    for candidate in detail_rows
-                    if key in (candidate.get("__ancestors") or [])
-                ]
+                descendants = [candidate for candidate in detail_rows if key in (candidate.get("__ancestors") or [])]
             values = [candidate[alias] for candidate in descendants if candidate.get(alias) is not None]
             if not values:
                 row[alias] = None
@@ -160,9 +154,7 @@ def apply_aggregations(
             weights = None
             if weight_column:
                 weights = [
-                    candidate[weight_column]
-                    for candidate in descendants
-                    if candidate.get(weight_column) is not None
+                    candidate[weight_column] for candidate in descendants if candidate.get(weight_column) is not None
                 ]
             row[alias] = aggregate(values, weights)
     return rows

@@ -76,9 +76,7 @@ def tab_format(locations: Mapping[str, Any], fmt: str) -> dict[str, Any]:
     }
 
 
-def text_transform(
-    locations: Mapping[str, Any], fn: Callable[[Any], Any]
-) -> dict[str, Any]:
+def text_transform(locations: Mapping[str, Any], fn: Callable[[Any], Any]) -> dict[str, Any]:
     """Transform the displayed value at ``locations`` with a Python callable."""
     return {
         "type": "transform",
@@ -209,18 +207,14 @@ def cols_merge_n_pct(
         template_fmt[col_n] = fmt
     if pct_fmt:
         template_fmt[col_pct] = pct_fmt
-    return cols_merge(
-        f"{{{col_n}}} ({{{col_pct}}})", template_fmt=template_fmt or None, **options
-    )
+    return cols_merge(f"{{{col_n}}} ({{{col_pct}}})", template_fmt=template_fmt or None, **options)
 
 
 def _matches_column(rule_columns: Any, name: str) -> bool:
     return rule_columns == "*" or name in rule_columns
 
 
-def _resolve_rows(
-    rows: Sequence[Mapping[str, Any]], reference: Any
-) -> list[int] | None:
+def _resolve_rows(rows: Sequence[Mapping[str, Any]], reference: Any) -> list[int] | None:
     if reference is None:
         return None
     if callable(reference):
@@ -259,13 +253,9 @@ def resolve_rules(
                     if _matches_column(columns, name):
                         row[name] = fn(row[name])
         elif rule_type == "format":
-            client_rules.append(
-                {"columns": columns, "rows": row_ids, "fmt": rule["fmt"]}
-            )
+            client_rules.append({"columns": columns, "rows": row_ids, "fmt": rule["fmt"]})
         elif rule_type == "style":
-            client_rules.append(
-                {"columns": columns, "rows": row_ids, "style": rule["style"]}
-            )
+            client_rules.append({"columns": columns, "rows": row_ids, "style": rule["style"]})
         elif rule_type == "substitute":
             client = {"type": "substitute", "columns": columns, "rows": row_ids}
             for key in ("kind", "text", "threshold", "values"):

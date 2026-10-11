@@ -395,13 +395,24 @@ Rebuild it with `make frontend-build` after editing `frontend/src/`.
 ## Development
 
 ```bash
-make test             # Python + JavaScript tests
-make lint             # ruff
-make check-notebooks  # marimo check
-make validate         # lint + notebooks + tests + build
+make install          # Python (incl. dev tools) + JavaScript dependencies
+make install-hooks    # install the pre-commit hooks
+make lint             # ruff · bandit · pip-audit · pyrefly · shellcheck · checkmake · rumdl
+make format           # auto-fix formatting and lint issues
+make test             # Python tests (with coverage) + JavaScript tests
+make test-browser     # Playwright functional tests (installed Edge/Chrome)
+make check-notebooks  # marimo check on every notebook
+make check-artifact   # build a wheel/sdist and verify their contents
+make validate         # lint + notebook checks + tests + build
 make run-marimo       # open the notebooks
 make screenshot       # render frontend/preview.html to /tmp/evidence_preview.png
 ```
+
+The quality gates are mirrored in two places so they cannot drift:
+`[.pre-commit-config.yaml](.pre-commit-config.yaml)` (on commit) and
+`[scripts/lint.sh](scripts/lint.sh)` (locally and in CI). Repository-workflow
+tests in `tests/release/` assert the gates actually fail when a tool fails and
+that the shipped wheel contains the committed renderer assets.
 
 ## Relationship to Evidence
 

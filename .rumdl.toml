@@ -1,0 +1,9 @@
+# rumdl markdown linter configuration
+
+[MD013]
+# Documentation uses long tables and links; allow a generous line length.
+line_length = 200
+
+[MD024]
+allow_different_nesting = true
+siblings_only = true

@@ -157,8 +157,7 @@ def grouped_table(
         if total_expression:
             # Use a different aggregation for the grand total row.
             measure_columns.append(
-                f"CASE WHEN grouping({dims[0]}) = 1 THEN ({total_expression}) "
-                f"ELSE ({expression}) END AS {alias}"
+                f"CASE WHEN grouping({dims[0]}) = 1 THEN ({total_expression}) ELSE ({expression}) END AS {alias}"
             )
         else:
             measure_columns.append(f"{expression} AS {alias}")

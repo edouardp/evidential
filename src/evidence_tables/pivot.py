@@ -90,9 +90,7 @@ def pivot_table(
     select_parts: list[str] = list(dims)
     select_parts.extend(f"grouping({dim}) AS __g{index}" for index, dim in enumerate(dims))
 
-    inner_measures = ", ".join(
-        f"{expression} AS {_quote(alias)}" for alias, expression in parsed_measures
-    )
+    inner_measures = ", ".join(f"{expression} AS {_quote(alias)}" for alias, expression in parsed_measures)
 
     # (column name, header group, headline measure alias)
     pivoted: list[tuple[str, str, str]] = []
@@ -106,9 +104,7 @@ def pivot_table(
             name = f"{alias}__{label}"
             # The inner stage already aggregated per (dims, pivots); re-aggregate
             # additively so subtotal rows sum across the pivot values.
-            select_parts.append(
-                f"sum({_quote(alias)}) FILTER (WHERE {condition}) AS {_quote(name)}"
-            )
+            select_parts.append(f"sum({_quote(alias)}) FILTER (WHERE {condition}) AS {_quote(name)}")
             pivoted.append((name, label, alias))
         if show_total_column:
             name = f"{alias}__{total_label}"

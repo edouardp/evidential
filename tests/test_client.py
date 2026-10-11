@@ -22,9 +22,7 @@ def test_grouped_records_structure_and_sums() -> None:
     assert total["revenue"] == 380.0
     assert total["orders"] == 6
 
-    usa = next(
-        row for row in table.rows if row["render_type"] == "row_subtotal" and row["country"] == "USA"
-    )
+    usa = next(row for row in table.rows if row["render_type"] == "row_subtotal" and row["country"] == "USA")
     assert usa["revenue"] == 300.0
 
 

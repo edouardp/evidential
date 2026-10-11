@@ -64,9 +64,7 @@ def grouped_records(
 
     if measures is None:
         measures = [
-            column["name"]
-            for column in maybe_columns
-            if column["type"] == "number" and column["name"] not in dims
+            column["name"] for column in maybe_columns if column["type"] == "number" and column["name"] not in dims
         ]
     measures = list(measures)
     if not measures:
@@ -120,9 +118,7 @@ def grouped_records(
         total_label=total_label,
     )
 
-    def build_column(
-        name: str, default_type: str, default_align: str, overrides: Mapping[str, Any]
-    ) -> dict[str, Any]:
+    def build_column(name: str, default_type: str, default_align: str, overrides: Mapping[str, Any]) -> dict[str, Any]:
         source = dict(by_name.get(name, {}))
         source.update(overrides)
         source.pop("name", None)
@@ -134,9 +130,7 @@ def grouped_records(
     for dim in dims:
         columns.append(build_column(dim, "string", "left", (dimension_config or {}).get(dim, {})))
     for measure in measures:
-        columns.append(
-            build_column(measure, "number", "right", (measure_config or {}).get(measure, {}))
-        )
+        columns.append(build_column(measure, "number", "right", (measure_config or {}).get(measure, {})))
 
     table_options.setdefault("show_total_row", total)
     table_options.setdefault("collapsible", subtotals)

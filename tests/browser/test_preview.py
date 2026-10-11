@@ -75,9 +75,7 @@ def test_bar_fills_row_without_growing_it(page, live_server):
     bar_cell = page.locator("#raw .et-bar-cell").first
     # the bar cell must not grow the row: it matches the padded content height
     # of a normal cell in the same row (the td's own bounding box adds borders)
-    data_client = (
-        page.locator("#raw tbody tr").first.locator("td").first.evaluate("el => el.clientHeight")
-    )
+    data_client = page.locator("#raw tbody tr").first.locator("td").first.evaluate("el => el.clientHeight")
     assert bar_cell.bounding_box()["height"] == pytest.approx(data_client, abs=1)
     # the bar fills the row, leaving ~2px to the separators
     bar_box = bar_cell.locator(".et-bar").first.bounding_box()
@@ -87,9 +85,7 @@ def test_bar_fills_row_without_growing_it(page, live_server):
 def test_accordion_indents_child_rows(page, live_server):
     open_preview(page, live_server)
     subtotal = page.locator("#grouped tbody tr.et-row-subtotal").first
-    detail = (
-        page.locator("#grouped tbody tr.et-row:not(.et-row-subtotal):not(.et-row-total)").first
-    )
+    detail = page.locator("#grouped tbody tr.et-row:not(.et-row-subtotal):not(.et-row-total)").first
 
     def pad(cell):
         return cell.evaluate("el => parseFloat(getComputedStyle(el).paddingLeft)")
@@ -118,7 +114,10 @@ def test_display_features(page, live_server):
     # delta chip
     assert page.locator("#features .et-delta-chip").count() >= 1
     # row conditional colour on the New York row (last after asc sort)
-    background = page.locator("#features tbody tr").nth(2).locator("td").first.evaluate(
-        "el => getComputedStyle(el).backgroundColor"
+    background = (
+        page.locator("#features tbody tr")
+        .nth(2)
+        .locator("td")
+        .first.evaluate("el => getComputedStyle(el).backgroundColor")
     )
     assert background == "rgb(254, 249, 195)"

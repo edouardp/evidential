@@ -139,9 +139,7 @@ def test_show_link_column() -> None:
 def test_top_level_color_options_merge_into_color_options() -> None:
     table = EvidenceTable(
         [{"v": 1}],
-        column_config={
-            "v": {"viz": "color", "color_scale": "green", "color_min": 0, "color_max": 10}
-        },
+        column_config={"v": {"viz": "color", "color_scale": "green", "color_min": 0, "color_max": 10}},
     )
     column = table.columns[0]
     assert column["color_options"]["color_scale"] == "green"
@@ -153,9 +151,7 @@ def test_top_level_color_options_merge_into_color_options() -> None:
 def test_sparkline_aliases_merge_into_sparkline_options() -> None:
     table = EvidenceTable(
         [{"trend": [1, 2, 3]}],
-        column_config={
-            "trend": {"viz": "sparkline", "sparkX": "d", "sparkY": "v", "sparkColor": "#123456"}
-        },
+        column_config={"trend": {"viz": "sparkline", "sparkX": "d", "sparkY": "v", "sparkColor": "#123456"}},
     )
     options = table.columns[0]["sparkline_options"]
     assert options["x"] == "d"

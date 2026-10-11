@@ -292,10 +292,7 @@ def _coerce_columns(
                 merged.append(_coerce_column({"name": name, **config}))
     # column_config overrides bypass _coerce_column, so normalise them too, and
     # drop Python callables (e.g. `blank`) that can't cross the JSON boundary.
-    return [
-        _normalize_column_options({k: v for k, v in dict(column).items() if not callable(v)})
-        for column in merged
-    ]
+    return [_normalize_column_options({k: v for k, v in dict(column).items() if not callable(v)}) for column in merged]
 
 
 def _apply_column_groups(
@@ -379,10 +376,7 @@ class EvidenceTable(anywidget.AnyWidget):
         merged_options.update(table_options)
         if client_rules:
             merged_options["rules"] = client_rules
-        if (
-            merged_options.get("groups_open") is not None
-            and "collapsed" not in table_options
-        ):
+        if merged_options.get("groups_open") is not None and "collapsed" not in table_options:
             merged_options["collapsed"] = not merged_options["groups_open"]
 
         link = merged_options.get("link")
@@ -419,9 +413,7 @@ class EvidenceTable(anywidget.AnyWidget):
         if columns is None:
             columns = inferred
         if columns is not None:
-            new_columns = _apply_column_groups(
-                _coerce_columns(columns, column_config), column_groups
-            )
+            new_columns = _apply_column_groups(_coerce_columns(columns, column_config), column_groups)
             # Setting columns triggers a browser re-render; only do it when the
             # column structure actually changed so data-only updates render once.
             if new_columns != list(self.columns):
@@ -466,9 +458,7 @@ class EvidenceTable(anywidget.AnyWidget):
         return cls(frame, **kwargs)
 
     @classmethod
-    def from_records(
-        cls, records: Sequence[Mapping[str, Any]], **kwargs: Any
-    ) -> EvidenceTable:
+    def from_records(cls, records: Sequence[Mapping[str, Any]], **kwargs: Any) -> EvidenceTable:
         """Build a table from a list of dicts."""
         return cls(list(records), **kwargs)
 

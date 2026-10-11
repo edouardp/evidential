@@ -104,8 +104,7 @@ def attach_s3_tables(
     table_bucket_arn = table_bucket_arn or os.environ.get("S3TABLES_TABLE_BUCKET_ARN")
     if not table_bucket_arn:
         raise RuntimeError(
-            "attach_s3_tables needs a table bucket ARN (pass table_bucket_arn= or set "
-            "S3TABLES_TABLE_BUCKET_ARN)."
+            "attach_s3_tables needs a table bucket ARN (pass table_bucket_arn= or set S3TABLES_TABLE_BUCKET_ARN)."
         )
     region = region or os.environ.get("AWS_REGION") or os.environ.get("AWS_DEFAULT_REGION")
     endpoint = f"https://s3tables.{region}.amazonaws.com/iceberg"

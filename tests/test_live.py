@@ -120,9 +120,7 @@ def test_run_toggles_loading(con: duckdb.DuckDBPyConnection) -> None:
 
 
 def test_rerun_does_not_reassign_unchanged_columns(con: duckdb.DuckDBPyConnection) -> None:
-    live = LiveEvidenceTable(
-        con, "SELECT a, amount FROM t WHERE a >= {min_a}", params={"min_a": 1}
-    )
+    live = LiveEvidenceTable(con, "SELECT a, amount FROM t WHERE a >= {min_a}", params={"min_a": 1})
     changes: list[str] = []
     live.observe(lambda change: changes.append(change["name"]), names="columns")
     live.run(params={"min_a": 2})

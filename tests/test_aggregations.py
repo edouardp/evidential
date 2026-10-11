@@ -51,9 +51,7 @@ def test_custom_callable_aggregation(sales: duckdb.DuckDBPyConnection) -> None:
     # city-level sums: 100, 250, 80, 120 -> max 250
     assert total["revenue"] == 250.0
 
-    usa = next(
-        row for row in table.rows if row["render_type"] == "row_subtotal" and row["country"] == "USA"
-    )
+    usa = next(row for row in table.rows if row["render_type"] == "row_subtotal" and row["country"] == "USA")
     assert usa["revenue"] == 250.0  # max of NYC 100, LA 250
 
 

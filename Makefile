@@ -8,6 +8,9 @@ HOST     ?= 127.0.0.1
 PORT     ?= 2728
 NOTEBOOK ?= notebooks/01_taxi_explore.py
 
+# 7-day publication lag for dependency updates (supply-chain protection).
+EXCLUDE_NEWER := $(shell date -u -v-7d +%Y-%m-%dT00:00:00Z 2>/dev/null || date -u -d '7 days ago' +%Y-%m-%dT00:00:00Z 2>/dev/null)
+
 # ============================================================================
 # General
 # ============================================================================
@@ -26,12 +29,16 @@ help: ## Show this help message, grouped by section
 # ============================================================================
 
 .PHONY: install
-install: frontend-install ## Install Python and frontend dependencies
-	uv sync --extra dev
+install: frontend-install ## Install Python (incl. dev tools) and frontend dependencies
+	uv sync
 
 .PHONY: install-python
-install-python: ## Install Python dependencies with uv
-	uv sync --extra dev
+install-python: ## Install Python dependencies (incl. dev tools) with uv
+	uv sync
+
+.PHONY: install-hooks
+install-hooks: ## Install the pre-commit git hooks
+	uv run pre-commit install
 
 .PHONY: frontend-install
 frontend-install: ## Install the JavaScript build/test dependencies
@@ -58,7 +65,7 @@ frontend-test: ## Run the JavaScript formatting/colour/renderer tests
 # ============================================================================
 
 .PHONY: run-marimo
-run-marimo: ## Open the notebooks in the marimo editor (HOST=127.0.0.1 PORT=2718)
+run-marimo: ## Open the notebooks in the marimo editor (HOST=127.0.0.1 PORT=2728)
 	uv run marimo edit --watch --no-sandbox --host $(HOST) notebooks
 
 .PHONY: run-notebook
@@ -90,27 +97,40 @@ screenshot: frontend-build ## Capture the preview to /tmp/evidence_preview.png (
 # ============================================================================
 
 .PHONY: lint
-lint: ## Run Python linting checks
-	uv run ruff check src tests
+lint: ## Run all lint gates (ruff, bandit, pip-audit, pyrefly, shellcheck, checkmake, rumdl)
+	./scripts/lint.sh
 
 .PHONY: format
-format: ## Auto-fix Python linting issues
-	uv run ruff check --fix src tests
+format: ## Auto-fix formatting and lint issues
+	./scripts/lint.sh --fix
 
 .PHONY: lint-fix
 lint-fix: format ## Alias for format
 
+.PHONY: pre-commit
+pre-commit: ## Run all pre-commit hooks against every file
+	uv run pre-commit run --all-files
+
 .PHONY: security
-security: ## Run the bandit security scan (install with: uv add --dev bandit)
+security: ## Run security scans (bandit + pip-audit)
 	uv run bandit -c .bandit -r -q src/evidence_tables
+	uv run pip-audit
+
+.PHONY: typecheck
+typecheck: ## Type-check the package with pyrefly
+	uv run pyrefly check
+
+.PHONY: markdown-lint
+markdown-lint: ## Lint documentation markdown with rumdl
+	uvx rumdl check README.md docs notebooks
 
 # ============================================================================
 # Testing
 # ============================================================================
 
 .PHONY: test-python
-test-python: ## Run the Python test suite
-	uv run pytest -v
+test-python: ## Run the Python test suite with coverage
+	uv run pytest --cov=evidence_tables --cov-report=term-missing --cov-fail-under=80
 
 .PHONY: test-browser
 test-browser: frontend-build ## Run real-browser functional tests (Playwright + installed Edge/Chrome)
@@ -123,12 +143,27 @@ test: test-python frontend-test ## Run Python and JavaScript tests
 test-all: test ## Alias for test
 
 # ============================================================================
+# Dependencies
+# ============================================================================
+
+.PHONY: update-deps
+update-deps: ## Update dependencies (7-day publication lag) and re-audit
+	@test -n "$(EXCLUDE_NEWER)" || { echo "Set EXCLUDE_NEWER manually"; exit 1; }
+	uv lock --upgrade --exclude-newer "$(EXCLUDE_NEWER)"
+	uv sync
+	uv run pip-audit
+
+# ============================================================================
 # Build
 # ============================================================================
 
 .PHONY: build
 build: frontend-build ## Build a wheel/sdist (bundling the latest frontend)
 	uv build
+
+.PHONY: check-artifact
+check-artifact: build ## Verify the built distributions contain the renderer assets
+	uv run python scripts/check_artifact.py
 
 # ============================================================================
 # Cleanup
@@ -137,7 +172,7 @@ build: frontend-build ## Build a wheel/sdist (bundling the latest frontend)
 .PHONY: clean
 clean: ## Remove caches and build artifacts
 	find . -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true
-	rm -rf .pytest_cache .ruff_cache .coverage htmlcov dist/ __marimo__/
+	rm -rf .pytest_cache .ruff_cache .rumdl_cache .coverage htmlcov dist/ __marimo__/
 
 .PHONY: clean-all
 clean-all: clean ## Remove caches, build artifacts, the virtualenv and node_modules

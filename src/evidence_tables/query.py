@@ -68,18 +68,12 @@ def date_range_sql(spec: str, column: str) -> str | None:
     match = re.fullmatch(r"previous\s+(week|month|quarter|year)", lower)
     if match:
         unit = unit_by_prefix[match.group(1)]
-        return (
-            f"date_trunc('{unit}', {col}) = "
-            f"date_trunc('{unit}', CURRENT_DATE) - INTERVAL '1 {unit}'"
-        )
+        return f"date_trunc('{unit}', {col}) = date_trunc('{unit}', CURRENT_DATE) - INTERVAL '1 {unit}'"
 
     match = re.fullmatch(r"next\s+(week|month|quarter|year)", lower)
     if match:
         unit = unit_by_prefix[match.group(1)]
-        return (
-            f"date_trunc('{unit}', {col}) = "
-            f"date_trunc('{unit}', CURRENT_DATE) + INTERVAL '1 {unit}'"
-        )
+        return f"date_trunc('{unit}', {col}) = date_trunc('{unit}', CURRENT_DATE) + INTERVAL '1 {unit}'"
 
     match = re.fullmatch(r"this\s+(week|month|quarter|year)", lower)
     if match:
@@ -88,9 +82,7 @@ def date_range_sql(spec: str, column: str) -> str | None:
 
     fixed = {
         "today": f"{col} >= CURRENT_DATE AND {col} < CURRENT_DATE + INTERVAL '1 day'",
-        "yesterday": (
-            f"{col} >= CURRENT_DATE - INTERVAL '1 day' AND {col} < CURRENT_DATE"
-        ),
+        "yesterday": (f"{col} >= CURRENT_DATE - INTERVAL '1 day' AND {col} < CURRENT_DATE"),
         "last 7 days": f"{col} >= now() - INTERVAL '7 days'",
         "last 30 days": f"{col} >= now() - INTERVAL '30 days'",
         "last 3 months": f"{col} >= now() - INTERVAL '3 months'",

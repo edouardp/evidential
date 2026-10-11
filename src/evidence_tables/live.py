@@ -39,7 +39,7 @@ Either way, values are bound as SQL parameters (never spliced into the SQL).
 from __future__ import annotations
 
 import re
-from collections.abc import Iterable, Mapping
+from collections.abc import Iterable, Mapping, Sequence
 from typing import Any
 
 import traitlets
@@ -76,7 +76,7 @@ class LiveEvidenceTable(EvidenceTable):
         *,
         params: Mapping[str, Any] | None = None,
         column_config: Mapping[str, Mapping[str, Any]] | None = None,
-        column_groups: Mapping[str, Iterable[str]] | None = None,
+        column_groups: Mapping[str, Sequence[str]] | None = None,
         auto_run: bool = True,
         bind_controls: bool = False,
         **options: Any,
@@ -110,11 +110,7 @@ class LiveEvidenceTable(EvidenceTable):
         self.loading = True
         try:
             statement, values = self._prepare(self._sql_template, self._params)
-            relation = (
-                self._connection.execute(statement, values)
-                if values
-                else self._connection.sql(statement)
-            )
+            relation = self._connection.execute(statement, values) if values else self._connection.sql(statement)
             self.set_data(
                 relation,
                 column_config=self._column_config,
@@ -152,9 +148,7 @@ class LiveEvidenceTable(EvidenceTable):
         def replace(match: re.Match[str]) -> str:
             name = match.group(1) or match.group(2) or match.group(3)
             if name not in resolved:
-                raise KeyError(
-                    f"Unknown SQL parameter {name!r}; known parameters: {sorted(resolved)}"
-                )
+                raise KeyError(f"Unknown SQL parameter {name!r}; known parameters: {sorted(resolved)}")
             positional.append(resolved[name])
             return "?"
 

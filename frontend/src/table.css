@@ -297,15 +297,20 @@
 .et-chevron-open { transform: rotate(90deg); }
 
 /* ----------------------------------------------------------- bar viz ------ */
-.et-bar-cell { position: relative; display: flex; align-items: center; min-width: 60px; }
-.et-bar-wrap { position: absolute; inset: 0; display: flex; align-items: center; }
+.et-bar-cell { position: relative; display: block; min-width: 60px; }
+.et-bar-wrap { position: absolute; inset: 0; }
 .et-bar {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  transform: translateY(-50%);
   height: 70%;
   min-width: 1px;
-  border-radius: 3px;
+  /* rectangular (no rounded corners) with a little clearance at the far end */
+  max-width: calc(100% - 4px);
   opacity: 0.35;
 }
-.et-bar-negative { justify-content: flex-end; }
+.et-bar-negative .et-bar { left: auto; right: 0; }
 .et-bar-label { position: relative; z-index: 1; }
 .et-hidden { visibility: hidden; }
 .et-no-viz .et-bar-cell { display: none; }

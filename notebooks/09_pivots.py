@@ -10,7 +10,7 @@
 
 import marimo
 
-__generated_with = "0.20.0"
+__generated_with = "0.25.1"
 app = marimo.App(width="full")
 
 
@@ -129,6 +129,11 @@ def _(connection, mo, pivot_table):
         )
     )
     by_channel
+    return
+
+
+@app.cell
+def _():
     return
 
 

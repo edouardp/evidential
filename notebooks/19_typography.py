@@ -19,14 +19,13 @@ __generated_with = "0.25.1"
 app = marimo.App(width="full")
 
 
-app._unparsable_cell(
-    r"""
-     import marimo as mo
+@app.cell
+def _():
+    import marimo as mo
 
     from evidence_tables import EvidenceTable
-    """,
-    name="_"
-)
+
+    return EvidenceTable, mo
 
 
 @app.cell
@@ -185,7 +184,7 @@ def _(EvidenceTable, mo):
                     "title": "Lowercase — Hoefler Text",
                     "fmt": "num2",
                     "align": "right",
-                    "font": "'Hoefler Text', Georgia, serif",
+                    "font": "'Hoefler Text'",
                 },
             },
         )

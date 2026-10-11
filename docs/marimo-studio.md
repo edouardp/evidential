@@ -33,8 +33,8 @@ The notebook owns the values; the view owns their presentation.
 | | |
 | --- | --- |
 | Notebook | [`notebooks/21_studio_dashboard.py`](../notebooks/21_studio_dashboard.py) |
-| View | [`notebooks/studio/21_studio_dashboard/dashboard/`](../notebooks/studio/21_studio_dashboard/dashboard/) |
-| Provider | `marimo-studio/vanilla` (a single `index.html`) |
+| Views | [`…/dashboard/`](../notebooks/studio/21_studio_dashboard/dashboard/) and [`…/report/`](../notebooks/studio/21_studio_dashboard/report/) |
+| Provider | `marimo-studio/vanilla` (a single `index.html` each) |
 | Runtime | `server` |
 
 Run it:
@@ -45,7 +45,7 @@ make studio-serve        # opens the notebook with Studio installed
 uv run --with "marimo-studio[deno]" marimo edit notebooks/21_studio_dashboard.py
 ```
 
-The view lives next to the notebook in a committed `view_root`
+The views live next to the notebook in a committed `view_root`
 (`notebooks/studio/21_studio_dashboard/`), configured in the notebook's own
 module block:
 
@@ -55,6 +55,21 @@ module block:
 # view_root = "studio/21_studio_dashboard"
 # runtime = "server"
 ```
+
+### Two complementary views, one notebook
+
+The demo ships both ways of using notebook results in a view, so you can see the
+trade-off:
+
+| View | Pattern | Shows |
+| --- | --- | --- |
+| **dashboard** | `<marimo-cell name="revenue_table">` | The notebook's own live, interactive `EvidenceTable` (Server runtime). |
+| **report** | `mo-value="filtered"` | The raw rows, drawn by the view's own markup and JS — portable to a static export. |
+
+![The report view draws its own table from projected values](img/studio-report.png)
+
+The dashboard reuses the widget; the report reimplements a little presentation in
+exchange for runtime portability. Both read the same notebook.
 
 ## Projection recipes
 

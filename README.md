@@ -315,10 +315,11 @@ controls and notebook values:
 ```
 
 The dashboard demo is [`notebooks/21_studio_dashboard.py`](notebooks/21_studio_dashboard.py)
-with a committed view under `notebooks/studio/21_studio_dashboard/`. Run it with
-`make studio-serve` (Server runtime) and validate the view with
-`make studio-validate`. See [docs/marimo-studio.md](docs/marimo-studio.md) for
-the projection recipes, runtime guidance and projection size limits.
+with two committed views under `notebooks/studio/21_studio_dashboard/` — a
+`dashboard` that projects the live widget and a `report` that draws the projected
+rows itself. Run it with `make studio-serve` (Server runtime) and validate the
+views with `make studio-validate`. See [docs/marimo-studio.md](docs/marimo-studio.md)
+for the projection recipes, runtime guidance and projection size limits.
 
 ## Amazon S3 Tables
 

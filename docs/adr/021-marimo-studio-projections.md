@@ -63,5 +63,6 @@ we adopt it rather than inventing one:
 
 - [Using EvidenceTable in marimo Studio views](../marimo-studio.md)
 - The demo: `notebooks/21_studio_dashboard.py`,
-  `notebooks/studio/21_studio_dashboard/dashboard/`
+  `notebooks/studio/21_studio_dashboard/dashboard/` (live widget) and
+  `notebooks/studio/21_studio_dashboard/report/` (view-rendered).
 - `tests/release/test_studio_views.py`

@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Revenue report</title>
+    <style>
+      :root {
+        color-scheme: light dark;
+        --paper: #ffffff;
+        --ink: #0f172a;
+        --muted: #64748b;
+        --line: #e2e8f0;
+        --bar: #bfdbfe;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root { --paper: #0b1220; --ink: #e2e8f0; --muted: #94a3b8; --line: #1e293b; --bar: #1e3a8a; }
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        background: var(--paper);
+        color: var(--ink);
+        font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+      }
+      main { max-width: 60rem; margin: 0 auto; padding: 2.5rem 1.5rem 4rem; }
+      .eyebrow {
+        margin: 0;
+        color: var(--muted);
+        font-size: 0.72rem;
+        font-weight: 650;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+      }
+      h1 { margin: 0.4rem 0 0; font-size: clamp(1.8rem, 4vw, 2.6rem); letter-spacing: -0.02em; }
+      .lede { color: var(--muted); line-height: 1.6; }
+      dl.kpis {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 1rem;
+        margin: 2rem 0;
+      }
+      @media (max-width: 48rem) { dl.kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+      dl.kpis div { border-top: 2px solid var(--ink); padding-top: 0.6rem; }
+      dt { color: var(--muted); font-size: 0.72rem; font-weight: 650; letter-spacing: 0.08em; text-transform: uppercase; }
+      dd { margin: 0.35rem 0 0; font-size: clamp(1.3rem, 3vw, 1.9rem); font-variant-numeric: lining-nums tabular-nums; }
+      table { width: 100%; border-collapse: collapse; font-variant-numeric: lining-nums tabular-nums; }
+      caption { text-align: left; color: var(--muted); padding-bottom: 0.6rem; }
+      th { text-align: right; border-bottom: 2px solid var(--ink); padding: 0.45rem 0.6rem; }
+      th:first-child, td:first-child { text-align: left; }
+      td { text-align: right; border-bottom: 1px solid var(--line); padding: 0.45rem 0.6rem; }
+      .bar { position: relative; z-index: 0; }
+      .bar::before {
+        content: "";
+        position: absolute;
+        inset: 2px auto 2px 0;
+        width: var(--bar-width, 0%);
+        background: var(--bar);
+        z-index: -1;
+      }
+      :where([mo-value]):is(:not(:defined), :empty)::after { content: "…"; color: var(--muted); }
+    </style>
+  </head>
+  <body>
+    <main id="app-shell">
+      <header>
+        <p class="eyebrow">21 Studio Dashboard</p>
+        <h1>Revenue report</h1>
+        <p class="lede">
+          The same notebook, rendered by the view instead of by a widget: the
+          numbers and rows arrive as projected values, and the page formats and
+          draws them itself.
+        </p>
+      </header>
+
+      <dl class="kpis" aria-label="Key figures">
+        <div><dt>Cities</dt><dd id="kpi-cities" mo-value="kpis.cities"></dd></div>
+        <div><dt>Trips</dt><dd id="kpi-trips" mo-value="kpis.trips"></dd></div>
+        <div><dt>Revenue</dt><dd id="kpi-revenue" mo-value="kpis.revenue"></dd></div>
+        <div><dt>Avg tip</dt><dd id="kpi-tip" mo-value="kpis.avg_tip"></dd></div>
+      </dl>
+
+      <table>
+        <caption>Revenue by city (filtered in the notebook)</caption>
+        <thead>
+          <tr><th scope="col">Region</th><th scope="col">City</th><th scope="col">Trips</th><th scope="col">Revenue</th><th scope="col">Tip rate</th></tr>
+        </thead>
+        <tbody id="report-body"></tbody>
+      </table>
+
+      <!-- Projected data the view renders itself. -->
+      <span id="rows-data" hidden mo-value="filtered"></span>
+    </main>
+
+    <script type="module">
+      /** Subscribe an explicit `mo-value` host to current values and later updates. */
+      const observeMarimoValue = (host, { onValue, onError = () => {} }) => {
+        const sync = (event) => onValue(event.detail.value);
+        const fail = (event) => onError(event.detail);
+        host.addEventListener("marimo-value-updated", sync);
+        host.addEventListener("marimo-value-error", fail);
+        if (host.dataset.marimoError !== undefined) {
+          onError({
+            selector: host.getAttribute("mo-value")?.trim() ?? "",
+            code: host.dataset.marimoErrorCode,
+            message: host.dataset.marimoError,
+            hint: host.dataset.marimoDiagnosticHint,
+          });
+        } else if (host.marimoValue !== undefined) {
+          onValue(host.marimoValue);
+        }
+        return () => {
+          host.removeEventListener("marimo-value-updated", sync);
+          host.removeEventListener("marimo-value-error", fail);
+        };
+      };
+
+      const count = new Intl.NumberFormat("en-US");
+      const money = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 });
+      const percent = new Intl.NumberFormat("en-US", { style: "percent", maximumFractionDigits: 1 });
+
+      const bindKpi = (id, format) => {
+        const host = document.getElementById(id);
+        observeMarimoValue(host, {
+          onValue: (value) => { host.textContent = value == null ? "—" : format(value); },
+          onError: () => { host.textContent = "—"; },
+        });
+      };
+      bindKpi("kpi-cities", (value) => count.format(value));
+      bindKpi("kpi-trips", (value) => count.format(value));
+      bindKpi("kpi-revenue", (value) => money.format(value));
+      bindKpi("kpi-tip", (value) => percent.format(value / 100));
+
+      const body = document.getElementById("report-body");
+      const renderRows = (rows) => {
+        const list = Array.isArray(rows) ? rows : [];
+        const max = Math.max(1, ...list.map((row) => Number(row.revenue) || 0));
+        body.replaceChildren(...list.map((row) => {
+          const tr = document.createElement("tr");
+          const cell = (text, className) => {
+            const td = document.createElement("td");
+            if (className) td.className = className;
+            td.textContent = text;
+            return td;
+          };
+          tr.append(
+            cell(row.region ?? ""),
+            cell(row.city ?? ""),
+            cell(count.format(row.trips ?? 0)),
+          );
+          const revenueCell = cell(money.format(row.revenue ?? 0), "bar");
+          revenueCell.style.setProperty("--bar-width", `${((Number(row.revenue) || 0) / max) * 100}%`);
+          tr.append(revenueCell, cell(percent.format((row.tip_rate ?? 0))));
+          return tr;
+        }));
+      };
+      const rowsSource = document.getElementById("rows-data");
+      observeMarimoValue(rowsSource, {
+        onValue: renderRows,
+        onError: () => body.replaceChildren(),
+      });
+
+      document.querySelector("#app-shell")?.setAttribute("data-ready", "");
+    </script>
+  </body>
+</html>

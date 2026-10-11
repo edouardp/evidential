@@ -28,7 +28,7 @@ are done in SQL. We implement them as Python/DuckDB helpers where feasible.
 - [x] `compact`
 - [x] `empty_message`
 - [x] `link` (clickable row)
-- [ ] `show_link_column` (currently always shows a chevron column)
+- [x] `show_link_column`
 - [x] `freeze_columns`
 - [x] `width` (px or a CSS length like `80%`)
 - [ ] `refresh_interval` (notebook-level; document)
@@ -71,7 +71,7 @@ are done in SQL. We implement them as Python/DuckDB helpers where feasible.
 - [x] `delta` (`show_value`, `chip`, `down_is_good`, `show_symbol`, neutral range)
 - [x] `colorscale` / `color` (`color_scale`, `color_stops`, `scale_column`,
       `min`/`max`/`midpoint`, `conditional_colors`)
-- [ ] `color_scale` presets (`green`, `blue`, `red`, …)
+- [x] `color_scale` presets (`green`, `blue`, `red`, `orange`, `purple`, `grey`)
 - [x] `bar` (`bar_color`, `bar_color_negative`, `hide_labels`, `fit_to_data`)
 - [x] `bar` `background_color`
 - [x] `sparkline` / `sparkarea` / `sparkbar` (`x`, `y`, `type`, `color`,

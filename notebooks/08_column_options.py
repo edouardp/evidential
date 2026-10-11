@@ -87,6 +87,8 @@ def _(mo):
     ## Conditional visualisations
 
     `bar`, `colorscale`, `delta` and `sparkline` with their options.
+    `color_scale` accepts a list of colours or a named preset (`green`, `blue`,
+    `red`, `orange`, `purple`, `grey`).
     """)
     return
 

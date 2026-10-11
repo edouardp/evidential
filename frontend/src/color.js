@@ -3,6 +3,22 @@ import chroma from "chroma-js";
 
 export const FALLBACK_COLOR_SCALE = ["#dbeafe", "#1e40af"];
 
+// Named colour-scale presets (Evidence's `colorScale="green"` etc.).
+export const COLOR_PRESETS = {
+  green: ["#f0fdf4", "#16a34a"],
+  blue: ["#eff6ff", "#2563eb"],
+  red: ["#fef2f2", "#dc2626"],
+  orange: ["#fff7ed", "#ea580c"],
+  purple: ["#faf5ff", "#9333ea"],
+  grey: ["#f8fafc", "#334155"],
+  gray: ["#f8fafc", "#334155"],
+};
+
+function resolvePalette(palette) {
+  if (typeof palette === "string") return COLOR_PRESETS[palette.toLowerCase()];
+  return palette;
+}
+
 function isValidColor(color) {
   try {
     chroma(color);
@@ -99,7 +115,7 @@ export function createColorScale(values, options) {
 
   let finalPalette;
   if (colorPalette && colorPalette.length > 0) {
-    const validColors = colorPalette.filter(isValidColor);
+    const validColors = resolvePalette(colorPalette).filter(isValidColor);
     if (validColors.length >= 2) finalPalette = validColors;
     else if (validColors.length === 1) finalPalette = [defaultColorScale[0] ?? "#ffffff", validColors[0]];
     else finalPalette = defaultColorScale;
@@ -211,7 +227,7 @@ export function calculateFormatRanges(columns, rows) {
 export function buildColorVizScale(col, range, defaultColorScale) {
   const opts = col.color_options || {};
   return createColorScale([], {
-    colorPalette: opts.color_scale,
+    colorPalette: resolvePalette(opts.color_scale),
     colorStops: opts.color_stops,
     defaultColorScale: defaultColorScale ?? FALLBACK_COLOR_SCALE,
     min: opts.min,

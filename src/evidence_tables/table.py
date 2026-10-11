@@ -47,6 +47,7 @@ _OPTION_KEYS = {
     "empty_message",
     "default_sort",
     "row_conditional_colors",
+    "show_link_column",
     "header_color",
     "header_font_color",
     "total_row_color",
@@ -87,6 +88,7 @@ _OPTION_DEFAULTS: dict[str, Any] = {
     "empty_message": "No records",
     "default_sort": None,
     "row_conditional_colors": None,
+    "show_link_column": False,
     "header_color": None,
     "header_font_color": None,
     "total_row_color": None,
@@ -229,12 +231,19 @@ class EvidenceTable(anywidget.AnyWidget):
             normalized_rows = [jsonify(row) for row in raw_rows]
             inferred = infer_columns(None, raw_rows)
 
+        had_explicit_columns = columns is not None
         if columns is None and inferred:
             columns = inferred
         coerced = _apply_column_groups(_coerce_columns(columns, column_config), column_groups)
 
         merged_options = dict(_OPTION_DEFAULTS)
         merged_options.update(table_options)
+
+        link = merged_options.get("link")
+        if link and not had_explicit_columns and not merged_options.get("show_link_column"):
+            link_column = next((column for column in coerced if column["name"] == link), None)
+            if link_column is not None:
+                link_column["hide"] = True
 
         super().__init__(
             rows=normalized_rows,

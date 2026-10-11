@@ -125,6 +125,17 @@ def test_new_table_options_round_trip() -> None:
     assert table.options["header_color"] == "#eeeeee"
 
 
+def test_show_link_column() -> None:
+    rows = [{"name": "A", "url": "https://example.com"}]
+    hidden = EvidenceTable(rows, link="url")
+    url = next(column for column in hidden.columns if column["name"] == "url")
+    assert url.get("hide") is True
+
+    shown = EvidenceTable(rows, link="url", show_link_column=True)
+    url = next(column for column in shown.columns if column["name"] == "url")
+    assert not url.get("hide")
+
+
 def test_make_column_defaults() -> None:
     column = make_column("trip_distance", type="number", fmt="num1")
     assert column["name"] == "trip_distance"

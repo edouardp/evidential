@@ -42,6 +42,16 @@ test("viz ranges skip totals", () => {
   assert.deepEqual(ranges.get("x"), { min: 1, max: 5 });
 });
 
+test("named colour-scale presets resolve to palettes", () => {
+  const scale = createColorScale([], {
+    colorPalette: "green",
+    min: 0,
+    max: 1,
+  });
+  assert.ok(scale);
+  assert.match(getColorForValue(1, scale), /^#[0-9a-f]{6}$/i);
+});
+
 test("calculateColorStyles uses conditional color column", () => {
   const col = { name: "x", viz: "color", color_options: { conditional_colors: "color" } };
   const row = { x: 5, color: "#ff0000" };

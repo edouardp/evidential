@@ -9,7 +9,7 @@
 
 import marimo
 
-__generated_with = "0.20.0"
+__generated_with = "0.25.1"
 app = marimo.App(width="full")
 
 
@@ -61,7 +61,7 @@ def _(duckdb, mo):
                 TIMESTAMP '2024-01-01 00:00:00' + INTERVAL (i) HOUR AS pickup,
                 ['Credit card', 'Cash', 'Dispute'][i % 3] AS payment,
                 5 + (i % 40) + (i % 7) AS total_amount
-            FROM range(1, 2000) tbl(i)
+            FROM range(1, 720) tbl(i)
             """
         )
     else:
@@ -81,7 +81,6 @@ def _(duckdb, mo):
             FROM read_parquet(
                 'https://d37ci6vzurychx.cloudfront.net/trip-data/yellow_tripdata_2024-01.parquet'
             )
-            LIMIT 300000
             """
         )
     return (connection,)
@@ -99,7 +98,7 @@ def _(EvidenceTable, connection, mo):
                 sum(total_amount) AS revenue,
                 avg(total_amount) AS aov
             FROM trips
-            WHERE pickup >= TIMESTAMP '2024-01-01'
+            WHERE pickup BETWEEN TIMESTAMP '2024-01-01' AND TIMESTAMP '2024-02-01'
             GROUP BY payment, day
         )
         SELECT

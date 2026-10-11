@@ -117,7 +117,9 @@ export class EvidenceTableRenderer {
     );
     this.body.append(this.loadingOverlay);
     this.footer = h("div", { class: "et-footer" });
-    this.root.append(this.titlebar, this.toolbar, this.body, this.footer);
+    this.footnotesEl = h("div", { class: "et-footnotes" });
+    this.caption = h("div", { class: "et-caption" });
+    this.root.append(this.titlebar, this.toolbar, this.body, this.footer, this.footnotesEl, this.caption);
     this._loading = !!this.model.get("loading");
     const defaultSort = this.options.default_sort;
     if (defaultSort && defaultSort.column) {
@@ -418,6 +420,7 @@ export class EvidenceTableRenderer {
     }
 
     this.scroller.replaceChildren();
+    const footnotes = [];
     if (!rows.length) {
       this.scroller.append(
         h("div", { class: "et-empty" }, [h("span", {}, opts.empty_message || "No records")]),
@@ -435,10 +438,13 @@ export class EvidenceTableRenderer {
           section,
           dimCount,
           rowspans,
+          footnotes,
         }),
       );
     }
     this._renderFooter(page, pageCount, total);
+    this._renderFootnotes(footnotes, opts.footnotes);
+    this.caption.textContent = opts.caption || "";
     this._updateBaselineHeight();
     requestAnimationFrame(() => this._applyFrozenOffsets());
 
@@ -683,6 +689,13 @@ export class EvidenceTableRenderer {
   _renderRow(row, columns, ctx, index) {
     const opts = this.options;
     const renderType = row.render_type || "cell_data";
+    if (renderType === "row_section") {
+      const colSpan = columns.length + (ctx.rowNumbers ? 1 : 0) + (opts.link ? 1 : 0);
+      const label = row.__label ?? (columns[0] ? row[columns[0].name] : "");
+      return h("tr", { class: "et-row et-row-section" }, [
+        h("td", { class: "et-td et-section-cell", colspan: colSpan }, String(label ?? "")),
+      ]);
+    }
     const isTotal = renderType === "row_total";
     const isSubtotal = renderType === "row_subtotal";
     const isCollapsed = isSubtotal && row.__group_key && this._isCollapsed(row.__group_key);
@@ -750,9 +763,21 @@ export class EvidenceTableRenderer {
         return;
       }
 
-      const value = row[col.name];
+      let value = row[col.name];
+      // Optional cutoffs: values outside the range are treated as blank.
+      if (
+        value !== null &&
+        value !== undefined &&
+        (typeof value === "number" ||
+          (typeof value === "string" && value.trim() !== "" && !isNaN(Number(value))))
+      ) {
+        const numeric = Number(value);
+        if (col.blank_below != null && numeric < col.blank_below) value = null;
+        if (col.blank_above != null && numeric > col.blank_above) value = null;
+      }
       if (value === null || value === undefined) {
-        td.append(h("span", { class: "et-null" }, "–"));
+        const nullText = col.null_text ?? opts.null_text ?? "–";
+        td.append(h("span", { class: "et-null" }, String(nullText)));
         tr.append(td);
         return;
       }
@@ -837,6 +862,20 @@ export class EvidenceTableRenderer {
         td.style.backgroundColor = vizStyles.backgroundColor;
         td.style.color = vizStyles.color;
         td.classList.add("et-color-cell");
+      }
+
+      const footnoteColumn = col.footnote || opts.footnote_column;
+      if (footnoteColumn && row[footnoteColumn]) {
+        const noteText = String(row[footnoteColumn]).trim();
+        if (noteText) {
+          let note = ctx.footnotes.find((item) => item.text === noteText);
+          if (!note) {
+            note = { text: noteText, index: ctx.footnotes.length + 1, rows: new Set() };
+            ctx.footnotes.push(note);
+          }
+          note.rows.add((ctx.rowNumberBase || 0) + rowIndex + 1);
+          td.append(h("sup", { class: "et-footnote-mark", title: noteText }, String(note.index)));
+        }
       }
       tr.append(td);
     });
@@ -1018,6 +1057,32 @@ export class EvidenceTableRenderer {
       if (y !== null && !isNaN(y)) points.push([x, y]);
     });
     return points;
+  }
+
+  /** Render the footer notes collected while building rows, plus any static
+   * `footnotes`, with the row numbers each note appears on. */
+  _renderFootnotes(footnotes, staticFootnotes) {
+    this.footnotesEl.replaceChildren();
+    const items = footnotes.map((note) => ({
+      mark: String(note.index),
+      text: note.text,
+      rows: [...note.rows].sort((a, b) => a - b),
+    }));
+    for (const text of staticFootnotes || []) {
+      items.push({ mark: null, text: String(text), rows: [] });
+    }
+    if (!items.length) return;
+    const list = h("ol", { class: "et-footnotes-list" });
+    for (const item of items) {
+      const entry = h("li", { class: "et-footnote-item" });
+      if (item.mark) entry.append(h("sup", { class: "et-footnote-mark" }, item.mark));
+      entry.append(document.createTextNode((item.mark ? " " : "") + item.text));
+      if (item.rows.length) {
+        entry.append(h("span", { class: "et-footnote-rows" }, ` (rows ${formatRowRanges(item.rows)})`));
+      }
+      list.append(entry);
+    }
+    this.footnotesEl.append(list);
   }
 
   _renderFooter(page, pageCount, total) {
@@ -1240,6 +1305,25 @@ export class EvidenceTableRenderer {
 function optString(value) {
   if (typeof value === "object") return JSON.stringify(value);
   return String(value);
+}
+
+/** Compress a sorted list of row numbers into ranges, e.g. [1,2,3,5] -> "1–3, 5". */
+function formatRowRanges(rows) {
+  if (!rows.length) return "";
+  const ranges = [];
+  let start = rows[0];
+  let prev = rows[0];
+  for (let index = 1; index <= rows.length; index++) {
+    const value = rows[index];
+    if (value === prev + 1) {
+      prev = value;
+      continue;
+    }
+    ranges.push(start === prev ? String(start) : `${start}–${prev}`);
+    start = value;
+    prev = value;
+  }
+  return ranges.join(", ");
 }
 
 export function render({ model, el }) {

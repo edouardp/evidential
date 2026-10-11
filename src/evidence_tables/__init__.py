@@ -38,10 +38,11 @@ from .grouped import grouped_table, simple_table
 from .live import LiveEvidenceTable, query_values
 from .pivot import pivot_table
 from .query import date_range_sql, query_table
-from .table import EvidenceTable
+from .table import EvidenceTable, section_row
 
 __all__ = [
     "EvidenceTable",
+    "section_row",
     "LiveEvidenceTable",
     "grouped_table",
     "grouped_records",

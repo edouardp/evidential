@@ -505,6 +505,72 @@ test("section groups merge the dimension cell with rowspan", () => {
   renderer.destroy();
 });
 
+test("section rows span all columns", () => {
+  const columns = [
+    { name: "label", type: "string" },
+    { name: "a", type: "number" },
+    { name: "b", type: "number" },
+  ];
+  const rows = [
+    { label: "Metric", a: 1, b: 2 },
+    { render_type: "row_section", __label: "Section header" },
+    { label: "Metric 2", a: 3, b: 4 },
+  ];
+  const renderer = new EvidenceTableRenderer(makeModel(rows, columns, {}, el), el);
+  const section = el.querySelector(".et-row-section td");
+  assert.ok(section);
+  assert.equal(section.getAttribute("colspan"), "3");
+  assert.equal(section.textContent, "Section header");
+  renderer.destroy();
+});
+
+test("caption renders below the table", () => {
+  const renderer = new EvidenceTableRenderer(
+    makeModel(ROWS, COLUMNS, { caption: "Source: example" }, el),
+    el,
+  );
+  assert.equal(el.querySelector(".et-caption").textContent, "Source: example");
+  renderer.destroy();
+});
+
+test("blank_below/above and null_text control blank cells", () => {
+  const columns = [
+    { name: "v", type: "number", fmt: "num0", blank_below: 10 },
+    { name: "n", type: "number", fmt: "num0", null_text: "" },
+  ];
+  const rows = [
+    { v: 5, n: null },
+    { v: 15, n: 3 },
+  ];
+  const renderer = new EvidenceTableRenderer(makeModel(rows, columns, {}, el), el);
+  const bodyRows = el.querySelectorAll("tbody tr");
+  assert.equal(bodyRows[0].querySelectorAll("td")[0].querySelector(".et-null").textContent, "–");
+  assert.equal(bodyRows[0].querySelectorAll("td")[1].querySelector(".et-null").textContent, "");
+  assert.equal(bodyRows[1].querySelectorAll("td")[0].textContent, "15");
+  renderer.destroy();
+});
+
+test("data-driven footnotes collect notes with row numbers", () => {
+  const columns = [
+    { name: "city", type: "string", footnote: "note" },
+    { name: "trips", type: "number" },
+    { name: "note", type: "string", hide: true },
+  ];
+  const rows = [
+    { city: "NYC", trips: 1, note: "Custom processors" },
+    { city: "LA", trips: 2, note: null },
+    { city: "SF", trips: 3, note: "Custom processors" },
+    { city: "CHI", trips: 4, note: "Smart-phone / tablet" },
+  ];
+  const renderer = new EvidenceTableRenderer(makeModel(rows, columns, {}, el), el);
+  const items = el.querySelectorAll(".et-footnotes .et-footnote-item");
+  assert.equal(items.length, 2);
+  assert.match(items[0].textContent, /Custom processors/);
+  assert.match(items[0].textContent, /rows 1, 3/);
+  assert.match(items[1].textContent, /rows 4/);
+  renderer.destroy();
+});
+
 test("theme.background drives the opaque expanded surface", () => {
   const renderer = new EvidenceTableRenderer(
     makeModel(ROWS, COLUMNS, { theme: { background: "#123456" } }, el),

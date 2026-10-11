@@ -166,6 +166,26 @@ grouped_records(sales, group_by=["region", "category"],
 
 See `notebooks/15_client_grouping.py`.
 
+## Presentation parts
+
+A display table is more than its data — gt calls the surrounding pieces the
+*table parts*: a header, row labels, column labels/spanners, the body, and a
+footer with footnotes and source notes. `EvidenceTable` covers:
+
+- **Section dividers** — put `section_row("Label")` anywhere in `rows` for a
+  full-width divider row.
+- **Footnotes** — point a column at a footnote column with
+  `column_config={"Intel": {"footnote": "intel_note"}}`. Cells then show a
+  superscript mark and the footer lists each unique note with the rows it
+  appears on (`rows 6, 14`, compressed to ranges for hierarchical tables).
+  `footnotes=["..."]` adds static notes.
+- **Caption / source notes** — `caption="Sources: ..."`.
+- **Blanking / cutoffs** — `null_text=""` renders nulls as truly blank (the
+  default is `–`); `blank_below` / `blank_above` suppress values outside a
+  range; a Python `blank=lambda value: ...` predicate blanks individual cells.
+
+See `notebooks/16_tech_giants.py`.
+
 ## Live, parameterised tables
 
 `LiveEvidenceTable` keeps a parameterised query and re-runs it when its
@@ -259,6 +279,10 @@ See `notebooks/02_s3_tables.py` for a full example (it gracefully stops if
 | `fmt` | Format code or preset (`usd2`, `pct1`, `num1m`, `mmm-yy`, …). |
 | `fmt_column` | Column of format codes used per row. |
 | `total_fmt`, `subtotal_fmt` | Format codes for total/subtotal rows. |
+| `null_text` | Text for null/cut-off cells (default `–`; use `""` for blank). |
+| `blank_below`, `blank_above` | Treat numeric values outside the range as blank. |
+| `blank` / `blank_if` | Python callable `value -> bool`; `True` blanks the cell. |
+| `footnote`, `footnote_column` | Column of footnote text; cells show a superscript and the footer lists notes with their rows. |
 | `align` | `left`, `right`, `center` (defaults by type). |
 | `wrap`, `hide`, `red_negatives` | Layout / value tweaks. |
 | `viz` | `bar`, `color`, `sparkline`, `delta`, or `None`. |
@@ -268,6 +292,7 @@ See `notebooks/02_s3_tables.py` for a full example (it gracefully stops if
 | `sparkline_options` | `type` (`line`/`area`/`bar`), `x`/`y` (field names for struct arrays), `color`, `fit_to_data`, `width`, `height`, `y_fmt`. |
 | `link`, `link_label`, `link_new_tab` | Per-cell links. |
 | `html`, `image`, `image_options`, `logo` | Custom cell content (HTML, image URL, or logo.dev domain). |
+| `footnote` | Name of a column whose value is this cell's footnote text. |
 | `column_group`, `info`, `repeat_values`, `viz_include_subtotals` | Additional metadata. |
 
 ### Table options

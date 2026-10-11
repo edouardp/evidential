@@ -137,8 +137,23 @@ are done in SQL. We implement them as Python/DuckDB helpers where feasible.
 - [x] `notebooks/13_hierarchical_rows.py` (accordion/section groups)
 - [x] `notebooks/14_aggregations.py` (built-in + custom aggregations)
 - [x] `notebooks/15_client_grouping.py` (in-memory `grouped_records`)
+- [x] `notebooks/16_tech_giants.py` (gt-style table: sections, blanks, footnotes)
 - [x] `notebooks/README.md` index of all demos
 - [x] README feature/API docs
+
+## Presentation parts (gt-inspired)
+
+- [x] Table header (`title`, `subtitle`)
+- [x] Caption / source notes (`caption`)
+- [x] Section divider rows (`section_row`)
+- [x] Data-driven footnotes (`footnote` column option) with row references
+- [x] Static footnotes (`footnotes=[...]`)
+- [x] Blank rendering (`null_text`) + value cutoffs (`blank_below`/`blank_above`) and a Python `blank` predicate
+- [x] Column groups / spanners (`column_groups`)
+- [x] Row groups and summary rows (`grouped_table`, `group_type`)
+- [ ] Location-based styling API (we use per-column config + conditional colours)
+- [ ] Nested spanners
+- [ ] Cell text transformations
 
 ## Testing
 

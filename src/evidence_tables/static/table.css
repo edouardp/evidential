@@ -306,6 +306,41 @@
 .et-hidden { visibility: hidden; }
 .et-no-viz .et-bar-cell { display: none; }
 
+.et-row-section .et-section-cell {
+  font-weight: 600;
+  text-align: left;
+  border-top: 1px solid var(--et-header-border);
+  border-bottom: 1px solid var(--et-header-border);
+  background: var(--et-subtotal-bg);
+}
+.et-caption {
+  margin-top: 0.35rem;
+  color: var(--et-muted);
+  font-size: 0.75rem;
+  line-height: 1.35;
+}
+.et-caption:empty { display: none; }
+.et-footnotes:empty { display: none; }
+.et-footnotes {
+  margin-top: 0.35rem;
+  color: var(--et-muted);
+  font-size: 0.75rem;
+}
+.et-footnotes-list {
+  margin: 0;
+  padding-left: 1rem;
+  list-style: none;
+}
+.et-footnote-item { line-height: 1.5; }
+.et-footnote-mark {
+  color: var(--et-accent, #2563eb);
+  font-weight: 600;
+  font-size: 0.7em;
+  vertical-align: super;
+  cursor: help;
+}
+.et-footnote-rows { color: var(--et-muted); }
+
 /* ----------------------------------------------------------- delta ------- */
 .et-delta { font-weight: 600; white-space: nowrap; }
 .et-delta-good { color: #16a34a; }

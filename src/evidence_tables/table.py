@@ -9,7 +9,7 @@ from typing import Any
 import anywidget
 import traitlets
 
-from .data import _merge_column_config, infer_columns, jsonify, make_column, normalize_data
+from .data import _merge_column_config, apply_blank_predicates, infer_columns, jsonify, make_column, normalize_data
 
 __all__ = ["EvidenceTable"]
 
@@ -19,6 +19,10 @@ _ASSET_DIR = Path(__file__).parent / "static"
 _OPTION_KEYS = {
     "title",
     "subtitle",
+    "caption",
+    "null_text",
+    "footnote_column",
+    "footnotes",
     "info",
     "info_link",
     "info_link_title",
@@ -62,6 +66,10 @@ _OPTION_KEYS = {
 _OPTION_DEFAULTS: dict[str, Any] = {
     "title": None,
     "subtitle": None,
+    "caption": None,
+    "null_text": None,
+    "footnote_column": None,
+    "footnotes": None,
     "info": None,
     "info_link": None,
     "info_link_title": None,
@@ -210,6 +218,11 @@ def _normalize_column_options(data: dict[str, Any]) -> dict[str, Any]:
     return data
 
 
+def section_row(label: str) -> dict[str, Any]:
+    """Return a full-width section divider row for :class:`EvidenceTable`."""
+    return {"render_type": "row_section", "__label": label}
+
+
 def _coerce_column(column: str | Mapping[str, Any]) -> dict[str, Any]:
     if isinstance(column, str):
         return make_column(column)
@@ -250,8 +263,12 @@ def _coerce_columns(
         columns = []
     result = [_coerce_column(column) for column in columns]
     merged = _merge_column_config(result, column_config)
-    # column_config overrides bypass _coerce_column, so normalise them too.
-    return [_normalize_column_options(dict(column)) for column in merged]
+    # column_config overrides bypass _coerce_column, so normalise them too, and
+    # drop Python callables (e.g. `blank`) that can't cross the JSON boundary.
+    return [
+        _normalize_column_options({k: v for k, v in dict(column).items() if not callable(v)})
+        for column in merged
+    ]
 
 
 def _apply_column_groups(
@@ -325,6 +342,7 @@ class EvidenceTable(anywidget.AnyWidget):
         had_explicit_columns = columns is not None
         if columns is None and inferred:
             columns = inferred
+        normalized_rows = apply_blank_predicates(normalized_rows, column_config)
         coerced = _apply_column_groups(_coerce_columns(columns, column_config), column_groups)
 
         merged_options = dict(_OPTION_DEFAULTS)
@@ -376,7 +394,7 @@ class EvidenceTable(anywidget.AnyWidget):
             # column structure actually changed so data-only updates render once.
             if new_columns != list(self.columns):
                 self.columns = new_columns
-        self.rows = normalized_rows
+        self.rows = apply_blank_predicates(normalized_rows, column_config)
         return self
 
     def update_options(self, **options: Any) -> EvidenceTable:

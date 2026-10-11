@@ -178,6 +178,46 @@ def test_logo_content_type() -> None:
     assert table.columns[0]["logo"] == "domain"
 
 
+def test_section_row_and_caption() -> None:
+    from evidence_tables import section_row
+
+    table = EvidenceTable(
+        [{"a": 1}, section_row("Divider"), {"a": 2}],
+        columns=[{"name": "a", "type": "number"}],
+        caption="Source: example",
+    )
+    assert table.rows[1]["render_type"] == "row_section"
+    assert table.rows[1]["__label"] == "Divider"
+    assert table.options["caption"] == "Source: example"
+
+
+def test_blank_predicate_and_null_text() -> None:
+    table = EvidenceTable(
+        [{"v": 5}, {"v": 15}],
+        column_config={"v": {"blank": lambda value: value < 10, "null_text": ""}},
+    )
+    assert table.rows[0]["v"] is None
+    assert table.rows[1]["v"] == 15
+    # the callable must not be serialized to the browser
+    assert "blank" not in table.columns[0]
+    assert table.columns[0]["null_text"] == ""
+
+
+def test_null_text_option() -> None:
+    table = EvidenceTable([{"a": 1}], null_text="blank")
+    assert table.options["null_text"] == "blank"
+
+
+def test_footnote_options_round_trip() -> None:
+    table = EvidenceTable(
+        [{"city": "NYC", "note": "x"}],
+        column_config={"city": {"footnote": "note"}},
+        footnotes=["A static note"],
+    )
+    assert table.columns[0]["footnote"] == "note"
+    assert table.options["footnotes"] == ["A static note"]
+
+
 def test_make_column_defaults() -> None:
     column = make_column("trip_distance", type="number", fmt="num1")
     assert column["name"] == "trip_distance"

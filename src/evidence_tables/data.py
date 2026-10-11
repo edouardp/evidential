@@ -158,6 +158,38 @@ def _merge_column_config(
     return columns
 
 
+def apply_blank_predicates(
+    rows: Iterable[Mapping[str, Any]],
+    column_config: Mapping[str, Mapping[str, Any]] | None,
+) -> list[dict[str, Any]]:
+    """Replace values with ``None`` where a column's ``blank`` callable says so.
+
+    Custom callables cannot be serialised to the browser, so they are applied to
+    the rows here; the rendered result is a null (see the column's
+    ``null_text``).
+    """
+    if not column_config:
+        return [dict(row) for row in rows]
+    predicates: dict[str, Any] = {}
+    for name, config in column_config.items():
+        if not isinstance(config, Mapping):
+            continue
+        predicate = config.get("blank") or config.get("blank_if")
+        if callable(predicate):
+            predicates[name] = predicate
+    if not predicates:
+        return [dict(row) for row in rows]
+    result = []
+    for row in rows:
+        row = dict(row)
+        for name, predicate in predicates.items():
+            value = row.get(name)
+            if value is not None and predicate(value):
+                row[name] = None
+        result.append(row)
+    return result
+
+
 def normalize_data(data: Any) -> tuple[list[dict[str, Any]], list[dict[str, Any]] | None]:
     """Convert ``data`` into ``(rows, inferred_columns)``.
 

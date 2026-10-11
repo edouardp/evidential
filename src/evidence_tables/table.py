@@ -10,6 +10,7 @@ import anywidget
 import traitlets
 
 from .data import _merge_column_config, apply_blank_predicates, infer_columns, jsonify, make_column, normalize_data
+from .rules import resolve_rules
 
 __all__ = ["EvidenceTable"]
 
@@ -21,6 +22,8 @@ _OPTION_KEYS = {
     "subtitle",
     "caption",
     "null_text",
+    "stub",
+    "stub_head",
     "footnote_column",
     "footnotes",
     "info",
@@ -68,6 +71,8 @@ _OPTION_DEFAULTS: dict[str, Any] = {
     "subtitle": None,
     "caption": None,
     "null_text": None,
+    "stub": None,
+    "stub_head": None,
     "footnote_column": None,
     "footnotes": None,
     "info": None,
@@ -328,9 +333,11 @@ class EvidenceTable(anywidget.AnyWidget):
         columns: Iterable[str | Mapping[str, Any]] | None = None,
         column_config: Mapping[str, Mapping[str, Any]] | None = None,
         column_groups: Mapping[str, Sequence[str]] | None = None,
+        rules: Iterable[Mapping[str, Any]] | None = None,
         **options: Any,
     ) -> None:
         table_options = {key: options.pop(key) for key in list(options) if key in _OPTION_KEYS}
+        self._rules = list(rules) if rules else None
 
         if rows is None:
             normalized_rows, inferred = normalize_data(data)
@@ -343,10 +350,13 @@ class EvidenceTable(anywidget.AnyWidget):
         if columns is None and inferred:
             columns = inferred
         normalized_rows = apply_blank_predicates(normalized_rows, column_config)
+        normalized_rows, client_rules = resolve_rules(normalized_rows, rules)
         coerced = _apply_column_groups(_coerce_columns(columns, column_config), column_groups)
 
         merged_options = dict(_OPTION_DEFAULTS)
         merged_options.update(table_options)
+        if client_rules:
+            merged_options["rules"] = client_rules
         if (
             merged_options.get("groups_open") is not None
             and "collapsed" not in table_options
@@ -394,7 +404,13 @@ class EvidenceTable(anywidget.AnyWidget):
             # column structure actually changed so data-only updates render once.
             if new_columns != list(self.columns):
                 self.columns = new_columns
-        self.rows = apply_blank_predicates(normalized_rows, column_config)
+        normalized_rows = apply_blank_predicates(normalized_rows, column_config)
+        normalized_rows, client_rules = resolve_rules(normalized_rows, self._rules)
+        self.rows = normalized_rows
+        if client_rules:
+            current = dict(self.options)
+            current["rules"] = client_rules
+            self.options = current
         return self
 
     def update_options(self, **options: Any) -> EvidenceTable:

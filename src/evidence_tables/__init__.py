@@ -38,6 +38,7 @@ from .grouped import grouped_table, simple_table
 from .live import LiveEvidenceTable, query_values
 from .pivot import pivot_table
 from .query import date_range_sql, query_table
+from .rules import cells_body, resolve_rules, tab_format, tab_style, text_transform
 from .table import EvidenceTable, section_row
 
 __all__ = [
@@ -53,6 +54,11 @@ __all__ = [
     "BUILTIN_AGGREGATIONS",
     "resolve_aggregation",
     "apply_aggregations",
+    "cells_body",
+    "tab_style",
+    "tab_format",
+    "text_transform",
+    "resolve_rules",
     "simple_table",
     "query_values",
     "make_column",

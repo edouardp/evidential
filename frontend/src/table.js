@@ -444,7 +444,8 @@ export class EvidenceTableRenderer {
     }
     this._renderFooter(page, pageCount, total);
     this._renderFootnotes(footnotes, opts.footnotes);
-    this.caption.textContent = opts.caption || "";
+    this.caption.replaceChildren();
+    if (opts.caption) this.caption.append(inlineMarkdown(opts.caption));
     this._updateBaselineHeight();
     requestAnimationFrame(() => this._applyFrozenOffsets());
 
@@ -526,7 +527,8 @@ export class EvidenceTableRenderer {
     if (!title && !subtitle) return;
     const text = h("div", { class: "et-title-text" });
     if (title) {
-      const t = h("span", { class: "et-title" }, title);
+      const t = h("span", { class: "et-title" });
+      t.append(inlineMarkdown(title));
       if (info) {
         const infoSpan = h("span", { class: "et-info", title: info }, "ⓘ");
         if (info_link) {
@@ -541,7 +543,11 @@ export class EvidenceTableRenderer {
         text.append(t);
       }
     }
-    if (subtitle) text.append(h("div", { class: "et-subtitle" }, subtitle));
+    if (subtitle) {
+      const s = h("div", { class: "et-subtitle" });
+      s.append(inlineMarkdown(subtitle));
+      text.append(s);
+    }
     this.titlebar.append(text);
   }
 
@@ -588,35 +594,31 @@ export class EvidenceTableRenderer {
   _renderHeader(columns, ctx) {
     const opts = this.options;
     const thead = h("thead");
-    const groups = columns.some((c) => c.column_group);
-    if (groups) {
-      const groupRow = h("tr", { class: "et-header-groups" });
-      if (ctx.rowNumbers) {
-        groupRow.append(h("th", { class: "et-th et-th-group et-row-num" }, ""));
-      }
-      let i = 0;
-      while (i < columns.length) {
-        const group = columns[i].column_group;
-        if (group) {
-          let span = 1;
-          while (i + span < columns.length && columns[i + span].column_group === group) span++;
+    const paths = columns.map((column) => groupPath(column.column_group));
+    const depth = paths.reduce((max, path) => Math.max(max, path.length), 0);
+    if (depth > 0) {
+      const levels = buildHeaderLevels(paths, depth);
+      levels.forEach((cells, level) => {
+        const groupRow = h("tr", { class: "et-header-groups" });
+        if (ctx.rowNumbers && level === 0) {
+          groupRow.append(h("th", { class: "et-th et-th-group et-row-num", rowspan: depth }, ""));
+        }
+        for (const cell of cells) {
           groupRow.append(
             h(
               "th",
-              { class: "et-th et-th-group", colspan: span, "data-group": group, title: group },
-              group,
+              {
+                class: `et-th et-th-group${cell.label ? "" : " et-th-group-blank"}`,
+                colspan: cell.span,
+                "data-group": cell.label,
+                title: cell.label || null,
+              },
+              cell.label,
             ),
           );
-          i += span;
-        } else {
-          // Count consecutive ungrouped columns and emit a blank spanning header.
-          let span = 1;
-          while (i + span < columns.length && !columns[i + span].column_group) span++;
-          groupRow.append(h("th", { class: "et-th et-th-group et-th-group-blank", colspan: span }, ""));
-          i += span;
         }
-      }
-      thead.append(groupRow);
+        thead.append(groupRow);
+      });
     }
 
     const row = h("tr");
@@ -626,13 +628,19 @@ export class EvidenceTableRenderer {
     for (const col of columns) {
       const sorted = this._state.sort?.column === col.name;
       const dir = sorted ? this._state.sort.direction : null;
+      const isStub = opts.stub === col.name;
       const th = h("th", {
-        class: `et-th${sorted ? " et-th-sorted" : ""}`,
+        class: `et-th${sorted ? " et-th-sorted" : ""}${isStub ? " et-stub-head" : ""}`,
         style: this._alignStyle(col),
         "aria-sort": sorted ? (dir === "asc" ? "ascending" : "descending") : "none",
       });
       const inner = h("span", { class: "et-th-inner" });
-      const title = opts.format_titles === false ? col.name : (col.title || formatTitle(col.name));
+      const title =
+        isStub && opts.stub_head
+          ? opts.stub_head
+          : opts.format_titles === false
+            ? col.name
+            : col.title || formatTitle(col.name);
       inner.append(h("span", { class: "et-th-title" }, title));
       if (col.info) {
         inner.append(
@@ -686,6 +694,21 @@ export class EvidenceTableRenderer {
     return spans;
   }
 
+  /** Merge the style/format rules matching a cell (last match wins). */
+  _matchingRules(col, row) {
+    const rules = this.options.rules;
+    if (!rules || !rules.length) return { fmt: null, style: null };
+    let fmt = null;
+    let style = null;
+    for (const rule of rules) {
+      if (rule.columns !== "*" && !rule.columns.includes(col.name)) continue;
+      if (rule.rows && !rule.rows.includes(row.__row_id)) continue;
+      if (rule.fmt != null) fmt = rule.fmt;
+      if (rule.style) style = { ...(style || {}), ...rule.style };
+    }
+    return { fmt, style };
+  }
+
   _renderRow(row, columns, ctx, index) {
     const opts = this.options;
     const renderType = row.render_type || "cell_data";
@@ -732,7 +755,7 @@ export class EvidenceTableRenderer {
 
     const rowIndex = index;
     columns.forEach((col, index) => {
-      const td = h("td", { class: "et-td", style: this._alignStyle(col) });
+      const td = h("td", { class: `et-td${opts.stub === col.name ? " et-stub" : ""}`, style: this._alignStyle(col) });
       if (ctx.section && index < ctx.dimCount) {
         const dimIndex = (row.__level ?? ctx.dimCount) - 1;
         const renders =
@@ -784,12 +807,15 @@ export class EvidenceTableRenderer {
 
       const baseFormat =
         col.fmt_column && row[col.fmt_column] != null ? String(row[col.fmt_column]) : col.fmt;
+      const matched = this._matchingRules(col, row);
       const formatCode =
-        isTotal && col.total_fmt
-          ? col.total_fmt
-          : isSubtotal && col.subtotal_fmt
-            ? col.subtotal_fmt
-            : baseFormat;
+        matched.fmt != null
+          ? matched.fmt
+          : isTotal && col.total_fmt
+            ? col.total_fmt
+            : isSubtotal && col.subtotal_fmt
+              ? col.subtotal_fmt
+              : baseFormat;
       const formatted = formatValue(value, formatCode, {
         type: col.type,
         range: ctx.formatRanges.get(col.name),
@@ -875,6 +901,11 @@ export class EvidenceTableRenderer {
           }
           note.rows.add((ctx.rowNumberBase || 0) + rowIndex + 1);
           td.append(h("sup", { class: "et-footnote-mark", title: noteText }, String(note.index)));
+        }
+      }
+      if (matched.style) {
+        for (const [property, propertyValue] of Object.entries(matched.style)) {
+          td.style.setProperty(property, propertyValue);
         }
       }
       tr.append(td);
@@ -1305,6 +1336,49 @@ export class EvidenceTableRenderer {
 function optString(value) {
   if (typeof value === "object") return JSON.stringify(value);
   return String(value);
+}
+
+/** Minimal inline markdown: **bold**, *italic* and `code` (no raw HTML). */
+function inlineMarkdown(text) {
+  const fragment = document.createDocumentFragment();
+  const source = String(text ?? "");
+  const pattern = /\*\*([^*]+)\*\*|__([^_]+)__|\*([^*]+)\*|_([^_]+)_|`([^`]+)`/g;
+  let last = 0;
+  for (const match of source.matchAll(pattern)) {
+    if (match.index > last) fragment.append(document.createTextNode(source.slice(last, match.index)));
+    const [full, bold, bold2, italic, italic2, code] = match;
+    const value = bold ?? bold2 ?? italic ?? italic2 ?? code ?? full;
+    if (code != null) fragment.append(h("code", {}, value));
+    else if (bold != null || bold2 != null) fragment.append(h("strong", {}, value));
+    else fragment.append(h("em", {}, value));
+    last = match.index + full.length;
+  }
+  if (last < source.length) fragment.append(document.createTextNode(source.slice(last)));
+  return fragment;
+}
+
+function groupPath(group) {
+  if (!group) return [];
+  return Array.isArray(group) ? group.map(String) : [String(group)];
+}
+
+/** Build one row of header cells per group level, nesting sub-groups. */
+function buildHeaderLevels(paths, depth) {
+  const levels = Array.from({ length: depth }, () => []);
+  function recurse(start, end, level) {
+    if (level >= depth) return;
+    let i = start;
+    while (i < end) {
+      const label = paths[i][level] ?? "";
+      let j = i + 1;
+      while (j < end && (paths[j][level] ?? "") === label) j++;
+      levels[level].push({ label, span: j - i });
+      recurse(i, j, level + 1);
+      i = j;
+    }
+  }
+  recurse(0, paths.length, 0);
+  return levels;
 }
 
 /** Compress a sorted list of row numbers into ranges, e.g. [1,2,3,5] -> "1–3, 5". */

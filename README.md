@@ -180,11 +180,38 @@ footer with footnotes and source notes. `EvidenceTable` covers:
   appears on (`rows 6, 14`, compressed to ranges for hierarchical tables).
   `footnotes=["..."]` adds static notes.
 - **Caption / source notes** — `caption="Sources: ..."`.
+- **Nested spanners** — `column_group` accepts a list for multi-level headers:
+  `{"name": "sales", "column_group": ["2021", "Sales"]}`.
+- **Stub** — `stub="product"` marks the row-label column and `stub_head` labels it.
+- **Markdown titles** — `title`/`subtitle`/`caption` support inline `**bold**`,
+  `*italic*` and `` `code` ``.
 - **Blanking / cutoffs** — `null_text=""` renders nulls as truly blank (the
   default is `–`); `blank_below` / `blank_above` suppress values outside a
   range; a Python `blank=lambda value: ...` predicate blanks individual cells.
 
-See `notebooks/16_tech_giants.py`.
+### Location-based rules (gt's `tab_style` / `tab_format` / `text_transform`)
+
+Target sets of cells with `cells_body(columns, rows)`, where `rows` is 0-based
+indices or a Python predicate on the row. Rules run in order; the last match
+wins.
+
+```python
+from evidence_tables import EvidenceTable, cells_body, tab_style, tab_format, text_transform
+
+EvidenceTable(
+    data,
+    rules=[
+        tab_style(
+            cells_body(columns=["sales"], rows=lambda r: r["sales"] < r["prior"]),
+            background="#fee2e2", color="#b91c1c", font_weight="600",
+        ),
+        tab_format(cells_body(columns=["revenue"]), "usd0"),
+        text_transform(cells_body(columns="code"), str.upper),
+    ],
+)
+```
+
+See `notebooks/16_tech_giants.py` and `notebooks/17_gt_features.py`.
 
 ## Live, parameterised tables
 

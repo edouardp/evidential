@@ -571,6 +571,69 @@ test("data-driven footnotes collect notes with row numbers", () => {
   renderer.destroy();
 });
 
+test("nested column groups build multiple header rows", () => {
+  const columns = [
+    { name: "city", type: "string" },
+    { name: "sales21", type: "number", column_group: ["Sales", "2021"] },
+    { name: "orders21", type: "number", column_group: ["Sales", "2021"] },
+    { name: "sales22", type: "number", column_group: ["Sales", "2022"] },
+  ];
+  const rows = [{ city: "NYC", sales21: 1, orders21: 2, sales22: 3 }];
+  const renderer = new EvidenceTableRenderer(makeModel(rows, columns, {}, el), el);
+  const groupRows = el.querySelectorAll("thead .et-header-groups");
+  assert.equal(groupRows.length, 2);
+  const level0 = [...groupRows[0].querySelectorAll("th")];
+  assert.equal(level0[0].textContent, "");
+  assert.equal(level0[1].textContent, "Sales");
+  assert.equal(level0[1].getAttribute("colspan"), "3");
+  const level1 = [...groupRows[1].querySelectorAll("th")];
+  assert.equal(level1[1].textContent, "2021");
+  assert.equal(level1[1].getAttribute("colspan"), "2");
+  renderer.destroy();
+});
+
+test("location rules apply per-cell style and format", () => {
+  const columns = [
+    { name: "city", type: "string" },
+    { name: "trips", type: "number", fmt: "id" },
+  ];
+  const rows = [
+    { city: "NYC", trips: 12000, __row_id: 0 },
+    { city: "LA", trips: 8000, __row_id: 1 },
+  ];
+  const rules = [{ columns: ["trips"], rows: [0], style: { color: "#b91c1c" }, fmt: "num0" }];
+  const renderer = new EvidenceTableRenderer(makeModel(rows, columns, { rules }, el), el);
+  const firstTrips = el.querySelectorAll("tbody tr")[0].querySelectorAll("td")[1];
+  assert.equal(firstTrips.style.color, "rgb(185, 28, 28)");
+  assert.equal(firstTrips.textContent, "12,000");
+  renderer.destroy();
+});
+
+test("inline markdown renders in the title", () => {
+  const renderer = new EvidenceTableRenderer(
+    makeModel(ROWS, COLUMNS, { title: "**Bold** title" }, el),
+    el,
+  );
+  const strong = el.querySelector(".et-title strong");
+  assert.ok(strong);
+  assert.equal(strong.textContent, "Bold");
+  renderer.destroy();
+});
+
+test("stub head label is used for the stub column", () => {
+  const columns = [
+    { name: "city", type: "string" },
+    { name: "trips", type: "number" },
+  ];
+  const renderer = new EvidenceTableRenderer(
+    makeModel([{ city: "NYC", trips: 1 }], columns, { stub: "city", stub_head: "Place" }, el),
+    el,
+  );
+  assert.equal(el.querySelector(".et-stub-head").textContent.trim(), "Place");
+  assert.ok(el.querySelector("tbody .et-stub"));
+  renderer.destroy();
+});
+
 test("theme.background drives the opaque expanded surface", () => {
   const renderer = new EvidenceTableRenderer(
     makeModel(ROWS, COLUMNS, { theme: { background: "#123456" } }, el),

@@ -138,6 +138,7 @@ are done in SQL. We implement them as Python/DuckDB helpers where feasible.
 - [x] `notebooks/14_aggregations.py` (built-in + custom aggregations)
 - [x] `notebooks/15_client_grouping.py` (in-memory `grouped_records`)
 - [x] `notebooks/16_tech_giants.py` (gt-style table: sections, blanks, footnotes)
+- [x] `notebooks/17_gt_features.py` (nested spanners, stub, rules)
 - [x] `notebooks/README.md` index of all demos
 - [x] README feature/API docs
 
@@ -150,10 +151,11 @@ are done in SQL. We implement them as Python/DuckDB helpers where feasible.
 - [x] Static footnotes (`footnotes=[...]`)
 - [x] Blank rendering (`null_text`) + value cutoffs (`blank_below`/`blank_above`) and a Python `blank` predicate
 - [x] Column groups / spanners (`column_groups`)
+- [x] Nested spanners (`column_group=["2021", "Sales"]`)
+- [x] First-class stub (`stub`, `stub_head`)
+- [x] Markdown in titles/subtitles/captions (inline `**bold**`, `*italic*`, `` `code` ``)
+- [x] Location-based styling/formatting/transforms (`cells_body` + `tab_style` / `tab_format` / `text_transform`)
 - [x] Row groups and summary rows (`grouped_table`, `group_type`)
-- [ ] Location-based styling API (we use per-column config + conditional colours)
-- [ ] Nested spanners
-- [ ] Cell text transformations
 
 ## Testing
 

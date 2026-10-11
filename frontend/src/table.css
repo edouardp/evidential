@@ -320,6 +320,7 @@
   line-height: 1.35;
 }
 .et-caption:empty { display: none; }
+.et-stub, .et-stub-head { text-align: left; }
 .et-footnotes:empty { display: none; }
 .et-footnotes {
   margin-top: 0.35rem;

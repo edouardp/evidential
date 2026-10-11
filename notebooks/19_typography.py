@@ -38,7 +38,7 @@ def _(mo):
     | Left-align text, right-align numbers | alignment defaults by column type |
     | Match headings to their data | header alignment follows the column |
     | Align to the decimal point | `align_decimals=True` (pads to a common precision) |
-    | Tabular lining numerals | `font-variant-numeric: tabular-nums` on numbers |
+    | Tabular lining numerals | `lining-nums tabular-nums` (default); `figure_style` overrides |
     | Don't stretch the table | `stretch=False` sizes columns to their content |
     | Keep furniture to a minimum | `row_lines=False`, no fills, no frame |
     | Caption / provenance | `caption="..."` |

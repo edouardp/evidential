@@ -99,3 +99,8 @@ def test_rotate_titles_option() -> None:
     assert table.options["rotate_titles"] == "vertical"
     oblique = EvidenceTable([{"a": 1}], rotate_titles=-45)
     assert oblique.options["rotate_titles"] == -45
+
+
+def test_figure_style_option() -> None:
+    table = EvidenceTable([{"a": 1}], figure_style="lining-tabular")
+    assert table.options["figure_style"] == "lining-tabular"

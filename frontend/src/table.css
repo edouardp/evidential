@@ -180,7 +180,8 @@
   border-spacing: 0;
   width: 100%;
   margin: 0;
-  font-variant-numeric: tabular-nums;
+  /* ALA: lining (uppercase-height) tabular numerals in tables of figures. */
+  font-variant-numeric: lining-nums tabular-nums;
 }
 .et-root.et-wrap .et-td { white-space: normal; }
 .et-root:not(.et-wrap) .et-td { white-space: nowrap; }
@@ -207,7 +208,7 @@
   white-space: nowrap;
   text-align: right;
   color: var(--et-muted);
-  font-variant-numeric: tabular-nums;
+  font-variant-numeric: lining-nums tabular-nums;
 }
 
 /* column info icon */

@@ -189,7 +189,9 @@ footer with footnotes and source notes. `EvidenceTable` covers:
   default is `–`); `blank_below` / `blank_above` suppress values outside a
   range; a Python `blank=lambda value: ...` predicate blanks individual cells.
 - **Readable typography** — text is left-aligned and numbers right-aligned by
-  default, headings follow their column, and figures are tabular. `stretch=False`
+  default, headings follow their column, and figures are **lining** tabular
+  numerals (so a font that defaults to oldstyle/lowercase figures is corrected;
+  override with `figure_style="oldstyle"|"proportional"|…`). `stretch=False`
   sizes columns to their content ("don't stretch tables"), and
   `align_decimals=True` pads each numeric column to a common precision so the
   decimal points line up. `row_lines=False` / `row_shading=False` keep the

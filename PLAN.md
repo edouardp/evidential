@@ -184,6 +184,7 @@ are done in SQL. We implement them as Python/DuckDB helpers where feasible.
 - [x] Consistent number precision per column (auto formats)
 - [x] Grouping with white space (`group_gap`), section dividers, and group-size striping (`row_shading=n` / `[shaded, unshaded]`)
 - [x] Rotated headings (`rotate_titles="vertical"` 90° CCW, or oblique degrees)
+- [x] Lining (uppercase-height) numerals by default + `figure_style` override
 
 ## Testing
 

@@ -755,6 +755,14 @@ test("rotated headers: vertical and oblique", () => {
   oblique.destroy();
 });
 
+test("figure_style sets font-variant-numeric", () => {
+  const columns = [{ name: "v", type: "number", fmt: "num0", figure_style: "oldstyle" }];
+  const renderer = new EvidenceTableRenderer(makeModel([{ v: 1234 }], columns, {}, el), el);
+  const td = el.querySelector("tbody .et-td");
+  assert.equal(td.style.fontVariantNumeric, "oldstyle-nums tabular-nums");
+  renderer.destroy();
+});
+
 test("theme.background drives the opaque expanded surface", () => {
   const renderer = new EvidenceTableRenderer(
     makeModel(ROWS, COLUMNS, { theme: { background: "#123456" } }, el),

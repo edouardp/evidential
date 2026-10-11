@@ -671,7 +671,7 @@ export class EvidenceTableRenderer {
       else if (typeof rotation === "number") thClass += " et-th-oblique";
       const th = h("th", {
         class: thClass,
-        style: this._alignStyle(col),
+        style: withFigure(this._alignStyle(col), col, opts),
         "aria-sort": sorted ? (dir === "asc" ? "ascending" : "descending") : "none",
       });
       if (typeof rotation === "number") {
@@ -850,7 +850,7 @@ export class EvidenceTableRenderer {
 
     const rowIndex = index;
     columns.forEach((col, index) => {
-      const td = h("td", { class: `et-td${opts.stub === col.name ? " et-stub" : ""}`, style: this._alignStyle(col) });
+      const td = h("td", { class: `et-td${opts.stub === col.name ? " et-stub" : ""}`, style: withFigure(this._alignStyle(col), col, opts) });
       if (ctx.section && index < ctx.dimCount) {
         const dimIndex = (row.__level ?? ctx.dimCount) - 1;
         const renders =
@@ -1482,6 +1482,31 @@ function inlineMarkdown(text) {
   }
   if (last < source.length) fragment.append(document.createTextNode(source.slice(last)));
   return fragment;
+}
+
+/** Map a figure style to a `font-variant-numeric` value (ALA). */
+function figureVariant(style) {
+  switch (style) {
+    case "oldstyle":
+    case "oldstyle-tabular":
+      return "oldstyle-nums tabular-nums";
+    case "proportional":
+    case "lining-proportional":
+      return "lining-nums proportional-nums";
+    case "oldstyle-proportional":
+      return "oldstyle-nums proportional-nums";
+    case "lining":
+    case "tabular":
+    case "lining-tabular":
+      return "lining-nums tabular-nums";
+    default:
+      return null;
+  }
+}
+
+function withFigure(baseStyle, col, opts) {
+  const variant = figureVariant(col.figure_style ?? opts.figure_style);
+  return variant ? { ...baseStyle, fontVariantNumeric: variant } : baseStyle;
 }
 
 function groupPath(group) {

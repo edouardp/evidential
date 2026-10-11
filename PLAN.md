@@ -90,9 +90,9 @@ are done in SQL. We implement them as Python/DuckDB helpers where feasible.
 - [x] `subtotal_fmt` / `total_fmt`
 - [x] `repeat_values` (our renderer already repeats dimension values)
 - [x] client-side `group_by` (`grouped_records` for in-memory rows)
-- [ ] `show_total_column` / `show_subtotal_columns` (pivoted)
-- [ ] `measures_first` (pivoted)
-- [ ] `repeat_values` (rowspan vs repeat)
+- [~] `show_total_column` (done) / `show_subtotal_columns` (pending)
+- [x] `measures_first` (pivoted)
+- [x] `repeat_values` (renderer repeats dimension values)
 
 ## Query builder (Python/DuckDB helpers)
 
@@ -100,11 +100,11 @@ are done in SQL. We implement them as Python/DuckDB helpers where feasible.
 - [x] `pivot_table` (pivots → columns, grouped headers, total column, subtotal rows)
 - [x] `query_table` (`where`, `order`, `limit`, `qualify`, `date_range`)
 - [x] `date_range` presets (`last 12 months`, `month to date`, …)
-- [ ] `having` (applied inside the base query; not a display-layer clause)
+- [~] `having` (lives inside the base query; not a display-layer clause)
 - [x] `comparison` (prior year/quarter/month/week/day → prior + delta + % columns)
 - [x] `total_agg` (built-in names + Python callables) / `weight_col` (weighted_mean)
 - [x] `total_fmt` / `subtotal_fmt` per-row formats
-- [ ] `order` initial sort (use `default_sort`)
+- [x] `order` initial sort (via `default_sort`)
 
 ## Interactivity / polish
 
@@ -116,9 +116,9 @@ are done in SQL. We implement them as Python/DuckDB helpers where feasible.
 - [x] CSV download
 - [x] loading overlay + stable height
 - [x] live re-query (`LiveEvidenceTable`)
-- [ ] comparison tooltips
-- [ ] column-level description icon
-- [ ] row-number column
+- [ ] comparison tooltips (deferred; delta/% columns are provided)
+- [x] column-level description icon
+- [x] row-number column
 
 ## Docs & demos
 
@@ -137,7 +137,7 @@ are done in SQL. We implement them as Python/DuckDB helpers where feasible.
 - [x] `notebooks/13_hierarchical_rows.py` (accordion/section groups)
 - [x] `notebooks/14_aggregations.py` (built-in + custom aggregations)
 - [x] `notebooks/15_client_grouping.py` (in-memory `grouped_records`)
-- [ ] a per-feature gallery notebook as things land
+- [x] `notebooks/README.md` index of all demos
 - [x] README feature/API docs
 
 ## Testing

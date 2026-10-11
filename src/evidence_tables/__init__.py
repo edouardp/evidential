@@ -30,6 +30,7 @@ Quick start::
 """
 
 from . import duck
+from .aggregations import BUILTIN_AGGREGATIONS, apply_aggregations, resolve_aggregation
 from .comparison import comparison_table
 from .data import make_column
 from .grouped import grouped_table, simple_table
@@ -46,6 +47,9 @@ __all__ = [
     "comparison_table",
     "query_table",
     "date_range_sql",
+    "BUILTIN_AGGREGATIONS",
+    "resolve_aggregation",
+    "apply_aggregations",
     "simple_table",
     "query_values",
     "make_column",

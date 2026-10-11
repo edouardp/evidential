@@ -12,6 +12,7 @@ import re
 from collections.abc import Mapping, Sequence
 from typing import Any
 
+from .aggregations import apply_aggregations
 from .data import jsonify
 from .table import EvidenceTable
 
@@ -127,6 +128,8 @@ def grouped_table(
     total_position: str = "bottom",
     total_label: str = "Total",
     total_measures: Mapping[str, str] | None = None,
+    aggregations: Any = None,
+    weight_columns: Mapping[str, str] | None = None,
     dimension_config: Mapping[str, Mapping[str, Any]] | None = None,
     measure_config: Mapping[str, Mapping[str, Any]] | None = None,
     **table_options: Any,
@@ -159,6 +162,14 @@ def grouped_table(
             )
         else:
             measure_columns.append(f"{expression} AS {alias}")
+
+    # Weighted aggregations need each measure's weights summed per detail group.
+    weight_aliases: dict[str, str] = {}
+    for alias, weight_column in (weight_columns or {}).items():
+        hidden = f"__w_{alias}"
+        measure_columns.append(f"sum({weight_column}) AS {hidden}")
+        weight_aliases[alias] = hidden
+
     measure_cols = ", ".join(measure_columns)
 
     sets: list[str] = []
@@ -187,6 +198,16 @@ def grouped_table(
         total_position=total_position,
         total_label=total_label,
     )
+    if aggregations is not None:
+        ordered = apply_aggregations(
+            ordered,
+            aggregations,
+            [alias for alias, _ in parsed_measures],
+            weight_aliases or None,
+        )
+    for row in ordered:
+        for hidden in weight_aliases.values():
+            row.pop(hidden, None)
 
     measure_aliases = [alias for alias, _ in parsed_measures]
 

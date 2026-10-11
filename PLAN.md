@@ -55,7 +55,7 @@ are done in SQL. We implement them as Python/DuckDB helpers where feasible.
 - [x] `fmt_column` (per-row format codes)
 - [x] `wrap`, `wrap_title`
 - [x] `info` / `description` (header icon)
-- [~] `total_agg` via `total_measures`; `total_fmt`/`weight_col` pending
+- [x] `total_agg` / `total_fmt` — `aggregations` built-ins + callables, per-row formats
 - [x] `total_fmt` / `subtotal_fmt` per-row formats
 - [x] `hide`
 - [x] `red_negatives`
@@ -102,7 +102,7 @@ are done in SQL. We implement them as Python/DuckDB helpers where feasible.
 - [x] `date_range` presets (`last 12 months`, `month to date`, …)
 - [ ] `having` (applied inside the base query; not a display-layer clause)
 - [x] `comparison` (prior year/quarter/month/week/day → prior + delta + % columns)
-- [~] `total_agg` via `total_measures`; weighted mean pending
+- [x] `total_agg` (built-in names + Python callables) / `weight_col` (weighted_mean)
 - [x] `total_fmt` / `subtotal_fmt` per-row formats
 - [ ] `order` initial sort (use `default_sort`)
 
@@ -135,6 +135,7 @@ are done in SQL. We implement them as Python/DuckDB helpers where feasible.
 - [x] `notebooks/11_comparisons.py` (prior-period comparisons)
 - [x] `notebooks/12_color_scales.py` (colour scales & conditional formatting)
 - [x] `notebooks/13_hierarchical_rows.py` (accordion/section groups)
+- [x] `notebooks/14_aggregations.py` (built-in + custom aggregations)
 - [ ] a per-feature gallery notebook as things land
 - [x] README feature/API docs
 

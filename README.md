@@ -127,6 +127,30 @@ Measures may be strings (`"sum(x) AS total"`), `(alias, expression)` tuples, or
 with `render_type` (`cell_data` / `row_subtotal` / `row_total`) and grouping
 metadata on each row.
 
+### Aggregations for subtotals/totals
+
+By default subtotals re-run the measure's SQL aggregate. `aggregations`
+recomputes them from the detail values (Evidence's `totalAgg`) using built-in
+names or any Python callable:
+
+```python
+import statistics
+from evidence_tables import grouped_table, BUILTIN_AGGREGATIONS
+
+grouped_table(con, sql, ["category", "item"], ["sum(sales) AS sales"],
+              aggregations={"sales": "mean"})        # sum, mean, median, min,
+                                                     # max, count, count_distinct,
+                                                     # weighted_mean
+
+grouped_table(..., aggregations={"sales": statistics.median})
+grouped_table(..., aggregations={"sales": lambda values: max(values) - min(values)})
+grouped_table(..., aggregations={"sales": "weighted_mean"},
+              weight_columns={"sales": "weight"})
+```
+
+`total_measures={"sales": "avg(sales)"}` is also available for a direct SQL
+override of the grand total. See `notebooks/14_aggregations.py`.
+
 ## Live, parameterised tables
 
 `LiveEvidenceTable` keeps a parameterised query and re-runs it when its

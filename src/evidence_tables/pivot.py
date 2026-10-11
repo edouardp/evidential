@@ -12,6 +12,7 @@ import datetime as dt
 from collections.abc import Mapping, Sequence
 from typing import Any
 
+from .aggregations import apply_aggregations
 from .data import jsonify, make_column
 from .grouped import _parse_measure, decorate_grouped_rows
 from .table import EvidenceTable
@@ -53,6 +54,8 @@ def pivot_table(
     subtotal_position: str = "bottom",
     total_position: str = "bottom",
     total_label: str = "Total",
+    aggregations: Any = None,
+    weight_columns: Mapping[str, str] | None = None,
     dimension_config: Mapping[str, Mapping[str, Any]] | None = None,
     measure_config: Mapping[str, Mapping[str, Any]] | None = None,
     **table_options: Any,
@@ -143,6 +146,13 @@ def pivot_table(
         total_position=total_position,
         total_label=total_label,
     )
+    if aggregations is not None:
+        ordered = apply_aggregations(
+            ordered,
+            aggregations,
+            [alias for alias, _ in parsed_measures],
+            None,
+        )
 
     # ---- columns -----------------------------------------------------------
     columns: list[dict[str, Any]] = []

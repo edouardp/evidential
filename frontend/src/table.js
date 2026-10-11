@@ -1505,8 +1505,11 @@ function figureVariant(style) {
 }
 
 function withFigure(baseStyle, col, opts) {
+  const style = { ...baseStyle };
   const variant = figureVariant(col.figure_style ?? opts.figure_style);
-  return variant ? { ...baseStyle, fontVariantNumeric: variant } : baseStyle;
+  if (variant) style.fontVariantNumeric = variant;
+  if (col.font) style.fontFamily = col.font;
+  return style;
 }
 
 function groupPath(group) {

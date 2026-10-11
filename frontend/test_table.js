@@ -763,6 +763,14 @@ test("figure_style sets font-variant-numeric", () => {
   renderer.destroy();
 });
 
+test("per-column font sets font-family", () => {
+  const columns = [{ name: "v", type: "number", font: "'Hoefler Text', serif" }];
+  const renderer = new EvidenceTableRenderer(makeModel([{ v: 1234 }], columns, {}, el), el);
+  const td = el.querySelector("tbody .et-td");
+  assert.match(td.style.fontFamily, /Hoefler/);
+  renderer.destroy();
+});
+
 test("theme.background drives the opaque expanded surface", () => {
   const renderer = new EvidenceTableRenderer(
     makeModel(ROWS, COLUMNS, { theme: { background: "#123456" } }, el),

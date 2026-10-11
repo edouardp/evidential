@@ -344,6 +344,8 @@ See `notebooks/02_s3_tables.py` for a full example (it gracefully stops if
 | `blank` / `blank_if` | Python callable `value -> bool`; `True` blanks the cell. |
 | `footnote`, `footnote_column` | Column of footnote text; cells show a superscript and the footer lists notes with their rows. |
 | `align` | `left`, `right`, `center` (defaults by type). |
+| `font` | Font family for this column (e.g. `"'Hoefler Text', serif"`). |
+| `figure_style` | `lining-tabular` (default), `oldstyle`, `proportional`, … |
 | `wrap`, `hide`, `red_negatives` | Layout / value tweaks. |
 | `viz` | `bar`, `color`, `sparkline`, `delta`, or `None`. |
 | `bar_options` | `bar_color`, `bar_color_negative`, `hide_labels`, `fit_to_data`. |

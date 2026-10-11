@@ -15,17 +15,18 @@ minimum.
 
 import marimo
 
-__generated_with = "0.20.0"
+__generated_with = "0.25.1"
 app = marimo.App(width="full")
 
 
-@app.cell
-def _():
-    import marimo as mo
+app._unparsable_cell(
+    r"""
+     import marimo as mo
 
     from evidence_tables import EvidenceTable
-
-    return EvidenceTable, mo
+    """,
+    name="_"
+)
 
 
 @app.cell
@@ -148,12 +149,13 @@ def _(EvidenceTable, mo):
 @app.cell
 def _(mo):
     mo.md("""
-    ## Numerals: lining vs oldstyle
+    ## Numerals: lining vs lowercase
 
-    ALA recommends **lining tabular** figures in tables. The same numbers are
-    shown in each style. Oldstyle figures require a font that ships the `onum`
-    feature (Iowan Old Style here; Georgia's figures are oldstyle by default
-    with no way to switch, and many sans fonts are lining-only).
+    ALA recommends **lining tabular** figures in tables. Here two typefaces are
+    compared: Iowan Old Style (lining by default, with `onum`/`tnum`) and
+    **Hoefler Text**, whose figures are lowercase (oldstyle) by default. Hoefler
+    exposes its features through AAT rather than OpenType, so the style comes
+    from the font itself rather than `font-variant-numeric`.
     """)
     return
 
@@ -161,23 +163,30 @@ def _(mo):
 @app.cell
 def _(EvidenceTable, mo):
     numerals = [
-        {"glyphs": "Sequence", "lining": 1111111111, "oldstyle": 1111111111, "proportional": 1111111111, "oldstyle_prop": 1111111111},
-        {"glyphs": "Mixed", "lining": 104729.54, "oldstyle": 104729.54, "proportional": 104729.54, "oldstyle_prop": 104729.54},
-        {"glyphs": "Headings", "lining": 1234567890, "oldstyle": 1234567890, "proportional": 1234567890, "oldstyle_prop": 1234567890},
+        {"glyphs": "Sequence", "lining": 1111111111, "lowercase": 1111111111},
+        {"glyphs": "Mixed", "lining": 104729.54, "lowercase": 104729.54},
+        {"glyphs": "Headings", "lining": 1234567890, "lowercase": 1234567890},
     ]
     mo.ui.anywidget(
         EvidenceTable(
             numerals,
             title="Numerals",
-            theme={"font": "'Iowan Old Style', 'New York', Georgia, serif", "font_size": "1.05rem"},
             stretch=False,
             row_lines=False,
             column_config={
                 "glyphs": {"align": "left"},
-                "lining": {"title": "Lining tabular", "fmt": "num2", "align": "right", "figure_style": "lining-tabular"},
-                "oldstyle": {"title": "Oldstyle", "fmt": "num2", "align": "right", "figure_style": "oldstyle"},
-                "proportional": {"title": "Lining proportional", "fmt": "num2", "align": "right", "figure_style": "proportional"},
-                "oldstyle_prop": {"title": "Oldstyle proportional", "fmt": "num2", "align": "right", "figure_style": "oldstyle-proportional"},
+                "lining": {
+                    "title": "Lining — Iowan Old Style",
+                    "fmt": "num2",
+                    "align": "right",
+                    "font": "'Iowan Old Style', Georgia, serif",
+                },
+                "lowercase": {
+                    "title": "Lowercase — Hoefler Text",
+                    "fmt": "num2",
+                    "align": "right",
+                    "font": "'Hoefler Text', Georgia, serif",
+                },
             },
         )
     )

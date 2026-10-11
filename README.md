@@ -153,7 +153,7 @@ Values from `params` / `set_controls` are bound as SQL parameters, never spliced
 into the SQL text. Outside a reactive host, `bind_controls=True` makes the
 widget re-run itself on control changes. `query_values(con, sql)` returns one
 column as a list, handy for populating dropdowns/multiselects from dimension
-queries. See `notebooks/03_live_drilldown.py`.
+queries. See `notebooks/03_live_drilldown.py` and `notebooks/04_live_demo.py`.
 
 ## Amazon S3 Tables
 

@@ -151,8 +151,9 @@ def _(mo):
     ## Numerals: lining vs oldstyle
 
     ALA recommends **lining tabular** figures in tables. The same numbers are
-    shown in each style — Georgia is used so the oldstyle variants exist; where
-    a font lacks them the browser falls back to lining.
+    shown in each style. Oldstyle figures require a font that ships the `onum`
+    feature (Iowan Old Style here; Georgia's figures are oldstyle by default
+    with no way to switch, and many sans fonts are lining-only).
     """)
     return
 
@@ -168,7 +169,7 @@ def _(EvidenceTable, mo):
         EvidenceTable(
             numerals,
             title="Numerals",
-            theme={"font": "Georgia, 'Times New Roman', serif"},
+            theme={"font": "'Iowan Old Style', 'New York', Georgia, serif", "font_size": "1.05rem"},
             stretch=False,
             row_lines=False,
             column_config={

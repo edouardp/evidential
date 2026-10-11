@@ -15,7 +15,7 @@ from typing import Any
 from .data import jsonify
 from .table import EvidenceTable
 
-__all__ = ["grouped_table", "simple_table"]
+__all__ = ["grouped_table", "simple_table", "decorate_grouped_rows"]
 
 _ALIAS_RE = re.compile(r"\s+as\s+([A-Za-z_][\w]*)\s*$", re.IGNORECASE)
 _SEP = "\x1f"
@@ -40,6 +40,79 @@ def _parse_measure(measure: Any) -> tuple[str, str]:
 
 def _key(path: Sequence[Any]) -> str:
     return _SEP.join(json.dumps(jsonify(value), default=str) for value in path)
+
+
+def decorate_grouped_rows(
+    rows: Sequence[Mapping[str, Any]],
+    dims: Sequence[str],
+    *,
+    subtotals: bool = True,
+    total: bool = True,
+    subtotal_position: str = "bottom",
+    total_position: str = "bottom",
+    total_label: str = "Total",
+) -> list[dict[str, Any]]:
+    """Turn DuckDB ``grouping()`` output into render-ready grouped rows.
+
+    Rows must contain ``__g{index}`` columns (from ``grouping(dim)``). Returns
+    rows annotated with ``render_type`` (``cell_data``/``row_subtotal``/
+    ``row_total``), ``__level``, ``__group_key``, ``__ancestors`` and
+    ``__parent_key``, ordered so subtotals sit above or below their group.
+    """
+    decorated = [dict(row) for row in rows]
+    n = len(dims)
+    for row in decorated:
+        present = [row.pop(f"__g{index}", 1) == 0 for index in range(n)]
+        row["__present"] = present
+        row["__level"] = sum(present)
+        for index in range(n):
+            if not present[index]:
+                row[dims[index]] = ""
+
+    total_rows = [row for row in decorated if row["__level"] == 0]
+    other_rows = [row for row in decorated if row["__level"] != 0]
+    top = subtotal_position != "bottom"
+
+    def sort_key(row: Mapping[str, Any]) -> list[tuple[int, str]]:
+        key: list[tuple[int, str]] = []
+        for index in range(n):
+            if row["__present"][index]:
+                key.append((1, json.dumps(jsonify(row[dims[index]]), default=str)))
+            else:
+                key.append((0, "") if top else (2, ""))
+        return key
+
+    other_rows.sort(key=sort_key)
+
+    def finalize(row: dict[str, Any]) -> dict[str, Any]:
+        present = row["__present"]
+        path = [row[dims[index]] for index in range(n) if present[index]]
+        level = row["__level"]
+        if level == n:
+            row["render_type"] = "cell_data"
+        elif subtotals:
+            row["render_type"] = "row_subtotal"
+            row["__group_key"] = _key(path)
+        row["__ancestors"] = [_key(path[:size]) for size in range(1, level)]
+        row["__parent_key"] = _key(path[: level - 1]) if level > 1 else None
+        row.pop("__present", None)
+        return row
+
+    for row in other_rows:
+        finalize(row)
+    for row in total_rows:
+        row["render_type"] = "row_total"
+        row["__level"] = 0
+        row["__group_key"] = "__total__"
+        row["__ancestors"] = []
+        row["__parent_key"] = None
+        row[dims[0]] = total_label
+        row.pop("__present", None)
+
+    ordered = list(other_rows)
+    if total_rows:
+        ordered = (total_rows + ordered) if total_position == "top" else (ordered + total_rows)
+    return ordered
 
 
 def grouped_table(
@@ -93,72 +166,17 @@ def grouped_table(
         GROUP BY GROUPING SETS ({", ".join(sets)})
     """
     rows = [jsonify(row) for row in connection.sql(query).to_arrow_table().to_pylist()]
+    ordered = decorate_grouped_rows(
+        rows,
+        dims,
+        subtotals=subtotals,
+        total=total,
+        subtotal_position=subtotal_position,
+        total_position=total_position,
+        total_label=total_label,
+    )
 
-    n = len(dims)
     measure_aliases = [alias for alias, _ in parsed_measures]
-
-    # Decorate rows with grouping metadata.
-    for row in rows:
-        present = [row.pop(f"__g{index}", 1) == 0 for index in range(n)]
-        row["__present"] = present
-        row["__level"] = sum(present)
-        path = [row[dims[index]] if present[index] else "" for index in range(n)]
-        row["__path"] = path
-        # Blank (rather than "–") grouped-away dimension cells.
-        for index in range(n):
-            if not present[index]:
-                row[dims[index]] = ""
-
-    total_rows = [row for row in rows if row["__level"] == 0]
-    other_rows = [row for row in rows if row["__level"] != 0]
-
-    top = subtotal_position != "bottom"
-
-    def sort_key(row: Mapping[str, Any]) -> list[tuple[int, str]]:
-        key: list[tuple[int, str]] = []
-        for index in range(n):
-            if row["__present"][index]:
-                key.append((1, json.dumps(jsonify(row[dims[index]]), default=str)))
-            else:
-                key.append((0, "") if top else (2, ""))
-        return key
-
-    other_rows.sort(key=sort_key)
-
-    # Attach group keys / ancestors / render types.
-    def finalize(row: dict[str, Any]) -> dict[str, Any]:
-        present = row["__present"]
-        path = [row[dims[index]] for index in range(n) if present[index]]
-        level = row["__level"]
-        if level == n:
-            row["render_type"] = "cell_data"
-        elif subtotals:
-            row["render_type"] = "row_subtotal"
-            row["__group_key"] = _key(path)
-        row["__ancestors"] = [_key(path[:size]) for size in range(1, level)]
-        row["__parent_key"] = _key(path[: level - 1]) if level > 1 else None
-        row.pop("__present", None)
-        row.pop("__path", None)
-        return row
-
-    for row in other_rows:
-        finalize(row)
-    for row in total_rows:
-        row["render_type"] = "row_total"
-        row["__level"] = 0
-        row["__group_key"] = "__total__"
-        row["__ancestors"] = []
-        row["__parent_key"] = None
-        row[dims[0]] = total_label
-        row.pop("__present", None)
-        row.pop("__path", None)
-
-    ordered = list(other_rows)
-    if total_rows:
-        if total_position == "top":
-            ordered = total_rows + ordered
-        else:
-            ordered = ordered + total_rows
 
     from .data import make_column
 

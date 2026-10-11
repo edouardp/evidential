@@ -95,7 +95,7 @@ are done in SQL. We implement them as Python/DuckDB helpers where feasible.
 ## Query builder (Python/DuckDB helpers)
 
 - [x] `grouped_table` (dimensions + measures + subtotals/totals)
-- [ ] `pivot_table` (pivots → columns, grouped headers, total/subtotal cols)
+- [x] `pivot_table` (pivots → columns, grouped headers, total column, subtotal rows)
 - [ ] `query_table` / `date_range` (`where`, `having`, `order`, `limit`,
       `qualify`)
 - [ ] `date_range` presets (`last 12 months`, `month to date`, …)
@@ -127,6 +127,7 @@ are done in SQL. We implement them as Python/DuckDB helpers where feasible.
 - [x] `notebooks/06_evidence_sample_data.py` (needful_things.orders)
 - [x] `notebooks/07_table_options.py` (table-level display options)
 - [x] `notebooks/08_column_options.py` (column formatting/content types)
+- [x] `notebooks/09_pivots.py` (pivoted columns)
 - [ ] a per-feature gallery notebook as things land
 - [x] README feature/API docs
 

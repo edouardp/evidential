@@ -33,12 +33,14 @@ from . import duck
 from .data import make_column
 from .grouped import grouped_table, simple_table
 from .live import LiveEvidenceTable, query_values
+from .pivot import pivot_table
 from .table import EvidenceTable
 
 __all__ = [
     "EvidenceTable",
     "LiveEvidenceTable",
     "grouped_table",
+    "pivot_table",
     "simple_table",
     "query_values",
     "make_column",

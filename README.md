@@ -31,6 +31,8 @@ themed with `theme={"surface": "#0b1220"}`.
   and produces collapsible groups, subtotals and a grand total.
 - **Hierarchical columns** — `column_groups={"Payment type": ["credit_card",
   "cash"]}` wraps columns under shared headers and clusters them together.
+- **Live tables** — `LiveEvidenceTable` re-runs a parameterised query when its
+  controls change, preserving sort/search/page state.
 - **Interaction** — 3-state column sorting, search, pagination (press and hold
   the prev/next buttons: after 700ms it pages every 700ms, easing to every
   100ms by 3 seconds), row links, clickable rows, sticky/frozen columns,
@@ -123,6 +125,35 @@ Measures may be strings (`"sum(x) AS total"`), `(alias, expression)` tuples, or
 `{alias: expression}` mappings. The resulting table is a normal `EvidenceTable`
 with `render_type` (`cell_data` / `row_subtotal` / `row_total`) and grouping
 metadata on each row.
+
+## Live, parameterised tables
+
+`LiveEvidenceTable` keeps a parameterised query and re-runs it when its
+controls change, without recreating the widget — so sort, search and page state
+survive. In Marimo, keep the widget persistent and let a reactive cell drive it:
+
+```python
+# controls
+min_fare = mo.ui.slider(0, 80, value=10, label="Minimum fare")
+min_fare
+
+# persistent widget (created once; no control references)
+live = LiveEvidenceTable(
+    con,
+    "SELECT * FROM trips WHERE fare_amount >= {min_fare}",
+    auto_run=False,
+)
+live
+
+# reactive cell: re-runs whenever the slider changes
+_ = live.set_controls(min_fare=min_fare)
+```
+
+Values from `params` / `set_controls` are bound as SQL parameters, never spliced
+into the SQL text. Outside a reactive host, `bind_controls=True` makes the
+widget re-run itself on control changes. `query_values(con, sql)` returns one
+column as a list, handy for populating dropdowns/multiselects from dimension
+queries. See `notebooks/03_live_drilldown.py`.
 
 ## Amazon S3 Tables
 

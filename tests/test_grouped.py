@@ -99,6 +99,20 @@ def test_measure_spec_forms(sales: duckdb.DuckDBPyConnection) -> None:
     assert "revenue" in detail and "orders" in detail and "avg_revenue" in detail
 
 
+def test_total_measures_override(sales: duckdb.DuckDBPyConnection) -> None:
+    table = grouped_table(
+        sales,
+        "SELECT * FROM sales",
+        ["country"],
+        ["sum(revenue) AS revenue"],
+        total_measures={"revenue": "avg(revenue)"},
+    )
+    total = next(row for row in table.rows if row["render_type"] == "row_total")
+    assert total["revenue"] == pytest.approx(110.0)  # avg of 100/200/50/80/120
+    detail = next(row for row in table.rows if row["render_type"] == "cell_data")
+    assert detail["revenue"] in (200.0, 350.0)  # per-country sums
+
+
 def test_measure_and_dimension_config(sales: duckdb.DuckDBPyConnection) -> None:
     table = grouped_table(
         sales,

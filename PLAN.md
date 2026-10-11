@@ -55,7 +55,7 @@ are done in SQL. We implement them as Python/DuckDB helpers where feasible.
 - [x] `fmt_column` (per-row format codes)
 - [x] `wrap`, `wrap_title`
 - [x] `info` / `description` (header icon)
-- [ ] `total_agg`, `total_fmt`, `weight_col` (query/group helper)
+- [~] `total_agg` via `total_measures`; `total_fmt`/`weight_col` pending
 - [x] `hide`
 - [x] `red_negatives`
 - [x] `column_group` / `colGroup`
@@ -67,7 +67,7 @@ are done in SQL. We implement them as Python/DuckDB helpers where feasible.
 
 - [x] `link` (`link_label`, `link_new_tab`)
 - [x] `image` (`height`/`width`/`alt` options)
-- [ ] `logo` (Evidence uses logo.dev; skip/deferred)
+- [x] `logo` (`logo`/`logo_options`, rendered via logo.dev)
 - [x] `delta` (`show_value`, `chip`, `down_is_good`, `show_symbol`, neutral range)
 - [x] `colorscale` / `color` (`color_scale`, `color_stops`, `scale_column`,
       `min`/`max`/`midpoint`, `conditional_colors`)
@@ -86,8 +86,9 @@ are done in SQL. We implement them as Python/DuckDB helpers where feasible.
 - [x] subtotal/total positions
 - [ ] client-side `group_by` column (Evidence legacy `groupBy`)
 - [ ] `group_type="section"` (merged group cells vs accordion)
-- [ ] `groups_open`
+- [x] `groups_open` (alias for the inverse of `collapsed`)
 - [ ] `subtotal_fmt`
+- [ ] `repeat_values` (our renderer already repeats dimension values)
 - [ ] `show_total_column` / `show_subtotal_columns` (pivoted)
 - [ ] `measures_first` (pivoted)
 - [ ] `repeat_values` (rowspan vs repeat)
@@ -100,7 +101,7 @@ are done in SQL. We implement them as Python/DuckDB helpers where feasible.
 - [x] `date_range` presets (`last 12 months`, `month to date`, …)
 - [ ] `having` (applied inside the base query; not a display-layer clause)
 - [x] `comparison` (prior year/quarter/month/week/day → prior + delta + % columns)
-- [ ] `total_agg` / `total_fmt` / weighted mean
+- [~] `total_agg` via `total_measures`; `total_fmt`/weighted mean pending
 - [ ] `order` initial sort (use `default_sort`)
 
 ## Interactivity / polish
@@ -130,6 +131,7 @@ are done in SQL. We implement them as Python/DuckDB helpers where feasible.
 - [x] `notebooks/09_pivots.py` (pivoted columns)
 - [x] `notebooks/10_query_options.py` (query_table/date_range)
 - [x] `notebooks/11_comparisons.py` (prior-period comparisons)
+- [x] `notebooks/12_color_scales.py` (colour scales & conditional formatting)
 - [ ] a per-feature gallery notebook as things land
 - [x] README feature/API docs
 

@@ -742,6 +742,19 @@ export class EvidenceTableRenderer {
         content = this._renderSparkline(col, value);
       } else if (col.html) {
         content = h("span", { html: String(value) });
+      } else if (col.logo && row[col.logo]) {
+        const domain = String(row[col.logo]);
+        const logoOptions = col.logo_options || {};
+        content = h("span", { class: "et-cell-media" }, [
+          h("img", {
+            class: "et-cell-logo",
+            src: `https://img.logo.dev/${encodeURIComponent(domain)}`,
+            alt: domain,
+            loading: "lazy",
+            style: logoOptions.height ? { height: `${logoOptions.height}px` } : {},
+          }),
+          h("span", { class: "et-cell-media-label" }, formatted),
+        ]);
       } else if (col.image && row[col.image]) {
         const imageOptions = col.image_options || {};
         content = h("span", { class: "et-cell-media" }, [

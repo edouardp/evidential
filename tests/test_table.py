@@ -136,6 +136,48 @@ def test_show_link_column() -> None:
     assert not url.get("hide")
 
 
+def test_top_level_color_options_merge_into_color_options() -> None:
+    table = EvidenceTable(
+        [{"v": 1}],
+        column_config={
+            "v": {"viz": "color", "color_scale": "green", "color_min": 0, "color_max": 10}
+        },
+    )
+    column = table.columns[0]
+    assert column["color_options"]["color_scale"] == "green"
+    assert column["color_options"]["min"] == 0
+    assert column["color_options"]["max"] == 10
+    assert "color_scale" not in column
+
+
+def test_sparkline_aliases_merge_into_sparkline_options() -> None:
+    table = EvidenceTable(
+        [{"trend": [1, 2, 3]}],
+        column_config={
+            "trend": {"viz": "sparkline", "sparkX": "d", "sparkY": "v", "sparkColor": "#123456"}
+        },
+    )
+    options = table.columns[0]["sparkline_options"]
+    assert options["x"] == "d"
+    assert options["y"] == "v"
+    assert options["color"] == "#123456"
+
+
+def test_groups_open_alias() -> None:
+    closed = EvidenceTable([{"a": 1}], groups_open=False)
+    assert closed.options["collapsed"] is True
+    opened = EvidenceTable([{"a": 1}], groups_open=True)
+    assert opened.options["collapsed"] is False
+
+
+def test_logo_content_type() -> None:
+    table = EvidenceTable(
+        [{"domain": "github.com"}],
+        columns=[{"name": "domain", "content_type": "logo"}],
+    )
+    assert table.columns[0]["logo"] == "domain"
+
+
 def test_make_column_defaults() -> None:
     column = make_column("trip_distance", type="number", fmt="num1")
     assert column["name"] == "trip_distance"

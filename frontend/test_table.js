@@ -450,6 +450,19 @@ test("page_size 'all' shows every row without pagination", () => {
   renderer.destroy();
 });
 
+test("logo columns render a logo.dev image", () => {
+  const columns = [
+    { name: "company", type: "string", logo: "domain" },
+    { name: "domain", type: "string", hide: true },
+  ];
+  const rows = [{ company: "GitHub", domain: "github.com" }];
+  const renderer = new EvidenceTableRenderer(makeModel(rows, columns, {}, el), el);
+  const img = el.querySelector(".et-cell-logo");
+  assert.ok(img);
+  assert.match(img.getAttribute("src"), /img\.logo\.dev\/github\.com/);
+  renderer.destroy();
+});
+
 test("theme.background drives the opaque expanded surface", () => {
   const renderer = new EvidenceTableRenderer(
     makeModel(ROWS, COLUMNS, { theme: { background: "#123456" } }, el),

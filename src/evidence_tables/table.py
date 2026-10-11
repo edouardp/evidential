@@ -38,6 +38,7 @@ _OPTION_KEYS = {
     "subtotal_position",
     "collapsible",
     "collapsed",
+    "groups_open",
     "link",
     "width",
     "max_height",
@@ -79,6 +80,7 @@ _OPTION_DEFAULTS: dict[str, Any] = {
     "subtotal_position": "bottom",
     "collapsible": False,
     "collapsed": None,
+    "groups_open": None,
     "link": None,
     "width": None,
     "max_height": None,
@@ -124,6 +126,88 @@ _COLUMN_ALIASES = {
 }
 
 
+def _normalize_column_options(data: dict[str, Any]) -> dict[str, Any]:
+    """Merge Evidence-style top-level column options into nested option dicts.
+
+    Allows ergonomic, Evidence-compatible configs such as
+    ``{"color_scale": "green", "sparkY": "sales"}`` to populate
+    ``color_options`` / ``sparkline_options`` / ``bar_options`` / etc.
+    """
+    color = dict(data.get("color_options") or {})
+    for key in (
+        "color_scale",
+        "color_stops",
+        "scale_column",
+        "scale_mode",
+        "conditional_colors",
+    ):
+        if key in data:
+            color.setdefault(key, data.pop(key))
+    for camel, snake in (("colorMin", "min"), ("colorMax", "max"), ("colorMid", "midpoint")):
+        if camel in data:
+            color.setdefault(snake, data.pop(camel))
+    for key, target in (("color_min", "min"), ("color_max", "max"), ("color_mid", "midpoint")):
+        if key in data:
+            color.setdefault(target, data.pop(key))
+    if color:
+        data["color_options"] = color
+
+    spark = dict(data.get("sparkline_options") or {})
+    for camel, snake in (
+        ("sparkX", "x"),
+        ("sparkY", "y"),
+        ("sparkColor", "color"),
+        ("sparkHeight", "height"),
+        ("sparkWidth", "width"),
+        ("sparkType", "type"),
+        ("sparkYScale", "fit_to_data"),
+        ("sparkYFmt", "y_fmt"),
+    ):
+        if camel in data:
+            spark.setdefault(snake, data.pop(camel))
+    for key in ("spark_x", "spark_y", "spark_color", "spark_height", "spark_width", "spark_type"):
+        if key in data:
+            spark.setdefault(key[len("spark_") :], data.pop(key))
+    if "spark_y_scale" in data:
+        spark.setdefault("fit_to_data", data.pop("spark_y_scale"))
+    if spark:
+        data["sparkline_options"] = spark
+
+    bar = dict(data.get("bar_options") or {})
+    for camel, snake in (
+        ("barColor", "bar_color"),
+        ("negativeBarColor", "bar_color_negative"),
+        ("hideLabels", "hide_labels"),
+        ("fitToData", "fit_to_data"),
+    ):
+        if camel in data:
+            bar.setdefault(snake, data.pop(camel))
+    if bar:
+        data["bar_options"] = bar
+
+    delta = dict(data.get("delta_options") or {})
+    for camel, snake in (
+        ("deltaSymbol", "show_symbol"),
+        ("downIsGood", "down_is_good"),
+        ("showValue", "show_value"),
+        ("neutralMin", "neutral_min"),
+        ("neutralMax", "neutral_max"),
+        ("chip", "chip"),
+    ):
+        if camel in data:
+            delta.setdefault(snake, data.pop(camel))
+    if delta:
+        data["delta_options"] = delta
+
+    image = dict(data.get("image_options") or {})
+    for key in ("height", "width", "alt"):
+        if key in data:
+            image.setdefault(key, data.pop(key))
+    if image:
+        data["image_options"] = image
+    return data
+
+
 def _coerce_column(column: str | Mapping[str, Any]) -> dict[str, Any]:
     if isinstance(column, str):
         return make_column(column)
@@ -131,6 +215,7 @@ def _coerce_column(column: str | Mapping[str, Any]) -> dict[str, Any]:
     for camel, snake in _COLUMN_ALIASES.items():
         if camel in data and snake not in data:
             data[snake] = data.pop(camel)
+    data = _normalize_column_options(data)
     name = data.pop("name", None)
     if not name:
         raise ValueError(f"column definition is missing a name: {column!r}")
@@ -149,6 +234,8 @@ def _coerce_column(column: str | Mapping[str, Any]) -> dict[str, Any]:
             data.setdefault("link", str(name))
         if content_type == "image":
             data.setdefault("image", str(name))
+        if content_type == "logo":
+            data.setdefault("logo", str(name))
     type_ = data.pop("type", "string")
     return make_column(str(name), type=type_, **data)
 
@@ -160,7 +247,9 @@ def _coerce_columns(
     if columns is None:
         columns = []
     result = [_coerce_column(column) for column in columns]
-    return _merge_column_config(result, column_config)
+    merged = _merge_column_config(result, column_config)
+    # column_config overrides bypass _coerce_column, so normalise them too.
+    return [_normalize_column_options(dict(column)) for column in merged]
 
 
 def _apply_column_groups(
@@ -238,6 +327,11 @@ class EvidenceTable(anywidget.AnyWidget):
 
         merged_options = dict(_OPTION_DEFAULTS)
         merged_options.update(table_options)
+        if (
+            merged_options.get("groups_open") is not None
+            and "collapsed" not in table_options
+        ):
+            merged_options["collapsed"] = not merged_options["groups_open"]
 
         link = merged_options.get("link")
         if link and not had_explicit_columns and not merged_options.get("show_link_column"):

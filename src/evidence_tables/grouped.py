@@ -126,6 +126,7 @@ def grouped_table(
     subtotal_position: str = "bottom",
     total_position: str = "bottom",
     total_label: str = "Total",
+    total_measures: Mapping[str, str] | None = None,
     dimension_config: Mapping[str, Mapping[str, Any]] | None = None,
     measure_config: Mapping[str, Mapping[str, Any]] | None = None,
     **table_options: Any,
@@ -147,7 +148,18 @@ def grouped_table(
     parsed_measures = [_parse_measure(measure) for measure in measures]
 
     grouping_cols = ", ".join(f"grouping({dim}) AS __g{index}" for index, dim in enumerate(dims))
-    measure_cols = ", ".join(f"{expression} AS {alias}" for alias, expression in parsed_measures)
+    measure_columns: list[str] = []
+    for alias, expression in parsed_measures:
+        total_expression = (total_measures or {}).get(alias)
+        if total_expression:
+            # Use a different aggregation for the grand total row.
+            measure_columns.append(
+                f"CASE WHEN grouping({dims[0]}) = 1 THEN ({total_expression}) "
+                f"ELSE ({expression}) END AS {alias}"
+            )
+        else:
+            measure_columns.append(f"{expression} AS {alias}")
+    measure_cols = ", ".join(measure_columns)
 
     sets: list[str] = []
     if subtotals:

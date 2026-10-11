@@ -278,6 +278,7 @@
 .et-cell-link:hover { text-decoration: underline; }
 .et-cell-media { display: inline-flex; align-items: center; gap: 0.35rem; }
 .et-cell-image { height: 1.25em; width: auto; border-radius: 3px; }
+.et-cell-logo { height: 1.25em; width: auto; border-radius: 3px; }
 .et-td-chevron { width: 1.5rem; text-align: center; color: var(--et-muted); }
 .et-row-chevron { font-size: 1.1rem; }
 

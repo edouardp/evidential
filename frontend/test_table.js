@@ -442,6 +442,14 @@ test("column info renders a header icon", () => {
   renderer.destroy();
 });
 
+test("page_size 'all' shows every row without pagination", () => {
+  const rows = Array.from({ length: 25 }, (_, i) => ({ city: `C${i}`, trips: i, revenue: i * 10 }));
+  const renderer = new EvidenceTableRenderer(makeModel(rows, COLUMNS, { page_size: "all" }, el), el);
+  assert.equal(el.querySelectorAll("tbody tr").length, 25);
+  assert.equal(el.querySelectorAll(".et-page-controls").length, 0);
+  renderer.destroy();
+});
+
 test("theme.background drives the opaque expanded surface", () => {
   const renderer = new EvidenceTableRenderer(
     makeModel(ROWS, COLUMNS, { theme: { background: "#123456" } }, el),

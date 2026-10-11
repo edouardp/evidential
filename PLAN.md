@@ -14,7 +14,7 @@ are done in SQL. We implement them as Python/DuckDB helpers where feasible.
 - [x] `title`, `subtitle`
 - [x] `info` (+ `info_link`, `info_link_title`)
 - [x] `page_size` (max 200)
-- [ ] `rows="all"` (show every row, no pagination)
+- [x] `rows="all"` via `page_size="all"`
 - [x] `search`
 - [x] `sortable`
 - [x] `sort` / initial `default_sort`
@@ -96,12 +96,12 @@ are done in SQL. We implement them as Python/DuckDB helpers where feasible.
 
 - [x] `grouped_table` (dimensions + measures + subtotals/totals)
 - [x] `pivot_table` (pivots → columns, grouped headers, total column, subtotal rows)
-- [ ] `query_table` / `date_range` (`where`, `having`, `order`, `limit`,
-      `qualify`)
-- [ ] `date_range` presets (`last 12 months`, `month to date`, …)
+- [x] `query_table` (`where`, `order`, `limit`, `qualify`, `date_range`)
+- [x] `date_range` presets (`last 12 months`, `month to date`, …)
+- [ ] `having` (applied inside the base query; not a display-layer clause)
 - [ ] `comparison` (prior year / prior period → delta + % columns)
 - [ ] `total_agg` / `total_fmt` / weighted mean
-- [ ] `order` initial sort
+- [ ] `order` initial sort (use `default_sort`)
 
 ## Interactivity / polish
 
@@ -128,6 +128,7 @@ are done in SQL. We implement them as Python/DuckDB helpers where feasible.
 - [x] `notebooks/07_table_options.py` (table-level display options)
 - [x] `notebooks/08_column_options.py` (column formatting/content types)
 - [x] `notebooks/09_pivots.py` (pivoted columns)
+- [x] `notebooks/10_query_options.py` (query_table/date_range)
 - [ ] a per-feature gallery notebook as things land
 - [x] README feature/API docs
 

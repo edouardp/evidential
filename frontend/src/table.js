@@ -350,7 +350,7 @@ export class EvidenceTableRenderer {
     const opts = this.options;
     const pageSize = this._effectivePageSize();
     const hasGroups = rows.some((r) => r.render_type && r.render_type !== "cell_data");
-    if (!pageSize || pageSize <= 0 || hasGroups || opts.collapsible) {
+    if (!pageSize || pageSize === "all" || pageSize <= 0 || hasGroups || opts.collapsible) {
       return { rows, pageCount: 1, page: 0, total: rows.length };
     }
     const total = rows.length;

@@ -108,3 +108,22 @@ def test_set_controls(con: duckdb.DuckDBPyConnection) -> None:
     live = LiveEvidenceTable(con, "SELECT a FROM t WHERE a >= {min_a}", params={"min_a": control})
     live.set_controls(min_a=2)
     assert [row["a"] for row in live.rows] == [2, 3]
+
+
+def test_run_toggles_loading(con: duckdb.DuckDBPyConnection) -> None:
+    live = LiveEvidenceTable(con, "SELECT a FROM t WHERE a >= {min_a}", params={"min_a": 1})
+    seen: list[bool] = []
+    live.observe(lambda change: seen.append(change["new"]), names="loading")
+    live.run(params={"min_a": 2})
+    assert seen == [True, False]
+    assert live.loading is False
+
+
+def test_rerun_does_not_reassign_unchanged_columns(con: duckdb.DuckDBPyConnection) -> None:
+    live = LiveEvidenceTable(
+        con, "SELECT a, amount FROM t WHERE a >= {min_a}", params={"min_a": 1}
+    )
+    changes: list[str] = []
+    live.observe(lambda change: changes.append(change["name"]), names="columns")
+    live.run(params={"min_a": 2})
+    assert changes == []  # column structure is unchanged, so only rows re-render

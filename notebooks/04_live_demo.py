@@ -9,7 +9,7 @@
 
 import marimo
 
-__generated_with = "0.20.0"
+__generated_with = "0.25.1"
 app = marimo.App(width="full")
 
 
@@ -102,12 +102,11 @@ def _(connection, mo, query_values):
         value="All",
         label="Time of day",
     )
-    mo.hstack([min_fare, payment, part], justify="start", gap=2)
     return min_fare, part, payment
 
 
 @app.cell
-def _(LiveEvidenceTable, connection):
+def _(LiveEvidenceTable, connection, min_fare, mo, part, payment):
     # Created once, with no references to the controls, so changing a control
     # never recreates the widget (and never resets sort/search/page).
     live = LiveEvidenceTable(
@@ -161,7 +160,10 @@ def _(LiveEvidenceTable, connection):
             },
         },
     )
-    live
+    mo.vstack([
+        mo.hstack([min_fare, payment, part], justify="start", gap=2),
+        live
+    ])
     return (live,)
 
 
@@ -173,7 +175,7 @@ def _(live, min_fare, part, payment):
     return
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(mo):
     mo.md("""
     ---

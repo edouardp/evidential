@@ -107,18 +107,22 @@ class LiveEvidenceTable(EvidenceTable):
             self._params = dict(params)
         if self._bind_controls_enabled:
             self._bind_controls()
-        statement, values = self._prepare(self._sql_template, self._params)
-        relation = (
-            self._connection.execute(statement, values)
-            if values
-            else self._connection.sql(statement)
-        )
-        self.set_data(
-            relation,
-            column_config=self._column_config,
-            column_groups=self._column_groups,
-        )
-        self.sql = statement
+        self.loading = True
+        try:
+            statement, values = self._prepare(self._sql_template, self._params)
+            relation = (
+                self._connection.execute(statement, values)
+                if values
+                else self._connection.sql(statement)
+            )
+            self.set_data(
+                relation,
+                column_config=self._column_config,
+                column_groups=self._column_groups,
+            )
+            self.sql = statement
+        finally:
+            self.loading = False
         return self
 
     def set_controls(self, **params: Any) -> LiveEvidenceTable:

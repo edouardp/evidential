@@ -95,8 +95,15 @@ export class EvidenceTableRenderer {
     this.titlebar = h("div", { class: "et-titlebar" });
     this.toolbar = h("div", { class: "et-toolbar" });
     this.scroller = h("div", { class: "et-scroller" });
+    // The body wrapper keeps the loading overlay fixed over the scroller even
+    // when the table is scrolled, and lets us lock the height during updates.
+    this.body = h("div", { class: "et-body" }, this.scroller);
     this.footer = h("div", { class: "et-footer" });
-    this.root.append(this.titlebar, this.toolbar, this.scroller, this.footer);
+    this.root.append(this.titlebar, this.toolbar, this.body, this.footer);
+    this._loading = !!this.model.get("loading");
+    this._baselineHeight = 0;
+    this._baselinePageSize = null;
+    this.loadingOverlay = null;
 
     // Fullscreen dialog (same pattern as galaga's cga3d widget).
     this.dialog = h("dialog", { class: "et-dialog", "aria-label": "Expanded data table" });
@@ -369,9 +376,55 @@ export class EvidenceTableRenderer {
       this.scroller.append(this._renderTable(columns, rows, { ranges, formatRanges, colorScales, hasGroups, headerRowCount }));
     }
     this._renderFooter(page, pageCount, total);
+    this._updateBaselineHeight();
+    this._syncOverlay();
     requestAnimationFrame(() => this._applyFrozenOffsets());
 
     this.el.dataset.rowCount = String(total);
+    this.el.dataset.renderCount = String((Number(this.el.dataset.renderCount) || 0) + 1);
+  }
+
+  // ------------------------------------------------------------- loading ---
+  /** Toggle the loading state without re-rendering the table. */
+  setLoading(loading) {
+    loading = !!loading;
+    if (loading === this._loading) return;
+    this._loading = loading;
+    if (loading) this._updateBaselineHeight();
+    this._syncOverlay();
+    this.el.dataset.loading = String(loading);
+  }
+
+  /** Keep the table from shrinking below the tallest page seen for the
+   * current page size, so live updates never change the layout. */
+  _updateBaselineHeight() {
+    const pageSize = this._effectivePageSize();
+    if (pageSize !== this._baselinePageSize) {
+      this._baselinePageSize = pageSize;
+      this._baselineHeight = 0;
+    }
+    const height = this.scroller.getBoundingClientRect().height;
+    if (height <= 0) return;
+    this._baselineHeight = Math.max(this._baselineHeight || 0, height);
+    this.scroller.style.minHeight = `${Math.round(this._baselineHeight)}px`;
+    this.el.dataset.baselineHeight = String(Math.round(this._baselineHeight));
+  }
+
+  _syncOverlay() {
+    this.root.classList.toggle("et-loading", this._loading);
+    if (this._loading) {
+      if (!this.loadingOverlay) {
+        this.loadingOverlay = h(
+          "div",
+          { class: "et-loading-overlay", role: "status", "aria-live": "polite" },
+          [h("span", { class: "et-spinner", "aria-hidden": "true" }), "Processing…"],
+        );
+      }
+      if (this.loadingOverlay.parentElement !== this.body) this.body.append(this.loadingOverlay);
+    } else if (this.loadingOverlay) {
+      this.loadingOverlay.remove();
+      this.loadingOverlay = null;
+    }
   }
 
   _renderTitle() {
@@ -922,13 +975,16 @@ export function render({ model, el }) {
   el.classList.add("evidence-tables-widget");
   const renderer = new EvidenceTableRenderer(model, el);
   const rerender = () => renderer.render();
+  const setLoading = () => renderer.setLoading(model.get("loading"));
   model.on("change:rows", rerender);
   model.on("change:columns", rerender);
   model.on("change:options", rerender);
+  model.on("change:loading", setLoading);
   return () => {
     model.off("change:rows", rerender);
     model.off("change:columns", rerender);
     model.off("change:options", rerender);
+    model.off("change:loading", setLoading);
     renderer.destroy();
   };
 }

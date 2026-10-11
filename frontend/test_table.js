@@ -260,6 +260,42 @@ test("grouped columns cluster under a shared header", () => {
   renderer.destroy();
 });
 
+test("loading state shows an overlay and keeps a stable height", () => {
+  const renderer = new EvidenceTableRenderer(makeModel(ROWS, COLUMNS, {}, el), el);
+  // jsdom has no layout engine; stub the measured height.
+  renderer.scroller.getBoundingClientRect = () => ({ height: 240 });
+  renderer.render();
+  assert.equal(renderer.scroller.style.minHeight, "240px");
+
+  renderer.setLoading(true);
+  assert.ok(el.querySelector(".et-loading-overlay"));
+  assert.ok(el.querySelector(".et-root").classList.contains("et-loading"));
+  assert.equal(renderer.scroller.style.minHeight, "240px");
+
+  // A data re-render keeps the overlay and the locked height.
+  renderer.render();
+  assert.ok(el.querySelector(".et-loading-overlay"));
+  assert.equal(renderer.scroller.style.minHeight, "240px");
+
+  renderer.setLoading(false);
+  assert.equal(el.querySelector(".et-loading-overlay"), null);
+  assert.equal(renderer.scroller.style.minHeight, "240px");
+  renderer.destroy();
+});
+
+test("baseline height prevents the table shrinking when rows decrease", () => {
+  const renderer = new EvidenceTableRenderer(makeModel(ROWS, COLUMNS, {}, el), el);
+  let height = 300;
+  renderer.scroller.getBoundingClientRect = () => ({ height });
+  renderer.render();
+  assert.equal(renderer.scroller.style.minHeight, "300px");
+
+  height = 120; // e.g. the live filter returns fewer rows
+  renderer.render();
+  assert.equal(renderer.scroller.style.minHeight, "300px");
+  renderer.destroy();
+});
+
 test("theme.background drives the opaque expanded surface", () => {
   const renderer = new EvidenceTableRenderer(
     makeModel(ROWS, COLUMNS, { theme: { background: "#123456" } }, el),

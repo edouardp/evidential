@@ -143,6 +143,9 @@ class EvidenceTable(anywidget.AnyWidget):
     rows = traitlets.List(trait=traitlets.Dict(), default_value=[]).tag(sync=True)
     columns = traitlets.List(trait=traitlets.Dict(), default_value=[]).tag(sync=True)
     options = traitlets.Dict(default_value={}).tag(sync=True)
+    #: When true the renderer dims the current table and shows a spinner without
+    #: changing its size (used while a live query is in flight).
+    loading = traitlets.Bool(False).tag(sync=True)
 
     def __init__(
         self,
@@ -198,9 +201,13 @@ class EvidenceTable(anywidget.AnyWidget):
         if columns is None:
             columns = inferred
         if columns is not None:
-            self.columns = _apply_column_groups(
+            new_columns = _apply_column_groups(
                 _coerce_columns(columns, column_config), column_groups
             )
+            # Setting columns triggers a browser re-render; only do it when the
+            # column structure actually changed so data-only updates render once.
+            if new_columns != list(self.columns):
+                self.columns = new_columns
         self.rows = normalized_rows
         return self
 

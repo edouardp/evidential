@@ -9,7 +9,7 @@
 
 import marimo
 
-__generated_with = "0.20.0"
+__generated_with = "0.25.1"
 app = marimo.App(width="full")
 
 
@@ -101,7 +101,7 @@ def _(connection, mo, query_values):
 
 
 @app.cell
-def _(LiveEvidenceTable, connection):
+def _(LiveEvidenceTable, connection, min_fare, mo, payment):
     # Persistent widget: created once, with no references to the controls, so
     # changing a control never recreates it (and never resets sort/page).
     live = LiveEvidenceTable(
@@ -133,7 +133,9 @@ def _(LiveEvidenceTable, connection):
             },
         },
     )
+    mo.vstack([mo.hstack([min_fare, payment], justify="start", gap=2),
     live
+               ])
     return (live,)
 
 

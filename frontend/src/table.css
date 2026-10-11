@@ -55,7 +55,13 @@
 }
 
 /* -------------------------------------------------------------- loading --- */
-.et-loading .et-table { opacity: 0.45; }
+/* Fade the current data out and "Processing…" in over FADE_MS; the reveal is
+   instant (transition: 0s) so new data appears the moment it is ready. */
+.et-table { transition: opacity 0s; }
+.et-root.et-loading .et-table {
+  opacity: 0.45;
+  transition: opacity 0.6s ease;
+}
 .et-loading-overlay {
   position: absolute;
   inset: 0;
@@ -69,6 +75,12 @@
   font-size: 0.8rem;
   color: var(--et-muted);
   pointer-events: none;
+  opacity: 0;
+  transition: opacity 0s;
+}
+.et-root.et-loading .et-loading-overlay {
+  opacity: 1;
+  transition: opacity 0.6s ease;
 }
 .et-spinner {
   width: 1rem;
@@ -79,7 +91,11 @@
   animation: et-spin 0.7s linear infinite;
 }
 @keyframes et-spin { to { transform: rotate(360deg); } }
-@media (prefers-reduced-motion: reduce) { .et-spinner { animation-duration: 2s; } }
+@media (prefers-reduced-motion: reduce) {
+  .et-spinner { animation-duration: 2s; }
+  .et-root.et-loading .et-table,
+  .et-root.et-loading .et-loading-overlay { transition-duration: 0.01s; }
+}
 
 /* ------------------------------------------------------------- titlebar --- */
 .et-titlebar:empty { display: none; }

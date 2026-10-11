@@ -15,6 +15,11 @@ import {
 const ROW_HEIGHT = 28;
 const MODAL_OVERHEAD = 150;
 
+// Loading transition timing (ms).
+const LOADING_SHOW_DELAY = 180; // don't show the overlay for updates faster than this
+const FADE_MS = 600; // fade current data out and "Processing…" in over this long
+const LOADING_HIDE_DEBOUNCE = 120; // settle time before revealing new data
+
 // Pagination press-and-hold repeat schedule.
 const HOLD_DELAY = 700; // wait before auto-repeat starts
 const HOLD_START_INTERVAL = 700; // slowest repeat interval (ms)
@@ -98,12 +103,21 @@ export class EvidenceTableRenderer {
     // The body wrapper keeps the loading overlay fixed over the scroller even
     // when the table is scrolled, and lets us lock the height during updates.
     this.body = h("div", { class: "et-body" }, this.scroller);
+    this.loadingOverlay = h(
+      "div",
+      { class: "et-loading-overlay", role: "status", "aria-live": "polite", "aria-hidden": "true" },
+      [h("span", { class: "et-spinner", "aria-hidden": "true" }), "Processing…"],
+    );
+    this.body.append(this.loadingOverlay);
     this.footer = h("div", { class: "et-footer" });
     this.root.append(this.titlebar, this.toolbar, this.body, this.footer);
     this._loading = !!this.model.get("loading");
+    this._loadingShown = false;
+    this._showTimer = null;
+    this._hideTimer = null;
+    this._loadingSince = 0;
     this._baselineHeight = 0;
     this._baselinePageSize = null;
-    this.loadingOverlay = null;
 
     // Fullscreen dialog (same pattern as galaga's cga3d widget).
     this.dialog = h("dialog", { class: "et-dialog", "aria-label": "Expanded data table" });
@@ -179,6 +193,8 @@ export class EvidenceTableRenderer {
 
   destroy() {
     this._stopHold();
+    if (this._showTimer) clearTimeout(this._showTimer);
+    if (this._hideTimer) clearTimeout(this._hideTimer);
     this._resizeObserver?.disconnect();
     this.dialog.remove();
     this.placeholder.remove();
@@ -377,7 +393,6 @@ export class EvidenceTableRenderer {
     }
     this._renderFooter(page, pageCount, total);
     this._updateBaselineHeight();
-    this._syncOverlay();
     requestAnimationFrame(() => this._applyFrozenOffsets());
 
     this.el.dataset.rowCount = String(total);
@@ -385,14 +400,52 @@ export class EvidenceTableRenderer {
   }
 
   // ------------------------------------------------------------- loading ---
-  /** Toggle the loading state without re-rendering the table. */
+  /** Reflect the `loading` trait in the UI.
+   *
+   * Fast updates finish within `LOADING_SHOW_DELAY`, so they never flash the
+   * overlay — the table simply swaps in place (no flicker). Slower updates fade
+   * the current data out over `FADE_MS`; once shown, the overlay is held until
+   * the fade completes and then removed immediately to reveal the new data.
+   */
   setLoading(loading) {
-    loading = !!loading;
-    if (loading === this._loading) return;
-    this._loading = loading;
-    if (loading) this._updateBaselineHeight();
-    this._syncOverlay();
-    this.el.dataset.loading = String(loading);
+    this._loading = !!loading;
+    this.el.dataset.loading = String(this._loading);
+    if (this._loading) {
+      if (this._hideTimer) {
+        clearTimeout(this._hideTimer);
+        this._hideTimer = null;
+      }
+      if (this._loadingShown || this._showTimer) return;
+      this._showTimer = setTimeout(() => {
+        this._showTimer = null;
+        this._loadingShown = true;
+        this._loadingSince = performance.now();
+        this._applyLoadingClass();
+      }, LOADING_SHOW_DELAY);
+    } else {
+      if (this._showTimer) {
+        // Finished before the overlay was shown: never flash it.
+        clearTimeout(this._showTimer);
+        this._showTimer = null;
+        return;
+      }
+      if (!this._loadingShown) return;
+      const elapsed = performance.now() - this._loadingSince;
+      const wait = Math.max(LOADING_HIDE_DEBOUNCE, FADE_MS - elapsed);
+      if (this._hideTimer) clearTimeout(this._hideTimer);
+      this._hideTimer = setTimeout(() => {
+        this._hideTimer = null;
+        this._loadingShown = false;
+        this._applyLoadingClass();
+      }, wait);
+    }
+  }
+
+  _applyLoadingClass() {
+    this.root.classList.toggle("et-loading", this._loadingShown);
+    this.loadingOverlay.setAttribute("aria-hidden", String(!this._loadingShown));
+    this.el.dataset.loading = String(this._loading);
+    this.el.dataset.loadingShown = String(this._loadingShown);
   }
 
   /** Keep the table from shrinking below the tallest page seen for the
@@ -408,23 +461,6 @@ export class EvidenceTableRenderer {
     this._baselineHeight = Math.max(this._baselineHeight || 0, height);
     this.scroller.style.minHeight = `${Math.round(this._baselineHeight)}px`;
     this.el.dataset.baselineHeight = String(Math.round(this._baselineHeight));
-  }
-
-  _syncOverlay() {
-    this.root.classList.toggle("et-loading", this._loading);
-    if (this._loading) {
-      if (!this.loadingOverlay) {
-        this.loadingOverlay = h(
-          "div",
-          { class: "et-loading-overlay", role: "status", "aria-live": "polite" },
-          [h("span", { class: "et-spinner", "aria-hidden": "true" }), "Processing…"],
-        );
-      }
-      if (this.loadingOverlay.parentElement !== this.body) this.body.append(this.loadingOverlay);
-    } else if (this.loadingOverlay) {
-      this.loadingOverlay.remove();
-      this.loadingOverlay = null;
-    }
   }
 
   _renderTitle() {

@@ -106,7 +106,7 @@ def _(connection, mo, query_values):
     return min_fare, part, payment
 
 
-@app.cell(hide_code=True)
+@app.cell(hide_code=True, expand_output=True)
 def _(LiveEvidenceTable, connection):
     # Created once, with no references to the controls, so changing a control
     # never recreates the widget (and never resets sort/search/page).
@@ -137,7 +137,7 @@ def _(LiveEvidenceTable, connection):
           AND ({payment} = 'All' OR payment = {payment})
           AND ({part} = 'All' OR part_of_day = {part})
         ORDER BY enriched.pickup DESC
-        LIMIT 500
+        --LIMIT 500
         """,
         auto_run=False,
         title="Filtered taxi trips",

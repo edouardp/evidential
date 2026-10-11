@@ -150,10 +150,15 @@ _ = live.set_controls(min_fare=min_fare)
 ```
 
 Values from `params` / `set_controls` are bound as SQL parameters, never spliced
-into the SQL text. Outside a reactive host, `bind_controls=True` makes the
-widget re-run itself on control changes. `query_values(con, sql)` returns one
-column as a list, handy for populating dropdowns/multiselects from dimension
-queries. See `notebooks/03_live_drilldown.py` and `notebooks/04_live_demo.py`.
+into the SQL text. Updates run in place: fast queries swap the rows in without
+flashing, while slow ones keep the current table on screen and fade it into a
+dimmed “Processing…” state over 0.6s, then reveal the new data immediately. The
+table keeps a stable height throughout.
+
+Outside a reactive host, `bind_controls=True` makes the widget re-run itself on
+control changes. `query_values(con, sql)` returns one column as a list, handy
+for populating dropdowns/multiselects from dimension queries. See
+`notebooks/03_live_drilldown.py` and `notebooks/04_live_demo.py`.
 
 > **Important:** the cell that creates the widget must **not** reference the
 > controls. Referencing a control registers a Marimo dependency, so wrapping

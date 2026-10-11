@@ -260,26 +260,29 @@ test("grouped columns cluster under a shared header", () => {
   renderer.destroy();
 });
 
-test("loading state shows an overlay and keeps a stable height", () => {
+test("loading overlay only appears for slow updates, and fades in", (t) => {
+  t.mock.timers.enable({ apis: ["setTimeout"] });
   const renderer = new EvidenceTableRenderer(makeModel(ROWS, COLUMNS, {}, el), el);
-  // jsdom has no layout engine; stub the measured height.
-  renderer.scroller.getBoundingClientRect = () => ({ height: 240 });
-  renderer.render();
-  assert.equal(renderer.scroller.style.minHeight, "240px");
+  const root = el.querySelector(".et-root");
+  const overlay = el.querySelector(".et-loading-overlay");
+  assert.ok(overlay, "overlay element exists");
+  assert.equal(root.classList.contains("et-loading"), false);
 
+  // Fast update: finishes before the show delay, so nothing flashes.
   renderer.setLoading(true);
-  assert.ok(el.querySelector(".et-loading-overlay"));
-  assert.ok(el.querySelector(".et-root").classList.contains("et-loading"));
-  assert.equal(renderer.scroller.style.minHeight, "240px");
+  t.mock.timers.tick(100);
+  renderer.setLoading(false);
+  t.mock.timers.tick(1000);
+  assert.equal(root.classList.contains("et-loading"), false, "fast update does not flash");
 
-  // A data re-render keeps the overlay and the locked height.
-  renderer.render();
-  assert.ok(el.querySelector(".et-loading-overlay"));
-  assert.equal(renderer.scroller.style.minHeight, "240px");
+  // Slow update: stays loading past the show delay, so the overlay fades in.
+  renderer.setLoading(true);
+  t.mock.timers.tick(200);
+  assert.equal(root.classList.contains("et-loading"), true, "slow update shows processing");
 
   renderer.setLoading(false);
-  assert.equal(el.querySelector(".et-loading-overlay"), null);
-  assert.equal(renderer.scroller.style.minHeight, "240px");
+  t.mock.timers.tick(700);
+  assert.equal(root.classList.contains("et-loading"), false, "new data revealed");
   renderer.destroy();
 });
 

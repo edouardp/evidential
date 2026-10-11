@@ -691,7 +691,6 @@ export class EvidenceTableRenderer {
           h("span", { class: "et-th-info", title: String(col.info), role: "img", "aria-label": String(col.info) }, "ⓘ"),
         );
       }
-      if (col.viz && col.viz !== "sparkline") inner.append(h("span", { class: "et-viz-badge", title: `${col.viz} visualization` }, ""));
       if (sorted) inner.append(h("span", { class: "et-sort-arrow" }, dir === "asc" ? "▲" : "▼"));
       th.append(inner);
       if (opts.sortable !== false) {

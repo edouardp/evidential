@@ -778,6 +778,13 @@ test("figure_style default uses the font's own figures", () => {
   renderer.destroy();
 });
 
+test("no viz badge is added to headers", () => {
+  const columns = [{ name: "v", type: "number", viz: "bar", bar_options: {} }];
+  const renderer = new EvidenceTableRenderer(makeModel([{ v: 1 }], columns, {}, el), el);
+  assert.equal(el.querySelectorAll(".et-viz-badge").length, 0);
+  renderer.destroy();
+});
+
 test("theme.background drives the opaque expanded surface", () => {
   const renderer = new EvidenceTableRenderer(
     makeModel(ROWS, COLUMNS, { theme: { background: "#123456" } }, el),

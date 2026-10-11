@@ -250,11 +250,6 @@
 .et-th-inner { display: inline-flex; align-items: center; gap: 0.3rem; }
 .et-th-sorted { color: var(--et-accent); }
 .et-sort-arrow { font-size: 0.6rem; }
-.et-viz-badge {
-  width: 10px; height: 10px; border-radius: 2px;
-  background: linear-gradient(135deg, var(--et-accent), transparent 80%);
-  display: inline-block; opacity: 0.6;
-}
 
 /* ----------------------------------------------------------------- rows --- */
 .et-td {

@@ -165,7 +165,7 @@ export class EvidenceTableRenderer {
     // Fullscreen dialog (same pattern as galaga's cga3d widget).
     this.dialog = h("dialog", { class: "et-dialog", "aria-label": "Expanded data table" });
     this.expandBtn = h("button", {
-      class: "et-icon-btn", type: "button", title: "Expand table",
+      class: "et-text-btn et-expand-btn", type: "button", title: "Expand table",
       "aria-label": "Expand table", "aria-expanded": "false",
       onclick: () => this._toggleExpanded(),
     });
@@ -652,12 +652,8 @@ export class EvidenceTableRenderer {
       });
       left.append(input);
     }
-    if (opts.download) {
-      right.append(h("button", { class: "et-btn", type: "button", title: "Download CSV", onclick: () => this._downloadCsv() }, "Download"));
-    }
-    right.append(this.expandBtn);
     this.toolbar.append(left, right);
-    this.toolbar.classList.toggle("et-toolbar-empty", !left.childElementCount && right.childElementCount <= 1);
+    this.toolbar.classList.toggle("et-toolbar-empty", !left.childElementCount && !right.childElementCount);
   }
 
   _renderTable(columns, rows, ctx) {
@@ -1365,47 +1361,70 @@ export class EvidenceTableRenderer {
 
   _renderFooter(page, pageCount, total) {
     this.footer.replaceChildren();
-    if (pageCount <= 1) return;
-    const opts = this.options;
-    const pageSize = this._effectivePageSize();
-    const start = page * pageSize + 1;
-    const end = Math.min(total, (page + 1) * pageSize);
+    if (pageCount > 1) {
+      const left = h("div", { class: "et-page-controls" });
+      const pageSize = this._effectivePageSize();
+      const start = page * pageSize + 1;
+      const end = Math.min(total, (page + 1) * pageSize);
 
-    const pageButton = (label, direction, disabled) => {
-      const button = h(
-        "button",
-        {
-          class: "et-btn et-page-btn",
-          type: "button",
-          disabled,
-          "aria-label": direction === "next" ? "Next page" : "Previous page",
-        },
-        label,
-      );
-      button.addEventListener("pointerdown", (event) => {
-        if (event.button !== undefined && event.button !== 0) return;
-        this._startHold(direction);
-      });
-      button.addEventListener("click", () => {
-        if (this._holdFired) {
-          this._holdFired = false;
-          return;
-        }
-        this._gotoPage(this._state.page + (direction === "next" ? 1 : -1));
-      });
-      return button;
-    };
+      const pageButton = (label, direction, disabled) => {
+        const button = h(
+          "button",
+          {
+            class: "et-btn et-page-btn",
+            type: "button",
+            disabled,
+            "aria-label": direction === "next" ? "Next page" : "Previous page",
+          },
+          label,
+        );
+        button.addEventListener("pointerdown", (event) => {
+          if (event.button !== undefined && event.button !== 0) return;
+          this._startHold(direction);
+        });
+        button.addEventListener("click", () => {
+          if (this._holdFired) {
+            this._holdFired = false;
+            return;
+          }
+          this._gotoPage(this._state.page + (direction === "next" ? 1 : -1));
+        });
+        return button;
+      };
 
-    // A single left-aligned run: ‹ 1/3 › (1–2 of 5). The arrows stay real
-    // buttons (same hitbox as before) but are styled as plain text.
-    this.footer.append(
-      h("div", { class: "et-page-controls" }, [
+      // A single left-aligned run: ‹ 1/3 › (1–2 of 5). The arrows stay real
+      // buttons (same hitbox as before) but are styled as plain text.
+      left.append(
         pageButton("‹", "prev", page === 0),
         h("span", { class: "et-page-current" }, `${page + 1}/${pageCount}`),
         pageButton("›", "next", page >= pageCount - 1),
         h("span", { class: "et-page-info" }, `(${start}–${end} of ${total})`),
-      ]),
-    );
+      );
+      this.footer.append(left);
+    }
+    this.footer.append(this._renderActions());
+  }
+
+  /** Bottom-right table actions (download, fullscreen) rendered as plain text.
+   *  CSS fades them in while the pointer is anywhere over the table. */
+  _renderActions() {
+    const actions = h("div", { class: "et-table-actions" });
+    if (this.options.download) {
+      actions.append(
+        h(
+          "button",
+          {
+            class: "et-text-btn et-download-btn",
+            type: "button",
+            title: "Download CSV",
+            onclick: () => this._downloadCsv(),
+          },
+          "Download",
+        ),
+      );
+    }
+    actions.append(this.expandBtn);
+    return actions;
   }
 
   _gotoPage(page) {

@@ -97,7 +97,8 @@ test("pagination limits rows and pages", () => {
 test("pagination reads as one left-aligned text run", () => {
   const renderer = new EvidenceTableRenderer(makeModel(ROWS, COLUMNS, { page_size: 2 }, el), el);
   const footer = el.querySelector(".et-footer");
-  assert.equal(footer.children.length, 1, "no separate info block on the right");
+  assert.equal(footer.firstElementChild.className, "et-page-controls", "pager is first");
+  assert.equal(footer.lastElementChild.className, "et-table-actions", "actions are last");
   const controls = footer.querySelector(".et-page-controls");
   assert.equal(controls.querySelector(".et-page-current").textContent, "1/2");
   assert.equal(controls.querySelector(".et-page-info").textContent, "(1–2 of 3)");
@@ -105,6 +106,28 @@ test("pagination reads as one left-aligned text run", () => {
   assert.equal(buttons.length, 2, "the arrows are still real buttons");
   assert.equal(buttons[0].textContent, "‹");
   assert.equal(buttons[1].textContent, "›");
+  renderer.destroy();
+});
+
+test("download and fullscreen live in the footer's bottom-right actions", () => {
+  const renderer = new EvidenceTableRenderer(
+    makeModel(ROWS, COLUMNS, { download: true, page_size: 2 }, el),
+    el,
+  );
+  const actions = el.querySelector(".et-footer .et-table-actions");
+  assert.ok(actions, "actions live in the footer");
+  assert.equal(actions.querySelector(".et-download-btn").textContent, "Download");
+  assert.equal(actions.querySelector(".et-expand-btn").textContent, "⛶");
+  // They are gone from the toolbar, which now hides when it holds nothing.
+  assert.equal(el.querySelectorAll(".et-toolbar .et-btn, .et-toolbar .et-text-btn").length, 0);
+  assert.ok(el.querySelector(".et-toolbar").classList.contains("et-toolbar-empty"));
+  renderer.destroy();
+});
+
+test("the fullscreen action stays available without pagination or download", () => {
+  const renderer = new EvidenceTableRenderer(makeModel(ROWS, COLUMNS, {}, el), el);
+  assert.equal(el.querySelectorAll(".et-page-controls").length, 0);
+  assert.ok(el.querySelector(".et-footer .et-expand-btn"), "expand stays available");
   renderer.destroy();
 });
 
@@ -165,7 +188,7 @@ test("fullscreen moves the widget into the dialog", () => {
   const root = el.querySelector(".et-root");
   assert.ok(el.contains(root));
 
-  const expand = el.querySelector(".et-icon-btn");
+  const expand = el.querySelector(".et-expand-btn");
   expand.dispatchEvent(new window.MouseEvent("click", { bubbles: true }));
   assert.equal(renderer._expanded, true);
   assert.ok(el.querySelector("dialog").contains(root));
@@ -247,7 +270,7 @@ test("clicking the backdrop dismisses the fullscreen dialog", () => {
   const dialog = el.querySelector("dialog");
   const root = el.querySelector(".et-root");
 
-  el.querySelector(".et-icon-btn").click();
+  el.querySelector(".et-expand-btn").click();
   assert.equal(renderer._expanded, true);
   dialog.dispatchEvent(new window.Event("pointerdown", { bubbles: true }));
   dialog.dispatchEvent(new window.MouseEvent("click", { bubbles: true }));
@@ -255,7 +278,7 @@ test("clicking the backdrop dismisses the fullscreen dialog", () => {
   assert.ok(el.contains(root));
 
   // A drag that starts inside the content and ends on the backdrop must not close.
-  el.querySelector(".et-icon-btn").click();
+  el.querySelector(".et-expand-btn").click();
   assert.equal(renderer._expanded, true);
   root.dispatchEvent(new window.Event("pointerdown", { bubbles: true }));
   dialog.dispatchEvent(new window.MouseEvent("click", { bubbles: true }));

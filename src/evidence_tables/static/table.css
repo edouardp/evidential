@@ -126,7 +126,7 @@
   gap: 0.5rem;
   padding: 0.25rem 0 0.5rem;
 }
-.et-toolbar-empty { justify-content: flex-end; }
+.et-toolbar-empty { display: none; }
 .et-toolbar-left { flex: 1 1 auto; }
 .et-toolbar-right { display: flex; gap: 0.35rem; align-items: center; }
 .et-search {
@@ -493,11 +493,38 @@
   display: flex;
   align-items: center;
   justify-content: flex-start;
+  gap: 0.75rem;
   padding: 0.45rem 0.15rem;
   color: var(--et-muted);
   font-size: 0.78rem;
 }
 .et-page-controls { display: flex; align-items: center; gap: 0.4rem; }
+/* Bottom-right actions are plain text, revealed while the pointer is over the
+   table; they stay visible in the expanded (fullscreen) dialog. */
+.et-table-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  margin-left: auto;
+  opacity: 0;
+  transition: opacity 0.5s ease;
+}
+.et-root:hover .et-table-actions,
+.et-root:focus-within .et-table-actions,
+.et-dialog .et-table-actions {
+  opacity: 1;
+}
+.et-text-btn {
+  border: none;
+  background: none;
+  padding: 0;
+  margin: 0;
+  font: inherit;
+  color: inherit;
+  line-height: 1.2;
+  cursor: pointer;
+}
+.et-text-btn:hover { color: var(--et-text); }
 .et-empty {
   padding: 2rem;
   text-align: center;

@@ -54,12 +54,12 @@ def test_pagination(page, live_server):
 def test_fullscreen_round_trip(page, live_server):
     open_preview(page, live_server, "#pages")
     dialog = page.locator("#paged dialog.et-dialog")
-    page.locator("#paged .et-icon-btn").click()
+    page.locator("#paged .et-expand-btn").click()
     page.wait_for_timeout(300)
     assert dialog.evaluate("d => d.open") is True
     assert dialog.locator(".et-root.et-expanded").count() == 1
 
-    dialog.locator(".et-icon-btn").click()
+    dialog.locator(".et-expand-btn").click()
     page.wait_for_timeout(300)
     assert dialog.evaluate("d => d.open") is False
     assert page.locator("#paged .et-root .et-table").count() == 1

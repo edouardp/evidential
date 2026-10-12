@@ -129,16 +129,16 @@
 
     // Use preview.html#fullscreen to capture the expanded dialog.
     if (location.hash === "#fullscreen") {
-      const expand = document.querySelector('#grouped .et-icon-btn');
+      const expand = document.querySelector('#grouped .et-expand-btn');
       if (expand) expand.click();
     }
 
     // Use preview.html#roundtrip to expand and immediately return inline.
     if (location.hash === "#roundtrip") {
-      const expand = document.querySelector('#grouped .et-icon-btn');
+      const expand = document.querySelector('#grouped .et-expand-btn');
       if (expand) {
         expand.click();
-        setTimeout(() => document.querySelector('dialog .et-icon-btn')?.click(), 100);
+        setTimeout(() => document.querySelector('dialog .et-expand-btn')?.click(), 100);
       }
     }
 
@@ -156,7 +156,7 @@
         search: true, page_size: 8, row_shading: true, max_height: "300px",
       }), el: document.getElementById("paged") });
       if (location.hash === "#pages-fullscreen") {
-        const expand = document.querySelector('#paged .et-icon-btn');
+        const expand = document.querySelector('#paged .et-expand-btn');
         if (expand) expand.click();
       }
     }

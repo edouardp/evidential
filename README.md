@@ -30,7 +30,8 @@ notebook can serve a live dashboard, a report and a slide deck.
 
 ![EvidenceTable renderer preview](docs/preview.png)
 
-Click the expand button (⛶) to fill the browser viewport. The expanded dialog
+Hover the table to reveal the **Download** and expand (⛶) actions at the bottom
+right, and click expand to fill the browser viewport. The expanded dialog
 recomputes the page size to fit the available height (and re-fits on resize,
 restoring your configured `page_size` on exit). It uses an opaque `Canvas`
 surface (so it follows light/dark mode) over a dimmed backdrop, and can be

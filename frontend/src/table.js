@@ -779,7 +779,16 @@ export class EvidenceTableRenderer {
             ? col.name
             : col.title || formatTitle(col.name);
       if (opts.all_caps) title = String(title).toUpperCase();
-      inner.append(h("span", { class: "et-th-title" }, title));
+      // A `\n` in the title forces a line break; whether other lines wrap at
+      // spaces is up to `wrap_titles` (see CSS).
+      const titleEl = h("span", { class: "et-th-title" });
+      String(title)
+        .split("\n")
+        .forEach((line, index) => {
+          if (index > 0) titleEl.append(h("br"));
+          titleEl.append(document.createTextNode(line));
+        });
+      inner.append(titleEl);
       if (infoText) {
         inner.append(
           h("span", { class: "et-th-info", role: "img", "aria-label": infoText }, "ⓘ"),

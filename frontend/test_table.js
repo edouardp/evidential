@@ -524,6 +524,17 @@ test("a column can sort by another column's values", () => {
   renderer.destroy();
 });
 
+test("a newline in a column title forces a line break", () => {
+  const columns = [{ name: "revenue", type: "number", title: "Revenue\n(USD thousands)" }];
+  const renderer = new EvidenceTableRenderer(makeModel([{ revenue: 1 }], columns, {}, el), el);
+  const title = el.querySelector("th.et-th .et-th-title");
+  assert.equal(title.querySelectorAll("br").length, 1);
+  assert.equal(title.childNodes.length, 3);
+  assert.equal(title.childNodes[0].textContent, "Revenue");
+  assert.equal(title.childNodes[2].textContent, "(USD thousands)");
+  renderer.destroy();
+});
+
 test("column info shows a native tooltip on the whole header cell", () => {
   const columns = [{ name: "city", type: "string", info: "A helpful hint" }];
   const renderer = new EvidenceTableRenderer(makeModel([{ city: "NYC" }], columns, {}, el), el);

@@ -199,7 +199,6 @@
 .et-root.et-group-gap .et-row-total .et-td {
   padding-top: 0.85rem;
 }
-.et-root.et-nowrap-titles .et-th-title { white-space: nowrap; }
 /* compact density */
 .et-root.et-compact .et-td,
 .et-root.et-compact .et-th {
@@ -238,9 +237,15 @@
   padding: 0.25rem 0.75rem 0.25rem 0.375rem;
   border-bottom: 1px solid var(--et-header-border);
   white-space: nowrap;
+  /* Multi-line titles sit on the header rule. */
+  vertical-align: bottom;
   user-select: none;
   cursor: pointer;
 }
+/* Titles may wrap; an explicit `\n` always forces a break (see table.js). Set
+   `wrap_titles=False` to keep every line as long as it needs to be. */
+.et-th-title { white-space: normal; }
+.et-root.et-nowrap-titles .et-th-title { white-space: nowrap; }
 .et-th:first-child { padding-left: 0.25rem; }
 .et-th-group {
   text-align: center;

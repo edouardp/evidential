@@ -43,6 +43,7 @@ dated, immutable record of the decisions behind them.
 | [022](022-type-driven-column-defaults.md) | Derive Default Column Format and Alignment from the Data Type | Accepted |
 | [023](023-duckdb-column-comments.md) | Surface DuckDB Column Comments as Header Descriptions | Accepted |
 | [024](024-arrow-field-metadata.md) | Read Arrow Field Metadata as Column Descriptions | Accepted |
+| [025](025-immediate-column-tooltip.md) | An Immediate Custom Tooltip for Column Descriptions | Accepted |
 
 ## Creating New ADRs
 

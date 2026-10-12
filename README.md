@@ -165,6 +165,9 @@ field metadata) into the file's `ARROW:schema` key-value entry, so
 itself has no standard per-column comment field: descriptions ride along in the
 Arrow schema, file-level key/value metadata is available via
 `parquet_kv_metadata()`, and DuckDB's `read_parquet` does not surface either.
+You can also set one directly:
+`column_config={"revenue": {"comment": "Net revenue in USD"}}` (`info` and
+`description` also work).
 
 ## Grouped tables with subtotals
 
@@ -505,7 +508,8 @@ See `notebooks/02_s3_tables.py` for a full example (it gracefully stops if
 | `link`, `link_label`, `link_new_tab` | Per-cell links. |
 | `html`, `image`, `image_options`, `logo` | Custom cell content (HTML, image URL, or logo.dev domain). |
 | `footnote` | Name of a column whose value is this cell's footnote text. |
-| `column_group`, `info`, `repeat_values`, `viz_include_subtotals` | Additional metadata. |
+| `info` (`comment`, `description`) | Header description, shown as an immediate **ⓘ** tooltip. |
+| `column_group`, `repeat_values`, `viz_include_subtotals` | Additional metadata. |
 
 ### Table options
 

@@ -234,6 +234,11 @@ def _normalize_column_options(data: dict[str, Any]) -> dict[str, Any]:
             image.setdefault(key, data.pop(key))
     if image:
         data["image_options"] = image
+
+    # Accept `comment` / `description` as aliases for the header description.
+    for key in ("comment", "description"):
+        if key in data and "info" not in data:
+            data["info"] = data.pop(key)
     return data
 
 

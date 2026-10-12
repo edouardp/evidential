@@ -121,6 +121,23 @@ def test_frozen_columns_have_an_opaque_backdrop(page, live_server):
     assert min(alphas) == 1, f"a frozen cell is translucent: {alphas}"
 
 
+def test_column_info_tooltip_is_immediate(page, live_server):
+    open_preview(page, live_server, "#features")
+    icon = page.locator("#features .et-th-info").first
+    assert icon.count() == 1
+    # no delayed native tooltip, and the cursor is left alone
+    assert icon.get_attribute("title") is None
+    assert icon.evaluate("el => getComputedStyle(el).cursor") != "help"
+
+    icon.hover()
+    tooltip = page.locator(".et-tooltip")
+    tooltip.wait_for(state="visible", timeout=2000)
+    assert tooltip.inner_text() == "The city name"
+
+    page.mouse.move(0, 0)
+    tooltip.wait_for(state="detached", timeout=2000)
+
+
 def test_display_features(page, live_server):
     open_preview(page, live_server, "#features")
     page.wait_for_selector("#features tbody tr")

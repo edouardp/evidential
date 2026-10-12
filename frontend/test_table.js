@@ -433,12 +433,21 @@ test("delta chip and show_value", () => {
   renderer.destroy();
 });
 
-test("column info renders a header icon", () => {
+test("column info renders a header icon with an immediate tooltip", () => {
   const columns = [{ name: "city", type: "string", info: "A helpful hint" }];
   const renderer = new EvidenceTableRenderer(makeModel([{ city: "NYC" }], columns, {}, el), el);
   const icon = el.querySelector(".et-th-info");
   assert.ok(icon);
-  assert.equal(icon.getAttribute("title"), "A helpful hint");
+  assert.equal(icon.getAttribute("aria-label"), "A helpful hint");
+  assert.equal(icon.getAttribute("title"), null); // no delayed native tooltip
+
+  icon.dispatchEvent(new dom.window.Event("mouseenter"));
+  const tip = document.querySelector(".et-tooltip");
+  assert.ok(tip, "tooltip appears on hover");
+  assert.equal(tip.textContent, "A helpful hint");
+
+  icon.dispatchEvent(new dom.window.Event("mouseleave"));
+  assert.equal(document.querySelector(".et-tooltip"), null);
   renderer.destroy();
 });
 

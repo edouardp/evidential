@@ -505,6 +505,11 @@ normalisation, Excel serial handling, quarters, and the special formatters
   $R=2300$ms. A `pointerup`/`pointercancel`/`blur` listener on `window` stops it.
 - **CSV download** serialises the current (searched, sorted, visible) rows, not
   just the page.
+- **Column descriptions** (`info`, or the `comment`/`description` aliases) render
+  as a **ⓘ** in the header. The tooltip is a single `position: fixed` element
+  appended to `document.body` — so the scroller cannot clip it — shown on
+  `mouseenter`/`focus` and removed on leave/scroll. We render our own instead of
+  the native `title` (which has a delay) and leave the cursor alone.
 
 ### 6.6 Fullscreen
 

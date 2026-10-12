@@ -88,6 +88,20 @@ def test_duckdb_column_comments_become_header_info() -> None:
     assert "info" not in raw["a"]
 
 
+def test_column_config_accepts_comment_and_description() -> None:
+    table = EvidenceTable(
+        [{"a": 1, "b": 2}],
+        column_config={
+            "a": {"comment": "The a value"},
+            "b": {"description": "The b value"},
+        },
+    )
+    columns = {column["name"]: column for column in table.columns}
+    assert columns["a"]["info"] == "The a value"
+    assert columns["b"]["info"] == "The b value"
+    assert "comment" not in columns["a"]
+
+
 def test_arrow_field_metadata_becomes_header_info() -> None:
     import pyarrow as pa
 

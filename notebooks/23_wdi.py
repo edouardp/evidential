@@ -282,6 +282,72 @@ def _(EvidenceTable, connection, mo, trend_country):
 @app.cell
 def _(mo):
     mo.md("""
+    ## All years in one sparkline
+
+    The same **indicator** and **region** controls drive a second view: one row
+    per country, with every reported year packed into a sparkline — an
+    `ARRAY_AGG` of `{'year': …, 'value': …}` objects.
+    """)
+    return
+
+
+@app.cell
+def _(EvidenceTable, connection, indicator, mo, region):
+    sparklines = mo.ui.anywidget(
+        EvidenceTable(
+            connection.sql(
+                """
+                SELECT
+                    c."Short Name" AS country,
+                    c.Region       AS region,
+                    count(*)        AS years,
+                    round(arg_max(o.value, o.year), 2) AS latest,
+                    array_agg(
+                        {'year': o.year, 'value': round(o.value, 2)}
+                        ORDER BY o.year
+                    ) AS trend
+                FROM observations o
+                JOIN country c ON c."Country Code" = o.country_code
+                WHERE o.indicator_code = ?
+                  AND c.Region IS NOT NULL
+                  AND (? = 'All regions' OR c.Region = ?)
+                GROUP BY 1, 2
+                ORDER BY c."Short Name"
+                """,
+                params=[indicator.value, region.value, region.value],
+            ),
+            title="Every reported year in one sparkline",
+            search=True,
+            page_size=12,
+            row_shading=True,
+            column_config={
+                "country": {"align": "left"},
+                "region": {"align": "left"},
+                "years": {"fmt": "num0", "align": "right"},
+                "latest": {"fmt": "num", "align": "right"},
+                "trend": {
+                    "title": "All years",
+                    "viz": "sparkline",
+                    "sparkline_options": {
+                        "x": "year",
+                        "y": "value",
+                        "type": "area",
+                        "fit_to_data": True,
+                        "width": 130,
+                        "height": 26,
+                    },
+                    "align": "center",
+                },
+            },
+        )
+    )
+    sparklines
+    return
+
+
+@app.cell
+def _(mo):
+    mo.md("""
     ## Wide view (pivot)
 
     `pivot_table` turns the `year` column into one column per year, grouped

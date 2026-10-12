@@ -204,10 +204,10 @@ export class EvidentialTableRenderer {
       "--et-font-size": theme.font_size,
     };
     for (const [k, v] of Object.entries(vars)) {
-      if (!v) continue;
-      this.root.style.setProperty(k, v);
-      // The dialog is a sibling of the root, so it needs the surface tokens too.
-      this.dialog.style.setProperty(k, v);
+      for (const element of [this.root, this.dialog]) {
+        if (v) element.style.setProperty(k, v);
+        else element.style.removeProperty(k);
+      }
     }
   }
 
@@ -374,6 +374,7 @@ export class EvidentialTableRenderer {
   // --------------------------------------------------------------- render ---
   render() {
     const opts = this.options;
+    this._applyTheme();
     this.root.style.maxWidth =
       opts.width == null
         ? ""
@@ -853,7 +854,17 @@ export class EvidentialTableRenderer {
       if (sorted) inner.append(h("span", { class: "et-sort-arrow" }, dir === "asc" ? "▲" : "▼"));
       th.append(inner);
       if (opts.sortable !== false) {
+        th.tabIndex = 0;
         th.addEventListener("click", () => this._sortColumn(col.name));
+        th.addEventListener("keydown", (event) => {
+          if (event.key !== "Enter" && event.key !== " ") return;
+          event.preventDefault();
+          this._sortColumn(col.name);
+          const replacement = [...this.scroller.querySelectorAll("thead tr:last-child th")]
+            .find((cell) => cell.dataset.column === col.name);
+          replacement?.focus({ preventScroll: true });
+        });
+        th.dataset.column = col.name;
       }
       row.append(th);
     }
@@ -1016,13 +1027,29 @@ export class EvidentialTableRenderer {
       const isSelected =
         ctx.selected !== null && ctx.selected !== undefined && String(ctx.selected) === String(selectKey);
       tr.classList.add("et-row-selectable");
+      tr.tabIndex = 0;
+      tr.dataset.selectKey = String(selectKey);
+      tr.setAttribute("aria-selected", String(isSelected));
       if (isSelected) tr.classList.add("et-row-selected");
-      tr.addEventListener("click", (event) => {
-        if (event.target.closest && event.target.closest("a")) return;
+      const select = (event) => {
+        if (event.target.closest && event.target.closest("a, button, input, select, textarea")) return;
         // Clicking the selected row again clears the selection. `save_changes`
         // is what lets Marimo treat the new value as a cell dependency.
         this.model.set("selected", isSelected ? null : selectKey);
         this.model.save_changes();
+        if (event.type === "keydown") {
+          requestAnimationFrame(() => {
+            const replacement = [...this.scroller.querySelectorAll("tr.et-row-selectable")]
+              .find((row) => row.dataset.selectKey === String(selectKey));
+            replacement?.focus({ preventScroll: true });
+          });
+        }
+      };
+      tr.addEventListener("click", select);
+      tr.addEventListener("keydown", (event) => {
+        if (event.target !== tr || (event.key !== "Enter" && event.key !== " ")) return;
+        event.preventDefault();
+        select(event);
       });
     }
 
@@ -1049,6 +1076,11 @@ export class EvidentialTableRenderer {
         tdStyle.paddingLeft = `calc(${base} + ${indent}rem)`;
       }
       const td = h("td", { class: `et-td${opts.stub === col.name ? " et-stub" : ""}`, style: tdStyle });
+      const matched = this._matchingRules(col, row);
+      const finish = (includeFootnote = true) => {
+        this._decorateCell(td, col, row, ctx, rowIndex, matched.style, includeFootnote);
+        tr.append(td);
+      };
       if (ctx.section && index < ctx.dimCount) {
         // Section mode merges each dimension cell vertically. A data row renders
         // only its leaf dimension (the rest sit under ancestor rowSpans); a
@@ -1064,7 +1096,7 @@ export class EvidentialTableRenderer {
         if (index === dimIndex) {
           if (isSubtotal) td.rowSpan = ctx.rowspans?.[rowIndex] ?? 1;
         } else if (index > dimIndex) {
-          tr.append(td);
+          finish(false);
           return;
         } else {
           return;
@@ -1081,7 +1113,18 @@ export class EvidentialTableRenderer {
       // Collapsible chevron in the subtotal's own dimension column.
       const dimIndex = (row.__level ?? 0) - 1;
       if (isSubtotal && index === dimIndex && !ctx.section) {
-        const chev = h("span", { class: `et-chevron${isCollapsed ? "" : " et-chevron-open"}` }, "▶");
+        const chev = h("button", {
+          class: `et-chevron${isCollapsed ? "" : " et-chevron-open"}`,
+          type: "button", "aria-label": `Toggle group ${row[col.name] ?? ""}`,
+          "aria-expanded": String(!isCollapsed),
+          onclick: (event) => {
+            event.stopPropagation();
+            this._toggleGroup(row.__group_key);
+            const replacement = [...this.scroller.querySelectorAll("td[data-group-key]")]
+              .find((cell) => cell.dataset.groupKey === row.__group_key);
+            replacement?.querySelector("button.et-chevron")?.focus({ preventScroll: true });
+          },
+        }, "▶");
         td.append(chev);
         td.dataset.groupKey = row.__group_key;
         td.addEventListener("click", (e) => {
@@ -1091,7 +1134,7 @@ export class EvidentialTableRenderer {
       }
 
       if (hidden[col.name]) {
-        tr.append(td);
+        finish(false);
         return;
       }
 
@@ -1107,7 +1150,7 @@ export class EvidentialTableRenderer {
           });
         });
         td.append(h("span", { class: "et-cell-value" }, merged));
-        tr.append(td);
+        finish();
         return;
       }
 
@@ -1115,7 +1158,7 @@ export class EvidentialTableRenderer {
       const substituted = this._matchSubstitution(col, row, value);
       if (substituted != null) {
         td.append(h("span", { class: "et-cell-value et-substituted" }, substituted));
-        tr.append(td);
+        finish();
         return;
       }
       // Optional cutoffs: values outside the range are treated as blank.
@@ -1138,13 +1181,12 @@ export class EvidentialTableRenderer {
           const nullText = col.null_text ?? opts.null_text ?? "–";
           td.append(h("span", { class: "et-null" }, String(nullText)));
         }
-        tr.append(td);
+        finish();
         return;
       }
 
       const baseFormat =
         col.fmt_column && row[col.fmt_column] != null ? String(row[col.fmt_column]) : col.fmt;
-      const matched = this._matchingRules(col, row);
       const alignDecimals =
         (col.align_decimals ?? opts.align_decimals) && ctx.decimals.has(col.name);
       const alignedBase = alignDecimals
@@ -1256,27 +1298,7 @@ export class EvidentialTableRenderer {
         td.classList.add("et-color-cell");
       }
 
-      const footnoteColumn = col.footnote || opts.footnote_column;
-      if (footnoteColumn && row[footnoteColumn]) {
-        const noteText = String(row[footnoteColumn]).trim();
-        if (noteText) {
-          let note = ctx.footnotes.find((item) => item.text === noteText);
-          if (!note) {
-            note = { text: noteText, index: ctx.footnotes.length + 1, rows: new Set() };
-            ctx.footnotes.push(note);
-          }
-          note.rows.add((ctx.rowNumberBase || 0) + rowIndex + 1);
-          td.append(
-            h("sup", { class: "et-footnote-mark", title: noteText }, this._footnoteMark(note.index)),
-          );
-        }
-      }
-      if (matched.style) {
-        for (const [property, propertyValue] of Object.entries(matched.style)) {
-          td.style.setProperty(property, propertyValue);
-        }
-      }
-      tr.append(td);
+      finish();
     });
 
     if (opts.link) {
@@ -1285,6 +1307,30 @@ export class EvidentialTableRenderer {
       tr.append(chevTd);
     }
     return tr;
+  }
+
+  /** Apply effects shared by ordinary, null, substituted and template cells. */
+  _decorateCell(td, col, row, ctx, rowIndex, style, includeFootnote) {
+    const footnoteColumn = col.footnote || this.options.footnote_column;
+    if (includeFootnote && footnoteColumn && row[footnoteColumn]) {
+      const noteText = String(row[footnoteColumn]).trim();
+      if (noteText) {
+        let note = ctx.footnotes.find((item) => item.text === noteText);
+        if (!note) {
+          note = { text: noteText, index: ctx.footnotes.length + 1, rows: new Set() };
+          ctx.footnotes.push(note);
+        }
+        note.rows.add((ctx.rowNumberBase || 0) + rowIndex + 1);
+        td.append(
+          h("sup", { class: "et-footnote-mark", title: noteText }, this._footnoteMark(note.index)),
+        );
+      }
+    }
+    if (style) {
+      for (const [property, propertyValue] of Object.entries(style)) {
+        td.style.setProperty(property, propertyValue);
+      }
+    }
   }
 
   _renderBar(col, value, formatted, range) {

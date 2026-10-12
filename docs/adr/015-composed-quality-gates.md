@@ -44,5 +44,7 @@ ADRs). They are defined in `.pre-commit-config.yaml` and mirrored by
 
 ## More Information
 
+- Dependency auditing also runs as an always-run local pre-commit hook so
+  lockfile-only changes receive the same audit as `make lint`.
 - [Design & DX §3](../design-and-dx.md)
 - [`.pre-commit-config.yaml`](../../.pre-commit-config.yaml), [`scripts/lint.sh`](../../scripts/lint.sh)

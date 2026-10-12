@@ -286,6 +286,10 @@ These build SQL, run it, and hand rows to `EvidentialTable` (or
   (`last 12 months`, `month to date`, `2020-01-01 to 2023-03-01`, …) into a
   DuckDB boolean expression.
 
+Custom dates are validated as ISO dates or datetimes. A date-only end includes
+the entire final day using an exclusive next-day bound; an explicit datetime
+end remains inclusive. To-date presets likewise include today's timestamps.
+
 ### 4.7 `rules.py` — gt-style locations
 
 `cells_body(columns, rows)` returns a location; `tab_style` / `tab_format` /
@@ -440,6 +444,10 @@ flowchart TD
   DELTA --> H
   MEDIA --> H
   TEXT --> H
+  Z --> I["footnote and location style"]
+  Z2 --> I
+  Z3 --> I
+  H --> I
 ```
 
 ### 6.2 Visualisations
@@ -644,15 +652,16 @@ and builds the wheel. `make test-browser` runs the Playwright suite.
 
 ## 10. Performance notes and limits
 
-- **Pagination, not virtualisation.** `page_size` is clamped to 200 rows; the
-  renderer builds real DOM. This bounds the per-render cost and memory. Very
-  large result sets should be paged or aggregated in SQL.
+- **Pagination, not virtualisation.** The renderer builds real DOM. Flat tables
+  use `page_size`; grouped tables render all visible groups, and `page_size="all"`
+  disables pagination. Only empty placeholder rows are capped at 200. Very
+  large result sets should be limited or aggregated in SQL.
 - **Full re-render.** Every interaction rebuilds the table body. This is simple
   and fast for a page; it is not intended for 10⁴ visible rows.
 - **Ranges recompute per render.** `calculateVizRanges` and
-  `calculateFormatRanges` scan the searched/sorted rows each time. These are
-  O(rows) and cheap for page-sized data; they are the first thing to memoise if
-  larger in-memory datasets are needed.
+  `calculateFormatRanges` scan the full searched/sorted dataset each time,
+  including rows outside the current page. Their cost grows with rows and
+  columns; they are the first thing to memoise for larger in-memory datasets.
 - **ResizeObserver.** Frozen-column offsets and fullscreen fitting react to
   size changes; the observer is disconnected in `destroy()`.
 

@@ -34,6 +34,13 @@ repos:
 
   - repo: local
     hooks:
+      - id: pip-audit
+        name: pip-audit (dependency audit)
+        entry: uv run pip-audit
+        language: system
+        pass_filenames: false
+        always_run: true
+
       - id: pyrefly
         name: pyrefly (type check)
         entry: uv run pyrefly check

@@ -22,6 +22,96 @@ if (!dom.window.HTMLDialogElement.prototype.showModal) {
 
 const { EvidentialTableRenderer, holdInterval } = await import("./src/table.js");
 
+test("numeric color and chip scales use inferred ranges", () => {
+  for (const viz of ["color", "chip"]) {
+    const renderer = new EvidentialTableRenderer(
+      makeModel([{ x: 1 }, { x: 10 }], [{ name: "x", type: "number", viz, color_options: { color_scale: "green" } }], {}, el), el,
+    );
+    const targets = [...el.querySelectorAll(viz === "chip" ? ".et-chip" : "tbody td")];
+    assert.ok(targets[0].style.backgroundColor);
+    assert.notEqual(targets[0].style.backgroundColor, targets[1].style.backgroundColor);
+    renderer.destroy();
+  }
+});
+
+test("theme options update and removing overrides restores inherited tokens", () => {
+  const model = makeModel([{ x: 1 }], [{ name: "x" }], { theme: { background: "red" } }, el);
+  const renderer = new EvidentialTableRenderer(model, el);
+  model.data.options = { theme: { background: "blue" } };
+  renderer.render();
+  assert.equal(renderer.root.style.getPropertyValue("--et-bg"), "blue");
+  assert.equal(renderer.dialog.style.getPropertyValue("--et-bg"), "blue");
+  model.data.options = {};
+  renderer.render();
+  assert.equal(renderer.root.style.getPropertyValue("--et-bg"), "");
+  assert.equal(renderer.dialog.style.getPropertyValue("--et-bg"), "");
+  renderer.destroy();
+});
+
+test("styles and footnotes compose with nulls, substitutions and templates", () => {
+  const columns = [{ name: "empty" }, { name: "zero" }, { name: "merged", template: "{other}" }];
+  const rows = [{ empty: null, zero: 0, other: "hello", note: "A note", __row_id: 0 }];
+  const renderer = new EvidentialTableRenderer(makeModel(rows, columns, {
+    footnote_column: "note",
+    rules: [
+      { columns: "*", rows: [0], style: { "background-color": "red" } },
+      { type: "substitute", columns: ["zero"], kind: "zero", text: "none" },
+    ],
+  }, el), el);
+  const cells = [...el.querySelectorAll("tbody td")];
+  assert.ok(cells.every((cell) => cell.style.backgroundColor === "red"));
+  assert.ok(cells.every((cell) => cell.querySelector(".et-footnote-mark")));
+  assert.match(cells[1].textContent, /none/);
+  assert.match(cells[2].textContent, /hello/);
+  renderer.destroy();
+});
+
+test("sorting and selection support keyboard activation", () => {
+  const model = makeModel([{ x: 1 }, { x: 2 }], [{ name: "x", type: "number" }], { select: "x" }, el);
+  const renderer = new EvidentialTableRenderer(model, el);
+  const header = el.querySelector("th");
+  assert.equal(header.tabIndex, 0);
+  header.dispatchEvent(new window.KeyboardEvent("keydown", { key: "Enter", bubbles: true }));
+  assert.match(el.querySelector("tbody tr").textContent, /2/);
+  const row = el.querySelector("tbody tr");
+  assert.equal(row.tabIndex, 0);
+  row.dispatchEvent(new window.KeyboardEvent("keydown", { key: " ", bubbles: true }));
+  assert.equal(model.data.selected, 2);
+  renderer.render();
+  assert.equal(el.querySelector("tbody tr").getAttribute("aria-selected"), "true");
+  renderer.destroy();
+});
+
+test("group chevrons are native buttons with expansion state", () => {
+  const rows = [
+    { x: "A", render_type: "row_subtotal", __level: 1, __group_key: "A", __ancestors: [] },
+    { x: "A", y: "B", render_type: "cell_data", __level: 2, __ancestors: ["A"] },
+  ];
+  const renderer = new EvidentialTableRenderer(
+    makeModel(rows, [{ name: "x" }, { name: "y" }], { collapsible: true, collapsed: false }, el), el,
+  );
+  const button = el.querySelector("button.et-chevron");
+  assert.ok(button);
+  assert.equal(button.getAttribute("aria-expanded"), "true");
+  button.click();
+  assert.equal(el.querySelectorAll("tbody tr").length, 1);
+  assert.equal(el.querySelector("button.et-chevron").getAttribute("aria-expanded"), "false");
+  renderer.destroy();
+});
+
+test("keyboard selection restores focus after a model-driven render", (t) => {
+  t.mock.timers.enable({ apis: ["setTimeout"] });
+  const model = makeModel([{ x: 1 }], [{ name: "x" }], { select: "x" }, el);
+  const renderer = new EvidentialTableRenderer(model, el);
+  model.set = (key, value) => { model.data[key] = value; renderer.render(); };
+  const row = el.querySelector("tbody tr");
+  row.focus();
+  row.dispatchEvent(new window.KeyboardEvent("keydown", { key: "Enter", bubbles: true }));
+  t.mock.timers.tick(1);
+  assert.equal(document.activeElement, el.querySelector("tbody tr"));
+  renderer.destroy();
+});
+
 function makeModel(rows, columns, options = {}, el) {
   const data = { rows, columns, options, selected: null };
   const calls = [];

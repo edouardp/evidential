@@ -78,3 +78,11 @@ def test_lint_success_runs_all_stages(tmp_path: Path, fix: bool) -> None:
     for stage in STAGES:
         assert stage in result.stdout
     assert "All lints passed" in result.stdout
+
+
+def test_dependency_audit_runs_in_precommit_even_without_python_changes() -> None:
+    config = (ROOT / ".pre-commit-config.yaml").read_text()
+    audit = config.split("- id: pip-audit\n", 1)[1].split("- id:", 1)[0]
+    assert "entry: uv run pip-audit" in audit
+    assert "pass_filenames: false" in audit
+    assert "always_run: true" in audit

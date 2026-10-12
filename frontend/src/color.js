@@ -115,7 +115,7 @@ export function createColorScale(values, options) {
 
   let finalPalette;
   if (colorPalette && colorPalette.length > 0) {
-    const validColors = resolvePalette(colorPalette).filter(isValidColor);
+    const validColors = (resolvePalette(colorPalette) || []).filter(isValidColor);
     if (validColors.length >= 2) finalPalette = validColors;
     else if (validColors.length === 1) finalPalette = [defaultColorScale[0] ?? "#ffffff", validColors[0]];
     else finalPalette = defaultColorScale;
@@ -242,10 +242,11 @@ export function buildColorVizScale(col, range, defaultColorScale) {
   return createColorScale([], {
     colorPalette: resolvePalette(opts.color_scale),
     colorStops: opts.color_stops,
-    defaultColorScale: defaultColorScale ?? FALLBACK_COLOR_SCALE,
-    min: opts.min,
-    max: opts.max,
+    defaultColorScale: resolvePalette(defaultColorScale) ?? FALLBACK_COLOR_SCALE,
+    min: opts.min ?? range.min,
+    max: opts.max ?? range.max,
     midpoint: opts.midpoint,
+    mode: opts.scale_mode ?? "lch",
   });
 }
 

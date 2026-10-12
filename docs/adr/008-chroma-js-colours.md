@@ -31,6 +31,10 @@ palette and midpoint produce the same colours, and it provides luminance and
 contrast directly. `color.js` ports `createColorScale`, `calculateVizRanges`
 and `colorStylesFromHex` on top of it.
 
+Color and chip scales use inferred data bounds unless explicitly overridden.
+`scale_mode` chooses chroma's interpolation mode (default `lch`); named
+table-level palettes are resolved in the same way as column-level palettes.
+
 ### Consequences
 
 - Good, because named presets (`green`, `blue`, `red`, …) and custom palettes

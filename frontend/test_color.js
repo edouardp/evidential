@@ -6,6 +6,7 @@ import {
   colorStylesFromHex,
   calculateVizRanges,
   calculateColorStyles,
+  buildColorVizScale,
 } from "./src/color.js";
 
 test("linear color scale", () => {
@@ -57,4 +58,15 @@ test("calculateColorStyles uses conditional color column", () => {
   const row = { x: 5, color: "#ff0000" };
   const styles = calculateColorStyles(col, row, { min: 0, max: 10 }, null);
   assert.equal(styles.backgroundColor, "#ff0000");
+});
+
+test("color scale uses inferred bounds and requested interpolation mode", () => {
+  const scale = buildColorVizScale(
+    { color_options: { color_scale: ["#000000", "#ffffff"], scale_mode: "rgb" } },
+    { min: 10, max: 20 },
+  );
+  assert.equal(getColorForValue(15, scale), "#808080");
+  const named = buildColorVizScale({}, { min: 0, max: 1 }, "green");
+  assert.equal(getColorForValue(1, named), "#16a34a");
+  assert.ok(createColorScale([0, 1], { colorPalette: "unknown" }));
 });

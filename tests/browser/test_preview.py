@@ -32,6 +32,53 @@ def test_renders_and_sorts(page, live_server):
     assert "New York" in cell_text(page, "#raw", 0, 1)
 
 
+def test_keyboard_sort_and_group_toggle(page, live_server):
+    open_preview(page, live_server)
+    header = page.locator("#raw .et-th", has_text="Trips")
+    header.focus()
+    page.keyboard.press("Enter")
+    assert "London" in cell_text(page, "#raw", 0, 1)
+    assert header.evaluate("el => el === document.activeElement")
+    page.keyboard.press("Space")
+    assert "Chicago" in cell_text(page, "#raw", 0, 1)
+    button = page.locator("#grouped button.et-chevron").first
+    initial = page.locator("#grouped tbody tr").count()
+    button.focus()
+    page.keyboard.press("Enter")
+    assert page.locator("#grouped tbody tr").count() < initial
+    assert button.get_attribute("aria-expanded") == "false"
+    assert button.evaluate("el => el === document.activeElement")
+    page.keyboard.press("Space")
+    assert page.locator("#grouped tbody tr").count() == initial
+
+
+def test_keyboard_selection_retains_focus_through_synced_updates(page, live_server):
+    open_preview(page, live_server)
+    page.evaluate("""async () => {
+        const {default: widget} = await import('/src/evidential/static/table.js');
+        const el = document.createElement('div');
+        el.id = 'keyboard-table';
+        document.body.append(el);
+        const data = {rows: [{x: 1}], columns: [{name: 'x'}], options: {select: 'x'}, selected: null};
+        const listeners = new Map();
+        widget.render({el, model: {
+            get: key => data[key],
+            set: (key, value) => { data[key] = value; listeners.get('change:' + key)?.(); },
+            save_changes: () => { el.dataset.saves = String(Number(el.dataset.saves || 0) + 1); },
+            on: (event, callback) => listeners.set(event, callback),
+            off: event => listeners.delete(event),
+        }});
+    }""")
+    row = page.locator("#keyboard-table tbody tr")
+    row.focus()
+    page.keyboard.press("Enter")
+    page.wait_for_function("document.querySelector('#keyboard-table tbody tr') === document.activeElement")
+    assert row.get_attribute("aria-selected") == "true"
+    page.keyboard.press("Space")
+    assert row.get_attribute("aria-selected") == "false"
+    assert page.locator("#keyboard-table").get_attribute("data-saves") == "2"
+
+
 def test_search_filters_rows(page, live_server):
     open_preview(page, live_server)
     search = page.locator("#raw .et-search")

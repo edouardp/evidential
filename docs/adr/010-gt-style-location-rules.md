@@ -34,6 +34,10 @@ Python, while `tab_style`, `tab_format` and `sub_*` travel to the browser as
 `{columns, rows: [__row_id...], style | fmt}`. Rules apply in order, last match
 wins.
 
+Every cell content branch finishes through a shared decoration step. Location
+styles and data-driven footnotes therefore apply to null, substituted, and
+template cells as well as ordinary formatted cells.
+
 ### Consequences
 
 - Good, because a rule can target exactly the cells it names.

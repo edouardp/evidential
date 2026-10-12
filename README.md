@@ -9,6 +9,25 @@ notebooks: rich cell formatting, conditional bars/colours/sparklines/deltas,
 collapsible grouped subtotals, frozen columns, search, pagination, CSV export
 and a fullscreen view — all driven from ordinary Python data.
 
+It is a **display** widget with a clean division of labour: SQL (or pandas /
+Arrow / records) shapes the data, Python describes how to present it, and the
+browser renders it. The same table can be embedded in a Marimo app or placed in
+a [marimo Studio](https://marimo.io/blog/introducing-marimo-studio) view, so one
+notebook can serve a live dashboard, a report and a slide deck.
+
+> **Status:** alpha (`0.1.0`), not yet published on PyPI — install from a
+> checkout (see [Install](#install)). The API may change.
+
+## Documentation
+
+- [Design & DX](docs/design-and-dx.md) — *why* the table works the way it does,
+  and what it borrows from Evidence, gt/Great Tables and A List Apart.
+- [Technical architecture](docs/technical-architecture.md) — the wire format,
+  render pipeline and diagrams.
+- [marimo Studio views](docs/marimo-studio.md) — reuse notebook components in a
+  view, with runtime guidance and troubleshooting.
+- [Architectural Decision Records](docs/adr/README.md) — the decisions behind it.
+
 ![EvidenceTable renderer preview](docs/preview.png)
 
 Click the expand button (⛶) to fill the browser viewport. The expanded dialog
@@ -45,14 +64,24 @@ themed with `theme={"surface": "#0b1220"}`.
 
 ## Install
 
+The package is not on PyPI yet. From a checkout:
+
 ```bash
-uv sync --extra dev          # Python + test dependencies
-make frontend-install        # JavaScript build/test dependencies
-make frontend-build          # bundle table.js / table.css into the package
+uv sync                  # Python dependencies (incl. dev tools)
+make frontend-install    # JavaScript build/test dependencies
+make frontend-build      # bundle table.js / table.css into the package
 ```
 
-The repository uses [`uv`](https://docs.astral.sh/uv/). `make` with no
-arguments lists every available target.
+To use it from another project, add the local path:
+
+```bash
+uv add evidence-tables --path /path/to/marimo-evidence-tables
+```
+
+Optional extras: `evidence-tables[duckdb]` (DuckDB, Arrow, pandas),
+`evidence-tables[marimo]`, and `evidence-tables[studio]` (marimo Studio). The
+repository uses [`uv`](https://docs.astral.sh/uv/); `make` with no arguments
+lists every available target.
 
 ## Quick start
 
@@ -303,23 +332,79 @@ if refresh.value is not None:
 ## marimo Studio views
 
 [marimo Studio](https://marimo.io/blog/introducing-marimo-studio) gives one
-notebook named views — a dashboard, article, slide deck or PDF — each a
-separate frontend project. An `EvidenceTable` is projected by the cell that
-displays it, so a view can place the live, interactive table next to native
-controls and notebook values:
+notebook named views — a dashboard, article, slide deck or PDF — each its own
+frontend project. A view does not copy your code: it **projects** the notebook's
+cells, outputs and values by name, so the same `EvidenceTable`, controls and
+KPIs can back several views and stay in sync with the notebook.
 
-```html
-<marimo-cell name="revenue_table"></marimo-cell>   <!-- live EvidenceTable -->
-<marimo-cell name="region_filter"></marimo-cell>   <!-- native marimo control -->
-<strong mo-value="kpis.revenue"></strong>          <!-- one value, as data -->
+![The demo dashboard view: a live EvidenceTable, KPIs and a filter](docs/img/studio-view.png)
+
+### Reuse notebook components in a view
+
+1. **Put each reusable component in its own named cell.** The cell function name
+   becomes its projection target.
+
+   ```python
+   @app.cell
+   def revenue_table(EvidenceTable, filtered):        # target: "revenue_table"
+       EvidenceTable(filtered, title="Revenue by city", column_config={...})
+   ```
+
+   ```python
+   @app.cell
+   def kpis(filtered):                                # value: "kpis"
+       kpis = {"revenue": ..., "trips": ...}
+       return (kpis,)
+   ```
+
+2. **Create a view** next to the notebook (Studio toolbar → **Add view**, or the
+   CLI). Views live in a committed `view_root`, so they can be versioned with the
+   notebook:
+
+   ```console
+   uv run --with "marimo-studio[deno]" marimo-studio view create dashboard --target analysis.py
+   ```
+
+3. **Project the components by name** from the view's `index.html`:
+
+   ```html
+   <marimo-cell name="revenue_table"></marimo-cell>   <!-- live EvidenceTable -->
+   <marimo-cell name="region_filter"></marimo-cell>   <!-- native marimo control -->
+   <strong mo-value="kpis.revenue"></strong>          <!-- one value, as data -->
+   ```
+
+| Goal | Element | Example |
+| --- | --- | --- |
+| Show a cell's output, live (table, chart, control) | `<marimo-cell name="…">` | `<marimo-cell name="revenue_table">` |
+| Show one object, even one the notebook never displays | `<marimo-output name="…">` | `<marimo-output name="summary">` |
+| Read one value into the view's own markup or JS | `mo-value="…"` | `mo-value="kpis.revenue"` |
+
+The notebook owns data and computation; the view owns presentation. The same
+component can be projected into any number of views, and changing a control in
+one view re-runs the notebook and updates every dependent result.
+
+**Reuse the widget, or reuse the data.** Project the cell (above) to reuse the
+live `EvidenceTable` with all its interaction. Project `mo-value="filtered"` to
+reuse only the rows and draw them in the view's own markup — the pattern the
+demo's `report` view uses, which also works in a static (Prepared) export. The
+[demo](notebooks/21_studio_dashboard.py) ships both.
+
+### Run the demo
+
+[`notebooks/21_studio_dashboard.py`](notebooks/21_studio_dashboard.py) is a
+self-contained notebook (no database, no network) with two committed views under
+`notebooks/studio/21_studio_dashboard/`:
+
+```console
+make studio-serve        # opens the notebook with Studio installed
+make studio-validate     # validates every committed view against the notebook
 ```
 
-The dashboard demo is [`notebooks/21_studio_dashboard.py`](notebooks/21_studio_dashboard.py)
-with two committed views under `notebooks/studio/21_studio_dashboard/` — a
-`dashboard` that projects the live widget and a `report` that draws the projected
-rows itself. Run it with `make studio-serve` (Server runtime) and validate the
-views with `make studio-validate`. See [docs/marimo-studio.md](docs/marimo-studio.md)
-for the projection recipes, runtime guidance and projection size limits.
+Because the table is interactive, the views use Studio's **Server** runtime. A
+static (`Prepared`) or browser (`wasm`) export additionally needs
+`evidence-tables` on PyPI. See [docs/marimo-studio.md](docs/marimo-studio.md)
+for the full recipes, runtime guidance, projection size limits and
+troubleshooting.
 
 ## Amazon S3 Tables
 

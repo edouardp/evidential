@@ -465,8 +465,9 @@ flowchart TD
   for a decrease, flipped by `down_is_good` — and a grey dash for a value inside
   `neutral_range`, which accepts a `"lo:hi"` string, a `[lo, hi]` pair or a
   ±value. The indicator sits in a fixed-width box so ▲/▼/– keep the numbers
-  aligned, and a missing value renders as the same neutral dash. Optional chip
-  and percentage-aware formatting.
+  aligned, and a missing value renders as the same neutral dash. A
+  `pct`-formatted delta is always shown as a percentage — even a 300% change —
+  rather than falling back to a bare number. Optional chip.
 
 ### 6.3 `format.js` and `color.js`
 

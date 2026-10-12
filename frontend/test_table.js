@@ -433,8 +433,9 @@ test("delta puts the indicator after the value, with a dash when neutral", () =>
     },
     { name: "cost", type: "number", fmt: "pct1", viz: "delta", delta_options: { down_is_good: true } },
     { name: "bare", type: "number", fmt: "pct1", viz: "delta", delta_options: { show_value: false } },
+    { name: "boom", type: "number", fmt: "pct1", viz: "delta" },
   ];
-  const rows = [{ up: 0.12, down: -0.04, flat: 0.03, cost: 0.05, bare: 0.12 }];
+  const rows = [{ up: 0.12, down: -0.04, flat: 0.03, cost: 0.05, bare: 0.12, boom: 3.0746 }];
   const renderer = new EvidenceTableRenderer(makeModel(rows, columns, {}, el), el);
   const cells = [...el.querySelectorAll(".et-delta")];
   const text = cells.map((node) => node.textContent.trim());
@@ -443,6 +444,7 @@ test("delta puts the indicator after the value, with a dash when neutral", () =>
   assert.equal(text[2], "3.0% –"); // neutral -> dash
   assert.equal(text[3], "5.0% ▲");
   assert.equal(text[4], "▲"); // show_value: false
+  assert.equal(text[5], "307.5% ▲"); // >100% still a percentage
   assert.equal(cells[0].querySelector(".et-delta-indicator").textContent, "▲");
   assert.equal(cells[2].querySelector(".et-delta-indicator").textContent, "–");
   assert.ok(cells[0].classList.contains("et-delta-good"));

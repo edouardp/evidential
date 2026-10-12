@@ -1172,9 +1172,15 @@ export class EvidenceTableRenderer {
     // The indicator is a dash for a neutral value, otherwise an up/down arrow.
     const indicator =
       opts.show_symbol === false ? "" : isNeutral ? "–" : positive ? "▲" : num < 0 ? "▼" : "–";
+    // A `pct`-formatted delta holds a fraction, so always show it as a
+    // percentage — even above 100% (e.g. a 307% change) — rather than falling
+    // back to a bare number.
     const pct =
-      Math.abs(num) <= 1 && col.fmt && col.fmt.startsWith("pct")
-        ? Math.abs(num * 100).toFixed(1) + "%"
+      col.fmt && col.fmt.startsWith("pct")
+        ? formatValue(Math.abs(num), col.fmt, {
+            type: "number",
+            fallback: String(Math.abs(num)),
+          })
         : Math.abs(num).toLocaleString(undefined, { maximumFractionDigits: 1 });
     const valueText = opts.show_value === false || isMissing ? "" : pct;
     const valueNode = valueText ? h("span", { class: "et-delta-value" }, valueText) : null;

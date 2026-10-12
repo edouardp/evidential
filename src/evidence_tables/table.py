@@ -225,6 +225,19 @@ def _normalize_column_options(data: dict[str, Any]) -> dict[str, Any]:
     ):
         if camel in data:
             delta.setdefault(snake, data.pop(camel))
+    # Allow the delta options (incl. a neutral range) at the top level too.
+    for key in (
+        "down_is_good",
+        "show_symbol",
+        "show_value",
+        "symbol_position",
+        "neutral_range",
+        "neutral_min",
+        "neutral_max",
+        "chip",
+    ):
+        if key in data:
+            delta.setdefault(key, data.pop(key))
     if delta:
         data["delta_options"] = delta
 

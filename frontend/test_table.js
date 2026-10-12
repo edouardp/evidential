@@ -420,16 +420,34 @@ test("fmt_column applies a per-row format code", () => {
   renderer.destroy();
 });
 
-test("delta chip and show_value", () => {
+test("delta puts the indicator after the value, with a dash when neutral", () => {
   const columns = [
-    { name: "change", type: "number", fmt: "pct1", viz: "delta", delta_options: { chip: true, show_value: true } },
-    { name: "only_arrow", type: "number", fmt: "pct1", viz: "delta", delta_options: { show_value: false } },
+    { name: "up", type: "number", fmt: "pct1", viz: "delta", delta_options: { chip: true } },
+    { name: "down", type: "number", fmt: "pct1", viz: "delta" },
+    {
+      name: "flat",
+      type: "number",
+      fmt: "pct1",
+      viz: "delta",
+      delta_options: { neutral_range: "-0.1:0.1" },
+    },
+    { name: "cost", type: "number", fmt: "pct1", viz: "delta", delta_options: { down_is_good: true } },
+    { name: "bare", type: "number", fmt: "pct1", viz: "delta", delta_options: { show_value: false } },
   ];
-  const rows = [{ change: 0.12, only_arrow: 0.12 }];
+  const rows = [{ up: 0.12, down: -0.04, flat: 0.03, cost: 0.05, bare: 0.12 }];
   const renderer = new EvidenceTableRenderer(makeModel(rows, columns, {}, el), el);
+  const cells = [...el.querySelectorAll(".et-delta")];
+  const text = cells.map((node) => node.textContent.trim());
+  assert.equal(text[0], "12.0% ▲");
+  assert.equal(text[1], "4.0% ▼");
+  assert.equal(text[2], "3.0% –"); // neutral -> dash
+  assert.equal(text[3], "5.0% ▲");
+  assert.equal(text[4], "▲"); // show_value: false
+  assert.ok(cells[0].classList.contains("et-delta-good"));
+  assert.ok(cells[1].classList.contains("et-delta-bad"));
+  assert.ok(cells[2].classList.contains("et-delta-neutral"));
+  assert.ok(cells[3].classList.contains("et-delta-bad")); // down_is_good flips it
   assert.ok(el.querySelector(".et-delta-chip"));
-  const arrows = [...el.querySelectorAll(".et-delta")];
-  assert.equal(arrows[1].textContent.trim(), "▲");
   renderer.destroy();
 });
 

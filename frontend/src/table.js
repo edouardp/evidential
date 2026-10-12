@@ -1139,19 +1139,39 @@ export class EvidenceTableRenderer {
     return cell;
   }
 
+  /** Neutral band from `neutral_range`.
+   * Accepts a `"lo:hi"` string (e.g. `"-0.1:0.1"`), a `[lo, hi]` pair, a single
+   * ±value, or `neutral_min` / `neutral_max`. Defaults to "only exactly 0". */
+  _neutralBounds(opts) {
+    const range = opts.neutral_range;
+    if (typeof range === "string") {
+      const match = range.match(/^\s*(-?\d+(?:\.\d+)?)\s*(?::|\.\.)\s*(-?\d+(?:\.\d+)?)\s*$/);
+      if (match) return [Number(match[1]), Number(match[2])];
+    }
+    if (Array.isArray(range) && range.length === 2) return [Number(range[0]), Number(range[1])];
+    if (typeof range === "number" && isFinite(range)) return [-Math.abs(range), Math.abs(range)];
+    return [opts.neutral_min ?? 0, opts.neutral_max ?? 0];
+  }
+
   _renderDelta(col, value) {
     const opts = col.delta_options || {};
     const num = Number(value);
-    const [lo, hi] = opts.neutral_range || [opts.neutral_min ?? 0, opts.neutral_max ?? 0];
+    const [lo, hi] = this._neutralBounds(opts);
     const isNeutral = (lo == null || num >= lo) && (hi == null || num <= hi);
     const positive = num > 0;
-    const good = isNeutral ? false : (opts.down_is_good ? !positive : positive);
+    const good = isNeutral ? false : opts.down_is_good ? !positive : positive;
     const cls = isNeutral ? "et-delta-neutral" : good ? "et-delta-good" : "et-delta-bad";
-    const symbol = opts.show_symbol === false ? "" : (positive ? "▲" : num < 0 ? "▼" : "");
-    const pct = Math.abs(num) <= 1 && col.fmt && col.fmt.startsWith("pct")
-      ? Math.abs(num * 100).toFixed(1) + "%"
-      : Math.abs(num).toLocaleString(undefined, { maximumFractionDigits: 1 });
-    const text = [symbol, opts.show_value === false ? "" : pct].filter(Boolean).join(" ");
+    // The indicator is a dash for a neutral value, otherwise an up/down arrow.
+    const indicator =
+      opts.show_symbol === false ? "" : isNeutral ? "–" : positive ? "▲" : num < 0 ? "▼" : "–";
+    const pct =
+      Math.abs(num) <= 1 && col.fmt && col.fmt.startsWith("pct")
+        ? Math.abs(num * 100).toFixed(1) + "%"
+        : Math.abs(num).toLocaleString(undefined, { maximumFractionDigits: 1 });
+    const valueText = opts.show_value === false ? "" : pct;
+    // The indicator follows the value by default (e.g. "12.0% ▲").
+    const parts = opts.symbol_position === "left" ? [indicator, valueText] : [valueText, indicator];
+    const text = parts.filter(Boolean).join(" ");
     const classes = ["et-delta", cls, opts.chip ? "et-delta-chip" : ""].filter(Boolean).join(" ");
     return h("span", { class: classes }, text || "–");
   }

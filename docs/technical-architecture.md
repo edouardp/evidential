@@ -460,8 +460,11 @@ flowchart TD
 - **Sparkline** (`_renderSparkline`). Builds an inline SVG from an array in a
   cell: `[y, …]`, `[[x, y], …]`, or `ARRAY_AGG({'date': …, 'value': …})`
   objects. Line/area/bar, optional zero baseline, tooltips via `<title>`.
-- **Delta** (`_renderDelta`). ▲/▼ with a good/bad class, optional chip and
-  neutral range, percentage-aware formatting.
+- **Delta** (`_renderDelta`). The value first with the ▲/▼ indicator after it
+  (or `symbol_position="left"`), a good/bad class — green for an increase, red
+  for a decrease, flipped by `down_is_good` — and a grey dash for a value inside
+  `neutral_range`, which accepts a `"lo:hi"` string, a `[lo, hi]` pair or a
+  ±value. Optional chip and percentage-aware formatting.
 
 ### 6.3 `format.js` and `color.js`
 

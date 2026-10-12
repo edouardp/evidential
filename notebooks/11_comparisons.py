@@ -6,11 +6,11 @@
 #     "evidence-tables",
 # ]
 # ///
-"""Prior-period comparisons (`comparison_table`)."""
+"""Prior-period comparisons (`comparison_table`) and delta formatting."""
 
 import marimo
 
-__generated_with = "0.20.0"
+__generated_with = "0.25.1"
 app = marimo.App(width="full")
 
 
@@ -103,6 +103,82 @@ def _(comparison_table, connection, mo):
         )
     )
     qoq
+    return
+
+
+@app.cell
+def _(mo):
+    mo.md("""
+    ## Delta formatting
+
+    The `% change` column is a `viz="delta"`. The indicator follows the value
+    (`12.0% ▲`), **green** means an increase and **red** a decrease, and a value
+    inside `neutral_range` shows a **grey dash** instead of an arrow.
+    `down_is_good=True` flips the colours for a measure where lower is better.
+
+    ### Neutral range
+
+    `neutral_range` accepts an inclusive range — a `"-0.1:0.1"` string, a
+    `[lo, hi]` pair, or a single ±value — and can be set at the top level of
+    `measure_config` / `column_config` next to `fmt`. Here changes within ±25%
+    read as neutral (widened from the usual ±10% so this data shows the dash).
+    """)
+    return
+
+
+@app.cell
+def _(comparison_table, connection, mo):
+    neutral = mo.ui.anywidget(
+        comparison_table(
+            connection,
+            "SELECT category, order_datetime, sales FROM needful_things.orders",
+            dimensions=["category"],
+            measures=["round(sum(sales), 0) AS sales"],
+            date_column="order_datetime",
+            compare_vs="prior year",
+            title='neutral_range="-0.25:0.25" — changes within ±25% show a dash',
+            page_size=10,
+            row_shading=True,
+            measure_config={"sales": {"fmt": "usd0", "neutral_range": "-0.25:0.25"}},
+        )
+    )
+    neutral
+    return
+
+
+@app.cell
+def _(mo):
+    mo.md("""
+    ### Flipping good and bad
+
+    For a measure where a decrease is good, set `down_is_good=True`: the arrow
+    is unchanged, but a fall is **green** and a rise is **red**.
+    """)
+    return
+
+
+@app.cell
+def _(comparison_table, connection, mo):
+    down_is_good = mo.ui.anywidget(
+        comparison_table(
+            connection,
+            "SELECT category, order_datetime, sales FROM needful_things.orders",
+            dimensions=["category"],
+            measures=["count(*) FILTER (WHERE sales < 10) AS small_orders"],
+            date_column="order_datetime",
+            compare_vs="prior year",
+            title="`small_orders with down_is_good=True — a fall is green`",
+            page_size=10,
+            row_shading=True,
+            measure_config={"small_orders": {"fmt": "num0", "down_is_good": True}},
+        )
+    )
+    down_is_good
+    return
+
+
+@app.cell
+def _():
     return
 
 

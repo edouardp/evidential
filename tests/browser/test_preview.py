@@ -138,6 +138,13 @@ def test_column_info_tooltip_is_immediate(page, live_server):
     tooltip.wait_for(state="detached", timeout=2000)
 
 
+def test_delta_indicator_follows_the_value(page, live_server):
+    open_preview(page, live_server, "#features")
+    text = page.locator("#features .et-delta").first.inner_text().strip()
+    assert text[0].isdigit()  # value first...
+    assert text.endswith("▲") or text.endswith("▼")  # ...indicator last
+
+
 def test_display_features(page, live_server):
     open_preview(page, live_server, "#features")
     page.wait_for_selector("#features tbody tr")

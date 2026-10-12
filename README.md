@@ -503,7 +503,7 @@ See `notebooks/02_s3_tables.py` for a full example (it gracefully stops if
 | `viz` | `bar`, `color`, `sparkline`, `delta`, or `None`. |
 | `bar_options` | `bar_color`, `bar_color_negative`, `hide_labels`, `fit_to_data`. |
 | `color_options` | `color_scale`, `color_stops`, `conditional_colors`, `scale_column`, `scale_mode`, `min`, `max`, `midpoint`. |
-| `delta_options` | `down_is_good`, `show_symbol`, `symbol_position`, `neutral_range`. |
+| `delta_options` | `down_is_good` (flip green/red), `show_symbol`, `show_value`, `symbol_position` (`"right"` default), `neutral_range` (`"lo:hi"`, a `[lo, hi]` pair, or a ±value), `chip`. The same keys also work at the top level of the column config. |
 | `sparkline_options` | `type` (`line`/`area`/`bar`), `x`/`y` (field names for struct arrays), `color`, `fit_to_data`, `width`, `height`, `y_fmt`. |
 | `link`, `link_label`, `link_new_tab` | Per-cell links. |
 | `html`, `image`, `image_options`, `logo` | Custom cell content (HTML, image URL, or logo.dev domain). |

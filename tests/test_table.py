@@ -112,6 +112,17 @@ def test_column_config_comment_overrides_an_inferred_description() -> None:
     assert table.columns[0]["info"] == "Overridden"
 
 
+def test_delta_options_accept_top_level_config() -> None:
+    table = EvidenceTable(
+        [{"change": 0.05}],
+        column_config={"change": {"viz": "delta", "neutral_range": "-0.1:0.1", "down_is_good": True}},
+    )
+    assert table.columns[0]["delta_options"] == {
+        "neutral_range": "-0.1:0.1",
+        "down_is_good": True,
+    }
+
+
 def test_arrow_field_metadata_becomes_header_info() -> None:
     import pyarrow as pa
 

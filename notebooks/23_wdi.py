@@ -150,9 +150,18 @@ def _(connection, mo):
             'SELECT "Indicator Name", "Series Code" FROM series ORDER BY "Indicator Name"'
         ).fetchall()
     )
+    # With a {label: value} mapping, `value` selects by label; .value is the code.
+    default_indicator = next(
+        (
+            label
+            for label, code in indicator_options.items()
+            if code == "SP.DYN.LE00.IN"
+        ),
+        None,
+    )
     indicator = mo.ui.dropdown(
         options=indicator_options,
-        value="SP.DYN.LE00.IN",
+        value=default_indicator,
         label="Indicator",
         searchable=True,
     )
@@ -177,7 +186,7 @@ def _(connection, mo):
 
 
 @app.cell
-def _(LiveEvidenceTable, connection, mo):
+def _(LiveEvidenceTable, connection):
     ranking = LiveEvidenceTable(
         connection,
         """
@@ -234,8 +243,11 @@ def _(connection, mo):
             'WHERE Region IS NOT NULL ORDER BY "Short Name"'
         ).fetchall()
     )
+    default_country = next(
+        (label for label, code in countries.items() if code == "JPN"), None
+    )
     trend_country = mo.ui.dropdown(
-        options=countries, value="JPN", label="Country", searchable=True
+        options=countries, value=default_country, label="Country", searchable=True
     )
     trend_country
     return (trend_country,)

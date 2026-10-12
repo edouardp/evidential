@@ -236,8 +236,10 @@ def _normalize_column_options(data: dict[str, Any]) -> dict[str, Any]:
         data["image_options"] = image
 
     # Accept `comment` / `description` as aliases for the header description.
+    # These win over an inferred `info` (e.g. a DuckDB comment) because an
+    # explicit `column_config` should override the source.
     for key in ("comment", "description"):
-        if key in data and "info" not in data:
+        if key in data:
             data["info"] = data.pop(key)
     return data
 

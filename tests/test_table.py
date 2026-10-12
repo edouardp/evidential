@@ -102,6 +102,16 @@ def test_column_config_accepts_comment_and_description() -> None:
     assert "comment" not in columns["a"]
 
 
+def test_column_config_comment_overrides_an_inferred_description() -> None:
+    import duckdb
+
+    con = duckdb.connect()
+    con.execute("CREATE TABLE t (a INTEGER)")
+    con.execute("COMMENT ON COLUMN t.a IS 'Inferred from the database'")
+    table = EvidenceTable(con.table("t"), column_config={"a": {"comment": "Overridden"}})
+    assert table.columns[0]["info"] == "Overridden"
+
+
 def test_arrow_field_metadata_becomes_header_info() -> None:
     import pyarrow as pa
 

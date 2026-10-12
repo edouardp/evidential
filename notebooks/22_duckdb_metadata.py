@@ -3,16 +3,17 @@
 # dependencies = [
 #     "marimo",
 #     "duckdb>=1.3",
+#     "pyarrow>=17",
 #     "evidence-tables",
 # ]
 # ///
-"""DuckDB metadata drives the table: types set the format, comments set the header.
+"""Column metadata drives the table: types set the format, descriptions set the header.
 
-DuckDB returns each result column's type (`relation.types`, and the Arrow schema)
-and stores `COMMENT ON COLUMN` text (`duckdb_columns().comment`). `EvidenceTable`
-uses the first to default formatting and alignment, and the second to fill in the
-header description (the ⓘ tooltip) — so a normalised table needs no
-`column_config` at all.
+`EvidenceTable` reads column descriptions from wherever they live — DuckDB
+`COMMENT ON COLUMN`, Arrow field metadata (which is how a description survives
+Parquet and Feather), or an explicit `column_config={"...": {"comment": ...}}` —
+and shows them as an immediate **ⓘ** tooltip in the header. Column types default
+the format and alignment, so a normalised table needs no `column_config` at all.
 """
 
 import marimo
@@ -23,12 +24,15 @@ app = marimo.App(width="full")
 
 @app.cell
 def _():
+    import tempfile
+    from pathlib import Path
+
     import duckdb
     import marimo as mo
 
     from evidence_tables import EvidenceTable, duck
 
-    return EvidenceTable, duck, duckdb, mo
+    return EvidenceTable, Path, duck, duckdb, mo, tempfile
 
 
 @app.cell
@@ -72,18 +76,20 @@ def _(duckdb):
 @app.cell
 def _(mo):
     mo.md("""
-    # DuckDB metadata drives the table
+    # Column metadata drives the table
 
     DuckDB hands back two useful kinds of metadata with every result:
 
     - **Column types** — `relation.types` and the Arrow schema (`INTEGER`,
       `DECIMAL(10,2)`, `DOUBLE`, `DATE`, `VARCHAR`, …).
-    - **Column comments** — `COMMENT ON COLUMN`, read back from
+    - **Column descriptions** — `COMMENT ON COLUMN`, read back from
       `duckdb_columns().comment`.
 
     `EvidenceTable` turns the type into sensible defaults (integers → `num0`,
-    decimals → `num2`, numbers right-aligned, text left-aligned) and the comment
-    into a header description (hover the **ⓘ**). Nothing is configured below.
+    decimals → `num2`, numbers right-aligned, text left-aligned) and the
+    description into the header **ⓘ**. Hovering it shows the text **immediately**
+    (a custom tooltip, not the browser's delayed one), and the cursor is left
+    alone. Nothing is configured below.
     """)
     return
 
@@ -128,6 +134,104 @@ def _(EvidenceTable, connection, mo):
 @app.cell
 def _(mo):
     mo.md("""
+    ### Set a description yourself
+
+    `column_config` wins over whatever the source says. The header description
+    can be set with `info` or its aliases `comment` / `description`, so the same
+    word as the database metadata works. Here `revenue` is overridden and
+    `discount` is both documented and formatted as a percentage.
+    """)
+    return
+
+
+@app.cell
+def _(EvidenceTable, connection, mo):
+    overridden = mo.ui.anywidget(
+        EvidenceTable(
+            connection.table("orders"),
+            title="column_config={...: {'comment': ...}}",
+            row_shading=True,
+            column_config={
+                "revenue": {"comment": "Net revenue in USD (set in column_config)"},
+                "discount": {"comment": "Discount rate (0-1)", "fmt": "pct0"},
+            },
+        )
+    )
+    overridden
+    return
+
+
+@app.cell
+def _(mo):
+    mo.md("""
+    ### Parquet and Arrow field metadata
+
+    Parquet has no standard per-column comment, but PyArrow stores the whole
+    Arrow schema — including **field metadata** — in the file's `ARROW:schema`
+    entry. So a `comment` (or `description` / `info`) field survives a Parquet
+    round-trip and becomes the header description. Reading the same file through
+    DuckDB's `read_parquet` loses it, because the metadata is not part of the
+    result.
+    """)
+    return
+
+
+@app.cell
+def _(Path, tempfile):
+    import pyarrow as pa
+    import pyarrow.parquet as pq
+
+    parquet_path = Path(tempfile.mkdtemp(prefix="evidence-tables-")) / "cities.parquet"
+    schema = pa.schema(
+        [
+            pa.field("city", pa.string(), metadata={"comment": "City name"}),
+            pa.field("trips", pa.int64(), metadata={"description": "Completed trips"}),
+            pa.field("revenue", pa.float64(), metadata={"comment": "Net revenue in USD"}),
+        ],
+        metadata={"description": "Cities demo"},
+    )
+    pq.write_table(
+        pa.table(
+            {
+                "city": ["New York", "Los Angeles", "London"],
+                "trips": [12040, 8320, 15600],
+                "revenue": [412300.0, 287100.0, 523400.0],
+            },
+            schema=schema,
+        ),
+        parquet_path,
+    )
+    return parquet_path, pq
+
+
+@app.cell
+def _(EvidenceTable, mo, parquet_path, pq):
+    from_parquet = mo.ui.anywidget(
+        EvidenceTable(
+            pq.read_table(parquet_path),
+            title="pq.read_table('cities.parquet') — descriptions from Arrow field metadata",
+            row_shading=True,
+        )
+    )
+    from_parquet
+    return
+
+
+@app.cell
+def _(EvidenceTable, connection, mo, parquet_path):
+    via_duckdb = mo.ui.anywidget(
+        EvidenceTable(
+            connection.sql(f"SELECT * FROM read_parquet('{parquet_path}')"),
+            title="con.sql('SELECT * FROM read_parquet(...)') — DuckDB does not carry the metadata",
+        )
+    )
+    via_duckdb
+    return
+
+
+@app.cell
+def _(mo):
+    mo.md("""
     ### Raw SQL loses the source table
 
     `con.sql("SELECT ...")` produces an **unnamed** query relation: it no longer
@@ -157,18 +261,6 @@ def _(EvidenceTable, connection, duck, mo):
 
 
 @app.cell
-def _(EvidenceTable, connection, mo):
-    plain_sql = mo.ui.anywidget(
-        EvidenceTable(
-            connection.sql("SELECT * FROM orders"),
-            title="con.sql(...) alone — types still apply, comments do not",
-        )
-    )
-    plain_sql
-    return
-
-
-@app.cell
 def _(mo):
     mo.md("""
     ### Notes
@@ -177,7 +269,8 @@ def _(mo):
       the relation keeps its source name through `.limit()`, `.filter()` and
       `.select()`.
     - `duck.column_comments(con, "schema.table")` disambiguates across schemas.
-    - Anything you set in `column_config` still wins over the inferred default.
+    - Anything you set in `column_config` — including `comment` / `description`
+      — still wins over the inferred default.
     """)
     return
 

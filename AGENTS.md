@@ -35,8 +35,11 @@ together with the source change.
 
 ## Packaging
 
-The build uses `uv_build` (`[tool.uv] package = true`). `make check-artifact`
-builds the wheel and sdist and verifies they contain every runtime module plus
+The build uses `uv_build` (`[tool.uv] package = true`; auto-detects
+`src/evidential`). The `uv_build` requirement is a bounded range because it
+versions in lockstep with `uv` — keep the two in step when bumping `uv`. See
+[ADR-034](docs/adr/034-uv-build-backend.md). `make check-artifact` builds the
+wheel and sdist and verifies they contain every runtime module plus
 `static/table.js` and `static/table.css`, and that no `tests/`, `notebooks/` or
 `frontend/` files leak into a release.
 

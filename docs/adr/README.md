@@ -52,6 +52,7 @@ dated, immutable record of the decisions behind them.
 | [031](031-column-highlights.md) | Column and Column-Group Highlights | Accepted |
 | [032](032-row-selection.md) | Row Selection Drives the Notebook | Accepted |
 | [033](033-stable-empty-table.md) | A Stable Empty Table (Placeholder Rows and an Overlay) | Accepted |
+| [034](034-uv-build-backend.md) | `uv_build` as the Build Backend | Accepted |
 
 ## Creating New ADRs
 

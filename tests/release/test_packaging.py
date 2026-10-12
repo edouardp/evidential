@@ -2,11 +2,23 @@
 
 from __future__ import annotations
 
+import re
+import tomllib
 from pathlib import Path
 
 from scripts import check_artifact as gate
 
 ROOT = Path(__file__).resolve().parents[2]
+
+
+def test_build_system_is_uv_build_with_a_bounded_pin() -> None:
+    pyproject = tomllib.loads((ROOT / "pyproject.toml").read_text())
+    build_system = pyproject["build-system"]
+    assert build_system["build-backend"] == "uv_build"
+    (requirement,) = build_system["requires"]
+    # uv_build ships in lockstep with uv, so the pin is a bounded range.
+    assert re.fullmatch(r"uv_build>=[\d.]+,<[\d.]+", requirement), requirement
+    assert pyproject["tool"]["uv"]["package"] is True
 
 
 def test_inspect_flags_missing_runtime_files() -> None:

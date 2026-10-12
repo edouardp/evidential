@@ -185,6 +185,34 @@ PyPI; a Browser export would have no way to install it. Once it is published,
 - **Keep the view's `AGENTS.md`/`DESIGN.md` current** so the next agent (or
   person) knows the notebook targets and the runtime.
 
+## Troubleshooting
+
+Both of these bit us while building the demo; knowing the cause saves a long
+detour.
+
+### `Failed to build sandbox environment … evidence-tables was not found in the package registry`
+
+The package is not on PyPI yet, and a sandboxed run installs the notebook's
+PEP 723 dependencies from scratch. The demo notebook therefore pins the
+dependency to the local checkout with `[tool.uv.sources]` (see the caveat
+above). If you removed it, restore it, or run without `--sandbox` and rely on
+the project environment.
+
+### A stream of `RuntimeError: Expected ASGI message 'websocket.send' or 'websocket.close', but got 'websocket.http.response.start'`
+
+This is a *downstream* symptom, not the underlying fault. marimo's WebSocket
+handler raised `HTTPException(file_not_found)` **after** accepting the socket
+(the workspace could not resolve the requested `file_key`), and starlette tried
+to send an HTTP response on the now-connected socket, which uvicorn rejects.
+
+In practice it follows a notebook session that failed to load — usually the
+sandbox build failure above, or a **stale Studio tab** reconnecting with a
+`file_key` from an earlier server. Resolve it by making the sandbox build
+succeed, then closing stale tabs and opening the exact URL marimo prints.
+Serving the notebook's **folder** (`marimo edit notebooks/`) is friendlier than
+a single file, because Studio resolves `?file=<relative path>` against the
+folder rather than a one-file allow-list.
+
 ## Validate
 
 ```console

@@ -393,6 +393,7 @@ export class EvidenceTableRenderer {
     this.root.classList.toggle("et-wrap", !!opts.wrap);
     this.root.classList.toggle("et-nowrap-titles", opts.wrap_titles === false);
     this.root.classList.toggle("et-no-row-lines", opts.row_lines === false);
+    this.root.classList.toggle("et-no-border", opts.border === false);
     this.root.classList.toggle("et-row-shading", !!opts.row_shading);
     this.root.classList.toggle("et-compact", !!opts.compact);
     this.root.classList.toggle("et-stretch-off", opts.stretch === false);

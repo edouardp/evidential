@@ -284,6 +284,7 @@ def test_new_table_options_round_trip() -> None:
         row_numbers=True,
         column_stats=True,
         compact=True,
+        border=False,
         empty_message="Nothing here",
         empty_rows=5,
         default_sort={"column": "a", "direction": "asc"},
@@ -293,6 +294,7 @@ def test_new_table_options_round_trip() -> None:
     assert table.options["row_numbers"] is True
     assert table.options["column_stats"] is True
     assert table.options["compact"] is True
+    assert table.options["border"] is False
     assert table.options["empty_message"] == "Nothing here"
     assert table.options["empty_rows"] == 5
     assert table.options["default_sort"] == {"column": "a", "direction": "asc"}

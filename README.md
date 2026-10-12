@@ -282,7 +282,8 @@ footer with footnotes and source notes. `EvidenceTable` covers:
   sizes columns to their content ("don't stretch tables"), and
   `align_decimals=True` pads each numeric column to a common precision so the
   decimal points line up. `row_lines=False` / `row_shading=False` keep the
-  furniture minimal. See `notebooks/19_typography.py`.
+  furniture minimal. See `notebooks/19_typography.py`. `border=False` drops the
+  frame (and rounded corners) around the whole table.
 - **Column statistics** — `column_stats=True` adds a summary block under each
   header (`min`/`max`/`avg`/`null` for numbers, `distinct`/`null` otherwise),
   formatted with the column's `fmt`. See `notebooks/25_column_stats.py`.
@@ -544,7 +545,7 @@ See `notebooks/02_s3_tables.py` for a full example (it gracefully stops if
 `total_label`, `total_position`, `subtotal_position`, `collapsible`,
 `collapsed`, `link`, `width`, `max_height`, `order_columns_by_group`, `theme`,
 `color_scale`, `row_numbers`, `column_stats`, `select`, `empty_message`,
-`empty_rows`.
+`empty_rows`, `border`.
 
 ## Architecture
 

@@ -181,6 +181,11 @@
   border: 1px solid var(--et-border);
   border-radius: 8px;
 }
+/* border=False drops the frame around the whole table (and its rounded corners). */
+.et-root.et-no-border .et-scroller {
+  border: none;
+  border-radius: 0;
+}
 .et-table {
   border-collapse: separate;
   border-spacing: 0;

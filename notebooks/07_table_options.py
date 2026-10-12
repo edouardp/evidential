@@ -139,6 +139,45 @@ def _(EvidenceTable, connection, mo):
 @app.cell
 def _(mo):
     mo.md("""
+    ## Outer border
+
+    `border=False` drops the frame (and rounded corners) around the table — handy
+    when it sits inside a card, or when the surrounding layout already frames it.
+    The rows keep their own lines (`row_lines`).
+    """)
+    return
+
+
+@app.cell
+def _(EvidenceTable, connection, mo):
+    borderless = mo.ui.anywidget(
+        EvidenceTable(
+            connection.sql(
+                """
+                SELECT category, count(*) AS orders, round(sum(sales), 0) AS sales
+                FROM needful_things.orders
+                GROUP BY category
+                ORDER BY sales DESC
+                """
+            ),
+            title="No outer border",
+            subtitle="border=False",
+            border=False,
+            row_shading=True,
+            column_config={
+                "category": {"align": "left"},
+                "orders": {"fmt": "num0"},
+                "sales": {"fmt": "usd0", "viz": "bar"},
+            },
+        )
+    )
+    borderless
+    return
+
+
+@app.cell
+def _(mo):
+    mo.md("""
     ## Empty state
 
     `empty_message` replaces the default “No records”.

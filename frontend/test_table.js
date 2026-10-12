@@ -440,6 +440,15 @@ test("an empty table with no columns falls back to a plain message", () => {
   renderer.destroy();
 });
 
+test("border=False drops the outer frame", () => {
+  const renderer = new EvidenceTableRenderer(makeModel(ROWS, COLUMNS, { border: false }, el), el);
+  assert.ok(el.querySelector(".et-root").classList.contains("et-no-border"));
+  renderer.destroy();
+  const framed = new EvidenceTableRenderer(makeModel(ROWS, COLUMNS, {}, el), el);
+  assert.ok(!el.querySelector(".et-root").classList.contains("et-no-border"));
+  framed.destroy();
+});
+
 test("default_sort sorts on first render", () => {
   const renderer = new EvidenceTableRenderer(
     makeModel(ROWS, COLUMNS, { default_sort: { column: "trips", direction: "asc" } }, el),

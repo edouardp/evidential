@@ -158,6 +158,42 @@ def test_delta_indicator_width_is_constant(page, live_server):
     assert "▲" in indicators and "▼" in indicators and "–" in indicators, indicators
 
 
+def test_header_styling(page, live_server):
+    open_preview(page, live_server, "#hierarchy")
+    page.wait_for_selector("#hier .et-th-group:not(.et-th-group-blank)")
+
+    # column headers are bold
+    weight = page.eval_on_selector("#hier .et-th:not(.et-th-group)", "el => getComputedStyle(el).fontWeight")
+    assert int(weight) >= 600, weight
+
+    # column groups are centred, with a bold rule inset 3px on each side
+    group = page.eval_on_selector(
+        "#hier .et-th-group:not(.et-th-group-blank)",
+        """el => {
+            const style = getComputedStyle(el);
+            const rule = getComputedStyle(el, '::after');
+            return {
+                align: style.textAlign,
+                borderRight: style.borderRightWidth,
+                left: rule.left,
+                right: rule.right,
+                height: rule.height,
+                width: rule.width,
+            };
+        }""",
+    )
+    assert group["align"] == "center", group
+    assert group["borderRight"] == "0px", group  # no vertical bars between groups
+    assert group["left"] == "3px", group
+    assert group["right"] == "3px", group
+    assert group["height"] == "2px", group
+    assert group["width"] != "0px", group
+
+    # an ungrouped column's blank spanner cell draws no rule
+    blank = page.eval_on_selector("#hier .et-th-group-blank", "el => getComputedStyle(el, '::after').display")
+    assert blank == "none", blank
+
+
 def test_display_features(page, live_server):
     open_preview(page, live_server, "#features")
     page.wait_for_selector("#features tbody tr")

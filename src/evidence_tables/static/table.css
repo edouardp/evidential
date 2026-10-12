@@ -243,7 +243,7 @@
 .et-header-groups th { top: 0; }
 .et-th {
   text-align: left;
-  font-weight: 500;
+  font-weight: 600;
   /* Evidence: py-1, first column pl-1 pr-3, others pl-1.5 pr-3. */
   padding: 0.25rem 0.75rem 0.25rem 0.375rem;
   border-bottom: 1px solid var(--et-header-border);
@@ -258,10 +258,28 @@
   font-weight: 600;
   letter-spacing: 0.03em;
   color: var(--et-muted);
-  border-bottom: 1px solid var(--et-row-border);
+  /* Symmetric padding so the label is centred over its columns. */
+  padding-left: 0.75rem;
+  padding-right: 0.75rem;
+  position: relative;
+  /* The inset rule below replaces the full-width cell border. */
+  border-bottom: none;
 }
-.et-th-group:not(:last-child) { border-right: 1px solid var(--et-row-border); }
+.et-th-group:first-child { padding-left: 0.75rem; }
+/* A bold rule under the spanner, inset 3px from each edge. */
+.et-th-group::after {
+  content: "";
+  position: absolute;
+  left: 3px;
+  right: 3px;
+  bottom: 0;
+  height: 2px;
+  background: var(--et-header-border);
+}
+.et-th-group:not(:last-child) { border-right: none; }
 .et-th-group-blank { cursor: default; }
+/* An ungrouped column's blank spanner cell gets no rule. */
+.et-th-group-blank::after { display: none; }
 .et-th:not(.et-th-group):hover { background: var(--et-hover); }
 .et-th-inner { display: inline-flex; align-items: center; gap: 0.3rem; }
 .et-th-sorted { color: var(--et-accent); }

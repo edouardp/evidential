@@ -157,6 +157,8 @@ _COLUMN_ALIASES = {
     "description": "info",
     "sortBy": "sort_by",
     "sortColumn": "sort_by",
+    "highlightColor": "highlight",
+    "highlight_color": "highlight",
 }
 
 
@@ -263,6 +265,10 @@ def _normalize_column_options(data: dict[str, Any]) -> dict[str, Any]:
     for key in ("sortBy", "sortColumn", "sort_column"):
         if key in data and "sort_by" not in data:
             data["sort_by"] = data.pop(key)
+    # `highlight` (camelCase too) — a background band for the whole column.
+    for key in ("highlightColor", "highlight_color"):
+        if key in data and "highlight" not in data:
+            data["highlight"] = data.pop(key)
     return data
 
 
@@ -353,16 +359,17 @@ def _center_chips(
 
 def _resolve_column_groups(
     columns: list[dict[str, Any]],
-    groups: Mapping[str, Sequence[str]] | None,
+    groups: Mapping[str, Sequence[str] | Mapping[str, Any]] | None,
 ) -> list[dict[str, Any]]:
     """Assign each column's ``column_group``.
 
-    ``groups`` maps ``{group: [column, ...]}`` and always wins. Otherwise a
-    column whose name contains a dot takes the part before the **last** dot as
-    its group — the ``"group.column"`` convention — and extra dots nest:
-    ``"Root.Sub.Leaf"`` groups under ``["Root", "Sub"]``. The name itself is
-    left untouched: the frontend's ``formatTitle`` already shows only the
-    trailing segment as the leaf label.
+    ``groups`` maps ``{group: [column, ...]}`` and always wins; a group may also
+    be ``{"columns": [...], "highlight": "#..."}`` to highlight every column in
+    it. Otherwise a column whose name contains a dot takes the part before the
+    **last** dot as its group — the ``"group.column"`` convention — and extra
+    dots nest: ``"Root.Sub.Leaf"`` groups under ``["Root", "Sub"]``. The name
+    itself is left untouched: the frontend's ``formatTitle`` already shows only
+    the trailing segment as the leaf label.
 
     Column order is left to the frontend, which clusters each group at its
     first occurrence so a leading dimension column (e.g. a date) keeps its
@@ -371,11 +378,22 @@ def _resolve_column_groups(
     result = [dict(column) for column in columns]
     if groups:
         by_name = {column["name"]: column for column in result}
-        for group, names in groups.items():
+        for group, spec in groups.items():
+            # A group is a list of columns, or a mapping with those columns and
+            # a highlight colour for the whole group.
+            if isinstance(spec, Mapping):
+                names = spec.get("columns") or []
+                highlight = spec.get("highlight") or spec.get("highlight_color")
+            else:
+                names = spec
+                highlight = None
             for name in names:
                 column = by_name.get(name)
-                if column is not None:
-                    column["column_group"] = group
+                if column is None:
+                    continue
+                column["column_group"] = group
+                if highlight and not column.get("highlight"):
+                    column["highlight"] = highlight
     for column in result:
         if not column.get("column_group"):
             head, _, leaf = str(column.get("name", "")).rpartition(".")
@@ -422,7 +440,7 @@ class EvidenceTable(anywidget.AnyWidget):
         rows: Sequence[Mapping[str, Any]] | None = None,
         columns: Iterable[str | Mapping[str, Any]] | None = None,
         column_config: Mapping[str, Mapping[str, Any]] | None = None,
-        column_groups: Mapping[str, Sequence[str]] | None = None,
+        column_groups: Mapping[str, Sequence[str] | Mapping[str, Any]] | None = None,
         rules: Iterable[Mapping[str, Any]] | None = None,
         **options: Any,
     ) -> None:
@@ -473,7 +491,7 @@ class EvidenceTable(anywidget.AnyWidget):
         rows: Sequence[Mapping[str, Any]] | None = None,
         columns: Iterable[str | Mapping[str, Any]] | None = None,
         column_config: Mapping[str, Mapping[str, Any]] | None = None,
-        column_groups: Mapping[str, Sequence[str]] | None = None,
+        column_groups: Mapping[str, Sequence[str] | Mapping[str, Any]] | None = None,
     ) -> EvidenceTable:
         """Replace the table data, keeping the current options."""
         if rows is None:

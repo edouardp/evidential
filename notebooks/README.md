@@ -33,6 +33,7 @@ and without network access.
 | [`25_column_stats.py`](25_column_stats.py) | Optional per-column statistics under the header (`min`/`max`/`avg`/`null`, `distinct`/`null`), toggled with a checkbox. |
 | [`26_multiline_headers.py`](26_multiline_headers.py) | Multi-line column headers: a `\n` forces a break and headers bottom-align. |
 | [`27_chips.py`](27_chips.py) | `viz="chip"`: values in a rounded, centred chip, coloured by a scale or conditional colours. |
+| [`28_column_highlights.py`](28_column_highlights.py) | Highlight an entire column or column group with a background colour. |
 
 `sample_data/needful_things/orders.parquet` is Evidence's demo dataset, copied
 from the published docs site.

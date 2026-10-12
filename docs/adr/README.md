@@ -49,6 +49,7 @@ dated, immutable record of the decisions behind them.
 | [028](028-dotted-column-name-groups.md) | Column Groups from Dotted Column Names | Accepted |
 | [029](029-native-header-tooltip.md) | Native Header Tooltip on the Whole Cell | Accepted |
 | [030](030-chip-visualisation.md) | Chip Visualisation | Accepted |
+| [031](031-column-highlights.md) | Column and Column-Group Highlights | Accepted |
 
 ## Creating New ADRs
 

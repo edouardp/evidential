@@ -490,7 +490,8 @@ See `notebooks/02_s3_tables.py` for a full example (it gracefully stops if
   their place). Equivalent to setting `column_group` on each column; disable
   clustering with `order_columns_by_group=False`. A column whose name contains
   a dot (`"GDP Measure.GDP nominal"`) is grouped automatically unless it
-  already has an explicit `column_group`.
+  already has an explicit `column_group`. A group may also be a mapping,
+  `{"columns": [...], "highlight": "#..."}`, to highlight every column in it.
 - `options`: table-level display options (below).
 - Methods: `set_data(...)`, `update_options(...)`, `set_column(name, ...)`.
 - Constructors: `from_records`, `from_arrow`, `from_pandas`, `from_duckdb`.
@@ -514,6 +515,7 @@ See `notebooks/02_s3_tables.py` for a full example (it gracefully stops if
 | `wrap`, `hide`, `red_negatives` | Layout / value tweaks. |
 | `viz` | `bar`, `color`, `chip`, `sparkline`, `delta`, or `None`. |
 | `sort_by` | Sort this column using another column's values; the target may be hidden or absent from the table (e.g. a sparkline sorted by its trend score). |
+| `highlight` (`highlightColor`, `highlight_color`) | Background colour for the whole column — its header and every cell — as a vertical band. |
 | `bar_options` | `bar_color`, `bar_color_negative`, `hide_labels`, `fit_to_data`. |
 | `color_options` | `color_scale`, `color_stops`, `conditional_colors`, `scale_column`, `scale_mode`, `min`, `max`, `midpoint`. `viz="chip"` uses these for the chip fill. |
 | `delta_options` | `down_is_good` (flip green/red), `show_symbol`, `show_value`, `symbol_position` (`"right"` default), `neutral_range` (`"lo:hi"`, a `[lo, hi]` pair, or a ±value), `chip`. The same keys also work at the top level of the column config. |

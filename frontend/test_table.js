@@ -583,6 +583,37 @@ test("a chip can take a conditional colour from another column", () => {
   renderer.destroy();
 });
 
+test("a column highlight paints the header and every cell", () => {
+  const columns = [
+    { name: "country", type: "string", align: "left" },
+    { name: "y20", type: "number", fmt: "num0", highlight: "#fde8d0" },
+    { name: "y21", type: "number", fmt: "num0" },
+  ];
+  const rows = [{ country: "A", y20: 1, y21: 2 }];
+  const renderer = new EvidenceTableRenderer(makeModel(rows, columns, {}, el), el);
+  const th = el.querySelectorAll("thead tr:last-child th")[1];
+  assert.equal(th.style.backgroundColor, "rgb(253, 232, 208)");
+  const td = el.querySelectorAll("tbody tr td")[1];
+  assert.equal(td.style.backgroundColor, "rgb(253, 232, 208)");
+  // The unhighlighted column is untouched.
+  assert.equal(el.querySelectorAll("tbody tr td")[2].style.backgroundColor, "");
+  renderer.destroy();
+});
+
+test("a spanner is highlighted only when every column it spans shares it", () => {
+  const columns = [
+    { name: "a", type: "number", column_group: "All", highlight: "#eef2ff" },
+    { name: "b", type: "number", column_group: "All", highlight: "#eef2ff" },
+    { name: "c", type: "number", column_group: "Some", highlight: "#eef2ff" },
+    { name: "d", type: "number", column_group: "Some" },
+  ];
+  const rows = [{ a: 1, b: 2, c: 3, d: 4 }];
+  const renderer = new EvidenceTableRenderer(makeModel(rows, columns, {}, el), el);
+  assert.equal(el.querySelector('[data-group="All"]').style.backgroundColor, "rgb(238, 242, 255)");
+  assert.equal(el.querySelector('[data-group="Some"]').style.backgroundColor, "");
+  renderer.destroy();
+});
+
 test("column info shows a native tooltip on the whole header cell", () => {
   const columns = [{ name: "city", type: "string", info: "A helpful hint" }];
   const renderer = new EvidenceTableRenderer(makeModel([{ city: "NYC" }], columns, {}, el), el);

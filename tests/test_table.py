@@ -322,6 +322,32 @@ def test_content_type_chip_sets_viz() -> None:
     assert table.columns[0]["viz"] == "chip"
 
 
+def test_column_highlight_round_trips() -> None:
+    table = EvidenceTable([{"a": 1}], column_config={"a": {"highlight": "#eef2ff"}})
+    assert table.columns[0]["highlight"] == "#eef2ff"
+    camel = EvidenceTable([{"a": 1}], column_config={"a": {"highlightColor": "#eef2ff"}})
+    assert camel.columns[0]["highlight"] == "#eef2ff"
+
+
+def test_group_highlight_applies_to_every_column() -> None:
+    table = EvidenceTable(
+        [{"a": 1, "b": 2}],
+        column_groups={"G": {"columns": ["a", "b"], "highlight": "#eef2ff"}},
+    )
+    assert all(column["highlight"] == "#eef2ff" for column in table.columns)
+
+
+def test_column_highlight_wins_over_group_highlight() -> None:
+    table = EvidenceTable(
+        [{"a": 1, "b": 2}],
+        column_groups={"G": {"columns": ["a", "b"], "highlight": "#eef2ff"}},
+        column_config={"a": {"highlight": "#ffffff"}},
+    )
+    highlights = {column["name"]: column.get("highlight") for column in table.columns}
+    assert highlights["a"] == "#ffffff"
+    assert highlights["b"] == "#eef2ff"
+
+
 def test_show_link_column() -> None:
     rows = [{"name": "A", "url": "https://example.com"}]
     hidden = EvidenceTable(rows, link="url")

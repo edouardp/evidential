@@ -732,18 +732,23 @@ export class EvidenceTableRenderer {
           groupRow.append(h("th", { class: "et-th et-th-group et-row-num", rowspan: depth }, ""));
         }
         for (const cell of cells) {
-          groupRow.append(
-            h(
-              "th",
-              {
-                class: `et-th et-th-group${cell.label ? "" : " et-th-group-blank"}`,
-                colspan: cell.span,
-                "data-group": cell.label,
-                title: cell.label || null,
-              },
-              cell.label,
-            ),
+          const th = h(
+            "th",
+            {
+              class: `et-th et-th-group${cell.label ? "" : " et-th-group-blank"}`,
+              colspan: cell.span,
+              "data-group": cell.label,
+              title: cell.label || null,
+            },
+            cell.label,
           );
+          // Highlight a spanner only when every column it spans shares the same
+          // highlight — a whole-group band, not a single-column one.
+          const spanned = columns.slice(cell.start, cell.start + cell.span);
+          if (spanned.length && spanned.every((c) => c.highlight && c.highlight === spanned[0].highlight)) {
+            th.style.backgroundColor = spanned[0].highlight;
+          }
+          groupRow.append(th);
         }
         thead.append(groupRow);
       });
@@ -772,6 +777,7 @@ export class EvidenceTableRenderer {
       if (typeof rotation === "number") {
         th.style.setProperty("--et-th-angle", `${rotation}deg`);
       }
+      if (col.highlight) th.style.backgroundColor = col.highlight;
       const inner = h("span", { class: "et-th-inner" });
       let title =
         isStub && opts.stub_head
@@ -1004,6 +1010,8 @@ export class EvidenceTableRenderer {
         td.style.backgroundColor = rowColorStyles.backgroundColor;
         td.style.color = rowColorStyles.color;
       }
+      // A column highlight is a vertical band: it wins over row colours.
+      if (col.highlight) td.style.backgroundColor = col.highlight;
       if (col.viz_include_subtotals === false && isSubtotal && col.viz) td.classList.add("et-no-viz");
 
       // Collapsible chevron in the subtotal's own dimension column.
@@ -1782,7 +1790,7 @@ function buildHeaderLevels(paths, depth) {
       const label = paths[i][level] ?? "";
       let j = i + 1;
       while (j < end && (paths[j][level] ?? "") === label) j++;
-      levels[level].push({ label, span: j - i });
+      levels[level].push({ label, span: j - i, start: i });
       recurse(i, j, level + 1);
       i = j;
     }

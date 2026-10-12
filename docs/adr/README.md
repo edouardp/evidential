@@ -45,6 +45,7 @@ dated, immutable record of the decisions behind them.
 | [024](024-arrow-field-metadata.md) | Read Arrow Field Metadata as Column Descriptions | Accepted |
 | [025](025-immediate-column-tooltip.md) | An Immediate Custom Tooltip for Column Descriptions | Accepted |
 | [026](026-delta-indicator-and-neutral-band.md) | Delta Indicator After the Value, Dash for Neutral | Accepted |
+| [027](027-sort-by-another-column.md) | Sort a Column by Another Column's Values | Accepted |
 
 ## Creating New ADRs
 

@@ -468,6 +468,25 @@ test("a missing delta renders the neutral dash, like a value in range", () => {
   renderer.destroy();
 });
 
+test("a column can sort by another column's values", () => {
+  const columns = [
+    { name: "name", type: "string" },
+    { name: "score", type: "number", hide: true }, // in the data, not displayed
+    { name: "trend", type: "number", sort_by: "score" },
+  ];
+  const rows = [
+    { name: "A", score: 3, trend: 10 },
+    { name: "B", score: 1, trend: 30 },
+    { name: "C", score: 2, trend: 20 },
+  ];
+  const renderer = new EvidenceTableRenderer(makeModel(rows, columns, {}, el), el);
+  const header = [...el.querySelectorAll(".et-th")].find((n) => n.textContent.includes("Trend"));
+  header.click(); // first click = descending
+  const order = [...el.querySelectorAll("tbody tr")].map((tr) => tr.querySelector("td").textContent.trim());
+  assert.deepEqual(order, ["A", "C", "B"]); // by score, not by trend
+  renderer.destroy();
+});
+
 test("column info renders a header icon with an immediate tooltip", () => {
   const columns = [{ name: "city", type: "string", info: "A helpful hint" }];
   const renderer = new EvidenceTableRenderer(makeModel([{ city: "NYC" }], columns, {}, el), el);

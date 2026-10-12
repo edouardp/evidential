@@ -76,6 +76,8 @@ def make_column(name: str, *, type: str = "string", **overrides: Any) -> dict[st
         "delta_options": None,
         "sparkline_options": None,
         "viz_include_subtotals": None,
+        # Sort this column by another column's values (hidden ones included).
+        "sort_by": None,
     }
     column.update(overrides)
     return {k: v for k, v in column.items() if v is not None or k in {"name", "type"}}

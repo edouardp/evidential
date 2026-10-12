@@ -501,6 +501,7 @@ See `notebooks/02_s3_tables.py` for a full example (it gracefully stops if
 | `figure_style` | `lining-tabular` (default), `oldstyle`, `proportional`, … |
 | `wrap`, `hide`, `red_negatives` | Layout / value tweaks. |
 | `viz` | `bar`, `color`, `sparkline`, `delta`, or `None`. |
+| `sort_by` | Sort this column using another column's values; the target may be hidden or absent from the table (e.g. a sparkline sorted by its trend score). |
 | `bar_options` | `bar_color`, `bar_color_negative`, `hide_labels`, `fit_to_data`. |
 | `color_options` | `color_scale`, `color_stops`, `conditional_colors`, `scale_column`, `scale_mode`, `min`, `max`, `midpoint`. |
 | `delta_options` | `down_is_good` (flip green/red), `show_symbol`, `show_value`, `symbol_position` (`"right"` default), `neutral_range` (`"lo:hi"`, a `[lo, hi]` pair, or a ±value), `chip`. The same keys also work at the top level of the column config. |

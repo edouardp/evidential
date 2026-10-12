@@ -350,11 +350,15 @@ export class EvidenceTableRenderer {
     const sort = this._state.sort;
     if (!sort) return rows;
     const col = this.columns.find((c) => c.name === sort.column);
-    const type = col?.type;
+    // A column can sort by another column's values (e.g. a sparkline sorted by
+    // a score). `sort_by` may name a column that is hidden from the table — or
+    // one that is in the data but not a configured column at all.
+    const key = col?.sort_by || sort.column;
+    const keyType = this.columns.find((c) => c.name === key)?.type;
     const dir = sort.direction === "asc" ? 1 : -1;
 
     const hasGroups = rows.some((r) => r.render_type && r.render_type !== "cell_data");
-    const cmp = (a, b) => dir * compareValues(a[sort.column], b[sort.column], type);
+    const cmp = (a, b) => dir * compareValues(a[key], b[key], keyType);
 
     if (!hasGroups) return [...rows].sort(cmp);
 

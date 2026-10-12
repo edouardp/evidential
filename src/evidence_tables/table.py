@@ -152,6 +152,8 @@ _COLUMN_ALIASES = {
     "openInNewTab": "link_new_tab",
     "wrapTitle": "wrap_title",
     "description": "info",
+    "sortBy": "sort_by",
+    "sortColumn": "sort_by",
 }
 
 
@@ -254,6 +256,10 @@ def _normalize_column_options(data: dict[str, Any]) -> dict[str, Any]:
     for key in ("comment", "description"):
         if key in data:
             data["info"] = data.pop(key)
+    # `sort_by` (camelCase too) — sort this column by another column's values.
+    for key in ("sortBy", "sortColumn", "sort_column"):
+        if key in data and "sort_by" not in data:
+            data["sort_by"] = data.pop(key)
     return data
 
 

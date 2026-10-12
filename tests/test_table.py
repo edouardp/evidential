@@ -123,6 +123,13 @@ def test_delta_options_accept_top_level_config() -> None:
     }
 
 
+def test_column_sort_by_accepts_alias() -> None:
+    table = EvidenceTable([{"a": 1, "b": 2}], column_config={"a": {"sort_by": "b"}})
+    assert table.columns[0]["sort_by"] == "b"
+    table2 = EvidenceTable([{"a": 1, "b": 2}], column_config={"a": {"sortBy": "b"}})
+    assert table2.columns[0]["sort_by"] == "b"
+
+
 def test_arrow_field_metadata_becomes_header_info() -> None:
     import pyarrow as pa
 

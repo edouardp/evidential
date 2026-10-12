@@ -46,4 +46,5 @@ parameterised re-querying (`LiveEvidenceTable`).
 ## More Information
 
 - [Design & DX §4.1](../design-and-dx.md#41-display-only-not-a-query-builder)
-- Related: [ADR-009](009-grouping-sets-for-grouped-totals.md)
+- Related: [ADR-009](009-grouping-sets-for-grouped-totals.md),
+  [ADR-032](032-row-selection.md) (the row-selection back-channel)

@@ -304,6 +304,16 @@
 }
 .et-row-subtotal.et-row-collapsible { cursor: pointer; }
 .et-row-link { cursor: pointer; }
+/* Selectable rows (opts.select): a row click sets the `selected` trait. */
+.et-row-selectable { cursor: pointer; }
+.et-row.et-row-selected .et-td,
+.et-row.et-row-selected:hover .et-td {
+  background-color: var(--et-bg);
+  background-image: linear-gradient(
+    color-mix(in srgb, var(--et-accent) 16%, transparent),
+    color-mix(in srgb, var(--et-accent) 16%, transparent)
+  );
+}
 .et-null { color: var(--et-muted); opacity: 0.75; }
 .et-negative { color: var(--et-negative); }
 /* A chip: the value in a rounded rectangle, coloured by the same rules as a

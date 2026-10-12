@@ -152,6 +152,11 @@ metric" dropdowns, without the user writing SQL. We mitigate this with helpers
 (`grouped_table`, `pivot_table`, `query_table`, `comparison_table`,
 `date_range_sql`) and with `LiveEvidenceTable` for parameterised re-querying.
 
+**Exception.** Row *selection* is a value the browser sends back ([ADR-032](adr/032-row-selection.md)):
+the table still only paints the rows it is given, but a click can put a key in a
+variable that the notebook reacts to — the drill-down in
+`notebooks/29_row_selection.py`.
+
 ### 4.2 Three layers, each doing what it is good at
 
 Put simply: **SQL shapes, Python binds, the browser paints.**

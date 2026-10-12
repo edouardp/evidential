@@ -65,6 +65,7 @@ _OPTION_KEYS = {
     "default_sort",
     "row_conditional_colors",
     "show_link_column",
+    "select",
     "header_color",
     "header_font_color",
     "total_row_color",
@@ -122,6 +123,7 @@ _OPTION_DEFAULTS: dict[str, Any] = {
     "default_sort": None,
     "row_conditional_colors": None,
     "show_link_column": False,
+    "select": None,
     "header_color": None,
     "header_font_color": None,
     "total_row_color": None,
@@ -445,6 +447,9 @@ class EvidenceTable(anywidget.AnyWidget):
     #: When true the renderer dims the current table and shows a spinner without
     #: changing its size (used while a live query is in flight).
     loading = traitlets.Bool(False).tag(sync=True)
+    #: The value of the ``select`` column for the clicked row (or None). Set by
+    #: the browser; reading it in another cell makes the table drive the graph.
+    selected = traitlets.Any(None).tag(sync=True)
 
     def __init__(
         self,

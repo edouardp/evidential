@@ -61,6 +61,11 @@ themed with `theme={"surface": "#0b1220"}`.
   the prev/next buttons: after 700ms it pages every 700ms, easing to every
   100ms by 3 seconds), row links, clickable rows, sticky/frozen columns,
   resizable fullscreen dialog and CSV download.
+- **Row selection drives the notebook** — `select="country_code"` makes rows
+  clickable: the clicked row's key lands in the widget's `selected` trait and
+  crosses to Python (via `save_changes()`), so a cell can read
+  `table.widget.selected` and re-run a drill-down. See
+  `notebooks/29_row_selection.py`.
 - **Presentation** — titles/subtitles, column groups, row shading, row lines,
   text wrapping, red-negative values and per-column alignment.
 - **Data sources** — Arrow tables, pandas DataFrames, DuckDB relations, plain
@@ -534,7 +539,7 @@ See `notebooks/02_s3_tables.py` for a full example (it gracefully stops if
 `freeze_columns`, `wrap`, `wrap_titles`, `format_titles`, `show_total_row`,
 `total_label`, `total_position`, `subtotal_position`, `collapsible`,
 `collapsed`, `link`, `width`, `max_height`, `order_columns_by_group`, `theme`,
-`color_scale`, `row_numbers`, `column_stats`.
+`color_scale`, `row_numbers`, `column_stats`, `select`.
 
 ## Architecture
 

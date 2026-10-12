@@ -519,6 +519,11 @@ alpha-3 country code).
   $R=2300$ms. A `pointerup`/`pointercancel`/`blur` listener on `window` stops it.
 - **CSV download** serialises the current (searched, sorted, visible) rows, not
   just the page.
+- **Row selection** (`select="key_column"`). A row click sets the widget's synced
+  `selected` trait and calls `model.save_changes()`; Marimo maps the comm update
+  to a UI-element value change, so the cells that read `table.widget.selected`
+  re-run (ADR-032). The clicked row is marked `.et-row-selected`; clicking it
+  again clears the selection.
 - **Column descriptions** (`info`, or the `comment`/`description` aliases) render
   as a **ⓘ** in the header, and set the native `title` on the whole `<th>` cell so
   hovering anywhere in the header shows the description. The **ⓘ** keeps

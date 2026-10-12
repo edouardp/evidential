@@ -487,6 +487,7 @@ export class EvidenceTableRenderer {
           footnotes,
           decimals,
           stats: opts.column_stats ? this._columnStats(columns, allRows) : null,
+          selected: opts.select ? this.model.get("selected") : null,
         }),
       );
     }
@@ -961,6 +962,21 @@ export class EvidenceTableRenderer {
       ].filter(Boolean).join(" "),
     });
     if (hasLink) tr.addEventListener("click", () => { window.location.href = String(row[opts.link]); });
+
+    const selectKey = opts.select ? row[opts.select] : undefined;
+    if (opts.select && selectKey !== undefined && selectKey !== null) {
+      const isSelected =
+        ctx.selected !== null && ctx.selected !== undefined && String(ctx.selected) === String(selectKey);
+      tr.classList.add("et-row-selectable");
+      if (isSelected) tr.classList.add("et-row-selected");
+      tr.addEventListener("click", (event) => {
+        if (event.target.closest && event.target.closest("a")) return;
+        // Clicking the selected row again clears the selection. `save_changes`
+        // is what lets Marimo treat the new value as a cell dependency.
+        this.model.set("selected", isSelected ? null : selectKey);
+        this.model.save_changes();
+      });
+    }
 
     if (ctx.rowNumbers) {
       const numberCell = h(
@@ -1832,10 +1848,12 @@ export function render({ model, el }) {
   model.on("change:columns", rerender);
   model.on("change:options", rerender);
   model.on("change:loading", setLoading);
+  model.on("change:selected", rerender);
   return () => {
     model.off("change:rows", rerender);
     model.off("change:columns", rerender);
     model.off("change:options", rerender);
+    model.off("change:selected", rerender);
     model.off("change:loading", setLoading);
     renderer.destroy();
   };

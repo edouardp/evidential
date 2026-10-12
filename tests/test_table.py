@@ -340,6 +340,16 @@ def test_chip_min_width_options() -> None:
     assert camel.columns[0]["chip_options"] == {"min_width": 80}
 
 
+def test_select_option_and_selected_trait() -> None:
+    table = EvidenceTable([{"country": "AUS"}], select="country")
+    assert table.options["select"] == "country"
+    assert table.selected is None
+    table.selected = "AUS"
+    assert table.selected == "AUS"
+    preselect = EvidenceTable([{"country": "AUS"}], select="country", selected="AUS")
+    assert preselect.selected == "AUS"
+
+
 def test_column_highlight_round_trips() -> None:
     table = EvidenceTable([{"a": 1}], column_config={"a": {"highlight": "#eef2ff"}})
     assert table.columns[0]["highlight"] == "#eef2ff"

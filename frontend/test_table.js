@@ -23,11 +23,15 @@ if (!dom.window.HTMLDialogElement.prototype.showModal) {
 const { EvidenceTableRenderer, holdInterval } = await import("./src/table.js");
 
 function makeModel(rows, columns, options = {}, el) {
-  const data = { rows, columns, options };
+  const data = { rows, columns, options, selected: null };
+  const calls = [];
   return {
     data,
+    calls,
     el,
     get(key) { return data[key]; },
+    set(key, value) { data[key] = value; calls.push(["set", key, value]); },
+    save_changes() { calls.push(["save_changes"]); },
     on() {},
     off() {},
   };
@@ -625,6 +629,38 @@ test("a chip can have a minimum width but still grows", () => {
   const renderer2 = new EvidenceTableRenderer(makeModel([{ status: "Good" }], css, {}, el), el);
   assert.equal(el.querySelector("tbody .et-chip").style.minWidth, "5rem");
   renderer2.destroy();
+});
+
+test("a selectable row sets the selected trait and saves it", () => {
+  const columns = [
+    { name: "country", type: "string", align: "left" },
+    { name: "revenue", type: "number", fmt: "usd0" },
+  ];
+  const rows = [
+    { country: "Australia", revenue: 100 },
+    { country: "Canada", revenue: 200 },
+  ];
+  const model = makeModel(rows, columns, { select: "country" }, el);
+  const renderer = new EvidenceTableRenderer(model, el);
+  const body = el.querySelectorAll("tbody tr");
+  assert.ok(body[0].classList.contains("et-row-selectable"));
+  body[1].dispatchEvent(new dom.window.MouseEvent("click", { bubbles: true }));
+  assert.deepEqual(model.calls, [["set", "selected", "Canada"], ["save_changes"]]);
+  // Clicking the selected row again clears the selection.
+  model.data.selected = "Canada";
+  renderer.render();
+  const selected = el.querySelectorAll("tbody tr")[1];
+  assert.ok(selected.classList.contains("et-row-selected"));
+  selected.dispatchEvent(new dom.window.MouseEvent("click", { bubbles: true }));
+  assert.deepEqual(model.calls.at(-2), ["set", "selected", null]);
+  renderer.destroy();
+});
+
+test("rows are only selectable when `select` is set", () => {
+  const model = makeModel(ROWS, COLUMNS, {}, el);
+  const renderer = new EvidenceTableRenderer(model, el);
+  assert.equal(el.querySelectorAll(".et-row-selectable").length, 0);
+  renderer.destroy();
 });
 
 test("column info shows a native tooltip on the whole header cell", () => {

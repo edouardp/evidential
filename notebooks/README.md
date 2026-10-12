@@ -28,6 +28,7 @@ and without network access.
 | [`19_typography.py`](19_typography.py) | Readable table typography: decimal alignment, no stretching, minimal furniture. |
 | [`20_whitespace_grouping.py`](20_whitespace_grouping.py) | Grouping with white space and group-size stripes. |
 | [`21_studio_dashboard.py`](21_studio_dashboard.py) | An `EvidenceTable` in a marimo Studio view: live dashboard, KPI strip, filter. |
+| [`22_duckdb_metadata.py`](22_duckdb_metadata.py) | DuckDB column types and `COMMENT ON COLUMN` default the format, alignment and header descriptions. |
 
 `sample_data/needful_things/orders.parquet` is Evidence's demo dataset, copied
 from the published docs site.

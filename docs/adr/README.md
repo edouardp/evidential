@@ -48,6 +48,7 @@ dated, immutable record of the decisions behind them.
 | [027](027-sort-by-another-column.md) | Sort a Column by Another Column's Values | Accepted |
 | [028](028-dotted-column-name-groups.md) | Column Groups from Dotted Column Names | Accepted |
 | [029](029-native-header-tooltip.md) | Native Header Tooltip on the Whole Cell | Accepted |
+| [030](030-chip-visualisation.md) | Chip Visualisation | Accepted |
 
 ## Creating New ADRs
 

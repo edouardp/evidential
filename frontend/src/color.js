@@ -175,13 +175,26 @@ export function colorStylesFromHex(colorValue) {
   }
 }
 
-/** Compute per-column visualization ranges (bar / color) over data rows. */
+/** Black or white text for a chip, by background luminance: white on darker
+ *  backgrounds, black on lighter ones. */
+export function contrastTextColor(colorValue) {
+  try {
+    return chroma(colorValue).luminance() < 0.5 ? "#ffffff" : "#000000";
+  } catch {
+    return "inherit";
+  }
+}
+
+/** Compute per-column visualization ranges (bar / color / chip) over data rows. */
 export function calculateVizRanges(columns, rows) {
   const ranges = new Map();
   for (const col of columns) {
-    if (col.viz !== "bar" && col.viz !== "color") continue;
+    if (col.viz !== "bar" && col.viz !== "color" && col.viz !== "chip") continue;
     const opts = col.color_options || {};
-    const scaleColumn = col.viz === "color" && opts.scale_column ? opts.scale_column : col.name;
+    const scaleColumn =
+      (col.viz === "color" || col.viz === "chip") && opts.scale_column
+        ? opts.scale_column
+        : col.name;
     let min = Infinity;
     let max = -Infinity;
     for (const row of rows) {

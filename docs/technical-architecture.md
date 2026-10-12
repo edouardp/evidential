@@ -457,6 +457,10 @@ flowchart TD
   explicit palettes, explicit colour stops, min/max/ midpoint, a separate
   `scale_column`, and `conditional_colors` (a hidden hex column). Text colour is
   chosen by contrast against the background.
+- **Chip** (`viz="chip"`). The value in a rounded rectangle, filled by the same
+  `calculateColorStyles` (a colour scale or `conditional_colors`), with a
+  black/white text colour from the fill's luminance. Chips are centred by
+  default: `_center_chips` sets the align unless the column asked otherwise.
 - **Sparkline** (`_renderSparkline`). Builds an inline SVG from an array in a
   cell: `[y, …]`, `[[x, y], …]`, or `ARRAY_AGG({'date': …, 'value': …})`
   objects. Line/area/bar, optional zero baseline, tooltips via `<title>`. The

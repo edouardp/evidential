@@ -46,6 +46,7 @@ themed with `theme={"surface": "#0b1220"}`.
   base formats that pick units (`k`, `M`, `B`) from the data range.
 - **Conditional visualisations** — `viz="bar"`, `viz="color"` (heatmap with
   custom colour scales, stops, midpoints and conditional-colour columns),
+  `viz="chip"` (the same colour rules in a rounded, centred chip),
   `viz="sparkline"` (line/area/bar from an array in a cell, incl.
   `ARRAY_AGG({'date': ..., 'value': ...})`), and `viz="delta"`.
 - **Grouped tables** — `grouped_table` runs one DuckDB `GROUPING SETS` query
@@ -511,10 +512,10 @@ See `notebooks/02_s3_tables.py` for a full example (it gracefully stops if
 | `font` | Font family for this column (e.g. `"'Hoefler Text', serif"`). |
 | `figure_style` | `lining-tabular` (default), `oldstyle`, `proportional`, … |
 | `wrap`, `hide`, `red_negatives` | Layout / value tweaks. |
-| `viz` | `bar`, `color`, `sparkline`, `delta`, or `None`. |
+| `viz` | `bar`, `color`, `chip`, `sparkline`, `delta`, or `None`. |
 | `sort_by` | Sort this column using another column's values; the target may be hidden or absent from the table (e.g. a sparkline sorted by its trend score). |
 | `bar_options` | `bar_color`, `bar_color_negative`, `hide_labels`, `fit_to_data`. |
-| `color_options` | `color_scale`, `color_stops`, `conditional_colors`, `scale_column`, `scale_mode`, `min`, `max`, `midpoint`. |
+| `color_options` | `color_scale`, `color_stops`, `conditional_colors`, `scale_column`, `scale_mode`, `min`, `max`, `midpoint`. `viz="chip"` uses these for the chip fill. |
 | `delta_options` | `down_is_good` (flip green/red), `show_symbol`, `show_value`, `symbol_position` (`"right"` default), `neutral_range` (`"lo:hi"`, a `[lo, hi]` pair, or a ±value), `chip`. The same keys also work at the top level of the column config. |
 | `sparkline_options` | `type` (`line`/`area`/`bar`), `x`/`y` (field names for struct arrays), `color`, `fit_to_data`, `y_fmt`; `width`/`height` set the SVG viewBox (aspect ratio) — the rendered sparkline scales to the row height. |
 | `link`, `link_label`, `link_new_tab` | Per-cell links. |

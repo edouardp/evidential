@@ -535,6 +535,35 @@ test("a newline in a column title forces a line break", () => {
   renderer.destroy();
 });
 
+test("chip columns render a coloured, centred value", () => {
+  const columns = [
+    { name: "city", type: "string", align: "left" },
+    {
+      name: "aqi",
+      type: "number",
+      align: "center",
+      viz: "chip",
+      fmt: "num0",
+      color_options: { color_scale: ["#16a34a", "#dc2626"], min: 0, max: 250 },
+    },
+  ];
+  const rows = [
+    { city: "A", aqi: 50 },
+    { city: "B", aqi: 220 },
+  ];
+  const renderer = new EvidenceTableRenderer(makeModel(rows, columns, {}, el), el);
+  const chips = el.querySelectorAll("tbody .et-chip");
+  assert.equal(chips.length, 2);
+  assert.equal(chips[0].textContent, "50");
+  // The fill comes from the colour scale; the text is a contrast colour.
+  assert.match(chips[0].style.backgroundColor, /rgb\(/);
+  assert.match(chips[0].style.color, /rgb\(/);
+  assert.notEqual(chips[0].style.backgroundColor, chips[1].style.backgroundColor);
+  const cell = el.querySelectorAll("tbody td")[1];
+  assert.equal(cell.style.textAlign, "center");
+  renderer.destroy();
+});
+
 test("column info shows a native tooltip on the whole header cell", () => {
   const columns = [{ name: "city", type: "string", info: "A helpful hint" }];
   const renderer = new EvidenceTableRenderer(makeModel([{ city: "NYC" }], columns, {}, el), el);

@@ -140,6 +140,7 @@ _CONTENT_TYPES: dict[str, tuple[str | None, str | None]] = {
     "bar": ("bar", None),
     "color": ("color", None),
     "colorscale": ("color", None),
+    "chip": ("chip", None),
     "delta": ("delta", None),
 }
 
@@ -306,8 +307,7 @@ def _coerce_columns(
     columns: Iterable[str | Mapping[str, Any]] | None,
     column_config: Mapping[str, Mapping[str, Any]] | None,
 ) -> list[dict[str, Any]]:
-    if columns is None:
-        columns = []
+    columns = list(columns) if columns is not None else []
     result = [_coerce_column(column) for column in columns]
     merged = _merge_column_config(result, column_config)
     # Template columns (cols_merge*) may not exist in the data; synthesise them.
@@ -321,6 +321,34 @@ def _coerce_columns(
     # column_config overrides bypass _coerce_column, so normalise them too, and
     # drop Python callables (e.g. `blank`) that can't cross the JSON boundary.
     return [_normalize_column_options({k: v for k, v in dict(column).items() if not callable(v)}) for column in merged]
+
+
+def _center_chips(
+    columns: list[dict[str, Any]],
+    column_config: Mapping[str, Mapping[str, Any]] | None,
+    explicit_columns: list[Any] | None,
+) -> list[dict[str, Any]]:
+    """A chip is centred unless the column asks for another alignment.
+
+    The type-derived default (numbers right, text left) must not win, so only an
+    explicit ``align`` — in ``column_config`` or an explicit column definition —
+    keeps a chip off-centre.
+    """
+    explicit = {
+        str(column.get("name"))
+        for column in explicit_columns or []
+        if isinstance(column, Mapping) and column.get("align") is not None
+    }
+    if column_config:
+        explicit.update(
+            str(name)
+            for name, config in column_config.items()
+            if isinstance(config, Mapping) and config.get("align") is not None
+        )
+    for column in columns:
+        if column.get("viz") == "chip" and column["name"] not in explicit:
+            column["align"] = "center"
+    return columns
 
 
 def _resolve_column_groups(
@@ -408,12 +436,14 @@ class EvidenceTable(anywidget.AnyWidget):
             normalized_rows = [jsonify(row) for row in raw_rows]
             inferred = infer_columns(None, raw_rows)
 
-        had_explicit_columns = columns is not None
+        explicit_columns = list(columns) if columns is not None else None
+        had_explicit_columns = explicit_columns is not None
         if columns is None and inferred:
             columns = inferred
         normalized_rows = apply_blank_predicates(normalized_rows, column_config)
         normalized_rows, client_rules = resolve_rules(normalized_rows, rules)
         coerced = _resolve_column_groups(_coerce_columns(columns, column_config), column_groups)
+        coerced = _center_chips(coerced, column_config, explicit_columns)
 
         merged_options = dict(_OPTION_DEFAULTS)
         merged_options.update(table_options)
@@ -453,10 +483,12 @@ class EvidenceTable(anywidget.AnyWidget):
             normalized_rows = [jsonify(row) for row in raw_rows]
             inferred = infer_columns(None, raw_rows)
 
+        explicit_columns = list(columns) if columns is not None else None
         if columns is None:
             columns = inferred
         if columns is not None:
             new_columns = _resolve_column_groups(_coerce_columns(columns, column_config), column_groups)
+            new_columns = _center_chips(new_columns, column_config, explicit_columns)
             # Setting columns triggers a browser re-render; only do it when the
             # column structure actually changed so data-only updates render once.
             if new_columns != list(self.columns):

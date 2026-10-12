@@ -302,6 +302,26 @@ def test_column_stats_is_off_by_default() -> None:
     assert EvidenceTable([{"a": 1}]).options["column_stats"] is False
 
 
+def test_chip_columns_are_centred_by_default() -> None:
+    table = EvidenceTable([{"city": "A", "aqi": 1}], column_config={"aqi": {"viz": "chip"}})
+    aqi = next(column for column in table.columns if column["name"] == "aqi")
+    assert aqi["viz"] == "chip"
+    assert aqi["align"] == "center"
+
+
+def test_chip_align_can_be_overridden() -> None:
+    table = EvidenceTable([{"aqi": 1}], column_config={"aqi": {"viz": "chip", "align": "right"}})
+    assert table.columns[0]["align"] == "right"
+
+    explicit = EvidenceTable([{"aqi": 1}], columns=[{"name": "aqi", "viz": "chip", "align": "left"}])
+    assert explicit.columns[0]["align"] == "left"
+
+
+def test_content_type_chip_sets_viz() -> None:
+    table = EvidenceTable([{"aqi": 1}], columns=[{"name": "aqi", "content_type": "chip"}])
+    assert table.columns[0]["viz"] == "chip"
+
+
 def test_show_link_column() -> None:
     rows = [{"name": "A", "url": "https://example.com"}]
     hidden = EvidenceTable(rows, link="url")

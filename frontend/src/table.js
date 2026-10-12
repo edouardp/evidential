@@ -11,6 +11,7 @@ import {
   buildColorVizScale,
   calculateColorStyles,
   colorStylesFromHex,
+  contrastTextColor,
 } from "./color.js";
 
 const ROW_HEIGHT = 28;
@@ -458,7 +459,7 @@ export class EvidenceTableRenderer {
     }
     const colorScales = new Map();
     for (const col of columns) {
-      if (col.viz === "color" && ranges.has(col.name)) {
+      if ((col.viz === "color" || col.viz === "chip") && ranges.has(col.name)) {
         colorScales.set(col.name, buildColorVizScale(col, ranges.get(col.name), opts.color_scale));
       }
     }
@@ -806,7 +807,8 @@ export class EvidenceTableRenderer {
   }
 
   _alignStyle(col) {
-    const align = col.align || (col.type === "number" ? "right" : "left");
+    const fallback = col.type === "number" ? "right" : "left";
+    const align = col.align || (col.viz === "chip" ? "center" : fallback);
     return { textAlign: align };
   }
 
@@ -1136,6 +1138,17 @@ export class EvidenceTableRenderer {
           }),
           h("span", { class: "et-cell-media-label" }, formatted),
         ]);
+      } else if (col.viz === "chip") {
+        const chipRange = ctx.ranges.get(col.name);
+        const chipStyles = chipRange
+          ? calculateColorStyles(col, row, chipRange, ctx.colorScales.get(col.name))
+          : null;
+        const chip = h("span", { class: "et-chip" }, formatted);
+        if (chipStyles) {
+          chip.style.backgroundColor = chipStyles.backgroundColor;
+          chip.style.color = contrastTextColor(chipStyles.backgroundColor);
+        }
+        content = chip;
       } else {
         content = h("span", { class: "et-cell-value" }, formatted);
       }

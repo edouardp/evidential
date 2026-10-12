@@ -1010,11 +1010,25 @@ export class EvidenceTableRenderer {
       }
       const td = h("td", { class: `et-td${opts.stub === col.name ? " et-stub" : ""}`, style: tdStyle });
       if (ctx.section && index < ctx.dimCount) {
-        const dimIndex = (row.__level ?? ctx.dimCount) - 1;
-        const renders =
-          isTotal ? index === 0 : isSubtotal ? index === dimIndex : index === ctx.dimCount - 1;
-        if (!renders) return;
-        if (isSubtotal) td.rowSpan = ctx.rowspans?.[rowIndex] ?? 1;
+        // Section mode merges each dimension cell vertically. A data row renders
+        // only its leaf dimension (the rest sit under ancestor rowSpans); a
+        // subtotal renders its own dimension cell; the total renders the first.
+        // Columns to the *right* of that cell are not covered by any rowSpan,
+        // so they must still occupy their place — blank — or the measure cells
+        // slide one column early.
+        const dimIndex = isTotal
+          ? 0
+          : isSubtotal
+            ? (row.__level ?? ctx.dimCount) - 1
+            : ctx.dimCount - 1;
+        if (index === dimIndex) {
+          if (isSubtotal) td.rowSpan = ctx.rowspans?.[rowIndex] ?? 1;
+        } else if (index > dimIndex) {
+          tr.append(td);
+          return;
+        } else {
+          return;
+        }
       }
       if (rowColorStyles) {
         td.style.backgroundColor = rowColorStyles.backgroundColor;

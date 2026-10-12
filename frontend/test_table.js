@@ -629,11 +629,39 @@ test("section groups merge the dimension cell with rowspan", () => {
   );
   const bodyRows = el.querySelectorAll("tbody tr");
   const usaCells = bodyRows[0].querySelectorAll("td");
-  assert.equal(usaCells.length, 2); // city cell is covered by the rowspan
+  // country (rowspan), blank city placeholder, revenue — measures stay aligned.
+  assert.equal(usaCells.length, 3);
   assert.equal(usaCells[0].getAttribute("rowspan"), "3");
+  assert.equal(usaCells[1].textContent, "");
+  assert.equal(usaCells[2].textContent, "$350");
   const detailCells = bodyRows[1].querySelectorAll("td");
   assert.equal(detailCells.length, 2); // country cell is covered
   assert.equal(detailCells[0].textContent, "NYC");
+  renderer.destroy();
+});
+
+test("section total row keeps its measures aligned", () => {
+  const columns = [
+    { name: "country", type: "string", align: "left" },
+    { name: "city", type: "string", align: "left" },
+    { name: "revenue", type: "number", fmt: "usd0", align: "right" },
+  ];
+  const rows = [
+    { country: "USA", city: "", revenue: 350, render_type: "row_subtotal", __level: 1, __group_key: '"USA"', __ancestors: [] },
+    { country: "USA", city: "NYC", revenue: 100, render_type: "cell_data", __level: 2, __ancestors: ['"USA"'], __parent_key: '"USA"' },
+    { country: "USA", city: "LA", revenue: 250, render_type: "cell_data", __level: 2, __ancestors: ['"USA"'], __parent_key: '"USA"' },
+    { country: "All", city: "", revenue: 350, render_type: "row_total", __level: 0 },
+  ];
+  const renderer = new EvidenceTableRenderer(
+    makeModel(rows, columns, { group_type: "section", subtotal_position: "top" }, el),
+    el,
+  );
+  const total = [...el.querySelectorAll("tbody tr")].at(-1);
+  const cells = total.querySelectorAll("td");
+  assert.equal(cells.length, 3);
+  assert.equal(cells[0].textContent, "All");
+  assert.equal(cells[1].textContent, "");
+  assert.equal(cells[2].textContent, "$350");
   renderer.destroy();
 });
 

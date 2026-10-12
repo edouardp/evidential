@@ -52,6 +52,8 @@ themed with `theme={"surface": "#0b1220"}`.
   and produces collapsible groups, subtotals and a grand total.
 - **Hierarchical columns** — `column_groups={"Payment type": ["credit_card",
   "cash"]}` wraps columns under shared headers and clusters them together.
+  A dotted column name groups itself: `"GDP Measure.GDP nominal"` renders under
+  **GDP Measure**.
 - **Live tables** — `LiveEvidenceTable` re-runs a parameterised query when its
   controls change, preserving sort/search/page state.
 - **Interaction** — 3-state column sorting, search, pagination (press and hold
@@ -258,7 +260,9 @@ footer with footnotes and source notes. `EvidenceTable` covers:
   `footnotes=["..."]` adds static notes.
 - **Caption / source notes** — `caption="Sources: ..."`.
 - **Nested spanners** — `column_group` accepts a list for multi-level headers:
-  `{"name": "sales", "column_group": ["2021", "Sales"]}`.
+  `{"name": "sales", "column_group": ["2021", "Sales"]}`. A dotted column
+  name is shorthand for the same thing: `"GDP Measure.GDP nominal"` groups
+  under **GDP Measure**, and extra dots nest (`"Root.Sub.Leaf"`).
 - **Stub** — `stub="product"` marks the row-label column and `stub_head` labels it.
 - **Markdown titles** — `title`/`subtitle`/`caption` support inline `**bold**`,
   `*italic*` and `` `code` ``.
@@ -479,7 +483,9 @@ See `notebooks/02_s3_tables.py` for a full example (it gracefully stops if
 - `column_groups`: `{group_title: [column, ...]}` renders the listed columns
   under a shared header and clusters them together (ungrouped columns keep
   their place). Equivalent to setting `column_group` on each column; disable
-  clustering with `order_columns_by_group=False`.
+  clustering with `order_columns_by_group=False`. A column whose name contains
+  a dot (`"GDP Measure.GDP nominal"`) is grouped automatically unless it
+  already has an explicit `column_group`.
 - `options`: table-level display options (below).
 - Methods: `set_data(...)`, `update_options(...)`, `set_column(name, ...)`.
 - Constructors: `from_records`, `from_arrow`, `from_pandas`, `from_duckdb`.

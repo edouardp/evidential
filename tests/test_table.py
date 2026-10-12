@@ -227,6 +227,31 @@ def test_column_groups_assign_group_without_reordering() -> None:
     assert groups["month"] is None
 
 
+def test_dotted_column_names_default_the_column_group() -> None:
+    table = EvidenceTable([{"country": "US", "GDP Measure.gdp_nominal": 1.0, "GDP Measure.gdp_ppp": 2.0}])
+    groups = {column["name"]: column.get("column_group") for column in table.columns}
+    assert groups["GDP Measure.gdp_nominal"] == "GDP Measure"
+    assert groups["GDP Measure.gdp_ppp"] == "GDP Measure"
+    assert groups["country"] is None
+
+
+def test_multi_level_dotted_name_becomes_a_nested_group() -> None:
+    table = EvidenceTable([{"a.b.c": 1}])
+    assert table.columns[0]["column_group"] == ["a", "b"]
+
+
+def test_dotted_name_group_can_be_overridden() -> None:
+    by_config = EvidenceTable([{"a.b": 1}], column_config={"a.b": {"column_group": "X"}})
+    assert by_config.columns[0]["column_group"] == "X"
+    by_mapping = EvidenceTable([{"a.b": 1}], column_groups={"Y": ["a.b"]})
+    assert by_mapping.columns[0]["column_group"] == "Y"
+
+
+def test_lone_dot_does_not_make_a_group() -> None:
+    table = EvidenceTable([{".b": 1, "a.": 2}])
+    assert [column.get("column_group") for column in table.columns] == [None, None]
+
+
 def test_content_type_shorthand_maps_to_viz() -> None:
     table = EvidenceTable(
         [{"trend": [1, 2, 3]}],

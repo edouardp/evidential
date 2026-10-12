@@ -281,7 +281,10 @@ in-memory data, so the renderer has exactly one grouping model.
 Hierarchical columns are the same idea applied horizontally: `column_groups`
 (or `pivot_table`) puts several columns under one spanner, and the renderer
 clusters each group at its first occurrence, so a leading dimension column keeps
-its place.
+its place. A **dotted column name** is a shortcut for the same grouping — the
+part before the last dot becomes the group and extra dots nest — so a query can
+carry its own header structure without a separate mapping
+([ADR-028](adr/028-dotted-column-name-groups.md)).
 
 ![Hierarchical columns: payment types under one spanner, totals under another](img/hierarchical-columns.png)
 

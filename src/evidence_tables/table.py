@@ -321,25 +321,40 @@ def _coerce_columns(
     return [_normalize_column_options({k: v for k, v in dict(column).items() if not callable(v)}) for column in merged]
 
 
-def _apply_column_groups(
+def _resolve_column_groups(
     columns: list[dict[str, Any]],
     groups: Mapping[str, Sequence[str]] | None,
 ) -> list[dict[str, Any]]:
-    """Assign ``column_group`` from a ``{group: [column, ...]}`` mapping.
+    """Assign each column's ``column_group``.
+
+    ``groups`` maps ``{group: [column, ...]}`` and always wins. Otherwise a
+    column whose name contains a dot takes the part before the **last** dot as
+    its group — the ``"group.column"`` convention — and extra dots nest:
+    ``"Root.Sub.Leaf"`` groups under ``["Root", "Sub"]``. The name itself is
+    left untouched: the frontend's ``formatTitle`` already shows only the
+    trailing segment as the leaf label.
 
     Column order is left to the frontend, which clusters each group at its
     first occurrence so a leading dimension column (e.g. a date) keeps its
     place.
     """
-    if not groups:
-        return columns
     result = [dict(column) for column in columns]
-    by_name = {column["name"]: column for column in result}
-    for group, names in groups.items():
-        for name in names:
-            column = by_name.get(name)
-            if column is not None:
-                column["column_group"] = group
+    if groups:
+        by_name = {column["name"]: column for column in result}
+        for group, names in groups.items():
+            for name in names:
+                column = by_name.get(name)
+                if column is not None:
+                    column["column_group"] = group
+    for column in result:
+        if not column.get("column_group"):
+            head, _, leaf = str(column.get("name", "")).rpartition(".")
+            if head and leaf:
+                segments = [segment for segment in head.split(".") if segment]
+                if len(segments) == 1:
+                    column["column_group"] = segments[0]
+                elif segments:
+                    column["column_group"] = segments
     return result
 
 
@@ -396,7 +411,7 @@ class EvidenceTable(anywidget.AnyWidget):
             columns = inferred
         normalized_rows = apply_blank_predicates(normalized_rows, column_config)
         normalized_rows, client_rules = resolve_rules(normalized_rows, rules)
-        coerced = _apply_column_groups(_coerce_columns(columns, column_config), column_groups)
+        coerced = _resolve_column_groups(_coerce_columns(columns, column_config), column_groups)
 
         merged_options = dict(_OPTION_DEFAULTS)
         merged_options.update(table_options)
@@ -439,7 +454,7 @@ class EvidenceTable(anywidget.AnyWidget):
         if columns is None:
             columns = inferred
         if columns is not None:
-            new_columns = _apply_column_groups(_coerce_columns(columns, column_config), column_groups)
+            new_columns = _resolve_column_groups(_coerce_columns(columns, column_config), column_groups)
             # Setting columns triggers a browser re-render; only do it when the
             # column structure actually changed so data-only updates render once.
             if new_columns != list(self.columns):

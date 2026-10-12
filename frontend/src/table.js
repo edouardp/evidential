@@ -286,8 +286,9 @@ export class EvidenceTableRenderer {
     const grouped = new Map();
     for (const col of columns) {
       if (!col.column_group) continue;
-      if (!grouped.has(col.column_group)) grouped.set(col.column_group, []);
-      grouped.get(col.column_group).push(col);
+      const key = groupKey(col.column_group);
+      if (!grouped.has(key)) grouped.set(key, []);
+      grouped.get(key).push(col);
     }
     if (!grouped.size) return columns;
     const emitted = new Set();
@@ -298,9 +299,10 @@ export class EvidenceTableRenderer {
         ordered.push(col);
         continue;
       }
-      if (emitted.has(group)) continue;
-      emitted.add(group);
-      ordered.push(...grouped.get(group));
+      const key = groupKey(group);
+      if (emitted.has(key)) continue;
+      emitted.add(key);
+      ordered.push(...grouped.get(key));
     }
     return ordered;
   }
@@ -1661,6 +1663,11 @@ function withFigure(baseStyle, col, opts) {
 function groupPath(group) {
   if (!group) return [];
   return Array.isArray(group) ? group.map(String) : [String(group)];
+}
+
+/** Stable Map/Set key for a group, which may be a string or a path array. */
+function groupKey(group) {
+  return Array.isArray(group) ? group.join("\u0000") : String(group);
 }
 
 function decimalPlaces(value) {

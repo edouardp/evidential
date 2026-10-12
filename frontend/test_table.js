@@ -692,6 +692,19 @@ test("nested column groups build multiple header rows", () => {
   renderer.destroy();
 });
 
+test("array column groups cluster at their first occurrence", () => {
+  const columns = [
+    { name: "a", type: "number", column_group: ["G", "1"] },
+    { name: "x", type: "number" },
+    { name: "b", type: "number", column_group: ["G", "1"] },
+  ];
+  const rows = [{ a: 1, x: 2, b: 3 }];
+  const renderer = new EvidenceTableRenderer(makeModel(rows, columns, {}, el), el);
+  const leaf = [...el.querySelectorAll("thead tr:last-child .et-th-title")].map((n) => n.textContent);
+  assert.deepEqual(leaf, ["A", "B", "X"]);
+  renderer.destroy();
+});
+
 test("location rules apply per-cell style and format", () => {
   const columns = [
     { name: "city", type: "string" },

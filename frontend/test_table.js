@@ -94,6 +94,20 @@ test("pagination limits rows and pages", () => {
   renderer.destroy();
 });
 
+test("pagination reads as one left-aligned text run", () => {
+  const renderer = new EvidenceTableRenderer(makeModel(ROWS, COLUMNS, { page_size: 2 }, el), el);
+  const footer = el.querySelector(".et-footer");
+  assert.equal(footer.children.length, 1, "no separate info block on the right");
+  const controls = footer.querySelector(".et-page-controls");
+  assert.equal(controls.querySelector(".et-page-current").textContent, "1/2");
+  assert.equal(controls.querySelector(".et-page-info").textContent, "(1–2 of 3)");
+  const buttons = controls.querySelectorAll("button.et-page-btn");
+  assert.equal(buttons.length, 2, "the arrows are still real buttons");
+  assert.equal(buttons[0].textContent, "‹");
+  assert.equal(buttons[1].textContent, "›");
+  renderer.destroy();
+});
+
 test("hold repeat interval eases from 700ms to 100ms by 3s", () => {
   assert.equal(holdInterval(0), 700);
   assert.equal(holdInterval(700), 700);

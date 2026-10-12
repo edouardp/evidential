@@ -1396,12 +1396,14 @@ export class EvidenceTableRenderer {
       return button;
     };
 
+    // A single left-aligned run: ‹ 1/3 › (1–2 of 5). The arrows stay real
+    // buttons (same hitbox as before) but are styled as plain text.
     this.footer.append(
-      h("span", { class: "et-page-info" }, `${start}–${end} of ${total}`),
       h("div", { class: "et-page-controls" }, [
         pageButton("‹", "prev", page === 0),
-        h("span", { class: "et-page-current" }, `${page + 1} / ${pageCount}`),
+        h("span", { class: "et-page-current" }, `${page + 1}/${pageCount}`),
         pageButton("›", "next", page >= pageCount - 1),
+        h("span", { class: "et-page-info" }, `(${start}–${end} of ${total})`),
       ]),
     );
   }

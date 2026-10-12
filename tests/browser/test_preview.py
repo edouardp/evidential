@@ -48,7 +48,7 @@ def test_pagination(page, live_server):
     page.locator("#paged .et-page-controls button").nth(1).click()
     page.wait_for_timeout(150)
     assert page.locator("#paged tbody tr").count() == 8
-    assert "2 /" in page.locator("#paged .et-page-current").inner_text()
+    assert "2/" in page.locator("#paged .et-page-current").inner_text()
 
 
 def test_fullscreen_round_trip(page, live_server):

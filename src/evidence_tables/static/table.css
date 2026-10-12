@@ -154,7 +154,13 @@
   -webkit-user-select: none;
   user-select: none;
 }
-.et-page-btn { min-width: 2rem; }
+/* Text-only pagination arrows: the border stays (transparent) so the hitbox
+   matches the old bordered button exactly. */
+.et-page-btn {
+  min-width: 2rem;
+  border-color: transparent;
+  background: transparent;
+}
 .et-page-btn:active { transform: scale(0.94); }
 .et-icon-btn { padding: 0.22rem 0.5rem; font-size: 0.95rem; }
 .et-btn:hover, .et-icon-btn:hover { background: var(--et-hover); }
@@ -486,7 +492,7 @@
 .et-footer {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-start;
   padding: 0.45rem 0.15rem;
   color: var(--et-muted);
   font-size: 0.78rem;

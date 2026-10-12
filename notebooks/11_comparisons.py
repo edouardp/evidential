@@ -146,7 +146,7 @@ def _(comparison_table, connection, mo):
     return
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(mo):
     mo.md("""
     ### Flipping good and bad
@@ -174,11 +174,6 @@ def _(comparison_table, connection, mo):
         )
     )
     down_is_good
-    return
-
-
-@app.cell
-def _():
     return
 
 

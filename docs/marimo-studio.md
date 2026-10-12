@@ -43,6 +43,8 @@ Run it:
 make studio-serve        # opens the notebook with Studio installed
 # or directly:
 uv run --with "marimo-studio[deno]" marimo edit notebooks/21_studio_dashboard.py
+# or, isolated from the project environment:
+uv run --with "marimo-studio[deno]" marimo edit notebooks/21_studio_dashboard.py --sandbox
 ```
 
 The views live next to the notebook in a committed `view_root`
@@ -155,6 +157,17 @@ PyPI; a Browser export would have no way to install it. Once it is published,
 
 ## Notes and caveats
 
+- **Sandbox runs need the local package.** `evidence-tables` is not on PyPI
+  yet, so the notebook's PEP 723 block points the dependency at the checkout
+  with `[tool.uv.sources]`:
+
+  ```toml
+  # [tool.uv.sources]
+  # evidence-tables = { path = "..", editable = true }
+  ```
+
+  Without it, `--sandbox` fails to resolve `evidence-tables`. Remove the
+  override once the package is published.
 - **Widget CSS is the widget's own.** The view supplies page chrome; the table
   injects its own stylesheet. Keep the view's selectors scoped so they do not
   collide with `.et-*`.

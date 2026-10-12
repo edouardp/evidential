@@ -3,8 +3,12 @@
 # dependencies = [
 #     "marimo",
 #     "evidence-tables",
-#     "marimo-studio==0.3.0"
+#     "marimo-studio==0.3.0",
 # ]
+#
+# [tool.uv.sources]
+# # Not on PyPI yet: in a sandboxed run, install the local checkout instead.
+# evidence-tables = { path = "..", editable = true }
 #
 # [tool.marimo-studio]
 # default = "dashboard"

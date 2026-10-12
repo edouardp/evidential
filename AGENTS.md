@@ -52,7 +52,9 @@ Releases follow the house flow (`../galaga`, `../gamr`):
    - commits, runs `make validate`, builds and `twine check`s the artifacts,
    - publishes with `uv publish` (token via keyring) and tags `vX.Y.Z`.
 2. `make check` runs `twine check` on an existing `dist/`; `make pypi` builds and
-   publishes without bumping.
+   publishes without bumping. The **first** release is already at `0.1.0` with
+   its changelog entry, so publish it directly:
+   `make check && make pypi && git tag v0.1.0 && git push origin v0.1.0`.
 3. CI ([`.github/workflows/tests.yml`](.github/workflows/tests.yml)) runs the
    lint gate, `marimo check`, the Python/frontend tests and the artifact check on
    every push and pull request.

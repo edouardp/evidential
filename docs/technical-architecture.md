@@ -516,10 +516,9 @@ alpha-3 country code).
 - **CSV download** serialises the current (searched, sorted, visible) rows, not
   just the page.
 - **Column descriptions** (`info`, or the `comment`/`description` aliases) render
-  as a **ⓘ** in the header. The tooltip is a single `position: fixed` element
-  appended to `document.body` — so the scroller cannot clip it — shown on
-  `mouseenter`/`focus` and removed on leave/scroll. We render our own instead of
-  the native `title` (which has a delay) and leave the cursor alone.
+  as a **ⓘ** in the header, and set the native `title` on the whole `<th>` cell so
+  hovering anywhere in the header shows the description. The **ⓘ** keeps
+  `aria-label` (for assistive technology) and `cursor: help`.
 
 ### 6.6 Fullscreen
 

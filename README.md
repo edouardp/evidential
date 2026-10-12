@@ -520,7 +520,7 @@ See `notebooks/02_s3_tables.py` for a full example (it gracefully stops if
 | `link`, `link_label`, `link_new_tab` | Per-cell links. |
 | `html`, `image`, `image_options`, `logo` | Custom cell content (HTML, image URL, or logo.dev domain). |
 | `footnote` | Name of a column whose value is this cell's footnote text. |
-| `info` (`comment`, `description`) | Header description, shown as an immediate **ⓘ** tooltip. |
+| `info` (`comment`, `description`) | Header description, shown as a native tooltip on the whole header cell (marked **ⓘ**). |
 | `column_group`, `repeat_values`, `viz_include_subtotals` | Additional metadata. |
 
 ### Table options

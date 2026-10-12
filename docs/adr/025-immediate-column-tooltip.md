@@ -1,5 +1,5 @@
 ---
-status: accepted
+status: superseded by ADR-029
 date: 2026-10-12
 deciders: edouard
 ---
@@ -50,3 +50,5 @@ sticky header is clipped by the scroller's `overflow`.
 - [Technical architecture §6.5](../technical-architecture.md)
 - `frontend/src/table.js` (`showTooltip`/`hideTooltip`)
 - Related: [ADR-023](023-duckdb-column-comments.md), [ADR-024](024-arrow-field-metadata.md)
+- **Superseded by [ADR-029](029-native-header-tooltip.md)**: the native tooltip
+  is back, now on the whole header cell.

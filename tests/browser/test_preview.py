@@ -121,21 +121,16 @@ def test_frozen_columns_have_an_opaque_backdrop(page, live_server):
     assert min(alphas) == 1, f"a frozen cell is translucent: {alphas}"
 
 
-def test_column_info_tooltip_is_immediate(page, live_server):
+def test_column_info_tooltip_is_on_the_header_cell(page, live_server):
     open_preview(page, live_server, "#features")
-    icon = page.locator("#features .et-th-info").first
-    assert icon.count() == 1
-    # no delayed native tooltip, and the cursor is left alone
+    headers = page.locator("#features th.et-th:has(.et-th-info)")
+    assert headers.count() == 1
+    header = headers.first
+    # The native tooltip is on the whole cell, so it no longer lives on the icon.
+    assert header.get_attribute("title") == "The city name"
+    icon = header.locator(".et-th-info")
     assert icon.get_attribute("title") is None
-    assert icon.evaluate("el => getComputedStyle(el).cursor") != "help"
-
-    icon.hover()
-    tooltip = page.locator(".et-tooltip")
-    tooltip.wait_for(state="visible", timeout=2000)
-    assert tooltip.inner_text() == "The city name"
-
-    page.mouse.move(0, 0)
-    tooltip.wait_for(state="detached", timeout=2000)
+    assert icon.evaluate("el => getComputedStyle(el).cursor") == "help"
 
 
 def test_delta_indicator_follows_the_value(page, live_server):

@@ -47,6 +47,7 @@ dated, immutable record of the decisions behind them.
 | [026](026-delta-indicator-and-neutral-band.md) | Delta Indicator After the Value, Dash for Neutral | Accepted |
 | [027](027-sort-by-another-column.md) | Sort a Column by Another Column's Values | Accepted |
 | [028](028-dotted-column-name-groups.md) | Column Groups from Dotted Column Names | Accepted |
+| [029](029-native-header-tooltip.md) | Native Header Tooltip on the Whole Cell | Accepted |
 
 ## Creating New ADRs
 

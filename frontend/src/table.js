@@ -52,33 +52,6 @@ function h(tag, attrs = {}, children = []) {
   return el;
 }
 
-// One shared tooltip for column descriptions. Native `title` tooltips have a
-// delay, so we render our own on `mouseenter`/`focus` with none. It is fixed to
-// the viewport so the scroller's `overflow` cannot clip it.
-let _tooltip = null;
-
-function hideTooltip() {
-  if (_tooltip) {
-    _tooltip.remove();
-    _tooltip = null;
-  }
-}
-
-function showTooltip(anchor, text) {
-  hideTooltip();
-  const node = h("div", { class: "et-tooltip", role: "tooltip" }, text);
-  document.body.append(node);
-  const anchorRect = anchor.getBoundingClientRect();
-  const { width, height } = node.getBoundingClientRect();
-  let left = anchorRect.left + anchorRect.width / 2 - width / 2;
-  left = Math.max(8, Math.min(left, window.innerWidth - width - 8));
-  let top = anchorRect.bottom + 6;
-  if (top + height > window.innerHeight - 8) top = anchorRect.top - height - 6;
-  node.style.left = `${left}px`;
-  node.style.top = `${top}px`;
-  _tooltip = node;
-}
-
 function _isNumeric(value) {
   if (typeof value === "number") return Number.isFinite(value);
   if (typeof value === "string") return value.trim() !== "" && !isNaN(Number(value));
@@ -193,10 +166,6 @@ export class EvidenceTableRenderer {
     this._expanded = false;
 
     this._applyTheme();
-    // Fixed-position tooltips must not outlive their anchor or scroll with it.
-    this._onTooltipViewportChange = () => hideTooltip();
-    window.addEventListener("scroll", this._onTooltipViewportChange, true);
-    window.addEventListener("resize", this._onTooltipViewportChange);
     this.render();
 
     this._resizeObserver = new ResizeObserver(() => {
@@ -246,9 +215,6 @@ export class EvidenceTableRenderer {
     if (this._showTimer) clearTimeout(this._showTimer);
     if (this._hideTimer) clearTimeout(this._hideTimer);
     this._resizeObserver?.disconnect();
-    window.removeEventListener("scroll", this._onTooltipViewportChange, true);
-    window.removeEventListener("resize", this._onTooltipViewportChange);
-    hideTooltip();
     this.dialog.remove();
     this.placeholder.remove();
     this.root.remove();
@@ -430,7 +396,6 @@ export class EvidenceTableRenderer {
     this.root.classList.toggle("et-compact", !!opts.compact);
     this.root.classList.toggle("et-stretch-off", opts.stretch === false);
     this.root.classList.toggle("et-group-gap", !!opts.group_gap);
-    hideTooltip();
     this._renderTitle();
     this._renderToolbar();
 
@@ -795,10 +760,13 @@ export class EvidenceTableRenderer {
       let thClass = `et-th${sorted ? " et-th-sorted" : ""}${isStub ? " et-stub-head" : ""}`;
       if (rotation === "vertical") thClass += " et-th-vertical";
       else if (typeof rotation === "number") thClass += " et-th-oblique";
+      const infoText = col.info ? String(col.info) : null;
       const th = h("th", {
         class: thClass,
         style: withFigure(this._alignStyle(col), col, opts),
         "aria-sort": sorted ? (dir === "asc" ? "ascending" : "descending") : "none",
+        // The description tooltip belongs to the whole header cell.
+        title: infoText,
       });
       if (typeof rotation === "number") {
         th.style.setProperty("--et-th-angle", `${rotation}deg`);
@@ -812,19 +780,10 @@ export class EvidenceTableRenderer {
             : col.title || formatTitle(col.name);
       if (opts.all_caps) title = String(title).toUpperCase();
       inner.append(h("span", { class: "et-th-title" }, title));
-      if (col.info) {
-        const infoText = String(col.info);
-        const info = h(
-          "span",
-          { class: "et-th-info", role: "img", "aria-label": infoText, tabindex: "0" },
-          "ⓘ",
+      if (infoText) {
+        inner.append(
+          h("span", { class: "et-th-info", role: "img", "aria-label": infoText }, "ⓘ"),
         );
-        const show = () => showTooltip(info, infoText);
-        info.addEventListener("mouseenter", show);
-        info.addEventListener("focus", show);
-        info.addEventListener("mouseleave", hideTooltip);
-        info.addEventListener("blur", hideTooltip);
-        inner.append(info);
       }
       if (sorted) inner.append(h("span", { class: "et-sort-arrow" }, dir === "asc" ? "▲" : "▼"));
       th.append(inner);

@@ -50,6 +50,9 @@ Option 3 was rejected: the magnitude of a neutral change is still useful.
 - Good, because costs/error rates can mark a decrease as good.
 - Bad, because a neutral cell still shows its (small) value next to the dash;
   set `show_value=false` for a bare dash.
+- Note: a *missing* value (e.g. a `0/0` comparison) is rendered as the same
+  neutral dash — blank value, same dash, colour and position — rather than the
+  generic `.et-null` text.
 
 ## More Information
 

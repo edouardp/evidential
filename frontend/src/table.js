@@ -988,8 +988,14 @@ export class EvidenceTableRenderer {
         if (col.blank_above != null && numeric > col.blank_above) value = null;
       }
       if (value === null || value === undefined) {
-        const nullText = col.null_text ?? opts.null_text ?? "–";
-        td.append(h("span", { class: "et-null" }, String(nullText)));
+        // A missing delta reads as the same neutral dash as a value inside
+        // `neutral_range`; other columns use the generic null text.
+        if (col.viz === "delta") {
+          td.append(this._renderDelta(col, value));
+        } else {
+          const nullText = col.null_text ?? opts.null_text ?? "–";
+          td.append(h("span", { class: "et-null" }, String(nullText)));
+        }
         tr.append(td);
         return;
       }
@@ -1155,9 +1161,11 @@ export class EvidenceTableRenderer {
 
   _renderDelta(col, value) {
     const opts = col.delta_options || {};
-    const num = Number(value);
+    const isMissing = value === null || value === undefined;
+    const num = isMissing ? 0 : Number(value);
     const [lo, hi] = this._neutralBounds(opts);
-    const isNeutral = (lo == null || num >= lo) && (hi == null || num <= hi);
+    const isNeutral =
+      isMissing || ((lo == null || num >= lo) && (hi == null || num <= hi));
     const positive = num > 0;
     const good = isNeutral ? false : opts.down_is_good ? !positive : positive;
     const cls = isNeutral ? "et-delta-neutral" : good ? "et-delta-good" : "et-delta-bad";
@@ -1168,7 +1176,7 @@ export class EvidenceTableRenderer {
       Math.abs(num) <= 1 && col.fmt && col.fmt.startsWith("pct")
         ? Math.abs(num * 100).toFixed(1) + "%"
         : Math.abs(num).toLocaleString(undefined, { maximumFractionDigits: 1 });
-    const valueText = opts.show_value === false ? "" : pct;
+    const valueText = opts.show_value === false || isMissing ? "" : pct;
     const valueNode = valueText ? h("span", { class: "et-delta-value" }, valueText) : null;
     const indicatorNode = indicator
       ? h("span", { class: "et-delta-indicator" }, indicator)

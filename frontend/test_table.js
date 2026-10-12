@@ -453,6 +453,19 @@ test("delta puts the indicator after the value, with a dash when neutral", () =>
   renderer.destroy();
 });
 
+test("a missing delta renders the neutral dash, like a value in range", () => {
+  const columns = [{ name: "change", type: "number", fmt: "pct1", viz: "delta" }];
+  const rows = [{ change: null }];
+  const renderer = new EvidenceTableRenderer(makeModel(rows, columns, {}, el), el);
+  const cell = el.querySelector(".et-delta");
+  assert.ok(cell, "a null delta still renders a delta");
+  assert.ok(cell.classList.contains("et-delta-neutral"));
+  assert.equal(cell.textContent.trim(), "–");
+  assert.equal(cell.querySelector(".et-delta-indicator").textContent, "–");
+  assert.equal(el.querySelector(".et-null"), null); // not the generic null cell
+  renderer.destroy();
+});
+
 test("column info renders a header icon with an immediate tooltip", () => {
   const columns = [{ name: "city", type: "string", info: "A helpful hint" }];
   const renderer = new EvidenceTableRenderer(makeModel([{ city: "NYC" }], columns, {}, el), el);

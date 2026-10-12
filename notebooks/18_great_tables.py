@@ -13,7 +13,7 @@ hidden helper columns) and only render the derived column.
 
 import marimo
 
-__generated_with = "0.20.0"
+__generated_with = "0.25.1"
 app = marimo.App(width="full")
 
 
@@ -42,7 +42,6 @@ def _():
         sub_large_vals,
         sub_missing,
         sub_small_vals,
-        sub_values,
         sub_zero,
     )
 
@@ -57,8 +56,9 @@ def _(mo):
       hidden helper columns produced in SQL.
     - **Substitutions** (`sub_*`): replace missing / zero / small / large /
       specific values with text at display time.
-    - **Special formatters**: `bytes`, `duration`, `roman`, `flag`, plus cell
-      `markdown`. `footnote_marks` and `all_caps` tweak presentation.
+    - **Special formatters**: `bytes`, `duration`, `roman`, `flag` (an ISO
+      3166-1 **alpha-2 or alpha-3** country code), plus cell `markdown`.
+      `footnote_marks` and `all_caps` tweak presentation.
     """)
     return
 
@@ -66,15 +66,22 @@ def _(mo):
 @app.cell
 def _():
     measurements = [
-        {"site": "Alpha", "low": 10, "high": 20, "value": 5.0, "uncert": 0.2, "n": 120, "pct": 0.31, "size": 1536000, "elapsed": 3725, "year": 2024, "country": "AU"},
-        {"site": "Beta", "low": 8, "high": 12, "value": 9.4, "uncert": 0.5, "n": 80, "pct": 0.12, "size": 512, "elapsed": 95, "year": 1999, "country": "US"},
-        {"site": "Gamma", "low": 30, "high": 45, "value": 41.0, "uncert": 1.1, "n": 210, "pct": 0.57, "size": 1048576, "elapsed": 86400, "year": 2021, "country": "JP"},
+        {"site": "Alpha", "low": 10, "high": 20, "value": 5.0, "uncert": 0.2, "n": 120, "pct": 0.31, "size": 1536000, "elapsed": 3725, "year": 2024, "country": "AUS"},
+        {"site": "Beta", "low": 8, "high": 12, "value": 9.4, "uncert": 0.5, "n": 80, "pct": 0.12, "size": 512, "elapsed": 95, "year": 1999, "country": "USA"},
+        {"site": "Gamma", "low": 30, "high": 45, "value": 41.0, "uncert": 1.1, "n": 210, "pct": 0.57, "size": 1048576, "elapsed": 86400, "year": 2021, "country": "JPN"},
     ]
     return (measurements,)
 
 
 @app.cell
-def _(EvidenceTable, cols_merge_n_pct, cols_merge_range, cols_merge_uncert, measurements, mo):
+def _(
+    EvidenceTable,
+    cols_merge_n_pct,
+    cols_merge_range,
+    cols_merge_uncert,
+    measurements,
+    mo,
+):
     merged = mo.ui.anywidget(
         EvidenceTable(
             measurements,
@@ -137,7 +144,6 @@ def _(
     sub_large_vals,
     sub_missing,
     sub_small_vals,
-    sub_values,
     sub_zero,
 ):
     substituted = mo.ui.anywidget(

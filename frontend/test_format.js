@@ -35,6 +35,11 @@ test("special formatters (bytes, duration, roman, flag)", () => {
   assert.equal(formatValue(90000, "duration"), "1d 1h");
   assert.equal(formatValue(2024, "roman"), "MMXXIV");
   assert.equal(formatValue("AU", "flag"), "\u{1F1E6}\u{1F1FA}");
+  // ISO 3166-1 alpha-3 codes render the same flag as their alpha-2 form.
+  assert.equal(formatValue("NZL", "flag"), "\u{1F1F3}\u{1F1FF}");
+  assert.equal(formatValue("JPN", "flag"), "\u{1F1EF}\u{1F1F5}");
+  assert.equal(formatValue("usa", "flag"), "\u{1F1FA}\u{1F1F8}");
+  assert.equal(formatValue("ZZZ", "flag"), "ZZZ");
 });
 
 test("titles", () => {

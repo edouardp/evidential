@@ -477,7 +477,8 @@ flowchart TD
 `format.js` ports Evidence's `formatValue` on top of `ssf`: preset construction
 (currencies, units, decimals, dates), auto-scaling base formats, date
 normalisation, Excel serial handling, quarters, and the special formatters
-`bytes`/`duration`/`roman`/`flag`.
+`bytes`/`duration`/`roman`/`flag` (`flag` takes an ISO 3166-1 alpha-2 or
+alpha-3 country code).
 
 `color.js` ports Evidence's colour-scale maths on top of `chroma-js`:
 `createColorScale` (linear, diverging via midpoint, or explicit stops),

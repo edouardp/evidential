@@ -69,12 +69,14 @@ def count_distinct_values(values: Sequence[Any], weights: Sequence[float] | None
 
 
 def weighted_mean_values(values: Sequence[Any], weights: Sequence[float] | None = None) -> float:
-    if not weights:
+    if weights is None:
         return statistics.fmean(values)
+    if len(values) != len(weights):
+        raise ValueError("values and weights must have the same length")
     total = sum(weights)
     if total == 0:
         return 0.0
-    return sum(value * weight for value, weight in zip(values, weights, strict=False)) / total
+    return sum(value * weight for value, weight in zip(values, weights, strict=True)) / total
 
 
 BUILTIN_AGGREGATIONS: dict[str, Aggregation] = {
@@ -147,14 +149,17 @@ def apply_aggregations(
                 descendants = detail_rows
             else:
                 descendants = [candidate for candidate in detail_rows if key in (candidate.get("__ancestors") or [])]
-            values = [candidate[alias] for candidate in descendants if candidate.get(alias) is not None]
+            members = [candidate for candidate in descendants if candidate.get(alias) is not None]
+            # A missing value or weight excludes the whole pair; filtering the
+            # lists independently can silently assign a weight to another row.
+            if weight_column and aggregate is weighted_mean_values:
+                members = [candidate for candidate in members if candidate.get(weight_column) is not None]
+            values = [candidate[alias] for candidate in members]
             if not values:
                 row[alias] = None
                 continue
             weights = None
-            if weight_column:
-                weights = [
-                    candidate[weight_column] for candidate in descendants if candidate.get(weight_column) is not None
-                ]
+            if weight_column and aggregate is weighted_mean_values:
+                weights = [candidate[weight_column] for candidate in members]
             row[alias] = aggregate(values, weights)
     return rows

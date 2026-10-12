@@ -1,7 +1,7 @@
 """DuckDB pivot helper.
 
-:func:`pivot_table` builds a dimensions × pivot-values × measures table using a
-two-stage aggregate (first per dims+pivots, then pivoted), groups the resulting
+:func:`pivot_table` aggregates the original records at every dimension/pivot
+level, then projects those results into columns. It groups the resulting
 columns under shared headers, and reuses :func:`decorate_grouped_rows` for
 subtotal/total rows.
 """
@@ -85,52 +85,83 @@ def pivot_table(
         "ORDER BY " + ", ".join(pivot_cols)
     )
     combo_rows = connection.sql(combo_query).to_arrow_table().to_pylist()
-    combos = [tuple(jsonify(row.get(col)) for col in pivot_cols) for row in combo_rows]
+    combos = [tuple(row.get(col) for col in pivot_cols) for row in combo_rows]
 
     select_parts: list[str] = list(dims)
-    select_parts.extend(f"grouping({dim}) AS __g{index}" for index, dim in enumerate(dims))
+    flags = [f"__g{index}" for index in range(len(dims))]
+    select_parts.extend(flags)
 
-    inner_measures = ", ".join(f"{expression} AS {_quote(alias)}" for alias, expression in parsed_measures)
+    inner_measures = [f"{expression} AS {_quote(alias)}" for alias, expression in parsed_measures]
+    weights = dict(weight_columns or {})
+    inner_weights = {alias: f"__w_{index}" for index, (alias, _) in enumerate(parsed_measures) if alias in weights}
+    inner_measures.extend(f"sum({weights[alias]}) AS {_quote(hidden)}" for alias, hidden in inner_weights.items())
+
+    used_names = {name.casefold() for name in dims}
+
+    def unique_name(preferred: str) -> str:
+        name = preferred
+        suffix = 2
+        while name.casefold() in used_names:
+            name = f"{preferred}__{suffix}"
+            suffix += 1
+        used_names.add(name.casefold())
+        return name
+
+    # Reserve total names first so a category named "Total" cannot take them.
+    totals = (
+        {alias: unique_name(f"{alias}__{total_label}") for alias, _ in parsed_measures} if show_total_column else {}
+    )
+    weight_aliases: dict[str, str] = {}
+
+    def add_projection(name: str, alias: str, condition: str) -> None:
+        # GROUPING SETS already computed exactly one result per output cell.
+        # max only projects it; it never combines aggregate values.
+        select_parts.append(f"max({_quote(alias)}) FILTER (WHERE {condition}) AS {_quote(name)}")
+        if alias in inner_weights:
+            hidden = unique_name(f"__w_{name}")
+            select_parts.append(f"max({_quote(inner_weights[alias])}) FILTER (WHERE {condition}) AS {_quote(hidden)}")
+            weight_aliases[name] = hidden
 
     # (column name, header group, headline measure alias)
     pivoted: list[tuple[str, str, str]] = []
     for alias, _ in parsed_measures:
         for combo in combos:
-            condition = " AND ".join(
+            condition = "__pivot_total = 0 AND " + " AND ".join(
                 f"{column} IS NOT DISTINCT FROM {_sql_literal(value)}"
-                for column, value in zip(pivot_cols, combo, strict=False)
+                for column, value in zip(pivot_cols, combo, strict=True)
             )
             label = _label(combo)
-            name = f"{alias}__{label}"
-            # The inner stage already aggregated per (dims, pivots); re-aggregate
-            # additively so subtotal rows sum across the pivot values.
-            select_parts.append(f"sum({_quote(alias)}) FILTER (WHERE {condition}) AS {_quote(name)}")
+            name = unique_name(f"{alias}__{label}")
+            add_projection(name, alias, condition)
             pivoted.append((name, label, alias))
         if show_total_column:
-            name = f"{alias}__{total_label}"
-            select_parts.append(f"sum({_quote(alias)}) AS {_quote(name)}")
+            name = totals[alias]
+            add_projection(name, alias, "__pivot_total = 1")
             pivoted.append((name, total_label, alias))
 
     sets: list[str] = []
-    if subtotals:
-        sets.extend("(" + ", ".join(dims[:size]) + ")" for size in range(len(dims), 0, -1))
-    else:
-        sets.append("(" + ", ".join(dims) + ")")
+    levels = list(range(len(dims), 0, -1)) if subtotals else [len(dims)]
     if total:
-        sets.append("()")
+        levels.append(0)
+    for size in levels:
+        sets.append("(" + ", ".join([*dims[:size], *pivot_cols]) + ")")
+        if show_total_column:
+            sets.append("(" + ", ".join(dims[:size]) + ")")
 
     group_cols = ", ".join([*dims, *pivot_cols])
     query = f"""
         WITH __inner AS (
-            SELECT {group_cols}, {inner_measures}
+            SELECT {group_cols}, {", ".join(inner_measures)},
+                   {", ".join(f"grouping({dim}) AS {flag}" for dim, flag in zip(dims, flags, strict=True))},
+                   grouping({pivot_cols[0]}) AS __pivot_total
             FROM (
                 {sql}
             ) AS __base
-            GROUP BY {group_cols}
+            GROUP BY GROUPING SETS ({", ".join(sets)})
         )
         SELECT {", ".join(select_parts)}
         FROM __inner
-        GROUP BY GROUPING SETS ({", ".join(sets)})
+        GROUP BY {", ".join([*dims, *flags])}
     """
     rows = [jsonify(row) for row in connection.sql(query).to_arrow_table().to_pylist()]
     ordered = decorate_grouped_rows(
@@ -143,12 +174,22 @@ def pivot_table(
         total_label=total_label,
     )
     if aggregations is not None:
+        specs = aggregations
+        if isinstance(aggregations, Mapping):
+            specs = {
+                name: aggregations.get(name, aggregations[alias]) if alias in aggregations else aggregations[name]
+                for name, _, alias in pivoted
+                if name in aggregations or alias in aggregations
+            }
         ordered = apply_aggregations(
             ordered,
-            aggregations,
-            [alias for alias, _ in parsed_measures],
-            None,
+            specs,
+            [name for name, _, _ in pivoted],
+            weight_aliases or None,
         )
+    for row in ordered:
+        for hidden in weight_aliases.values():
+            row.pop(hidden, None)
 
     # ---- columns -----------------------------------------------------------
     columns: list[dict[str, Any]] = []

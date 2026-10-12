@@ -6,6 +6,7 @@ import duckdb
 import pytest
 
 from evidential import BUILTIN_AGGREGATIONS, grouped_table, resolve_aggregation
+from evidential.aggregations import weighted_mean_values
 from evidential.duck import connect
 
 
@@ -103,3 +104,25 @@ def test_unknown_aggregation_raises() -> None:
 def test_builtin_registry_has_common_functions() -> None:
     for name in ("sum", "mean", "median", "min", "max", "count", "count_distinct"):
         assert name in BUILTIN_AGGREGATIONS
+
+
+def test_weighted_mean_keeps_missing_values_and_weights_paired() -> None:
+    with duckdb.connect() as connection:
+        table = grouped_table(
+            connection,
+            "SELECT * FROM (VALUES ('A', 1, NULL, 100), ('A', 2, 10, 1), "
+            "('A', 3, 20, 1), ('A', 4, 999, NULL)) t(category, item, value, weight)",
+            ["category", "item"],
+            ["sum(value) AS value"],
+            aggregations={"value": "weighted_mean"},
+            weight_columns={"value": "weight"},
+        )
+    summaries = [row for row in table.rows if row["render_type"] != "cell_data"]
+    assert summaries
+    assert all(row["value"] == pytest.approx(15) for row in summaries)
+
+
+@pytest.mark.parametrize("weights", [[], [1], [1, 1, 1]])
+def test_weighted_mean_rejects_mismatched_lengths(weights: list[float]) -> None:
+    with pytest.raises(ValueError, match="same length"):
+        weighted_mean_values([10, 20], weights)

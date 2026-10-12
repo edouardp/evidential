@@ -53,6 +53,7 @@ dated, immutable record of the decisions behind them.
 | [032](032-row-selection.md) | Row Selection Drives the Notebook | Accepted |
 | [033](033-stable-empty-table.md) | A Stable Empty Table (Placeholder Rows and an Overlay) | Accepted |
 | [034](034-uv-build-backend.md) | `uv_build` as the Build Backend | Accepted |
+| [035](035-correct-pivot-aggregations.md) | Aggregate Pivot Totals from Original Records | Accepted |
 
 ## Creating New ADRs
 

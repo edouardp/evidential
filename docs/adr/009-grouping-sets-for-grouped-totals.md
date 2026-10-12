@@ -45,3 +45,4 @@ decoration for in-memory rows, so the renderer has exactly one model.
 
 - [Technical architecture §4.3](../technical-architecture.md)
 - Related: [ADR-002](002-display-only-widget.md), [ADR-019](019-accordion-indentation.md)
+- Pivot totals extend this decision in [ADR-035](035-correct-pivot-aggregations.md).

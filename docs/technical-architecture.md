@@ -273,10 +273,11 @@ total uses all detail rows. For `weighted_mean`, `grouped_table` adds hidden
 These build SQL, run it, and hand rows to `EvidentialTable` (or
 `decorate_grouped_rows`).
 
-- `pivot_table` discovers distinct pivot combinations, emits one
-  `sum(measure) FILTER (WHERE pivot = …)` column per combination per measure,
-  groups those columns under spanners, and reuses the grouped decoration for
-  subtotal rows.
+- `pivot_table` discovers distinct pivot combinations and computes each
+  dimension/pivot level from the original rows with `GROUPING SETS`. A filtered
+  `max` projects the single result for each cell into a pivot column. Headline
+  aggregation overrides expand to those columns; hidden weight sums keep
+  weighted overrides aligned. See [ADR-035](adr/035-correct-pivot-aggregations.md).
 - `comparison_table` anchors on the latest `date_column`, computes current and
   prior windows with a two-CTE join, and appends `<m>_prior`, `<m>_delta`,
   `<m>_pct` columns (the last rendered as a `delta`).

@@ -94,15 +94,15 @@ def _(duckdb, mo):
             """
         )
         source_label = "yellow_tripdata_2024-01.parquet"
-    return connection, source_label
+    return (connection,)
 
 
-@app.cell(expand_output=True)
-def _(EvidenceTable, connection, mo, source_label):
+app._unparsable_cell(
+    """
     sample_table = mo.ui.anywidget(
         EvidenceTable(
             connection.sql(
-                """
+                \"\"\"
                 SELECT
                     tpep_pickup_datetime AS pickup,
                     payment,
@@ -116,35 +116,37 @@ def _(EvidenceTable, connection, mo, source_label):
                 WHERE tpep_pickup_datetime >= TIMESTAMP '2024-01-01'
                 ORDER BY tpep_pickup_datetime
                 LIMIT 5000
-                """
+                \"\"\"
             ),
-            title="Recent yellow taxi trips",
-            subtitle=source_label,
-            search=True,
-            page_size=15,
-            row_shading=True,
-            freeze_columns=2,
-            max_height="520px",
-            column_config={
-                "pickup": {"title": "Pickup", "fmt": "shortdate", "align": "left"},
-                "payment": {"align": "left"},
-                "passenger_count": {"title": "Pax", "fmt": "id"},
-                "trip_distance": {"title": "Distance", "fmt": "num1", "viz": "bar"},
-                "fare_amount": {"fmt": "usd2"},
-                "tip_amount": {"title": "Tip", "fmt": "usd2", "viz": "bar"},
-                "total_amount": {"title": "Total", "fmt": "usd2"},
-                "tip_rate": {
-                    "title": "Tip rate",
-                    "fmt": "pct1",
-                    "viz": "color",
-                    "color_scale": ["#fee2e2", "#fef9c3", "#bbf7d0", "#15803d"],
-                    "color_options": {"midpoint": 0.15, "min": 0, "max": 0.4},
-                },
-            },
+            title=\"Recent yellow taxi trips\",
+            subtitle=f\"`source_label,
+            #search=True,
+            #page_size=15,
+            #row_shading=3,
+            #freeze_columns=2,
+            #max_height=\"520px\",
+            #column_config={
+            #    \"pickup\": {\"title\": \"Pickup\", \"fmt\": \"shortdate\", \"align\": \"left\"},
+            #    \"payment\": {\"align\": \"left\"},
+            #    \"passenger_count\": {\"title\": \"Pax\", \"fmt\": \"id\"},
+            #    \"trip_distance\": {\"title\": \"Distance\", \"fmt\": \"num1\", \"viz\": \"bar\"},
+            #    \"fare_amount\": {\"fmt\": \"usd2\"},
+            #    \"tip_amount\": {\"title\": \"Tip\", \"fmt\": \"usd2\", \"viz\": \"bar\"},
+            #    \"total_amount\": {\"title\": \"Total\", \"fmt\": \"usd2\"},
+            #    \"tip_rate\": {
+            #        \"title\": \"Tip rate\",
+            #        \"fmt\": \"pct1\",
+            #        \"viz\": \"color\",
+            #        \"color_scale\": [\"#fee2e2\", \"#fef9c3\", \"#bbf7d0\", \"#15803d\"],
+            #        \"color_options\": {\"midpoint\": 0.15, \"min\": 0, \"max\": 0.4},
+            #    },
+            #},
         )
     )
     sample_table
-    return
+    """,
+    column=None, disabled=False, hide_code=False, expand_output=True, name="_"
+)
 
 
 @app.cell

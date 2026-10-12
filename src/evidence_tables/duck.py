@@ -16,6 +16,7 @@ __all__ = [
     "configure_s3",
     "attach_s3_tables",
     "connect_s3_tables",
+    "column_comments",
     "query",
 ]
 
@@ -122,6 +123,37 @@ def connect_s3_tables(**kwargs: Any) -> Any:
     connection = connect(extensions=())
     attach_s3_tables(connection, **kwargs)
     return connection
+
+
+def column_comments(connection: Any, table: str) -> dict[str, str]:
+    """Column comments for a DuckDB table or view, keyed by column name.
+
+    DuckDB stores ``COMMENT ON COLUMN`` metadata but exposes it only through
+    ``duckdb_columns()``; it does not travel with query results or the Arrow
+    schema. A table or view relation is read automatically (see
+    ``EvidenceTable(con.table("t"))``); for a raw ``con.sql(...)`` result, merge
+    this into ``column_config``::
+
+        comments = {name: {"info": text} for name, text in column_comments(con, "trips").items()}
+        EvidenceTable(con.sql("SELECT * FROM trips LIMIT 500"), column_config=comments)
+
+    ``table`` may be ``schema.table`` to disambiguate across schemas.
+    """
+    schema_name, separator, table_name = str(table).rpartition(".")
+    if not separator:
+        table_name = schema_name or table_name
+        schema_name = ""
+
+    def escape(value: object) -> str:
+        return str(value).replace("'", "''")
+
+    conditions = [f"table_name = '{escape(table_name)}'"]
+    if schema_name:
+        conditions.append(f"schema_name = '{escape(schema_name)}'")
+    rows = connection.sql(
+        "SELECT column_name, comment FROM duckdb_columns() WHERE " + " AND ".join([*conditions, "comment IS NOT NULL"])
+    ).fetchall()
+    return {str(name): str(comment) for name, comment in rows if comment}
 
 
 def query(connection: Any, sql: str) -> Any:

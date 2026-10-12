@@ -212,7 +212,11 @@ presentation from the type — integers get `fmt="num0"`, `DECIMAL(p, s)` gets
 `num{s}`, and numbers are right-aligned while text is left-aligned — so a
 DuckDB result renders sensibly with no `column_config` (see
 [ADR-022](adr/022-type-driven-column-defaults.md)). `apply_blank_predicates` is
-where a Python `blank=lambda v: …` becomes a `None` in the rows.
+where a Python `blank=lambda v: …` becomes a `None` in the rows. For a DuckDB
+table/view relation it also reads `COMMENT ON COLUMN` text from
+`duckdb_columns()` and sets each column's `info` (see
+[ADR-023](adr/023-duckdb-column-comments.md)); a raw `con.sql(...)` relation has
+no source name, so `duck.column_comments` is the explicit path.
 
 ### 4.3 `grouped.py` — subtotals from one query
 

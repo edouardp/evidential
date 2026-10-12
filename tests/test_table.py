@@ -66,6 +66,28 @@ def test_duckdb_result_types_default_formatting() -> None:
     assert columns["d"]["type"] == "date"
 
 
+def test_duckdb_column_comments_become_header_info() -> None:
+    import duckdb
+
+    from evidence_tables import duck
+
+    con = duckdb.connect()
+    con.execute("CREATE TABLE t (a INTEGER, b VARCHAR)")
+    con.execute("COMMENT ON COLUMN t.a IS 'The a value'")
+
+    # A table/view relation knows its name, so comments are read automatically,
+    # including after .limit()/.filter()/.select().
+    columns = {column["name"]: column for column in EvidenceTable(con.table("t")).columns}
+    assert columns["a"]["info"] == "The a value"
+    assert "info" not in columns["b"]
+    assert EvidenceTable(con.table("t").limit(5)).columns[0]["info"] == "The a value"
+
+    # Raw SQL becomes an unnamed relation; the helper is the explicit path.
+    assert duck.column_comments(con, "t") == {"a": "The a value"}
+    raw = {column["name"]: column for column in EvidenceTable(con.sql("SELECT a, b FROM t")).columns}
+    assert "info" not in raw["a"]
+
+
 def test_column_config_overrides() -> None:
     table = EvidenceTable(
         [{"revenue": 4200.5}],

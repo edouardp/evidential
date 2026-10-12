@@ -120,8 +120,8 @@ def _(LiveEvidenceTable, connection):
         page_size=12,
         row_shading=True,
         column_config={
-            "payment": {"title": "Payment", "align": "left"},
-            "trip_distance": {"title": "Distance", "fmt": "num1", "viz": "bar"},
+            "payment": {"title": "Payment"},
+            "trip_distance": {"title": "Distance",  "viz": "bar"},
             "fare_amount": {"fmt": "usd2"},
             "tip_amount": {"title": "Tip", "fmt": "usd2"},
             "tip_rate": {

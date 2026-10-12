@@ -235,6 +235,31 @@ def apply_blank_predicates(
     return result
 
 
+def _relation_column_comments(relation: Any) -> dict[str, str]:
+    """DuckDB column comments for a table/view relation, if it knows its name.
+
+    DuckDB stores ``COMMENT ON COLUMN`` metadata but exposes it only through
+    ``duckdb_columns()`` (it does not travel with the result or the Arrow
+    schema). Relations built from a table or view — including ``.limit()``,
+    ``.filter()`` and ``.select()`` — keep that name in ``alias``; raw
+    ``con.sql(...)`` relations do not, and fall back to
+    :func:`evidence_tables.duck.column_comments`.
+    """
+    alias = getattr(relation, "alias", None)
+    run_query = getattr(relation, "query", None)
+    if not alias or str(alias).startswith("unnamed_relation") or not callable(run_query):
+        return {}
+    escaped = str(alias).replace("'", "''")
+    try:
+        rows = run_query(
+            "__evidence_tables_relation",
+            f"SELECT column_name, comment FROM duckdb_columns() WHERE table_name = '{escaped}' AND comment IS NOT NULL",
+        ).fetchall()
+    except Exception:  # pragma: no cover - depends on the DuckDB build
+        return {}
+    return {str(name): str(comment) for name, comment in rows if comment}
+
+
 def normalize_data(data: Any) -> tuple[list[dict[str, Any]], list[dict[str, Any]] | None]:
     """Convert ``data`` into ``(rows, inferred_columns)``.
 
@@ -262,7 +287,14 @@ def normalize_data(data: Any) -> tuple[list[dict[str, Any]], list[dict[str, Any]
             if callable(read_all):
                 arrow = read_all()
             if is_arrow_table(arrow):
-                return arrow_table_to_rows(arrow), infer_columns(arrow, [])
+                columns = infer_columns(arrow, [])
+                # Surface DuckDB column comments as header descriptions.
+                comments = _relation_column_comments(data)
+                for column in columns:
+                    comment = comments.get(column["name"])
+                    if comment:
+                        column["info"] = comment
+                return arrow_table_to_rows(arrow), columns
     if hasattr(data, "to_pylist"):
         raw_rows = [dict(row) for row in data.to_pylist()]
         return [jsonify(row) for row in raw_rows], infer_columns(data, raw_rows)

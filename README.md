@@ -144,6 +144,19 @@ configuration. Integers default to `num0`; set `fmt="num"` to restore the
 auto-scaling format (e.g. `26k`). DuckDB result types come back both as
 `relation.types` and in the Arrow schema — the Arrow schema is what drives this.
 
+DuckDB column comments come through too. A **table or view relation**
+(`con.table("trips")`, including `.limit()` / `.filter()` / `.select()`)
+surfaces `COMMENT ON COLUMN` text as the header description (the ⓘ tooltip). A
+raw `con.sql(...)` result becomes an unnamed relation that no longer knows its
+source, so pass `duck.column_comments` explicitly:
+
+```python
+from evidence_tables import EvidenceTable, duck
+
+comments = {name: {"info": text} for name, text in duck.column_comments(con, "trips").items()}
+EvidenceTable(con.sql("SELECT * FROM trips LIMIT 500"), column_config=comments)
+```
+
 ## Grouped tables with subtotals
 
 `grouped_table` builds the SQL for you. Pass a base query, the dimensions to

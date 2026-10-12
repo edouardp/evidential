@@ -88,6 +88,44 @@ def test_duckdb_column_comments_become_header_info() -> None:
     assert "info" not in raw["a"]
 
 
+def test_arrow_field_metadata_becomes_header_info() -> None:
+    import pyarrow as pa
+
+    schema = pa.schema(
+        [
+            pa.field("a", pa.int32(), metadata={b"comment": b"The a value"}),
+            pa.field("b", pa.string(), metadata={"description": "The b value"}),  # str keys too
+            pa.field("c", pa.int32()),
+        ]
+    )
+    columns = {c["name"]: c for c in EvidenceTable(pa.table({"a": [1], "b": ["x"], "c": [2]}, schema=schema)).columns}
+    assert columns["a"]["info"] == "The a value"
+    assert columns["b"]["info"] == "The b value"
+    assert "info" not in columns["c"]
+
+
+def test_parquet_field_metadata_survives_to_info(tmp_path) -> None:
+    import duckdb
+    import pyarrow as pa
+    import pyarrow.parquet as pq
+
+    schema = pa.schema(
+        [pa.field("a", pa.int32(), metadata={b"comment": b"The a value"})],
+        metadata={b"description": b"A table"},
+    )
+    path = tmp_path / "t.parquet"
+    pq.write_table(pa.table({"a": [1, 2]}, schema=schema), path)
+
+    # PyArrow writes the Arrow schema into the file's ARROW:schema metadata, so
+    # field comments survive a Parquet round-trip.
+    assert EvidenceTable(pq.read_table(path)).columns[0]["info"] == "The a value"
+
+    # DuckDB's read_parquet does not surface it.
+    con = duckdb.connect()
+    relation = con.sql(f"SELECT * FROM read_parquet('{path}')")
+    assert "info" not in EvidenceTable(relation).columns[0]
+
+
 def test_column_config_overrides() -> None:
     table = EvidenceTable(
         [{"revenue": 4200.5}],

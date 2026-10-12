@@ -42,6 +42,7 @@ dated, immutable record of the decisions behind them.
 | [021](021-marimo-studio-projections.md) | Support marimo Studio Views by Projection | Accepted |
 | [022](022-type-driven-column-defaults.md) | Derive Default Column Format and Alignment from the Data Type | Accepted |
 | [023](023-duckdb-column-comments.md) | Surface DuckDB Column Comments as Header Descriptions | Accepted |
+| [024](024-arrow-field-metadata.md) | Read Arrow Field Metadata as Column Descriptions | Accepted |
 
 ## Creating New ADRs
 

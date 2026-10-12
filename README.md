@@ -157,6 +157,15 @@ comments = {name: {"info": text} for name, text in duck.column_comments(con, "tr
 EvidenceTable(con.sql("SELECT * FROM trips LIMIT 500"), column_config=comments)
 ```
 
+**Arrow field metadata** works the same way, and is how a column description
+survives **Parquet** and **Feather**: PyArrow writes the Arrow schema (including
+field metadata) into the file's `ARROW:schema` key-value entry, so
+`EvidenceTable(pq.read_table("orders.parquet"))` shows a `comment` /
+`description` / `info` field metadata value as the header description. Parquet
+itself has no standard per-column comment field: descriptions ride along in the
+Arrow schema, file-level key/value metadata is available via
+`parquet_kv_metadata()`, and DuckDB's `read_parquet` does not surface either.
+
 ## Grouped tables with subtotals
 
 `grouped_table` builds the SQL for you. Pass a base query, the dimensions to

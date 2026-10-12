@@ -141,6 +141,36 @@ def _arrow_column_spec(field_type: Any) -> dict[str, Any]:
     return _column_spec("number")
 
 
+#: Arrow field metadata keys treated as a column description (case-insensitive).
+_FIELD_INFO_KEYS = ("comment", "description", "info")
+
+
+def _arrow_field_info(field: Any) -> str | None:
+    """A column description from Arrow field metadata, if any.
+
+    This is how a description survives Parquet and Feather: PyArrow writes the
+    full Arrow schema (including field metadata) into the file's ``ARROW:schema``
+    key-value entry, and reads it back. DuckDB does not surface it from
+    ``read_parquet``. Recognised keys are ``comment``, ``description`` and
+    ``info`` (case-insensitive).
+    """
+    metadata = getattr(field, "metadata", None)
+    if not metadata:
+        return None
+    normalized: dict[str, Any] = {}
+    for key, value in metadata.items():
+        name = key.decode("utf-8", "replace") if isinstance(key, bytes) else str(key)
+        normalized[name.lower()] = value
+    for key in _FIELD_INFO_KEYS:
+        value = normalized.get(key)
+        if not value:
+            continue
+        text = value.decode("utf-8", "replace") if isinstance(value, bytes) else str(value)
+        if text.strip():
+            return text.strip()
+    return None
+
+
 def _python_column_spec(values: Iterable[Any]) -> dict[str, Any]:
     numeric = False
     integer = True
@@ -177,7 +207,14 @@ def infer_columns(data: Any, rows: Sequence[Mapping[str, Any]]) -> list[dict[str
     """
     schema = getattr(data, "schema", None)
     if schema is not None and hasattr(schema, "names"):  # pyarrow-style schema
-        return [make_column(field.name, **_arrow_column_spec(field.type)) for field in schema]
+        columns = []
+        for field in schema:
+            column = make_column(field.name, **_arrow_column_spec(field.type))
+            info = _arrow_field_info(field)
+            if info:
+                column["info"] = info
+            columns.append(column)
+        return columns
     if hasattr(data, "columns") and not callable(data.columns):  # pandas
         names = [str(c) for c in data.columns]
     elif rows:

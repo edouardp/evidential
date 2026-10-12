@@ -459,7 +459,10 @@ flowchart TD
   chosen by contrast against the background.
 - **Sparkline** (`_renderSparkline`). Builds an inline SVG from an array in a
   cell: `[y, …]`, `[[x, y], …]`, or `ARRAY_AGG({'date': …, 'value': …})`
-  objects. Line/area/bar, optional zero baseline, tooltips via `<title>`.
+  objects. Line/area/bar, optional zero baseline, tooltips via `<title>`. The
+  SVG scales to the text size (`height: 1.25em`, width from the viewBox), so a
+  sparkline never grows the row; `sparkline_options.width`/`height` set the
+  viewBox (i.e. the aspect ratio).
 - **Delta** (`_renderDelta`). The value first with the ▲/▼ indicator after it
   (or `symbol_position="left"`), a good/bad class — green for an increase, red
   for a decrease, flipped by `down_is_good` — and a grey dash for a value inside

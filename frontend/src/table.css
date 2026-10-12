@@ -294,7 +294,6 @@
   background: var(--et-bg);
 }
 .et-td:first-child { padding-left: 0.25rem; }
-.et-td:has(.et-sparkline) { padding-bottom: 0.125rem; }
 .et-root.et-no-row-lines .et-td { border-bottom: none; }
 .et-row-shaded .et-td { background: var(--et-shading); }
 .et-row:hover .et-td { background: var(--et-hover); }
@@ -445,7 +444,15 @@
 .et-delta-chip.et-delta-neutral { background: color-mix(in srgb, var(--et-muted) 15%, transparent); }
 
 /* ----------------------------------------------------------- sparkline --- */
-.et-sparkline { display: inline-block; vertical-align: middle; overflow: visible; }
+/* Scale to the text (the row's natural height) so a sparkline never makes the
+   row taller; the viewBox keeps the aspect ratio, so width follows. */
+.et-sparkline {
+  display: inline-block;
+  vertical-align: middle;
+  overflow: visible;
+  height: 1.25em;
+  width: auto;
+}
 
 /* --------------------------------------------------------- color cell ----- */
 .et-color-cell { position: relative; }

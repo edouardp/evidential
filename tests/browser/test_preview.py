@@ -194,6 +194,31 @@ def test_header_styling(page, live_server):
     assert blank == "none", blank
 
 
+def test_sparklines_fit_the_row(page, live_server):
+    open_preview(page, live_server)
+    data = page.eval_on_selector(
+        "#raw tbody tr",
+        """row => {
+            const content = (td) => {
+                const s = getComputedStyle(td);
+                return td.clientHeight - parseFloat(s.paddingTop) - parseFloat(s.paddingBottom);
+            };
+            const cells = [...row.children];
+            const spark = cells.find((td) => td.querySelector('.et-sparkline'));
+            const plain = cells.find(
+                (td) => !td.querySelector('.et-sparkline') && !td.classList.contains('et-frozen')
+            );
+            return {
+                svg: spark.querySelector('svg.et-sparkline').getBoundingClientRect().height,
+                spark: content(spark),
+                plain: content(plain),
+            };
+        }""",
+    )
+    assert data["svg"] <= data["spark"] + 0.5, data  # the SVG fits the cell
+    assert data["spark"] <= data["plain"] + 0.5, data  # the cell is not taller than its peers
+
+
 def test_display_features(page, live_server):
     open_preview(page, live_server, "#features")
     page.wait_for_selector("#features tbody tr")

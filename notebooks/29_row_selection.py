@@ -197,7 +197,7 @@ def _(connection, detail, detail_sql, selected):
     # Update the same widget (do not recreate it): Marimo keeps it alive and
     # only the rows change.
     detail.widget.set_data(connection.sql(detail_sql, params={"code": selected or ""}))
-    detail.widget.update_options(
+    _ = detail.widget.update_options(
         title=f"{selected} — every year" if selected else "Country detail"
     )
     return

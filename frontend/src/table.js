@@ -466,7 +466,12 @@ export class EvidenceTableRenderer {
 
     this.scroller.replaceChildren();
     const footnotes = [];
-    if (!rows.length) {
+    const isEmpty = rows.length === 0;
+    // With columns configured, an empty table keeps its headers and shows blank
+    // placeholder rows under a translucent message overlay, so it holds its size
+    // while a filter or selection is pending. Without columns there is nothing
+    // to draw, so fall back to a plain message.
+    if (isEmpty && !columns.length) {
       this.scroller.append(
         h("div", { class: "et-empty" }, [h("span", {}, opts.empty_message || "No records")]),
       );
@@ -488,6 +493,9 @@ export class EvidenceTableRenderer {
           decimals,
           stats: opts.column_stats ? this._columnStats(columns, allRows) : null,
           selected: opts.select ? this.model.get("selected") : null,
+          isEmpty,
+          emptyRows: isEmpty ? this._emptyRowCount(opts) : 0,
+          emptyMessage: opts.empty_message || "No records",
         }),
       );
     }
@@ -626,16 +634,55 @@ export class EvidenceTableRenderer {
     this.toolbar.classList.toggle("et-toolbar-empty", !left.childElementCount && !right.childElementCount);
   }
 
+  /** How many blank rows an empty table shows, to hold its height. */
+  _emptyRowCount(opts) {
+    const configured = Number(opts.empty_rows);
+    if (Number.isFinite(configured) && configured > 0) return Math.min(Math.floor(configured), 200);
+    const pageSize = Number(this._effectivePageSize());
+    if (Number.isFinite(pageSize) && pageSize > 0) return Math.min(Math.floor(pageSize), 200);
+    return 10;
+  }
+
   _renderTable(columns, rows, ctx) {
     const opts = this.options;
     const table = h("table", { class: "et-table" });
     table.append(this._renderHeader(columns, ctx));
     const tbody = h("tbody");
     ctx.shadingCounter = { value: 0 };
-    if (ctx.stats) tbody.append(this._renderStatsRow(columns, ctx));
-    rows.forEach((row, index) => tbody.append(this._renderRow(row, columns, ctx, index)));
+    if (ctx.isEmpty) {
+      // A placeholder body: the message overlay is a `::after` on the tbody, so
+      // it covers the rows but not the header.
+      tbody.classList.add("et-empty-body");
+      tbody.dataset.emptyMessage = ctx.emptyMessage;
+      for (let i = 0; i < ctx.emptyRows; i++) {
+        tbody.append(this._renderPlaceholderRow(columns, ctx));
+      }
+    } else {
+      if (ctx.stats) tbody.append(this._renderStatsRow(columns, ctx));
+      rows.forEach((row, index) => tbody.append(this._renderRow(row, columns, ctx, index)));
+    }
     table.append(tbody);
     return table;
+  }
+
+  /** A blank row; its cells keep the column alignment and borders. */
+  _renderPlaceholderRow(columns, ctx) {
+    const opts = this.options;
+    const tr = h("tr", { class: "et-row et-row-placeholder" });
+    let first = null;
+    if (ctx.rowNumbers) {
+      first = h("td", { class: "et-td et-row-num" });
+      tr.append(first);
+    }
+    for (const col of columns) {
+      const td = h("td", { class: "et-td", style: withFigure(this._alignStyle(col), col, opts) });
+      if (!first) first = td;
+      tr.append(td);
+    }
+    if (opts.link) tr.append(h("td", { class: "et-td et-td-chevron" }));
+    // One non-breaking space gives the empty row the normal line height.
+    if (first) first.append(document.createTextNode("\u00a0"));
+    return tr;
   }
 
   /** Per-column summary over the full dataset: min/max/avg/null for numeric

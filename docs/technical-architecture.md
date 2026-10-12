@@ -519,6 +519,10 @@ alpha-3 country code).
   $R=2300$ms. A `pointerup`/`pointercancel`/`blur` listener on `window` stops it.
 - **CSV download** serialises the current (searched, sorted, visible) rows, not
   just the page.
+- **Empty state.** An empty table with columns still renders its header and
+  `empty_rows` (default: the effective page size) blank rows; the message is a
+  `tbody::after` overlay (30% surface) that covers the body but not the header
+  (ADR-033). A table with no columns falls back to a flat `.et-empty` block.
 - **Row selection** (`select="key_column"`). A row click sets the widget's synced
   `selected` trait and calls `model.save_changes()`; Marimo maps the comm update
   to a UI-element value change, so the cells that read `table.widget.selected`

@@ -10,9 +10,10 @@
 
 The country list sets ``select="country_code"``. Clicking a row stores that
 row's key in the widget's ``selected`` trait and saves the change, which Marimo
-treats as a cell dependency. A second cell reads ``table.widget.selected`` and a
-third queries the World Bank WDI bundle for that country — years as rows,
-indicators as columns.
+treats as a cell dependency. A second cell reads ``table.widget.selected`` and
+updates the **same** detail table with ``set_data``, so it never disappears: with
+no selection it shows its headers and blank placeholder rows under a translucent
+"click a country" overlay, and it fills in when a row is clicked.
 
 Point it at a WDI Parquet bundle with the ``WDI_PARQUET`` environment variable
 (default: ``~/Downloads/WDI_CSV_2026_10_01/parquet``).
@@ -65,23 +66,53 @@ def _(Path, duckdb, mo, os):
 
 
 @app.cell
+def _():
+    detail_sql = """
+        SELECT
+            year,
+            max(value) FILTER (WHERE indicator_code = 'NY.GDP.MKTP.CD')    AS "GDP (current US$)",
+            max(value) FILTER (WHERE indicator_code = 'NY.GDP.PCAP.CD')    AS "GDP per capita (US$)",
+            max(value) FILTER (WHERE indicator_code = 'SP.POP.TOTL')       AS "Population",
+            max(value) FILTER (WHERE indicator_code = 'SP.DYN.LE00.IN')    AS "Life expectancy",
+            max(value) FILTER (WHERE indicator_code = 'SP.URB.TOTL.IN.ZS') AS "Urban share (%)",
+            max(value) FILTER (WHERE indicator_code = 'FP.CPI.TOTL.ZG')    AS "Inflation (%)"
+        FROM observations
+        WHERE country_code = $code
+        GROUP BY year
+        ORDER BY year DESC
+    """
+    detail_config = {
+        "year": {"fmt": "yyyy", "align": "left"},
+        "GDP (current US$)": {"fmt": "usd"},
+        "GDP per capita (US$)": {"fmt": "usd"},
+        "Population": {"fmt": "num"},
+        "Life expectancy": {"fmt": "num1"},
+        "Urban share (%)": {"fmt": '0.0"%"'},
+        "Inflation (%)": {"fmt": '0.0"%"'},
+    }
+    return detail_config, detail_sql
+
+
+@app.cell
 def _(mo):
     mo.md("""
     # A table that drives the notebook
 
     The country list sets `select="country_code"`: clicking a row stores that
     row's key in the widget's **`selected`** trait and calls `save_changes()`.
-    Marimo sees the new value as a cell dependency, so the two cells below
-    re-run — a second table queries the World Bank data for the clicked country,
-    with **years as rows and indicators as columns**.
+    Marimo sees the new value as a cell dependency, so the cell below re-runs and
+    updates the second table.
 
     ```python
     table = mo.ui.anywidget(EvidenceTable(rows, select="country_code"))
     ...
-    selected = table.widget.selected   # re-runs when a row is clicked
+    selected = table.widget.selected          # "USA", or None
+    detail.widget.set_data(query(selected))   # the same table, new rows
     ```
 
-    Click a row (and click it again to clear).
+    The detail table exists from the start. With no selection it keeps its
+    **headers** and shows blank placeholder rows under a translucent message —
+    so nothing jumps when you click. Click a row (and click it again to clear).
     """)
     return
 
@@ -135,7 +166,7 @@ def _(countries):
 @app.cell
 def _(mo, selected):
     mo.md(
-        "### Click a country above to drill in."
+        "### No country selected yet."
         if not selected
         else f"### Selected country: **{selected}**"
     )
@@ -143,45 +174,32 @@ def _(mo, selected):
 
 
 @app.cell
-def _(EvidenceTable, connection, mo, selected):
-    mo.stop(not selected, mo.md("*No country selected yet.*"))
-
+def _(EvidenceTable, connection, detail_config, detail_sql, mo):
+    # Created once with an empty result: the headers and placeholder rows are
+    # already there, so the table never disappears (and its height holds).
     detail = mo.ui.anywidget(
         EvidenceTable(
-            connection.sql(
-                """
-                SELECT
-                    year,
-                    max(value) FILTER (WHERE indicator_code = 'NY.GDP.MKTP.CD')    AS "GDP (current US$)",
-                    max(value) FILTER (WHERE indicator_code = 'NY.GDP.PCAP.CD')    AS "GDP per capita (US$)",
-                    max(value) FILTER (WHERE indicator_code = 'SP.POP.TOTL')       AS "Population",
-                    max(value) FILTER (WHERE indicator_code = 'SP.DYN.LE00.IN')    AS "Life expectancy",
-                    max(value) FILTER (WHERE indicator_code = 'SP.URB.TOTL.IN.ZS') AS "Urban share (%)",
-                    max(value) FILTER (WHERE indicator_code = 'FP.CPI.TOTL.ZG')    AS "Inflation (%)"
-                FROM observations
-                WHERE country_code = $code
-                GROUP BY year
-                ORDER BY year DESC
-                """,
-                params={"code": selected},
-            ),
-            title=f"{selected} — every year",
+            connection.sql(detail_sql, params={"code": ""}),
+            title="Country detail",
             subtitle="Rows are years; columns are indicators",
+            empty_message="Click a country above to see its data",
             page_size=12,
             row_shading=True,
-            default_sort={"column": "year", "direction": "desc"},
-            column_config={
-                "year": {"fmt": "yyyy", "align": "left"},
-                "GDP (current US$)": {"fmt": "usd"},
-                "GDP per capita (US$)": {"fmt": "usd"},
-                "Population": {"fmt": "num"},
-                "Life expectancy": {"fmt": "num1"},
-                "Urban share (%)": {"fmt": '0.0"%"'},
-                "Inflation (%)": {"fmt": '0.0"%"'},
-            },
+            column_config=detail_config,
         )
     )
     detail
+    return (detail,)
+
+
+@app.cell
+def _(connection, detail, detail_sql, selected):
+    # Update the same widget (do not recreate it): Marimo keeps it alive and
+    # only the rows change.
+    detail.widget.set_data(connection.sql(detail_sql, params={"code": selected or ""}))
+    detail.widget.update_options(
+        title=f"{selected} — every year" if selected else "Country detail"
+    )
     return
 
 
@@ -194,12 +212,12 @@ def _(mo):
       pointer cursor; the clicked row is marked, and clicking it again clears it.
     - The value crosses to Python because the renderer calls
       `model.set("selected", ...)` **and** `model.save_changes()` — Marimo treats
-      the saved change as a UI-element value update and re-runs the cells that
-      read `table.widget.selected`.
-    - `EvidenceTable(..., select="country_code", selected="NZL")` preselects a
-      row.
-    - The country table is not re-created on click: only the cells that depend on
-      `selected` re-run.
+      the saved change as a UI-element value update.
+    - When the detail table has no rows it still draws its headers and
+      `page_size` blank rows, with the message on a translucent overlay over the
+      body only. Set `empty_rows` for a specific row count.
+    - `set_data` (not a rebuilt widget) keeps the table in place, so clicking
+      around does not flicker.
     """)
     return
 

@@ -286,6 +286,10 @@ footer with footnotes and source notes. `EvidenceTable` covers:
 - **Column statistics** — `column_stats=True` adds a summary block under each
   header (`min`/`max`/`avg`/`null` for numbers, `distinct`/`null` otherwise),
   formatted with the column's `fmt`. See `notebooks/25_column_stats.py`.
+- **Stable empty state** — an empty table keeps its headers and shows blank
+  placeholder rows (`page_size`, or `empty_rows`) under a translucent message
+  overlay that covers the body only, so a drill-down does not jump while its
+  data is pending. `empty_message` sets the text (default `No records`).
 - **Grouping with white space or stripes** — `group_gap=True` adds room around
   group boundaries, `section_row(...)` inserts full-width dividers, and
   `row_shading` accepts `True` (alternating), an integer for groups of *n*
@@ -539,7 +543,8 @@ See `notebooks/02_s3_tables.py` for a full example (it gracefully stops if
 `freeze_columns`, `wrap`, `wrap_titles`, `format_titles`, `show_total_row`,
 `total_label`, `total_position`, `subtotal_position`, `collapsible`,
 `collapsed`, `link`, `width`, `max_height`, `order_columns_by_group`, `theme`,
-`color_scale`, `row_numbers`, `column_stats`, `select`.
+`color_scale`, `row_numbers`, `column_stats`, `select`, `empty_message`,
+`empty_rows`.
 
 ## Architecture
 

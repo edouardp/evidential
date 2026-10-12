@@ -51,6 +51,7 @@ dated, immutable record of the decisions behind them.
 | [030](030-chip-visualisation.md) | Chip Visualisation | Accepted |
 | [031](031-column-highlights.md) | Column and Column-Group Highlights | Accepted |
 | [032](032-row-selection.md) | Row Selection Drives the Notebook | Accepted |
+| [033](033-stable-empty-table.md) | A Stable Empty Table (Placeholder Rows and an Overlay) | Accepted |
 
 ## Creating New ADRs
 

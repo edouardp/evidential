@@ -285,6 +285,7 @@ def test_new_table_options_round_trip() -> None:
         column_stats=True,
         compact=True,
         empty_message="Nothing here",
+        empty_rows=5,
         default_sort={"column": "a", "direction": "asc"},
         row_conditional_colors="tint",
         header_color="#eeeeee",
@@ -293,6 +294,7 @@ def test_new_table_options_round_trip() -> None:
     assert table.options["column_stats"] is True
     assert table.options["compact"] is True
     assert table.options["empty_message"] == "Nothing here"
+    assert table.options["empty_rows"] == 5
     assert table.options["default_sort"] == {"column": "a", "direction": "asc"}
     assert table.options["row_conditional_colors"] == "tint"
     assert table.options["header_color"] == "#eeeeee"

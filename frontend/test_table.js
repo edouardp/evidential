@@ -414,11 +414,30 @@ test("row numbers, compact density and empty message", () => {
   compact.destroy();
 
   const empty = new EvidenceTableRenderer(
-    makeModel([], COLUMNS, { empty_message: "Nothing here" }, el),
+    makeModel([], COLUMNS, { empty_message: "Nothing here", page_size: 4 }, el),
+    el,
+  );
+  // The headers stay and the body is blank rows under the message overlay.
+  assert.equal(el.querySelectorAll("thead th").length, COLUMNS.length);
+  assert.equal(el.querySelectorAll(".et-row-placeholder").length, 4);
+  assert.equal(el.querySelector(".et-empty-body").dataset.emptyMessage, "Nothing here");
+  empty.destroy();
+});
+
+test("empty_rows controls how many blank rows an empty table shows", () => {
+  const renderer = new EvidenceTableRenderer(makeModel([], COLUMNS, { empty_rows: 6 }, el), el);
+  assert.equal(el.querySelectorAll(".et-row-placeholder").length, 6);
+  renderer.destroy();
+});
+
+test("an empty table with no columns falls back to a plain message", () => {
+  const renderer = new EvidenceTableRenderer(
+    makeModel([], [], { empty_message: "Nothing here" }, el),
     el,
   );
   assert.equal(el.querySelector(".et-empty").textContent, "Nothing here");
-  empty.destroy();
+  assert.equal(el.querySelectorAll(".et-row-placeholder").length, 0);
+  renderer.destroy();
 });
 
 test("default_sort sorts on first render", () => {

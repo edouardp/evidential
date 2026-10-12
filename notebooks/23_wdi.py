@@ -285,8 +285,9 @@ def _(mo):
     ## All years in one sparkline
 
     The same **indicator** and **region** controls drive a second view: one row
-    per country, with every reported year packed into a sparkline — an
-    `ARRAY_AGG` of `{'year': …, 'value': …}` objects.
+    per country with every reported year packed into a sparkline — an
+    `ARRAY_AGG` of `{'year': …, 'value': …}` objects. `% change` compares the
+    **last 5 years** with the **previous 10** (averages, computed in SQL).
     """)
     return
 
@@ -297,26 +298,40 @@ def _(EvidenceTable, connection, indicator, mo, region):
         EvidenceTable(
             connection.sql(
                 """
+                WITH anchored AS (
+                    SELECT max(year) AS anchor
+                    FROM observations
+                    WHERE indicator_code = $indicator
+                )
                 SELECT
                     c."Short Name" AS country,
                     c.Region       AS region,
                     count(*)        AS years,
                     round(arg_max(o.value, o.year), 2) AS latest,
+                    (avg(o.value) FILTER (WHERE o.year BETWEEN a.anchor - 4 AND a.anchor)
+                     - avg(o.value) FILTER (WHERE o.year BETWEEN a.anchor - 14 AND a.anchor - 5))
+                      / nullif(avg(o.value) FILTER (
+                            WHERE o.year BETWEEN a.anchor - 14 AND a.anchor - 5), 0) AS pct_change,
+                    round(avg(o.value) FILTER (
+                        WHERE o.year BETWEEN a.anchor - 4 AND a.anchor), 2) AS avg_last_5,
+                    round(avg(o.value) FILTER (
+                        WHERE o.year BETWEEN a.anchor - 14 AND a.anchor - 5), 2) AS avg_prev_10,
                     array_agg(
                         {'year': o.year, 'value': round(o.value, 2)}
                         ORDER BY o.year
                     ) AS trend
                 FROM observations o
                 JOIN country c ON c."Country Code" = o.country_code
-                WHERE o.indicator_code = ?
+                CROSS JOIN anchored a
+                WHERE o.indicator_code = $indicator
                   AND c.Region IS NOT NULL
-                  AND (? = 'All regions' OR c.Region = ?)
-                GROUP BY 1, 2
-                ORDER BY c."Short Name"
+                  AND ($region = 'All regions' OR c.Region = $region)
+                GROUP BY 1, 2, a.anchor
+                ORDER BY pct_change DESC NULLS LAST
                 """,
-                params=[indicator.value, region.value, region.value],
+                params={"indicator": indicator.value, "region": region.value},
             ),
-            title="Every reported year in one sparkline",
+            title="Last 5 years vs the previous 10, with every year in a sparkline",
             search=True,
             page_size=12,
             row_shading=True,
@@ -325,6 +340,14 @@ def _(EvidenceTable, connection, indicator, mo, region):
                 "region": {"align": "left"},
                 "years": {"fmt": "num0", "align": "right"},
                 "latest": {"fmt": "num", "align": "right"},
+                "pct_change": {
+                    "title": "% change (5y vs 10y)",
+                    "fmt": "pct1",
+                    "viz": "delta",
+                    "align": "right",
+                },
+                "avg_last_5": {"title": "Last 5y avg", "fmt": "num2", "align": "right"},
+                "avg_prev_10": {"title": "Prev 10y avg", "fmt": "num2", "align": "right"},
                 "trend": {
                     "title": "All years",
                     "viz": "sparkline",

@@ -5,7 +5,7 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 PORT="${PORT:-8765}"
 HOST="${HOST:-127.0.0.1}"
-OUT="${OUT:-/tmp/evidence_preview.png}"
+OUT="${OUT:-/tmp/evidential_preview.png}"
 
 find_browser() {
   for candidate in \

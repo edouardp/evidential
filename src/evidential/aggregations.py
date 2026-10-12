@@ -129,7 +129,7 @@ def apply_aggregations(
     """Recompute subtotal/total cells from the detail rows.
 
     ``rows`` must be the decorated, display-ordered rows produced by
-    :func:`~evidence_tables.grouped.decorate_grouped_rows` (detail rows have
+    :func:`~evidential.grouped.decorate_grouped_rows` (detail rows have
     ``render_type == "cell_data"`` and ``__ancestors``).
     """
     resolved = _expand(aggregations, measure_aliases)

@@ -2,7 +2,7 @@
 # requires-python = ">=3.12"
 # dependencies = [
 #     "marimo",
-#     "evidence-tables",
+#     "evidential",
 # ]
 # ///
 """Great Tables-inspired ideas: column merging, substitutions, special formatters.
@@ -21,8 +21,8 @@ app = marimo.App(width="full")
 def _():
     import marimo as mo
 
-    from evidence_tables import (
-        EvidenceTable,
+    from evidential import (
+        EvidentialTable,
         cols_merge_n_pct,
         cols_merge_range,
         cols_merge_uncert,
@@ -34,7 +34,7 @@ def _():
     )
 
     return (
-        EvidenceTable,
+        EvidentialTable,
         cols_merge_n_pct,
         cols_merge_range,
         cols_merge_uncert,
@@ -75,7 +75,7 @@ def _():
 
 @app.cell
 def _(
-    EvidenceTable,
+    EvidentialTable,
     cols_merge_n_pct,
     cols_merge_range,
     cols_merge_uncert,
@@ -83,7 +83,7 @@ def _(
     mo,
 ):
     merged = mo.ui.anywidget(
-        EvidenceTable(
+        EvidentialTable(
             measurements,
             title="Column merging & special formatters",
             all_caps=True,
@@ -138,7 +138,7 @@ def _():
 
 @app.cell
 def _(
-    EvidenceTable,
+    EvidentialTable,
     mo,
     readings,
     sub_large_vals,
@@ -147,7 +147,7 @@ def _(
     sub_zero,
 ):
     substituted = mo.ui.anywidget(
-        EvidenceTable(
+        EvidentialTable(
             readings,
             title="Substitutions",
             footnote_marks="letters",

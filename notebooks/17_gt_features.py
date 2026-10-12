@@ -2,7 +2,7 @@
 # requires-python = ">=3.12"
 # dependencies = [
 #     "marimo",
-#     "evidence-tables",
+#     "evidential",
 # ]
 # ///
 """gt-inspired features: nested spanners, a stub, markdown titles, and
@@ -18,15 +18,15 @@ app = marimo.App(width="full")
 def _():
     import marimo as mo
 
-    from evidence_tables import (
-        EvidenceTable,
+    from evidential import (
+        EvidentialTable,
         cells_body,
         tab_format,
         tab_style,
         text_transform,
     )
 
-    return EvidenceTable, cells_body, mo, tab_format, tab_style, text_transform
+    return EvidentialTable, cells_body, mo, tab_format, tab_style, text_transform
 
 
 @app.cell
@@ -64,9 +64,9 @@ def _():
 
 
 @app.cell
-def _(EvidenceTable, cells_body, mo, rows, tab_format, tab_style, text_transform, columns):
+def _(EvidentialTable, cells_body, mo, rows, tab_format, tab_style, text_transform, columns):
     mo.ui.anywidget(
-        EvidenceTable(
+        EvidentialTable(
             rows,
             columns=columns,
             title="**Annual** performance",

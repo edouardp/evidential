@@ -4,7 +4,7 @@
 #     "marimo",
 #     "duckdb>=1.3",
 #     "boto3>=1.35",
-#     "evidence-tables",
+#     "evidential",
 # ]
 # ///
 
@@ -20,9 +20,9 @@ def _():
 
     import marimo as mo
 
-    from evidence_tables import EvidenceTable, duck, grouped_table
+    from evidential import EvidentialTable, duck, grouped_table
 
-    return EvidenceTable, duck, grouped_table, mo, os
+    return EvidentialTable, duck, grouped_table, mo, os
 
 
 @app.cell
@@ -31,7 +31,7 @@ def _(mo):
     # Amazon S3 Tables + Evidence-style grouped tables
 
     DuckDB's `iceberg` extension speaks the Iceberg REST protocol, and
-    S3 Tables exposes a REST endpoint. `evidence_tables.duck.connect_s3_tables()`
+    S3 Tables exposes a REST endpoint. `evidential.duck.connect_s3_tables()`
     builds an S3 secret from your ambient AWS credentials and `ATTACH`es the
     table bucket, so you can query it with plain SQL.
 
@@ -104,9 +104,9 @@ def _(connection, mo):
 
 
 @app.cell
-def _(EvidenceTable, mo, monthly):
+def _(EvidentialTable, mo, monthly):
     mo.ui.anywidget(
-        EvidenceTable(
+        EvidentialTable(
             monthly,
             title="Yellow taxi — daily totals",
             search=True,

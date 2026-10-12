@@ -12,7 +12,7 @@ pytestmark = pytest.mark.browser
 
 def open_preview(page, live_server, fragment=""):
     page.goto(f"{live_server}/frontend/preview.html{fragment}", wait_until="networkidle")
-    page.wait_for_selector(".evidence-tables-widget .et-table")
+    page.wait_for_selector(".evidential-widget .et-table")
 
 
 def cell_text(page, scope, row, column):

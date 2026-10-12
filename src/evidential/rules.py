@@ -2,7 +2,7 @@
 
 gt's defining idea is that style/format/transform functions all take a
 ``locations`` argument and target a set of cells. This module brings that to
-:class:`~evidence_tables.EvidenceTable`::
+:class:`~evidential.EvidentialTable`::
 
     rules=[
         tab_style(cells_body(columns=["Intel"], rows=lambda r: r["Processors"] == 1),

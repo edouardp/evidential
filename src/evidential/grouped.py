@@ -14,7 +14,7 @@ from typing import Any
 
 from .aggregations import apply_aggregations
 from .data import jsonify
-from .table import EvidenceTable
+from .table import EvidentialTable
 
 __all__ = ["grouped_table", "simple_table", "decorate_grouped_rows"]
 
@@ -133,8 +133,8 @@ def grouped_table(
     dimension_config: Mapping[str, Mapping[str, Any]] | None = None,
     measure_config: Mapping[str, Mapping[str, Any]] | None = None,
     **table_options: Any,
-) -> EvidenceTable:
-    """Run a grouped query and return an :class:`EvidenceTable`.
+) -> EvidentialTable:
+    """Run a grouped query and return an :class:`EvidentialTable`.
 
     ``sql`` is the base relation (any ``SELECT``), ``dimensions`` are grouping
     columns, and ``measures`` are aggregate expressions such as
@@ -231,9 +231,9 @@ def grouped_table(
         table_options["collapsible"] = False
     if table_options.get("subtotal_position") is None:
         table_options["subtotal_position"] = subtotal_position
-    return EvidenceTable(rows=ordered, columns=columns, **table_options)
+    return EvidentialTable(rows=ordered, columns=columns, **table_options)
 
 
-def simple_table(connection: Any, sql: str, **table_options: Any) -> EvidenceTable:
+def simple_table(connection: Any, sql: str, **table_options: Any) -> EvidentialTable:
     """Run ``sql`` on a DuckDB connection and wrap the arrow result."""
-    return EvidenceTable(connection.sql(sql), **table_options)
+    return EvidentialTable(connection.sql(sql), **table_options)

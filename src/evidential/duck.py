@@ -38,7 +38,7 @@ def configure_s3(
     *,
     region: str | None = None,
     profile: str | None = None,
-    secret_name: str = "evidence_s3",
+    secret_name: str = "evidential_s3",
 ) -> None:
     """Create a DuckDB S3 secret from the ambient AWS credentials.
 
@@ -131,11 +131,11 @@ def column_comments(connection: Any, table: str) -> dict[str, str]:
     DuckDB stores ``COMMENT ON COLUMN`` metadata but exposes it only through
     ``duckdb_columns()``; it does not travel with query results or the Arrow
     schema. A table or view relation is read automatically (see
-    ``EvidenceTable(con.table("t"))``); for a raw ``con.sql(...)`` result, merge
+    ``EvidentialTable(con.table("t"))``); for a raw ``con.sql(...)`` result, merge
     this into ``column_config``::
 
         comments = {name: {"info": text} for name, text in column_comments(con, "trips").items()}
-        EvidenceTable(con.sql("SELECT * FROM trips LIMIT 500"), column_config=comments)
+        EvidentialTable(con.sql("SELECT * FROM trips LIMIT 500"), column_config=comments)
 
     ``table`` may be ``schema.table`` to disambiguate across schemas.
     """

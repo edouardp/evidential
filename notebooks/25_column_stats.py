@@ -2,7 +2,7 @@
 # requires-python = ">=3.12"
 # dependencies = [
 #     "marimo",
-#     "evidence-tables",
+#     "evidential",
 # ]
 # ///
 """Optional column statistics under the header.
@@ -36,9 +36,9 @@ def _():
 
     import marimo as mo
 
-    from evidence_tables import EvidenceTable
+    from evidential import EvidentialTable
 
-    return EvidenceTable, dt, mo
+    return EvidentialTable, dt, mo
 
 
 @app.cell
@@ -74,9 +74,9 @@ def _(dt):
 
 
 @app.cell
-def _(EvidenceTable, mo, records):
+def _(EvidentialTable, mo, records):
     table = mo.ui.anywidget(
-        EvidenceTable(
+        EvidentialTable(
             records,
             title="Trips by city",
             column_stats=True,

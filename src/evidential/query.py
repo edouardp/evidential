@@ -12,7 +12,7 @@ import re
 from collections.abc import Mapping
 from typing import Any
 
-from .table import EvidenceTable
+from .table import EvidentialTable
 
 __all__ = ["query_table", "date_range_sql"]
 
@@ -106,7 +106,7 @@ def query_table(
     date_range: str | Mapping[str, Any] | None = None,
     date_column: str | None = None,
     **table_options: Any,
-) -> EvidenceTable:
+) -> EvidentialTable:
     """Wrap ``sql`` with optional ``WHERE`` / ``QUALIFY`` / ``ORDER`` / ``LIMIT``.
 
     ``date_range`` (a preset string, or ``{"range": ..., "date": ...}``) adds a
@@ -142,4 +142,4 @@ def query_table(
     query = "SELECT * FROM (\n" + sql + "\n) AS __base"
     if clauses:
         query += "\n" + "\n".join(clauses)
-    return EvidenceTable(connection.sql(query), **table_options)
+    return EvidentialTable(connection.sql(query), **table_options)

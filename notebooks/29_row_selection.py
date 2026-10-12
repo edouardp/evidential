@@ -3,7 +3,7 @@
 # dependencies = [
 #     "marimo",
 #     "duckdb>=1.3",
-#     "evidence-tables",
+#     "evidential",
 # ]
 # ///
 """Click a country in one table to drill into a second table.
@@ -33,9 +33,9 @@ def _():
     import duckdb
     import marimo as mo
 
-    from evidence_tables import EvidenceTable
+    from evidential import EvidentialTable
 
-    return EvidenceTable, Path, duckdb, mo, os
+    return EvidentialTable, Path, duckdb, mo, os
 
 
 @app.cell
@@ -104,7 +104,7 @@ def _(mo):
     updates the second table.
 
     ```python
-    table = mo.ui.anywidget(EvidenceTable(rows, select="country_code"))
+    table = mo.ui.anywidget(EvidentialTable(rows, select="country_code"))
     ...
     selected = table.widget.selected          # "USA", or None
     detail.widget.set_data(query(selected))   # the same table, new rows
@@ -118,9 +118,9 @@ def _(mo):
 
 
 @app.cell
-def _(EvidenceTable, connection, mo):
+def _(EvidentialTable, connection, mo):
     countries = mo.ui.anywidget(
-        EvidenceTable(
+        EvidentialTable(
             connection.sql(
                 """
                 SELECT
@@ -174,11 +174,11 @@ def _(mo, selected):
 
 
 @app.cell
-def _(EvidenceTable, connection, detail_config, detail_sql, mo):
+def _(EvidentialTable, connection, detail_config, detail_sql, mo):
     # Created once with an empty result: the headers and placeholder rows are
     # already there, so the table never disappears (and its height holds).
     detail = mo.ui.anywidget(
-        EvidenceTable(
+        EvidentialTable(
             connection.sql(detail_sql, params={"code": ""}),
             title="Country detail",
             subtitle="Rows are years; columns are indicators",

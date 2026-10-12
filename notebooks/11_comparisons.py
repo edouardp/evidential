@@ -3,7 +3,7 @@
 # dependencies = [
 #     "marimo",
 #     "duckdb>=1.3",
-#     "evidence-tables",
+#     "evidential",
 # ]
 # ///
 """Prior-period comparisons (`comparison_table`) and delta formatting."""
@@ -21,7 +21,7 @@ def _():
     import marimo as mo
     import duckdb
 
-    from evidence_tables import comparison_table
+    from evidential import comparison_table
 
     return Path, comparison_table, duckdb, mo
 

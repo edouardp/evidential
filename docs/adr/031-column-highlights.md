@@ -46,5 +46,5 @@ does not tint the spanner (matching the "projection column" look).
 ## More Information
 
 - `frontend/src/table.js` (`_renderHeader`, `_renderRow`)
-- `src/evidence_tables/table.py` (`_resolve_column_groups`)
+- `src/evidential/table.py` (`_resolve_column_groups`)
 - `notebooks/28_column_highlights.py`

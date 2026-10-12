@@ -1,4 +1,4 @@
-# marimo-evidence-tables
+# evidential
 
 Evidence.dev-style interactive data tables for [Marimo](https://marimo.io),
 packaged as an [anywidget](https://anywidget.dev) and powered by
@@ -28,7 +28,7 @@ notebook can serve a live dashboard, a report and a slide deck.
   view, with runtime guidance and troubleshooting.
 - [Architectural Decision Records](docs/adr/README.md) — the decisions behind it.
 
-![EvidenceTable renderer preview](docs/preview.png)
+![EvidentialTable renderer preview](docs/preview.png)
 
 Hover the table to reveal the **Download** and expand (⛶) actions at the bottom
 right, and click expand to fill the browser viewport. The expanded dialog
@@ -37,7 +37,7 @@ restoring your configured `page_size` on exit). It uses an opaque `Canvas`
 surface (so it follows light/dark mode) over a dimmed backdrop, and can be
 themed with `theme={"surface": "#0b1220"}`.
 
-![EvidenceTable fullscreen](docs/fullscreen.png)
+![EvidentialTable fullscreen](docs/fullscreen.png)
 
 ## Features
 
@@ -55,7 +55,7 @@ themed with `theme={"surface": "#0b1220"}`.
   "cash"]}` wraps columns under shared headers and clusters them together.
   A dotted column name groups itself: `"GDP Measure.GDP nominal"` renders under
   **GDP Measure**.
-- **Live tables** — `LiveEvidenceTable` re-runs a parameterised query when its
+- **Live tables** — `LiveEvidentialTable` re-runs a parameterised query when its
   controls change, preserving sort/search/page state.
 - **Interaction** — 3-state column sorting, search, pagination (press and hold
   the prev/next buttons: after 700ms it pages every 700ms, easing to every
@@ -84,11 +84,11 @@ make frontend-build      # bundle table.js / table.css into the package
 To use it from another project, add the local path:
 
 ```bash
-uv add evidence-tables --path /path/to/marimo-evidence-tables
+uv add evidential --path /path/to/evidential
 ```
 
-Optional extras: `evidence-tables[duckdb]` (DuckDB, Arrow, pandas),
-`evidence-tables[marimo]`, and `evidence-tables[studio]` (marimo Studio). The
+Optional extras: `evidential[duckdb]` (DuckDB, Arrow, pandas),
+`evidential[marimo]`, and `evidential[studio]` (marimo Studio). The
 repository uses [`uv`](https://docs.astral.sh/uv/); `make` with no arguments
 lists every available target.
 
@@ -96,7 +96,7 @@ lists every available target.
 
 ```python
 import duckdb
-from evidence_tables import EvidenceTable
+from evidential import EvidentialTable
 
 con = duckdb.connect()
 con.execute("INSTALL httpfs; LOAD httpfs;")
@@ -108,7 +108,7 @@ con.execute(
     """
 )
 
-EvidenceTable(
+EvidentialTable(
     con.sql("SELECT * FROM trips LIMIT 5000"),
     title="Recent yellow taxi trips",
     search=True,
@@ -129,7 +129,7 @@ EvidenceTable(
 ```
 
 In Marimo, display the widget directly or wrap it with
-`mo.ui.anywidget(EvidenceTable(...))` when you want to read state back.
+`mo.ui.anywidget(EvidentialTable(...))` when you want to read state back.
 
 ### Inferred defaults
 
@@ -160,16 +160,16 @@ raw `con.sql(...)` result becomes an unnamed relation that no longer knows its
 source, so pass `duck.column_comments` explicitly:
 
 ```python
-from evidence_tables import EvidenceTable, duck
+from evidential import EvidentialTable, duck
 
 comments = {name: {"info": text} for name, text in duck.column_comments(con, "trips").items()}
-EvidenceTable(con.sql("SELECT * FROM trips LIMIT 500"), column_config=comments)
+EvidentialTable(con.sql("SELECT * FROM trips LIMIT 500"), column_config=comments)
 ```
 
 **Arrow field metadata** works the same way, and is how a column description
 survives **Parquet** and **Feather**: PyArrow writes the Arrow schema (including
 field metadata) into the file's `ARROW:schema` key-value entry, so
-`EvidenceTable(pq.read_table("orders.parquet"))` shows a `comment` /
+`EvidentialTable(pq.read_table("orders.parquet"))` shows a `comment` /
 `description` / `info` field metadata value as the header description. Parquet
 itself has no standard per-column comment field: descriptions ride along in the
 Arrow schema, file-level key/value metadata is available via
@@ -184,7 +184,7 @@ You can also set one directly:
 group by, and aggregate expressions:
 
 ```python
-from evidence_tables import grouped_table
+from evidential import grouped_table
 
 grouped_table(
     con,
@@ -208,7 +208,7 @@ grouped_table(
 ```
 
 Measures may be strings (`"sum(x) AS total"`), `(alias, expression)` tuples, or
-`{alias: expression}` mappings. The resulting table is a normal `EvidenceTable`
+`{alias: expression}` mappings. The resulting table is a normal `EvidentialTable`
 with `render_type` (`cell_data` / `row_subtotal` / `row_total`) and grouping
 metadata on each row.
 
@@ -220,7 +220,7 @@ names or any Python callable:
 
 ```python
 import statistics
-from evidence_tables import grouped_table, BUILTIN_AGGREGATIONS
+from evidential import grouped_table, BUILTIN_AGGREGATIONS
 
 grouped_table(con, sql, ["category", "item"], ["sum(sales) AS sales"],
               aggregations={"sales": "mean"})        # sum, mean, median, min,
@@ -242,7 +242,7 @@ For rows already in Python (a list of dicts, a DataFrame, …), `grouped_records
 does the same grouping without a database — Evidence's legacy `groupBy`:
 
 ```python
-from evidence_tables import grouped_records
+from evidential import grouped_records
 
 grouped_records(sales, group_by=["region", "category"],
                 measures=["sales", "orders"], aggregations={"sales": "mean"},
@@ -255,7 +255,7 @@ See `notebooks/15_client_grouping.py`.
 
 A display table is more than its data — gt calls the surrounding pieces the
 *table parts*: a header, row labels, column labels/spanners, the body, and a
-footer with footnotes and source notes. `EvidenceTable` covers:
+footer with footnotes and source notes. `EvidentialTable` covers:
 
 - **Section dividers** — put `section_row("Label")` anywhere in `rows` for a
   full-width divider row.
@@ -309,9 +309,9 @@ indices or a Python predicate on the row. Rules run in order; the last match
 wins.
 
 ```python
-from evidence_tables import EvidenceTable, cells_body, tab_style, tab_format, text_transform
+from evidential import EvidentialTable, cells_body, tab_style, tab_format, text_transform
 
-EvidenceTable(
+EvidentialTable(
     data,
     rules=[
         tab_style(
@@ -344,7 +344,7 @@ See `notebooks/18_great_tables.py`.
 
 ## Live, parameterised tables
 
-`LiveEvidenceTable` keeps a parameterised query and re-runs it when its
+`LiveEvidentialTable` keeps a parameterised query and re-runs it when its
 controls change, without recreating the widget — so sort, search and page state
 survive. In Marimo, keep the widget persistent and let a reactive cell drive it:
 
@@ -354,7 +354,7 @@ min_fare = mo.ui.slider(0, 80, value=10, label="Minimum fare")
 min_fare
 
 # persistent widget (created once; no control references)
-live = LiveEvidenceTable(
+live = LiveEvidentialTable(
     con,
     "SELECT * FROM trips WHERE fare_amount >= {min_fare}",
     auto_run=False,
@@ -401,10 +401,10 @@ if refresh.value is not None:
 [marimo Studio](https://marimo.io/blog/introducing-marimo-studio) gives one
 notebook named views — a dashboard, article, slide deck or PDF — each its own
 frontend project. A view does not copy your code: it **projects** the notebook's
-cells, outputs and values by name, so the same `EvidenceTable`, controls and
+cells, outputs and values by name, so the same `EvidentialTable`, controls and
 KPIs can back several views and stay in sync with the notebook.
 
-![The demo dashboard view: a live EvidenceTable, KPIs and a filter](docs/img/studio-view.png)
+![The demo dashboard view: a live EvidentialTable, KPIs and a filter](docs/img/studio-view.png)
 
 ### Reuse notebook components in a view
 
@@ -413,8 +413,8 @@ KPIs can back several views and stay in sync with the notebook.
 
    ```python
    @app.cell
-   def revenue_table(EvidenceTable, filtered):        # target: "revenue_table"
-       EvidenceTable(filtered, title="Revenue by city", column_config={...})
+   def revenue_table(EvidentialTable, filtered):        # target: "revenue_table"
+       EvidentialTable(filtered, title="Revenue by city", column_config={...})
    ```
 
    ```python
@@ -435,7 +435,7 @@ KPIs can back several views and stay in sync with the notebook.
 3. **Project the components by name** from the view's `index.html`:
 
    ```html
-   <marimo-cell name="revenue_table"></marimo-cell>   <!-- live EvidenceTable -->
+   <marimo-cell name="revenue_table"></marimo-cell>   <!-- live EvidentialTable -->
    <marimo-cell name="region_filter"></marimo-cell>   <!-- native marimo control -->
    <strong mo-value="kpis.revenue"></strong>          <!-- one value, as data -->
    ```
@@ -451,7 +451,7 @@ component can be projected into any number of views, and changing a control in
 one view re-runs the notebook and updates every dependent result.
 
 **Reuse the widget, or reuse the data.** Project the cell (above) to reuse the
-live `EvidenceTable` with all its interaction. Project `mo-value="filtered"` to
+live `EvidentialTable` with all its interaction. Project `mo-value="filtered"` to
 reuse only the rows and draw them in the view's own markup — the pattern the
 demo's `report` view uses, which also works in a static (Prepared) export. The
 [demo](notebooks/21_studio_dashboard.py) ships both.
@@ -469,17 +469,17 @@ make studio-validate     # validates every committed view against the notebook
 
 Because the table is interactive, the views use Studio's **Server** runtime. A
 static (`Prepared`) or browser (`wasm`) export additionally needs
-`evidence-tables` on PyPI. See [docs/marimo-studio.md](docs/marimo-studio.md)
+`evidential` on PyPI. See [docs/marimo-studio.md](docs/marimo-studio.md)
 for the full recipes, runtime guidance, projection size limits and
 troubleshooting.
 
 ## Amazon S3 Tables
 
-`evidence_tables.duck` can attach an S3 Tables Iceberg catalog to DuckDB using
+`evidential.duck` can attach an S3 Tables Iceberg catalog to DuckDB using
 your ambient AWS credentials:
 
 ```python
-from evidence_tables import duck
+from evidential import duck
 
 con = duck.connect_s3_tables(table_bucket_arn="arn:aws:s3tables:...:bucket/...")
 con.sql("SELECT * FROM s3tables.taxi.yellow_trips LIMIT 100")
@@ -490,7 +490,7 @@ See `notebooks/02_s3_tables.py` for a full example (it gracefully stops if
 
 ## API
 
-### `EvidenceTable(data=..., *, columns=None, column_config=None, column_groups=None, **options)`
+### `EvidentialTable(data=..., *, columns=None, column_config=None, column_groups=None, **options)`
 
 - `data`: records, Arrow table, pandas DataFrame, or DuckDB relation.
 - `columns`: optional list of column definitions (dicts or names).
@@ -561,12 +561,12 @@ Three reference documents go with the code:
 
 The widget has two halves:
 
-- **Python** (`src/evidence_tables/`) normalises data into JSON-serialisable
+- **Python** (`src/evidential/`) normalises data into JSON-serialisable
   `rows`, `columns` and `options` traitlets. `data.py` handles type inference
   and Arrow/Decimal/date conversion; `grouped.py` builds the `GROUPING SETS`
   SQL and the row metadata; `duck.py` manages DuckDB connections, S3
   credentials and the S3 Tables catalog.
-- **JavaScript** (`frontend/src/`, bundled to `src/evidence_tables/static/`)
+- **JavaScript** (`frontend/src/`, bundled to `src/evidential/static/`)
   is a dependency-light vanilla renderer. `format.js` ports Evidence's
   `formatValue` (on `ssf`), `color.js` ports its chroma-based colour scales,
   and `table.js` owns rendering, sorting, search, grouping, frozen columns,

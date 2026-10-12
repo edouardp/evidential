@@ -62,5 +62,5 @@ from the first values, including whether a numeric column is wholly integral.
 ## More Information
 
 - [Technical architecture §4.2](../technical-architecture.md)
-- `src/evidence_tables/data.py` (`_arrow_column_spec`, `_python_column_spec`)
+- `src/evidential/data.py` (`_arrow_column_spec`, `_python_column_spec`)
 - Related: [ADR-007](007-ssf-format-codes.md)

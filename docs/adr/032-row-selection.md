@@ -39,7 +39,7 @@ the cells that depend on it. The only missing piece was that
 `model.set(key, value)` alone does not send the update — the Jupyter widgets
 protocol needs `model.save_changes()`. So the renderer, when the column named by
 `select` exists, marks the row clickable, sets `selected` to that row's key and
-saves it. Clicking the selected row clears it; `EvidenceTable(..., selected=...)`
+saves it. Clicking the selected row clears it; `EvidentialTable(..., selected=...)`
 preselects.
 
 Option 2 was rejected as more machinery for the same result. Option 3 was
@@ -62,7 +62,7 @@ rejected: polling is slower and re-runs cells that did not change.
 
 ## More Information
 
-- `frontend/src/table.js` (`_renderRow`, `render`), `src/evidence_tables/table.py`
+- `frontend/src/table.js` (`_renderRow`, `render`), `src/evidential/table.py`
   (`selected`)
 - [Technical architecture §6.5](../technical-architecture.md)
 - `notebooks/29_row_selection.py`

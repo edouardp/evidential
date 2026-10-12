@@ -5,12 +5,12 @@ from decimal import Decimal
 
 import pytest
 
-from evidence_tables import EvidenceTable, make_column
-from evidence_tables.duck import connect
+from evidential import EvidentialTable, make_column
+from evidential.duck import connect
 
 
 def test_from_records_infers_columns() -> None:
-    table = EvidenceTable(
+    table = EvidentialTable(
         [
             {"city": "NYC", "trips": 120, "revenue": 4200.5, "when": dt.date(2024, 1, 1)},
             {"city": "LA", "trips": 90, "revenue": 3100.0, "when": dt.date(2024, 1, 2)},
@@ -37,7 +37,7 @@ def test_arrow_types_drive_default_format_and_alignment() -> None:
             "meta": pa.array([{"a": 1}, {"a": 2}, {"a": 3}], pa.struct([("a", pa.int32())])),
         }
     )
-    columns = {column["name"]: column for column in EvidenceTable(arrow).columns}
+    columns = {column["name"]: column for column in EvidentialTable(arrow).columns}
 
     assert (columns["count"]["type"], columns["count"]["fmt"], columns["count"]["align"]) == (
         "number",
@@ -58,7 +58,7 @@ def test_duckdb_result_types_default_formatting() -> None:
     import duckdb
 
     relation = duckdb.connect().sql("SELECT 1::INTEGER AS n, 2.5::DOUBLE AS x, 'a' AS s, DATE '2024-01-01' AS d")
-    columns = {column["name"]: column for column in EvidenceTable(relation).columns}
+    columns = {column["name"]: column for column in EvidentialTable(relation).columns}
     assert columns["n"]["fmt"] == "num0"  # integers are whole numbers
     assert columns["n"]["align"] == "right"
     assert columns["x"].get("fmt") is None  # floats keep auto-scaling
@@ -69,7 +69,7 @@ def test_duckdb_result_types_default_formatting() -> None:
 def test_duckdb_column_comments_become_header_info() -> None:
     import duckdb
 
-    from evidence_tables import duck
+    from evidential import duck
 
     con = duckdb.connect()
     con.execute("CREATE TABLE t (a INTEGER, b VARCHAR)")
@@ -77,19 +77,19 @@ def test_duckdb_column_comments_become_header_info() -> None:
 
     # A table/view relation knows its name, so comments are read automatically,
     # including after .limit()/.filter()/.select().
-    columns = {column["name"]: column for column in EvidenceTable(con.table("t")).columns}
+    columns = {column["name"]: column for column in EvidentialTable(con.table("t")).columns}
     assert columns["a"]["info"] == "The a value"
     assert "info" not in columns["b"]
-    assert EvidenceTable(con.table("t").limit(5)).columns[0]["info"] == "The a value"
+    assert EvidentialTable(con.table("t").limit(5)).columns[0]["info"] == "The a value"
 
     # Raw SQL becomes an unnamed relation; the helper is the explicit path.
     assert duck.column_comments(con, "t") == {"a": "The a value"}
-    raw = {column["name"]: column for column in EvidenceTable(con.sql("SELECT a, b FROM t")).columns}
+    raw = {column["name"]: column for column in EvidentialTable(con.sql("SELECT a, b FROM t")).columns}
     assert "info" not in raw["a"]
 
 
 def test_column_config_accepts_comment_and_description() -> None:
-    table = EvidenceTable(
+    table = EvidentialTable(
         [{"a": 1, "b": 2}],
         column_config={
             "a": {"comment": "The a value"},
@@ -108,12 +108,12 @@ def test_column_config_comment_overrides_an_inferred_description() -> None:
     con = duckdb.connect()
     con.execute("CREATE TABLE t (a INTEGER)")
     con.execute("COMMENT ON COLUMN t.a IS 'Inferred from the database'")
-    table = EvidenceTable(con.table("t"), column_config={"a": {"comment": "Overridden"}})
+    table = EvidentialTable(con.table("t"), column_config={"a": {"comment": "Overridden"}})
     assert table.columns[0]["info"] == "Overridden"
 
 
 def test_delta_options_accept_top_level_config() -> None:
-    table = EvidenceTable(
+    table = EvidentialTable(
         [{"change": 0.05}],
         column_config={"change": {"viz": "delta", "neutral_range": "-0.1:0.1", "down_is_good": True}},
     )
@@ -124,9 +124,9 @@ def test_delta_options_accept_top_level_config() -> None:
 
 
 def test_column_sort_by_accepts_alias() -> None:
-    table = EvidenceTable([{"a": 1, "b": 2}], column_config={"a": {"sort_by": "b"}})
+    table = EvidentialTable([{"a": 1, "b": 2}], column_config={"a": {"sort_by": "b"}})
     assert table.columns[0]["sort_by"] == "b"
-    table2 = EvidenceTable([{"a": 1, "b": 2}], column_config={"a": {"sortBy": "b"}})
+    table2 = EvidentialTable([{"a": 1, "b": 2}], column_config={"a": {"sortBy": "b"}})
     assert table2.columns[0]["sort_by"] == "b"
 
 
@@ -140,7 +140,7 @@ def test_arrow_field_metadata_becomes_header_info() -> None:
             pa.field("c", pa.int32()),
         ]
     )
-    columns = {c["name"]: c for c in EvidenceTable(pa.table({"a": [1], "b": ["x"], "c": [2]}, schema=schema)).columns}
+    columns = {c["name"]: c for c in EvidentialTable(pa.table({"a": [1], "b": ["x"], "c": [2]}, schema=schema)).columns}
     assert columns["a"]["info"] == "The a value"
     assert columns["b"]["info"] == "The b value"
     assert "info" not in columns["c"]
@@ -160,16 +160,16 @@ def test_parquet_field_metadata_survives_to_info(tmp_path) -> None:
 
     # PyArrow writes the Arrow schema into the file's ARROW:schema metadata, so
     # field comments survive a Parquet round-trip.
-    assert EvidenceTable(pq.read_table(path)).columns[0]["info"] == "The a value"
+    assert EvidentialTable(pq.read_table(path)).columns[0]["info"] == "The a value"
 
     # DuckDB's read_parquet does not surface it.
     con = duckdb.connect()
     relation = con.sql(f"SELECT * FROM read_parquet('{path}')")
-    assert "info" not in EvidenceTable(relation).columns[0]
+    assert "info" not in EvidentialTable(relation).columns[0]
 
 
 def test_column_config_overrides() -> None:
-    table = EvidenceTable(
+    table = EvidentialTable(
         [{"revenue": 4200.5}],
         column_config={
             "revenue": {"fmt": "usd0", "viz": "bar", "align": "right"},
@@ -182,7 +182,7 @@ def test_column_config_overrides() -> None:
 
 
 def test_table_options_round_trip() -> None:
-    table = EvidenceTable([{"a": 1}], title="Hello", search=True, page_size=25)
+    table = EvidentialTable([{"a": 1}], title="Hello", search=True, page_size=25)
     assert table.options["title"] == "Hello"
     assert table.options["search"] is True
     assert table.options["page_size"] == 25
@@ -191,7 +191,7 @@ def test_table_options_round_trip() -> None:
 
 
 def test_set_column_appends_and_updates() -> None:
-    table = EvidenceTable([{"a": 1}])
+    table = EvidentialTable([{"a": 1}])
     table.set_column("a", fmt="num0")
     table.set_column("b", type="number", viz="color")
     names = [column["name"] for column in table.columns]
@@ -200,7 +200,7 @@ def test_set_column_appends_and_updates() -> None:
 
 
 def test_jsonify_handles_decimal_and_nan() -> None:
-    table = EvidenceTable([{"x": Decimal("1.5"), "y": float("nan")}])
+    table = EvidentialTable([{"x": Decimal("1.5"), "y": float("nan")}])
     assert table.rows[0]["x"] == 1.5
     assert table.rows[0]["y"] is None
 
@@ -208,14 +208,14 @@ def test_jsonify_handles_decimal_and_nan() -> None:
 def test_from_duckdb_relation() -> None:
     connection = connect()
     connection.execute("CREATE TABLE t AS SELECT 1 AS a, 'x' AS b")
-    table = EvidenceTable.from_duckdb(connection, "SELECT * FROM t")
+    table = EvidentialTable.from_duckdb(connection, "SELECT * FROM t")
     assert table.rows == [{"a": 1, "b": "x"}]
     types = {column["name"]: column["type"] for column in table.columns}
     assert types == {"a": "number", "b": "string"}
 
 
 def test_column_groups_assign_group_without_reordering() -> None:
-    table = EvidenceTable(
+    table = EvidentialTable(
         [{"month": "Jan", "cc": 1, "cash": 2, "other": 3}],
         column_groups={"Payment type": ["cc", "cash"]},
     )
@@ -228,7 +228,7 @@ def test_column_groups_assign_group_without_reordering() -> None:
 
 
 def test_dotted_column_names_default_the_column_group() -> None:
-    table = EvidenceTable([{"country": "US", "GDP Measure.gdp_nominal": 1.0, "GDP Measure.gdp_ppp": 2.0}])
+    table = EvidentialTable([{"country": "US", "GDP Measure.gdp_nominal": 1.0, "GDP Measure.gdp_ppp": 2.0}])
     groups = {column["name"]: column.get("column_group") for column in table.columns}
     assert groups["GDP Measure.gdp_nominal"] == "GDP Measure"
     assert groups["GDP Measure.gdp_ppp"] == "GDP Measure"
@@ -236,24 +236,24 @@ def test_dotted_column_names_default_the_column_group() -> None:
 
 
 def test_multi_level_dotted_name_becomes_a_nested_group() -> None:
-    table = EvidenceTable([{"a.b.c": 1}])
+    table = EvidentialTable([{"a.b.c": 1}])
     assert table.columns[0]["column_group"] == ["a", "b"]
 
 
 def test_dotted_name_group_can_be_overridden() -> None:
-    by_config = EvidenceTable([{"a.b": 1}], column_config={"a.b": {"column_group": "X"}})
+    by_config = EvidentialTable([{"a.b": 1}], column_config={"a.b": {"column_group": "X"}})
     assert by_config.columns[0]["column_group"] == "X"
-    by_mapping = EvidenceTable([{"a.b": 1}], column_groups={"Y": ["a.b"]})
+    by_mapping = EvidentialTable([{"a.b": 1}], column_groups={"Y": ["a.b"]})
     assert by_mapping.columns[0]["column_group"] == "Y"
 
 
 def test_lone_dot_does_not_make_a_group() -> None:
-    table = EvidenceTable([{".b": 1, "a.": 2}])
+    table = EvidentialTable([{".b": 1, "a.": 2}])
     assert [column.get("column_group") for column in table.columns] == [None, None]
 
 
 def test_content_type_shorthand_maps_to_viz() -> None:
-    table = EvidenceTable(
+    table = EvidentialTable(
         [{"trend": [1, 2, 3]}],
         columns=[{"name": "trend", "content_type": "sparkbar"}],
     )
@@ -263,7 +263,7 @@ def test_content_type_shorthand_maps_to_viz() -> None:
 
 
 def test_camelcase_column_aliases() -> None:
-    table = EvidenceTable(
+    table = EvidentialTable(
         [{"x": 1, "url": "https://example.com"}],
         columns=[
             {"name": "url", "contentType": "link"},
@@ -279,7 +279,7 @@ def test_camelcase_column_aliases() -> None:
 
 
 def test_new_table_options_round_trip() -> None:
-    table = EvidenceTable(
+    table = EvidentialTable(
         [{"a": 1}],
         row_numbers=True,
         column_stats=True,
@@ -303,41 +303,41 @@ def test_new_table_options_round_trip() -> None:
 
 
 def test_column_stats_is_off_by_default() -> None:
-    assert EvidenceTable([{"a": 1}]).options["column_stats"] is False
+    assert EvidentialTable([{"a": 1}]).options["column_stats"] is False
 
 
 def test_chip_columns_are_centred_by_default() -> None:
-    table = EvidenceTable([{"city": "A", "aqi": 1}], column_config={"aqi": {"viz": "chip"}})
+    table = EvidentialTable([{"city": "A", "aqi": 1}], column_config={"aqi": {"viz": "chip"}})
     aqi = next(column for column in table.columns if column["name"] == "aqi")
     assert aqi["viz"] == "chip"
     assert aqi["align"] == "center"
 
 
 def test_chip_align_can_be_overridden() -> None:
-    table = EvidenceTable([{"aqi": 1}], column_config={"aqi": {"viz": "chip", "align": "right"}})
+    table = EvidentialTable([{"aqi": 1}], column_config={"aqi": {"viz": "chip", "align": "right"}})
     assert table.columns[0]["align"] == "right"
 
-    explicit = EvidenceTable([{"aqi": 1}], columns=[{"name": "aqi", "viz": "chip", "align": "left"}])
+    explicit = EvidentialTable([{"aqi": 1}], columns=[{"name": "aqi", "viz": "chip", "align": "left"}])
     assert explicit.columns[0]["align"] == "left"
 
 
 def test_content_type_chip_sets_viz() -> None:
-    table = EvidenceTable([{"aqi": 1}], columns=[{"name": "aqi", "content_type": "chip"}])
+    table = EvidentialTable([{"aqi": 1}], columns=[{"name": "aqi", "content_type": "chip"}])
     assert table.columns[0]["viz"] == "chip"
 
 
 def test_chip_min_width_options() -> None:
-    table = EvidenceTable(
+    table = EvidentialTable(
         [{"aqi": 1}],
         column_config={"aqi": {"viz": "chip", "chip_options": {"min_width": 72}}},
     )
     assert table.columns[0]["chip_options"] == {"min_width": 72}
-    top_level = EvidenceTable(
+    top_level = EvidentialTable(
         [{"aqi": 1}],
         column_config={"aqi": {"viz": "chip", "chip_min_width": 64}},
     )
     assert top_level.columns[0]["chip_options"] == {"min_width": 64}
-    camel = EvidenceTable(
+    camel = EvidentialTable(
         [{"aqi": 1}],
         column_config={"aqi": {"viz": "chip", "chipMinWidth": 80}},
     )
@@ -345,24 +345,24 @@ def test_chip_min_width_options() -> None:
 
 
 def test_select_option_and_selected_trait() -> None:
-    table = EvidenceTable([{"country": "AUS"}], select="country")
+    table = EvidentialTable([{"country": "AUS"}], select="country")
     assert table.options["select"] == "country"
     assert table.selected is None
     table.selected = "AUS"
     assert table.selected == "AUS"
-    preselect = EvidenceTable([{"country": "AUS"}], select="country", selected="AUS")
+    preselect = EvidentialTable([{"country": "AUS"}], select="country", selected="AUS")
     assert preselect.selected == "AUS"
 
 
 def test_column_highlight_round_trips() -> None:
-    table = EvidenceTable([{"a": 1}], column_config={"a": {"highlight": "#eef2ff"}})
+    table = EvidentialTable([{"a": 1}], column_config={"a": {"highlight": "#eef2ff"}})
     assert table.columns[0]["highlight"] == "#eef2ff"
-    camel = EvidenceTable([{"a": 1}], column_config={"a": {"highlightColor": "#eef2ff"}})
+    camel = EvidentialTable([{"a": 1}], column_config={"a": {"highlightColor": "#eef2ff"}})
     assert camel.columns[0]["highlight"] == "#eef2ff"
 
 
 def test_group_highlight_applies_to_every_column() -> None:
-    table = EvidenceTable(
+    table = EvidentialTable(
         [{"a": 1, "b": 2}],
         column_groups={"G": {"columns": ["a", "b"], "highlight": "#eef2ff"}},
     )
@@ -370,7 +370,7 @@ def test_group_highlight_applies_to_every_column() -> None:
 
 
 def test_column_highlight_wins_over_group_highlight() -> None:
-    table = EvidenceTable(
+    table = EvidentialTable(
         [{"a": 1, "b": 2}],
         column_groups={"G": {"columns": ["a", "b"], "highlight": "#eef2ff"}},
         column_config={"a": {"highlight": "#ffffff"}},
@@ -382,17 +382,17 @@ def test_column_highlight_wins_over_group_highlight() -> None:
 
 def test_show_link_column() -> None:
     rows = [{"name": "A", "url": "https://example.com"}]
-    hidden = EvidenceTable(rows, link="url")
+    hidden = EvidentialTable(rows, link="url")
     url = next(column for column in hidden.columns if column["name"] == "url")
     assert url.get("hide") is True
 
-    shown = EvidenceTable(rows, link="url", show_link_column=True)
+    shown = EvidentialTable(rows, link="url", show_link_column=True)
     url = next(column for column in shown.columns if column["name"] == "url")
     assert not url.get("hide")
 
 
 def test_top_level_color_options_merge_into_color_options() -> None:
-    table = EvidenceTable(
+    table = EvidentialTable(
         [{"v": 1}],
         column_config={"v": {"viz": "color", "color_scale": "green", "color_min": 0, "color_max": 10}},
     )
@@ -404,7 +404,7 @@ def test_top_level_color_options_merge_into_color_options() -> None:
 
 
 def test_sparkline_aliases_merge_into_sparkline_options() -> None:
-    table = EvidenceTable(
+    table = EvidentialTable(
         [{"trend": [1, 2, 3]}],
         column_config={"trend": {"viz": "sparkline", "sparkX": "d", "sparkY": "v", "sparkColor": "#123456"}},
     )
@@ -415,14 +415,14 @@ def test_sparkline_aliases_merge_into_sparkline_options() -> None:
 
 
 def test_groups_open_alias() -> None:
-    closed = EvidenceTable([{"a": 1}], groups_open=False)
+    closed = EvidentialTable([{"a": 1}], groups_open=False)
     assert closed.options["collapsed"] is True
-    opened = EvidenceTable([{"a": 1}], groups_open=True)
+    opened = EvidentialTable([{"a": 1}], groups_open=True)
     assert opened.options["collapsed"] is False
 
 
 def test_logo_content_type() -> None:
-    table = EvidenceTable(
+    table = EvidentialTable(
         [{"domain": "github.com"}],
         columns=[{"name": "domain", "content_type": "logo"}],
     )
@@ -430,9 +430,9 @@ def test_logo_content_type() -> None:
 
 
 def test_section_row_and_caption() -> None:
-    from evidence_tables import section_row
+    from evidential import section_row
 
-    table = EvidenceTable(
+    table = EvidentialTable(
         [{"a": 1}, section_row("Divider"), {"a": 2}],
         columns=[{"name": "a", "type": "number"}],
         caption="Source: example",
@@ -443,7 +443,7 @@ def test_section_row_and_caption() -> None:
 
 
 def test_blank_predicate_and_null_text() -> None:
-    table = EvidenceTable(
+    table = EvidentialTable(
         [{"v": 5}, {"v": 15}],
         column_config={"v": {"blank": lambda value: value < 10, "null_text": ""}},
     )
@@ -455,12 +455,12 @@ def test_blank_predicate_and_null_text() -> None:
 
 
 def test_null_text_option() -> None:
-    table = EvidenceTable([{"a": 1}], null_text="blank")
+    table = EvidentialTable([{"a": 1}], null_text="blank")
     assert table.options["null_text"] == "blank"
 
 
 def test_footnote_options_round_trip() -> None:
-    table = EvidenceTable(
+    table = EvidentialTable(
         [{"city": "NYC", "note": "x"}],
         column_config={"city": {"footnote": "note"}},
         footnotes=["A static note"],
@@ -476,10 +476,10 @@ def test_make_column_defaults() -> None:
     assert column["type"] == "number"
 
 
-@pytest.mark.parametrize("widget", [EvidenceTable([{"a": 1}])])
-def test_widget_has_static_assets(widget: EvidenceTable) -> None:
+@pytest.mark.parametrize("widget", [EvidentialTable([{"a": 1}])])
+def test_widget_has_static_assets(widget: EvidentialTable) -> None:
     from importlib.resources import files
 
-    static = files("evidence_tables").joinpath("static")
+    static = files("evidential").joinpath("static")
     assert static.joinpath("table.js").is_file()
     assert static.joinpath("table.css").is_file()

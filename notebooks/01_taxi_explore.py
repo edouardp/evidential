@@ -3,7 +3,7 @@
 # dependencies = [
 #     "marimo",
 #     "duckdb>=1.3",
-#     "evidence-tables",
+#     "evidential",
 # ]
 # ///
 
@@ -18,9 +18,9 @@ def _():
     import marimo as mo
     import duckdb
 
-    from evidence_tables import EvidenceTable, grouped_table
+    from evidential import EvidentialTable, grouped_table
 
-    return EvidenceTable, duckdb, grouped_table, mo
+    return EvidentialTable, duckdb, grouped_table, mo
 
 
 @app.cell
@@ -29,7 +29,7 @@ def _(mo):
     # NYC yellow taxi — Evidence-style tables
 
     This notebook streams the public NYC TLC Parquet files with DuckDB and
-    renders them with `EvidenceTable`, an anywidget that mirrors the
+    renders them with `EvidentialTable`, an anywidget that mirrors the
     formatting, conditional colours, bars and interactions of
     [Evidence.dev](https://evidence.dev) tables.
 
@@ -98,9 +98,9 @@ def _(duckdb, mo):
 
 
 @app.cell(expand_output=True)
-def _(EvidenceTable, connection, mo, source_label):
+def _(EvidentialTable, connection, mo, source_label):
     sample_table = mo.ui.anywidget(
-        EvidenceTable(
+        EvidentialTable(
             connection.sql(
                 """
                 SELECT
@@ -205,9 +205,9 @@ def _(mo):
 
 
 @app.cell
-def _(EvidenceTable, connection, mo):
+def _(EvidentialTable, connection, mo):
     pivoted = mo.ui.anywidget(
-        EvidenceTable(
+        EvidentialTable(
             connection.sql(
                 """
                 SELECT

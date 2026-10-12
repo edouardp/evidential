@@ -28,7 +28,7 @@ The gates are: **ruff** (lint + format), **bandit**, **pip-audit**, **pyrefly**
 
 ## Frontend
 
-`src/evidence_tables/static/table.js` and `table.css` are **committed** so the
+`src/evidential/static/table.js` and `table.css` are **committed** so the
 Python package needs no JS toolchain. After editing anything under
 `frontend/src/`, run `make frontend-build` and commit the rebuilt bundle
 together with the source change.

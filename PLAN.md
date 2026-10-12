@@ -115,7 +115,7 @@ are done in SQL. We implement them as Python/DuckDB helpers where feasible.
 - [x] fullscreen (fit rows, backdrop dismiss, height reset)
 - [x] CSV download
 - [x] loading overlay + stable height
-- [x] live re-query (`LiveEvidenceTable`)
+- [x] live re-query (`LiveEvidentialTable`)
 - [ ] comparison tooltips (deferred; delta/% columns are provided)
 - [x] column-level description icon
 - [x] row-number column

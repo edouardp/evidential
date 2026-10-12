@@ -1,6 +1,6 @@
 """Live, parameterised tables for Marimo.
 
-:class:`LiveEvidenceTable` is an :class:`~evidence_tables.EvidenceTable` that
+:class:`LiveEvidentialTable` is an :class:`~evidential.EvidentialTable` that
 keeps a parameterised SQL query and re-runs it when its controls change —
 without recreating the widget, so sort/search/page state is preserved.
 
@@ -13,7 +13,7 @@ change)::
     min_fare
 
     # cell 2 — persistent widget, no control references
-    live = LiveEvidenceTable(
+    live = LiveEvidentialTable(
         con,
         "SELECT * FROM trips WHERE fare_amount >= {min_fare}",
         auto_run=False,
@@ -26,7 +26,7 @@ change)::
 Outside a reactive host (plain ipywidgets), pass ``bind_controls=True`` and the
 widget re-runs itself on control changes::
 
-    live = LiveEvidenceTable(
+    live = LiveEvidentialTable(
         con,
         "SELECT * FROM trips WHERE fare_amount >= {min_fare}",
         params={"min_fare": min_fare},
@@ -44,9 +44,9 @@ from typing import Any
 
 import traitlets
 
-from .table import EvidenceTable
+from .table import EvidentialTable
 
-__all__ = ["LiveEvidenceTable", "query_values"]
+__all__ = ["LiveEvidentialTable", "query_values"]
 
 # `${name}`, `$name` and `{name}` placeholders in plain string SQL.
 _PARAM_RE = re.compile(r"\$\{(\w+)\}|\$(\w+)|\{(\w+)\}")
@@ -64,7 +64,7 @@ def query_values(connection: Any, sql: str) -> list[Any]:
     return [next(iter(row.values())) if isinstance(row, dict) else row[0] for row in rows]
 
 
-class LiveEvidenceTable(EvidenceTable):
+class LiveEvidentialTable(EvidentialTable):
     """An Evidence table backed by a query that re-runs on control changes."""
 
     sql = traitlets.Unicode("").tag(sync=True)
@@ -99,7 +99,7 @@ class LiveEvidenceTable(EvidenceTable):
         """The DuckDB connection used to run queries."""
         return self._connection
 
-    def run(self, sql: Any = None, params: Mapping[str, Any] | None = None) -> LiveEvidenceTable:
+    def run(self, sql: Any = None, params: Mapping[str, Any] | None = None) -> LiveEvidentialTable:
         """(Re-)run the query, optionally replacing the SQL or parameter mapping."""
         if sql is not None:
             self._sql_template = sql
@@ -121,7 +121,7 @@ class LiveEvidenceTable(EvidenceTable):
             self.loading = False
         return self
 
-    def set_controls(self, **params: Any) -> LiveEvidenceTable:
+    def set_controls(self, **params: Any) -> LiveEvidentialTable:
         """Add or replace bound parameters and re-run."""
         self._params.update(params)
         self.run()
@@ -130,7 +130,7 @@ class LiveEvidenceTable(EvidenceTable):
     # --------------------------------------------------------------- helpers --
     def _prepare(self, template: Any, params: Mapping[str, Any]) -> tuple[str, list[Any]]:
         if template is None:
-            raise ValueError("LiveEvidenceTable has no SQL to run")
+            raise ValueError("LiveEvidentialTable has no SQL to run")
         # PEP 750 t-string: one `?` per interpolation.
         if hasattr(template, "strings") and hasattr(template, "interpolations"):
             parts: list[str] = []

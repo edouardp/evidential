@@ -3,7 +3,7 @@
 # dependencies = [
 #     "marimo",
 #     "duckdb>=1.3",
-#     "evidence-tables",
+#     "evidential",
 # ]
 # ///
 """Pivoted columns (`pivot_table`) demonstrated on Evidence's sample data."""
@@ -21,7 +21,7 @@ def _():
     import marimo as mo
     import duckdb
 
-    from evidence_tables import pivot_table
+    from evidential import pivot_table
 
     return Path, duckdb, mo, pivot_table
 

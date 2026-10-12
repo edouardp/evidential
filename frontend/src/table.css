@@ -1,6 +1,6 @@
 /* Evidence-style table widget for Marimo. */
 
-.evidence-tables-widget {
+.evidential-widget {
   width: 100%;
   --et-bg: transparent;
   /* Opaque surface used by the fullscreen dialog and frozen columns. `Canvas`

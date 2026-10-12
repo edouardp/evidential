@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <title>EvidenceTable preview</title>
-  <link rel="stylesheet" href="/src/evidence_tables/static/table.css" />
+  <title>EvidentialTable preview</title>
+  <link rel="stylesheet" href="/src/evidential/static/table.css" />
   <style>
     body { font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif; margin: 24px; background: #f8fafc; color: #0f172a; }
     h1 { font-size: 1.1rem; margin: 0 0 4px; }
@@ -12,7 +12,7 @@
   </style>
 </head>
 <body>
-  <h1>EvidenceTable — renderer preview</h1>
+  <h1>EvidentialTable — renderer preview</h1>
   <div class="muted">Sample data mounted directly against the bundled renderer.</div>
   <div class="panel"><div id="raw"></div></div>
   <div class="panel"><div id="grouped"></div></div>
@@ -21,7 +21,7 @@
   <div class="panel"><div id="features"></div></div>
 
   <script type="module">
-    import widget from "/src/evidence_tables/static/table.js";
+    import widget from "/src/evidential/static/table.js";
 
     const makeModel = (rows, columns, options) => ({
       _data: { rows, columns, options },

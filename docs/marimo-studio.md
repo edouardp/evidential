@@ -1,21 +1,21 @@
-# EvidenceTable in marimo Studio views
+# EvidentialTable in marimo Studio views
 
 [marimo Studio](https://marimo.io/blog/introducing-marimo-studio) turns one
 reactive notebook into named **views**: a dashboard, article, slide deck or
 PDF, each its own frontend project. A view places the notebook's cells, outputs
-and **values** by name, so a live `EvidenceTable` and the numbers around it stay
+and **values** by name, so a live `EvidentialTable` and the numbers around it stay
 in sync with the notebook.
 
-![The evidence-tables dashboard view in Studio](img/studio-view.png)
+![The evidential dashboard view in Studio](img/studio-view.png)
 
 ## The short version
 
-An `EvidenceTable` is a widget, so a Studio view shows it by projecting the
+An `EvidentialTable` is a widget, so a Studio view shows it by projecting the
 **cell** that displays it. Native controls and plain values are projected
 separately:
 
 ```html
-<!-- a live, interactive EvidenceTable -->
+<!-- a live, interactive EvidentialTable -->
 <marimo-cell name="revenue_table"></marimo-cell>
 
 <!-- a native marimo control (dropdown, slider, …) -->
@@ -65,7 +65,7 @@ trade-off:
 
 | View | Pattern | Shows |
 | --- | --- | --- |
-| **dashboard** | `<marimo-cell name="revenue_table">` | The notebook's own live, interactive `EvidenceTable` (Server runtime). |
+| **dashboard** | `<marimo-cell name="revenue_table">` | The notebook's own live, interactive `EvidentialTable` (Server runtime). |
 | **report** | `mo-value="filtered"` | The raw rows, drawn by the view's own markup and JS — portable to a static export. |
 
 ![The report view draws its own table from projected values](img/studio-report.png)
@@ -86,13 +86,13 @@ depends on whether you want the notebook's own presentation or just its data.
 
 ### Reuse the notebook's own table
 
-This is the recommended path: the notebook builds the `EvidenceTable` it wants,
+This is the recommended path: the notebook builds the `EvidentialTable` it wants,
 and the view places it.
 
 ```python
 @app.cell
-def revenue_table(EvidenceTable, filtered):
-    EvidenceTable(filtered, title="Revenue by city",
+def revenue_table(EvidentialTable, filtered):
+    EvidentialTable(filtered, title="Revenue by city",
                   column_config={"revenue": {"fmt": "usd0", "viz": "bar"}})
 ```
 
@@ -145,28 +145,28 @@ the table.
 Studio runs a view in one of three runtimes. The right choice for a table with
 interactive widgets is **Server**.
 
-| Runtime | Runs Python | Live `EvidenceTable` | Use when |
+| Runtime | Runs Python | Live `EvidentialTable` | Use when |
 | --- | --- | --- | --- |
 | **Server** | In the notebook's kernel | ✅ yes | The view needs the interactive widget (the normal case). |
-| **Browser** (`wasm`) | In each visitor's browser (Pyodide) | ✅ yes, once `evidence-tables` is installable from PyPI | You want a static host (GitHub Pages) with no server. |
+| **Browser** (`wasm`) | In each visitor's browser (Pyodide) | ✅ yes, once `evidential` is installable from PyPI | You want a static host (GitHub Pages) with no server. |
 | **Prepared** (`zero-python`) | At export time | ❌ not replayable | A read-only report of captured values and figures. |
 
-The demo pins `runtime = "server"` because `evidence-tables` is not yet on
+The demo pins `runtime = "server"` because `evidential` is not yet on
 PyPI; a Browser export would have no way to install it. Once it is published,
 `runtimes = ["server", "wasm"]` makes the same view exportable as static files.
 
 ## Notes and caveats
 
-- **Sandbox runs need the local package.** `evidence-tables` is not on PyPI
+- **Sandbox runs need the local package.** `evidential` is not on PyPI
   yet, so the notebook's PEP 723 block points the dependency at the checkout
   with `[tool.uv.sources]`:
 
   ```toml
   # [tool.uv.sources]
-  # evidence-tables = { path = "..", editable = true }
+  # evidential = { path = "..", editable = true }
   ```
 
-  Without it, `--sandbox` fails to resolve `evidence-tables`. Remove the
+  Without it, `--sandbox` fails to resolve `evidential`. Remove the
   override once the package is published.
 - **Widget CSS is the widget's own.** The view supplies page chrome; the table
   injects its own stylesheet. Keep the view's selectors scoped so they do not
@@ -177,7 +177,7 @@ PyPI; a Browser export would have no way to install it. Once it is published,
   notebook and project the small result, or split a large table into per-item
   frames selected at runtime.
 - **One cell, one widget.** A projection targets a cell's output, so put each
-  `EvidenceTable` in its own named cell. (A `mo.vstack([a, b])` cell projects as
+  `EvidentialTable` in its own named cell. (A `mo.vstack([a, b])` cell projects as
   one output if you want them together.)
 - **Name your cells.** Projections resolve cell function names (e.g.
   `revenue_table`) and variable names (e.g. `kpis`); anonymous cells only get
@@ -190,7 +190,7 @@ PyPI; a Browser export would have no way to install it. Once it is published,
 Both of these bit us while building the demo; knowing the cause saves a long
 detour.
 
-### `Failed to build sandbox environment … evidence-tables was not found in the package registry`
+### `Failed to build sandbox environment … evidential was not found in the package registry`
 
 The package is not on PyPI yet, and a sandboxed run installs the notebook's
 PEP 723 dependencies from scratch. The demo notebook therefore pins the
@@ -225,7 +225,7 @@ re-checks the committed view's manifest, provider and projection targets in CI,
 without requiring Studio to be installed.
 
 A **Prepared** or **Browser** export (`marimo-studio view export …`) needs
-`evidence-tables` to be installable from PyPI, because Studio resolves the
+`evidential` to be installable from PyPI, because Studio resolves the
 notebook's declared dependencies in the export environment. Until the package is
 published, export from a checkout where it is installed (the export bundles the
 local build) or stick to the Server runtime.

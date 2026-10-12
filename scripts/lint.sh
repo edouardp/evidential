@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Run every lint/format/security gate for evidence-tables.
+# Run every lint/format/security gate for evidential.
 #
 # Usage:
 #   ./scripts/lint.sh          # check only (CI, pre-commit parity)
@@ -22,7 +22,7 @@ else
 fi
 
 echo "=== bandit ==="
-uv run bandit -r -c .bandit -q src/evidence_tables
+uv run bandit -r -c .bandit -q src/evidential
 
 echo "=== pip-audit ==="
 uv run pip-audit

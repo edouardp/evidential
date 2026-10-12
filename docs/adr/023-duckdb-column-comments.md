@@ -46,7 +46,7 @@ tables could attach an unrelated comment.
 
 ### Consequences
 
-- Good, because `EvidenceTable(con.table("trips"))` shows documented columns
+- Good, because `EvidentialTable(con.table("trips"))` shows documented columns
   with no configuration.
 - Good, because `column_config` still wins, and ambiguity cannot mislabel a
   column.
@@ -57,6 +57,6 @@ tables could attach an unrelated comment.
 ## More Information
 
 - [Technical architecture §4.2](../technical-architecture.md)
-- `src/evidence_tables/data.py` (`_relation_column_comments`),
-  `src/evidence_tables/duck.py` (`column_comments`)
+- `src/evidential/data.py` (`_relation_column_comments`),
+  `src/evidential/duck.py` (`column_comments`)
 - Related: [ADR-022](022-type-driven-column-defaults.md)

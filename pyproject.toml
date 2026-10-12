@@ -1,5 +1,5 @@
 [project]
-name = "evidence-tables"
+name = "evidential"
 version = "0.1.0"
 description = "Evidence.dev-style interactive data tables for Marimo, powered by anywidget and DuckDB."
 readme = "README.md"
@@ -7,7 +7,7 @@ authors = [{ name = "Edouard Poor", email = "git@edouard.info" }]
 requires-python = ">=3.11"
 license = "MIT"
 license-files = ["LICENSE"]
-keywords = ["marimo", "anywidget", "table", "duckdb", "evidence", "visualization"]
+keywords = ["marimo", "anywidget", "table", "duckdb", "evidential", "visualization"]
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Science/Research",
@@ -23,7 +23,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-# Runtime extras: `pip install evidence-tables[duckdb]` / `[...][marimo]` / `[...][studio]`.
+# Runtime extras: `pip install evidential[duckdb]` / `[...][marimo]` / `[...][studio]`.
 duckdb = ["duckdb>=1.3", "pyarrow>=17", "pandas>=2.2"]
 marimo = ["marimo>=0.20"]
 # marimo Studio: build named views of a notebook (see docs/marimo-studio.md).
@@ -47,7 +47,7 @@ dev = [
 ]
 
 [project.urls]
-Repository = "https://github.com/edouardp/marimo-evidence-tables"
+Repository = "https://github.com/edouardp/evidential"
 
 [build-system]
 requires = ["uv_build>=0.11.7,<0.12.0"]
@@ -69,7 +69,7 @@ select = ["E", "W", "F", "I", "B", "C4", "UP"]
 ignore = ["E501"]
 
 [tool.ruff.lint.isort]
-known-first-party = ["evidence_tables"]
+known-first-party = ["evidential"]
 
 [tool.ruff.format]
 quote-style = "double"
@@ -83,7 +83,7 @@ markers = [
 ]
 
 [tool.coverage.run]
-source = ["evidence_tables"]
+source = ["evidential"]
 omit = ["*/static/*"]
 
 [tool.coverage.report]
@@ -93,5 +93,5 @@ exclude_lines = ["pragma: no cover", "if TYPE_CHECKING:"]
 [tool.pyrefly]
 search-path = ["src"]
 # Type-check the shipped package (tests and notebooks are exercised at runtime).
-project-includes = ["src/evidence_tables/**/*.py"]
+project-includes = ["src/evidential/**/*.py"]
 project-excludes = ["**/__pycache__", ".venv", "**/static/**"]

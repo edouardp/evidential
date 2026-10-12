@@ -1,4 +1,4 @@
-"""Data conversion helpers for :class:`evidence_tables.EvidenceTable`.
+"""Data conversion helpers for :class:`evidential.EvidentialTable`.
 
 The widget exchanges plain JSON with the browser, so this module normalises the
 common Python data containers (Arrow tables, pandas DataFrames, DuckDB
@@ -285,7 +285,7 @@ def _relation_column_comments(relation: Any) -> dict[str, str]:
     schema). Relations built from a table or view — including ``.limit()``,
     ``.filter()`` and ``.select()`` — keep that name in ``alias``; raw
     ``con.sql(...)`` relations do not, and fall back to
-    :func:`evidence_tables.duck.column_comments`.
+    :func:`evidential.duck.column_comments`.
     """
     alias = getattr(relation, "alias", None)
     run_query = getattr(relation, "query", None)
@@ -294,7 +294,7 @@ def _relation_column_comments(relation: Any) -> dict[str, str]:
     escaped = str(alias).replace("'", "''")
     try:
         rows = run_query(
-            "__evidence_tables_relation",
+            "__evidential_relation",
             f"SELECT column_name, comment FROM duckdb_columns() WHERE table_name = '{escaped}' AND comment IS NOT NULL",
         ).fetchall()
     except Exception:  # pragma: no cover - depends on the DuckDB build

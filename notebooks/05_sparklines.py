@@ -3,7 +3,7 @@
 # dependencies = [
 #     "marimo",
 #     "duckdb>=1.3",
-#     "evidence-tables",
+#     "evidential",
 # ]
 # ///
 
@@ -18,9 +18,9 @@ def _():
     import marimo as mo
     import duckdb
 
-    from evidence_tables import EvidenceTable
+    from evidential import EvidentialTable
 
-    return EvidenceTable, duckdb, mo
+    return EvidentialTable, duckdb, mo
 
 
 @app.cell
@@ -32,7 +32,7 @@ def _(mo):
     series point. In DuckDB you build that with `ARRAY_AGG({'x': ..., 'y': ...})`,
     then point a column at it with `viz="sparkline"` and `sparkline_options`:
 
-    | Evidence attribute | `EvidenceTable` option |
+    | Evidence attribute | `EvidentialTable` option |
     | --- | --- |
     | `contentType=sparkline` | `sparkline_options.type = "line"` |
     | `contentType=sparkarea` | `sparkline_options.type = "area"` |
@@ -87,7 +87,7 @@ def _(duckdb, mo):
 
 
 @app.cell
-def _(EvidenceTable, connection, mo):
+def _(EvidentialTable, connection, mo):
     # One ARRAY_AGG per sparkline column, each an array of {date, value} structs.
     trend_query = """
         WITH daily AS (
@@ -114,7 +114,7 @@ def _(EvidenceTable, connection, mo):
     """
 
     table = mo.ui.anywidget(
-        EvidenceTable(
+        EvidentialTable(
             connection.sql(trend_query),
             title="Payment types over time",
             subtitle="Each row carries three sparkline series built with ARRAY_AGG",
@@ -168,7 +168,7 @@ def _(mo):
       with no `x`/`y` config the first numeric struct field is used for the
       value and the first non-numeric field for the axis.
     - The data is passed through as-is, so this pairs naturally with
-      `LiveEvidenceTable` — the sparkline arrays just update with the rows.
+      `LiveEvidentialTable` — the sparkline arrays just update with the rows.
     """)
     return
 

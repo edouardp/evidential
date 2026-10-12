@@ -3,7 +3,7 @@
 Evidence's legacy ``groupBy`` groups a flat table by a column and shows
 section/accordion groups with subtotals. :func:`grouped_records` does that in
 Python for data already loaded in the notebook, producing the same row metadata
-as :func:`~evidence_tables.grouped_table` so the renderer treats them
+as :func:`~evidential.grouped_table` so the renderer treats them
 identically.
 """
 
@@ -15,7 +15,7 @@ from typing import Any
 from .aggregations import resolve_aggregation
 from .data import infer_columns, jsonify, make_column, normalize_data
 from .grouped import decorate_grouped_rows
-from .table import EvidenceTable
+from .table import EvidentialTable
 
 __all__ = ["grouped_records"]
 
@@ -39,8 +39,8 @@ def grouped_records(
     dimension_config: Mapping[str, Mapping[str, Any]] | None = None,
     measure_config: Mapping[str, Mapping[str, Any]] | None = None,
     **table_options: Any,
-) -> EvidenceTable:
-    """Group flat rows client-side and return an :class:`EvidenceTable`.
+) -> EvidentialTable:
+    """Group flat rows client-side and return an :class:`EvidentialTable`.
 
     ``group_by`` is one or more dimension columns; ``measures`` defaults to the
     numeric columns not used as dimensions. Each subtotal/total is computed from
@@ -137,4 +137,4 @@ def grouped_records(
     if table_options.get("group_type") == "section":
         table_options["collapsible"] = False
     table_options.setdefault("subtotal_position", subtotal_position)
-    return EvidenceTable(rows=ordered, columns=columns, **table_options)
+    return EvidentialTable(rows=ordered, columns=columns, **table_options)

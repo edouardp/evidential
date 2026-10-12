@@ -33,7 +33,7 @@ Chosen option: "Display-only widget", because the renderer should be a pure
 function of the rows it is given, and Marimo already owns reactivity. Evidence's
 query features are offered as SQL-building helpers (`grouped_table`,
 `pivot_table`, `query_table`, `comparison_table`, `date_range_sql`) and as live,
-parameterised re-querying (`LiveEvidenceTable`).
+parameterised re-querying (`LiveEvidentialTable`).
 
 ### Consequences
 

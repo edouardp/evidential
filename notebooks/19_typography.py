@@ -2,7 +2,7 @@
 # requires-python = ">=3.12"
 # dependencies = [
 #     "marimo",
-#     "evidence-tables",
+#     "evidential",
 # ]
 # ///
 """Table typography: readable by default, not over-styled.
@@ -23,9 +23,9 @@ app = marimo.App(width="full")
 def _():
     import marimo as mo
 
-    from evidence_tables import EvidenceTable
+    from evidential import EvidentialTable
 
-    return EvidenceTable, mo
+    return EvidentialTable, mo
 
 
 @app.cell
@@ -59,9 +59,9 @@ def _():
 
 
 @app.cell
-def _(EvidenceTable, mo, rows):
+def _(EvidentialTable, mo, rows):
     mo.ui.anywidget(
-        EvidenceTable(
+        EvidentialTable(
             rows,
             title="Sales by item",
             caption="Figures are illustrative.",
@@ -98,14 +98,14 @@ def _(mo):
 
 
 @app.cell
-def _(EvidenceTable, mo):
+def _(EvidentialTable, mo):
     months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
     monthly = [
         {"metric": "Revenue", **{month: 1000 + index * 137 for index, month in enumerate(months)}},
         {"metric": "Orders", **{month: 40 + index * 3 for index, month in enumerate(months)}},
     ]
     mo.ui.anywidget(
-        EvidenceTable(
+        EvidentialTable(
             monthly,
             title="Monthly figures — vertical headings",
             rotate_titles="vertical",
@@ -122,14 +122,14 @@ def _(EvidenceTable, mo):
 
 
 @app.cell
-def _(EvidenceTable, mo):
+def _(EvidentialTable, mo):
     quarters = ["Q1 2024", "Q2 2024", "Q3 2024", "Q4 2024", "Q1 2025", "Q2 2025"]
     per_quarter = [
         {"metric": "Revenue", "metric_fmt": "usd0", **{quarter: 120000 + index * 9000 for index, quarter in enumerate(quarters)}},
         {"metric": "Gross margin", "metric_fmt": "pct1", **{quarter: 0.4 + index * 0.01 for index, quarter in enumerate(quarters)}},
     ]
     mo.ui.anywidget(
-        EvidenceTable(
+        EvidentialTable(
             per_quarter,
             title="Oblique headings (−60°)",
             rotate_titles=-60,
@@ -160,14 +160,14 @@ def _(mo):
 
 
 @app.cell
-def _(EvidenceTable, mo):
+def _(EvidentialTable, mo):
     numerals = [
         {"glyphs": "Sequence", "lining": 1111111111, "lowercase": 1111111111},
         {"glyphs": "Mixed", "lining": 104729.54, "lowercase": 104729.54},
         {"glyphs": "Headings", "lining": 1234567890, "lowercase": 1234567890},
     ]
     mo.ui.anywidget(
-        EvidenceTable(
+        EvidentialTable(
             numerals,
             title="Numerals",
             stretch=False,

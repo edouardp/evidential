@@ -3,7 +3,7 @@
 # dependencies = [
 #     "marimo",
 #     "duckdb>=1.3",
-#     "evidence-tables",
+#     "evidential",
 # ]
 # ///
 """Column groups from dotted column names.
@@ -32,9 +32,9 @@ def _():
     import duckdb
     import marimo as mo
 
-    from evidence_tables import EvidenceTable
+    from evidential import EvidentialTable
 
-    return EvidenceTable, Path, duckdb, mo, os
+    return EvidentialTable, Path, duckdb, mo, os
 
 
 @app.cell
@@ -115,9 +115,9 @@ def _(connection):
 
 
 @app.cell
-def _(EvidenceTable, mo, ranking, reference_year):
+def _(EvidentialTable, mo, ranking, reference_year):
     grouped = mo.ui.anywidget(
-        EvidenceTable(
+        EvidentialTable(
             ranking,
             title=f"World Bank WDI — reference year {reference_year}",
             subtitle="One SELECT; the header groups come from the dotted column aliases",
@@ -152,9 +152,9 @@ def _(mo):
 
 
 @app.cell
-def _(EvidenceTable, mo, ranking):
+def _(EvidentialTable, mo, ranking):
     overridden = mo.ui.anywidget(
-        EvidenceTable(
+        EvidentialTable(
             ranking,
             title="Explicit groups override the convention",
             subtitle="Two GDP columns regrouped under Output, one leaf renamed",

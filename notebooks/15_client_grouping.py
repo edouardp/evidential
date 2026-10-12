@@ -3,7 +3,7 @@
 # dependencies = [
 #     "marimo",
 #     "duckdb>=1.3",
-#     "evidence-tables",
+#     "evidential",
 # ]
 # ///
 """Client-side grouping of in-memory rows (`grouped_records`)."""
@@ -18,7 +18,7 @@ app = marimo.App(width="full")
 def _():
     import marimo as mo
 
-    from evidence_tables import grouped_records
+    from evidential import grouped_records
 
     return grouped_records, mo
 

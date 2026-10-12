@@ -3,7 +3,7 @@
 # dependencies = [
 #     "marimo",
 #     "duckdb>=1.3",
-#     "evidence-tables",
+#     "evidential",
 # ]
 # ///
 """White space as a grouping device (proximity / similarity).
@@ -25,9 +25,9 @@ def _():
     import marimo as mo
     import duckdb
 
-    from evidence_tables import EvidenceTable, grouped_table, section_row
+    from evidential import EvidentialTable, grouped_table, section_row
 
-    return EvidenceTable, Path, duckdb, grouped_table, mo
+    return EvidentialTable, Path, duckdb, grouped_table, mo
 
 
 @app.cell
@@ -61,9 +61,9 @@ def _(mo):
 
 
 @app.cell
-def _(EvidenceTable, connection, mo):
+def _(EvidentialTable, connection, mo):
     mo.ui.anywidget(
-        EvidenceTable(
+        EvidentialTable(
             connection.sql(
                 """
                 SELECT category, item, round(sum(sales), 0) AS sales
@@ -125,9 +125,9 @@ def _(mo):
 
 
 @app.cell
-def _(EvidenceTable, connection, mo):
+def _(EvidentialTable, connection, mo):
     mo.ui.anywidget(
-        EvidenceTable(
+        EvidentialTable(
             connection.sql(
                 """
                 SELECT category, item, round(sum(sales), 0) AS sales
@@ -158,7 +158,7 @@ def _(mo):
 
 
 @app.cell
-def _(EvidenceTable, mo):
+def _(EvidentialTable, mo):
     rows = [
         {"metric": "Revenue", "q1": 120000, "q2": 135000},
         {"metric": "Cost of sales", "q1": 54000, "q2": 61000},
@@ -169,7 +169,7 @@ def _(EvidenceTable, mo):
         {"metric": "General & admin", "q1": 9000, "q2": 9500},
     ]
     mo.ui.anywidget(
-        EvidenceTable(
+        EvidentialTable(
             rows,
             title="Income statement (illustrative)",
             column_config={

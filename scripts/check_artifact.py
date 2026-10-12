@@ -16,7 +16,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 DIST = ROOT / "dist"
 
-PACKAGE = "evidence_tables"
+PACKAGE = "evidential"
 REQUIRED = (
     f"{PACKAGE}/__init__.py",
     f"{PACKAGE}/_compat.py",

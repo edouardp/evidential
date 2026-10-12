@@ -2,13 +2,13 @@
 # requires-python = ">=3.12,<3.15"
 # dependencies = [
 #     "marimo",
-#     "evidence-tables",
+#     "evidential",
 #     "marimo-studio==0.3.0",
 # ]
 #
 # [tool.uv.sources]
 # # Not on PyPI yet: in a sandboxed run, install the local checkout instead.
-# evidence-tables = { path = "..", editable = true }
+# evidential = { path = "..", editable = true }
 #
 # [tool.marimo-studio]
 # default = "dashboard"
@@ -18,14 +18,14 @@
 #
 # [tool.marimo-studio.cells]
 # ///
-"""One notebook, an EvidenceTable dashboard, and a marimo Studio view.
+"""One notebook, an EvidentialTable dashboard, and a marimo Studio view.
 
 Run it with Studio so the view can project the notebook's cells and values::
 
     uv run --with "marimo-studio[deno]" marimo edit notebooks/21_studio_dashboard.py
 
 The committed view lives in ``notebooks/studio/21_studio_dashboard/dashboard``.
-It projects the live ``EvidenceTable`` widget through ``<marimo-cell>`` and the
+It projects the live ``EvidentialTable`` widget through ``<marimo-cell>`` and the
 KPI dictionary through ``mo-value``; because the widget is interactive, the view
 uses Studio's **Server** runtime.
 """
@@ -42,7 +42,7 @@ def intro(mo):
     # Studio dashboard
 
     A self-contained notebook (no database, no network) that a marimo Studio
-    view projects: a live `EvidenceTable`, a region filter, and a KPI strip.
+    view projects: a live `EvidentialTable`, a region filter, and a KPI strip.
     Change the filter and both the table and the KPIs update everywhere.
     """)
     return
@@ -52,9 +52,9 @@ def intro(mo):
 def _():
     import marimo as mo
 
-    from evidence_tables import EvidenceTable
+    from evidential import EvidentialTable
 
-    return EvidenceTable, mo
+    return EvidentialTable, mo
 
 
 @app.cell
@@ -110,10 +110,10 @@ def kpis(filtered):
 
 
 @app.cell
-def revenue_table(EvidenceTable, filtered):
-    # The live EvidenceTable widget is this cell's output; <marimo-cell
+def revenue_table(EvidentialTable, filtered):
+    # The live EvidentialTable widget is this cell's output; <marimo-cell
     # name="revenue_table"> mounts it in the view.
-    EvidenceTable(
+    EvidentialTable(
         filtered,
         title="Revenue by city",
         subtitle="Bars, colour scales and deltas",

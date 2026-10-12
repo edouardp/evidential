@@ -2,7 +2,7 @@
 # requires-python = ">=3.12"
 # dependencies = [
 #     "marimo",
-#     "evidence-tables",
+#     "evidential",
 # ]
 # ///
 """Multi-line column headers.
@@ -23,9 +23,9 @@ app = marimo.App(width="full")
 def _():
     import marimo as mo
 
-    from evidence_tables import EvidenceTable
+    from evidential import EvidentialTable
 
-    return EvidenceTable, mo
+    return EvidentialTable, mo
 
 
 @app.cell
@@ -51,9 +51,9 @@ def _():
 
 
 @app.cell
-def _(EvidenceTable, mo, records):
+def _(EvidentialTable, mo, records):
     multiline = mo.ui.anywidget(
-        EvidenceTable(
+        EvidentialTable(
             records,
             title="Forced line breaks",
             subtitle="A newline in the title, and every header sits on the rule",
@@ -84,9 +84,9 @@ def _(mo):
 
 
 @app.cell
-def _(EvidenceTable, mo, records):
+def _(EvidentialTable, mo, records):
     wrapped = mo.ui.anywidget(
-        EvidenceTable(
+        EvidentialTable(
             records,
             title="Wrapping titles (default)",
             width="420px",
@@ -103,9 +103,9 @@ def _(EvidenceTable, mo, records):
 
 
 @app.cell
-def _(EvidenceTable, mo, records):
+def _(EvidentialTable, mo, records):
     nowrap = mo.ui.anywidget(
-        EvidenceTable(
+        EvidentialTable(
             records,
             title="wrap_titles=False",
             width="420px",

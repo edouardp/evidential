@@ -1,10 +1,10 @@
 {
-  "name": "evidence-tables-frontend",
+  "name": "evidential-frontend",
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "esbuild src/index.js --bundle --format=esm --minify --legal-comments=linked --outfile=../src/evidence_tables/static/table.js && cp src/table.css ../src/evidence_tables/static/table.css",
-    "dev": "esbuild src/index.js --bundle --format=esm --sourcemap --outfile=../src/evidence_tables/static/table.js --watch",
+    "build": "esbuild src/index.js --bundle --format=esm --minify --legal-comments=linked --outfile=../src/evidential/static/table.js && cp src/table.css ../src/evidential/static/table.css",
+    "dev": "esbuild src/index.js --bundle --format=esm --sourcemap --outfile=../src/evidential/static/table.js --watch",
     "test": "node --test test_*.js"
   },
   "dependencies": {

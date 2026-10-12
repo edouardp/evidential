@@ -2,7 +2,7 @@
 # requires-python = ">=3.12"
 # dependencies = [
 #     "marimo",
-#     "evidence-tables",
+#     "evidential",
 # ]
 # ///
 """Highlight an entire column or column group with a colour.
@@ -23,9 +23,9 @@ app = marimo.App(width="full")
 def _():
     import marimo as mo
 
-    from evidence_tables import EvidenceTable
+    from evidential import EvidentialTable
 
-    return EvidenceTable, mo
+    return EvidentialTable, mo
 
 
 @app.cell
@@ -67,9 +67,9 @@ def _():
 
 
 @app.cell
-def _(EvidenceTable, mo, records):
+def _(EvidentialTable, mo, records):
     projection = mo.ui.anywidget(
-        EvidenceTable(
+        EvidentialTable(
             records,
             title="Selected economies: current account balance, 2017-20",
             subtitle="The 2020 Projection column is highlighted in both groups",
@@ -108,9 +108,9 @@ def _(mo):
 
 
 @app.cell
-def _(EvidenceTable, mo, records):
+def _(EvidentialTable, mo, records):
     group_band = mo.ui.anywidget(
-        EvidenceTable(
+        EvidentialTable(
             records,
             title="The projected years, highlighted as a group",
             row_shading=True,

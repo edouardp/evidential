@@ -1,4 +1,4 @@
-# Makefile for marimo-evidence-tables
+# Makefile for evidential
 #
 # Usage:
 #   make              Show all available targets
@@ -92,7 +92,7 @@ preview: frontend-build ## Serve the renderer preview at http://HOST:PORT/fronte
 	uv run python -m http.server $(PORT) --bind $(HOST)
 
 .PHONY: screenshot
-screenshot: frontend-build ## Capture the preview to /tmp/evidence_preview.png (Chromium-based browser)
+screenshot: frontend-build ## Capture the preview to /tmp/evidential_preview.png (Chromium-based browser)
 	@bash scripts/screenshot.sh
 
 # ============================================================================
@@ -128,7 +128,7 @@ pre-commit: ## Run all pre-commit hooks against every file
 
 .PHONY: security
 security: ## Run security scans (bandit + pip-audit)
-	uv run bandit -c .bandit -r -q src/evidence_tables
+	uv run bandit -c .bandit -r -q src/evidential
 	uv run pip-audit
 
 .PHONY: typecheck
@@ -145,7 +145,7 @@ markdown-lint: ## Lint documentation markdown with rumdl
 
 .PHONY: test-python
 test-python: ## Run the Python test suite with coverage
-	uv run pytest --cov=evidence_tables --cov-report=term-missing --cov-fail-under=80
+	uv run pytest --cov=evidential --cov-report=term-missing --cov-fail-under=80
 
 .PHONY: test-browser
 test-browser: frontend-build ## Run real-browser functional tests (Playwright + installed Edge/Chrome)

@@ -76,7 +76,7 @@ function compareValues(a, b, type) {
   return 0;
 }
 
-export class EvidenceTableRenderer {
+export class EvidentialTableRenderer {
   constructor(model, el) {
     this.model = model;
     this.el = el;
@@ -1888,8 +1888,8 @@ function formatRowRanges(rows) {
 }
 
 export function render({ model, el }) {
-  el.classList.add("evidence-tables-widget");
-  const renderer = new EvidenceTableRenderer(model, el);
+  el.classList.add("evidential-widget");
+  const renderer = new EvidentialTableRenderer(model, el);
   const rerender = () => renderer.render();
   const setLoading = () => renderer.setLoading(model.get("loading"));
   model.on("change:rows", rerender);

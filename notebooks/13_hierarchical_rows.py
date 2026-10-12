@@ -3,7 +3,7 @@
 # dependencies = [
 #     "marimo",
 #     "duckdb>=1.3",
-#     "evidence-tables",
+#     "evidential",
 # ]
 # ///
 """Hierarchical (grouped) rows: accordion and section styles."""
@@ -21,7 +21,7 @@ def _():
     import marimo as mo
     import duckdb
 
-    from evidence_tables import grouped_table
+    from evidential import grouped_table
 
     return Path, duckdb, grouped_table, mo
 

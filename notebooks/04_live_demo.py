@@ -3,7 +3,7 @@
 # dependencies = [
 #     "marimo",
 #     "duckdb>=1.3",
-#     "evidence-tables",
+#     "evidential",
 # ]
 # ///
 
@@ -18,17 +18,17 @@ def _():
     import marimo as mo
     import duckdb
 
-    from evidence_tables import LiveEvidenceTable, query_values
+    from evidential import LiveEvidentialTable, query_values
 
-    return LiveEvidenceTable, duckdb, mo, query_values
+    return LiveEvidentialTable, duckdb, mo, query_values
 
 
 @app.cell
 def _(mo):
     mo.md("""
-    # LiveEvidenceTable demo
+    # LiveEvidentialTable demo
 
-    A `LiveEvidenceTable` keeps a **parameterised SQL query** and re-runs it when
+    A `LiveEvidentialTable` keeps a **parameterised SQL query** and re-runs it when
     its controls change — without recreating the widget, so sort, search and page
     state survive. Values are bound as query parameters, never spliced into SQL.
 
@@ -106,10 +106,10 @@ def _(connection, mo, query_values):
 
 
 @app.cell(hide_code=True, expand_output=True)
-def _(LiveEvidenceTable, connection):
+def _(LiveEvidentialTable, connection):
     # Created once, with no references to the controls, so changing a control
     # never recreates the widget (and never resets sort/search/page).
-    live = LiveEvidenceTable(
+    live = LiveEvidentialTable(
         connection,
         """
         WITH enriched AS (

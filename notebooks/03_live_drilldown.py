@@ -3,7 +3,7 @@
 # dependencies = [
 #     "marimo",
 #     "duckdb>=1.3",
-#     "evidence-tables",
+#     "evidential",
 # ]
 # ///
 
@@ -18,9 +18,9 @@ def _():
     import marimo as mo
     import duckdb
 
-    from evidence_tables import LiveEvidenceTable, query_values
+    from evidential import LiveEvidentialTable, query_values
 
-    return LiveEvidenceTable, duckdb, mo, query_values
+    return LiveEvidentialTable, duckdb, mo, query_values
 
 
 @app.cell
@@ -28,7 +28,7 @@ def _(mo):
     mo.md("""
     # Live, parameterised tables
 
-    `LiveEvidenceTable` keeps a parameterised SQL query and re-runs it whenever
+    `LiveEvidentialTable` keeps a parameterised SQL query and re-runs it whenever
     a bound control changes — the widget itself is not recreated, so sort,
     search and page state are preserved.
 
@@ -101,10 +101,10 @@ def _(connection, mo, query_values):
 
 
 @app.cell
-def _(LiveEvidenceTable, connection):
+def _(LiveEvidentialTable, connection):
     # Persistent widget: created once, with no references to the controls, so
     # changing a control never recreates it (and never resets sort/page).
-    live = LiveEvidenceTable(
+    live = LiveEvidentialTable(
         connection,
         """
         SELECT payment, trip_distance, fare_amount, tip_amount, tip_rate

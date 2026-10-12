@@ -1,7 +1,7 @@
 # Architectural Decision Records
 
 This directory contains Architectural Decision Records (ADRs) for
-`marimo-evidence-tables`.
+`evidential`.
 
 ## What are ADRs?
 

@@ -20,7 +20,7 @@ esbuild to render a table.
 
 ## Considered Options
 
-1. Commit the esbuild bundle into `src/evidence_tables/static/`.
+1. Commit the esbuild bundle into `src/evidential/static/`.
 2. Build the frontend as part of the Python build.
 3. Load the module from a CDN.
 
@@ -28,7 +28,7 @@ esbuild to render a table.
 
 Chosen option: "Commit the bundle". `frontend/src/` is the source of truth;
 `make frontend-build` bundles it with esbuild into
-`src/evidence_tables/static/table.js` and copies `table.css`, and both files are
+`src/evidential/static/table.js` and copies `table.css`, and both files are
 committed. The wheel therefore contains the renderer with no build step.
 
 ### Consequences

@@ -5,8 +5,8 @@ import statistics
 import duckdb
 import pytest
 
-from evidence_tables import BUILTIN_AGGREGATIONS, grouped_table, resolve_aggregation
-from evidence_tables.duck import connect
+from evidential import BUILTIN_AGGREGATIONS, grouped_table, resolve_aggregation
+from evidential.duck import connect
 
 
 @pytest.fixture()

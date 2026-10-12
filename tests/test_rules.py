@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from evidence_tables import (
-    EvidenceTable,
+from evidential import (
+    EvidentialTable,
     cells_body,
     cols_merge_range,
     sub_missing,
@@ -14,7 +14,7 @@ from evidence_tables import (
 
 
 def test_style_rule_resolves_rows() -> None:
-    table = EvidenceTable(
+    table = EvidentialTable(
         [{"city": "NYC", "trips": 12000}, {"city": "LA", "trips": 8000}],
         rules=[
             tab_style(
@@ -30,7 +30,7 @@ def test_style_rule_resolves_rows() -> None:
 
 
 def test_format_rule_by_index() -> None:
-    table = EvidenceTable(
+    table = EvidentialTable(
         [{"a": 1}, {"a": 2}],
         rules=[tab_format(cells_body(columns="a", rows=[1]), "usd0")],
     )
@@ -39,7 +39,7 @@ def test_format_rule_by_index() -> None:
 
 
 def test_text_transform_applied() -> None:
-    table = EvidenceTable(
+    table = EvidentialTable(
         [{"name": "alpha"}, {"name": "beta"}],
         rules=[text_transform(cells_body(columns="name"), str.upper)],
     )
@@ -47,12 +47,12 @@ def test_text_transform_applied() -> None:
 
 
 def test_rows_get_stable_id_when_rules_present() -> None:
-    table = EvidenceTable([{"a": 1}, {"a": 2}], rules=[tab_format(cells_body("a"), "id")])
+    table = EvidentialTable([{"a": 1}, {"a": 2}], rules=[tab_format(cells_body("a"), "id")])
     assert [row["__row_id"] for row in table.rows] == [0, 1]
 
 
 def test_sub_small_vals_rule() -> None:
-    table = EvidenceTable(
+    table = EvidentialTable(
         [{"v": 0.001}, {"v": 10}],
         rules=[sub_small_vals(columns="v", threshold=0.01, small_text="small")],
     )
@@ -64,7 +64,7 @@ def test_sub_small_vals_rule() -> None:
 
 
 def test_sub_missing_and_values() -> None:
-    table = EvidenceTable(
+    table = EvidentialTable(
         [{"v": None}, {"v": 0}, {"v": 7}],
         rules=[sub_missing(columns="v", missing_text="n/a"), sub_values(columns="v", values=[0], replacement="-")],
     )
@@ -73,7 +73,7 @@ def test_sub_missing_and_values() -> None:
 
 
 def test_cols_merge_range_creates_template_column() -> None:
-    table = EvidenceTable(
+    table = EvidentialTable(
         [{"low": 1, "high": 2}],
         column_config={"range": cols_merge_range("low", "high", fmt="num0")},
     )
@@ -83,24 +83,24 @@ def test_cols_merge_range_creates_template_column() -> None:
 
 
 def test_footnote_marks_and_all_caps() -> None:
-    table = EvidenceTable([{"a": 1}], footnote_marks="letters", all_caps=True)
+    table = EvidentialTable([{"a": 1}], footnote_marks="letters", all_caps=True)
     assert table.options["footnote_marks"] == "letters"
     assert table.options["all_caps"] is True
 
 
 def test_stretch_and_align_decimals_options() -> None:
-    table = EvidenceTable([{"a": 1.5}], stretch=False, align_decimals=True)
+    table = EvidentialTable([{"a": 1.5}], stretch=False, align_decimals=True)
     assert table.options["stretch"] is False
     assert table.options["align_decimals"] is True
 
 
 def test_rotate_titles_option() -> None:
-    table = EvidenceTable([{"a": 1}], rotate_titles="vertical")
+    table = EvidentialTable([{"a": 1}], rotate_titles="vertical")
     assert table.options["rotate_titles"] == "vertical"
-    oblique = EvidenceTable([{"a": 1}], rotate_titles=-45)
+    oblique = EvidentialTable([{"a": 1}], rotate_titles=-45)
     assert oblique.options["rotate_titles"] == -45
 
 
 def test_figure_style_option() -> None:
-    table = EvidenceTable([{"a": 1}], figure_style="lining-tabular")
+    table = EvidentialTable([{"a": 1}], figure_style="lining-tabular")
     assert table.options["figure_style"] == "lining-tabular"

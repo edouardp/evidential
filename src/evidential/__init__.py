@@ -7,7 +7,7 @@ formatting, conditional visualisation, grouping and interaction of
 Quick start::
 
     import duckdb
-    from evidence_tables import EvidenceTable
+    from evidential import EvidentialTable
 
     con = duckdb.connect()
     con.execute("INSTALL httpfs; LOAD httpfs;")
@@ -16,7 +16,7 @@ Quick start::
         "'https://d37ci6vzurychx.cloudfront.net/trip-data/yellow_tripdata_2024-01.parquet'"
     )
 
-    EvidenceTable(
+    EvidentialTable(
         con.sql("SELECT * FROM trips LIMIT 500"),
         title="NYC yellow taxi trips",
         search=True,
@@ -35,7 +35,7 @@ from .client import grouped_records
 from .comparison import comparison_table
 from .data import make_column
 from .grouped import grouped_table, simple_table
-from .live import LiveEvidenceTable, query_values
+from .live import LiveEvidentialTable, query_values
 from .pivot import pivot_table
 from .query import date_range_sql, query_table
 from .rules import (
@@ -54,12 +54,12 @@ from .rules import (
     tab_style,
     text_transform,
 )
-from .table import EvidenceTable, section_row
+from .table import EvidentialTable, section_row
 
 __all__ = [
-    "EvidenceTable",
+    "EvidentialTable",
     "section_row",
-    "LiveEvidenceTable",
+    "LiveEvidentialTable",
     "grouped_table",
     "grouped_records",
     "pivot_table",

@@ -3,10 +3,10 @@
 # dependencies = [
 #     "marimo",
 #     "duckdb>=1.3",
-#     "evidence-tables",
+#     "evidential",
 # ]
 # ///
-"""Surface the World Development Indicators Parquet bundle with EvidenceTables.
+"""Surface the World Development Indicators Parquet bundle with Evidential.
 
 WDI is a panel: one value per (country, indicator, year). This notebook reads
 the hive-partitioned Parquet bundle and shows the same data several ways — a
@@ -31,17 +31,17 @@ def _():
     import duckdb
     import marimo as mo
 
-    from evidence_tables import (
-        EvidenceTable,
-        LiveEvidenceTable,
+    from evidential import (
+        EvidentialTable,
+        LiveEvidentialTable,
         comparison_table,
         grouped_table,
         pivot_table,
     )
 
     return (
-        EvidenceTable,
-        LiveEvidenceTable,
+        EvidentialTable,
+        LiveEvidentialTable,
         Path,
         comparison_table,
         duckdb,
@@ -186,8 +186,8 @@ def _(connection, mo):
 
 
 @app.cell
-def _(LiveEvidenceTable, connection):
-    ranking = LiveEvidenceTable(
+def _(LiveEvidentialTable, connection):
+    ranking = LiveEvidentialTable(
         connection,
         """
         SELECT
@@ -254,9 +254,9 @@ def _(connection, mo):
 
 
 @app.cell
-def _(EvidenceTable, connection, mo, trend_country):
+def _(EvidentialTable, connection, mo, trend_country):
     trend = mo.ui.anywidget(
-        EvidenceTable(
+        EvidentialTable(
             connection.sql(
                 """
                 SELECT year, round(value, 2) AS value
@@ -295,9 +295,9 @@ def _(mo):
 
 
 @app.cell
-def _(EvidenceTable, connection, indicator, mo, region):
+def _(EvidentialTable, connection, indicator, mo, region):
     sparklines = mo.ui.anywidget(
-        EvidenceTable(
+        EvidentialTable(
             connection.sql(
                 """
                 WITH anchored AS (
@@ -567,9 +567,9 @@ def _(mo):
 
 
 @app.cell
-def _(EvidenceTable, connection, mo):
+def _(EvidentialTable, connection, mo):
     countries_table = mo.ui.anywidget(
-        EvidenceTable(
+        EvidentialTable(
             connection.sql(
                 """
                 SELECT "Country Code" AS code, "Short Name" AS name, Region,
@@ -595,9 +595,9 @@ def _(EvidenceTable, connection, mo):
 
 
 @app.cell
-def _(EvidenceTable, connection, mo):
+def _(EvidentialTable, connection, mo):
     indicators_table = mo.ui.anywidget(
-        EvidenceTable(
+        EvidentialTable(
             connection.sql(
                 """
                 SELECT "Series Code" AS code, "Indicator Name" AS name, Topic,
@@ -633,9 +633,9 @@ def _(mo):
 
 
 @app.cell
-def _(EvidenceTable, connection, mo):
+def _(EvidentialTable, connection, mo):
     footnotes_table = mo.ui.anywidget(
-        EvidenceTable(
+        EvidentialTable(
             connection.sql(
                 """
                 SELECT country_code, year, description

@@ -12,7 +12,7 @@ from typing import Any
 
 from .data import make_column
 from .grouped import _parse_measure
-from .table import EvidenceTable
+from .table import EvidentialTable
 
 __all__ = ["comparison_table"]
 
@@ -46,7 +46,7 @@ def comparison_table(
     dimension_config: Mapping[str, Mapping[str, Any]] | None = None,
     measure_config: Mapping[str, Mapping[str, Any]] | None = None,
     **table_options: Any,
-) -> EvidenceTable:
+) -> EvidentialTable:
     """Compare each measure against the previous ``periods`` periods.
 
     The window is anchored on the latest ``date_column`` value in ``sql``:
@@ -140,4 +140,4 @@ def comparison_table(
         pct.pop("color_options", None)
         columns.append(make_column(alias + "_pct", **pct))
 
-    return EvidenceTable(rows=rows, columns=columns, **table_options)
+    return EvidentialTable(rows=rows, columns=columns, **table_options)

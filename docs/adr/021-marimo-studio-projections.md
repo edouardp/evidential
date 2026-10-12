@@ -10,7 +10,7 @@ deciders: edouard
 
 marimo Studio turns one notebook into named views (dashboards, articles, slide
 decks). A view is a separate frontend project that places the notebook's cells,
-outputs and values by name. `EvidenceTable` is an interactive anywidget, so a
+outputs and values by name. `EvidentialTable` is an interactive anywidget, so a
 view needs a defined way to show it — and a view has no direct Python of its
 own.
 
@@ -25,7 +25,7 @@ own.
 
 1. Support Studio **projections** as the integration surface, with a committed
    demo view and Server runtime.
-2. Build a bespoke Studio view provider / widget for evidence-tables.
+2. Build a bespoke Studio view provider / widget for evidential.
 3. Do nothing: Studio is out of scope.
 
 ## Decision Outcome
@@ -34,11 +34,11 @@ Chosen option: "Support projections". Studio already defines the contract, so
 we adopt it rather than inventing one:
 
 - A live table is projected with `<marimo-cell name="…">` (the cell that
-  displays the `EvidenceTable`).
+  displays the `EvidentialTable`).
 - Native controls use `<marimo-cell name="…">`.
 - Single values use `mo-value="…"` and are formatted by the view's own JS.
 - The demo uses the **Server** runtime, because the widget needs a kernel. A
-  Prepared or Browser export additionally needs `evidence-tables` on PyPI,
+  Prepared or Browser export additionally needs `evidential` on PyPI,
   because Studio resolves the notebook's declared dependencies when exporting.
 - Views are committed next to the notebook in a configured `view_root`
   (`notebooks/studio/<notebook>/`), not under the ignored `__marimo__/`.
@@ -61,7 +61,7 @@ we adopt it rather than inventing one:
 
 ## More Information
 
-- [Using EvidenceTable in marimo Studio views](../marimo-studio.md)
+- [Using EvidentialTable in marimo Studio views](../marimo-studio.md)
 - The demo: `notebooks/21_studio_dashboard.py`,
   `notebooks/studio/21_studio_dashboard/dashboard/` (live widget) and
   `notebooks/studio/21_studio_dashboard/report/` (view-rendered).

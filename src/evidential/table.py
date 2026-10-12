@@ -1,4 +1,4 @@
-"""The :class:`EvidenceTable` anywidget."""
+"""The :class:`EvidentialTable` anywidget."""
 
 from __future__ import annotations
 
@@ -12,7 +12,7 @@ import traitlets
 from .data import _merge_column_config, apply_blank_predicates, infer_columns, jsonify, make_column, normalize_data
 from .rules import resolve_rules
 
-__all__ = ["EvidenceTable"]
+__all__ = ["EvidentialTable"]
 
 _ASSET_DIR = Path(__file__).parent / "static"
 
@@ -292,7 +292,7 @@ def _normalize_column_options(data: dict[str, Any]) -> dict[str, Any]:
 
 
 def section_row(label: str) -> dict[str, Any]:
-    """Return a full-width section divider row for :class:`EvidenceTable`."""
+    """Return a full-width section divider row for :class:`EvidentialTable`."""
     return {"render_type": "row_section", "__label": label}
 
 
@@ -425,7 +425,7 @@ def _resolve_column_groups(
     return result
 
 
-class EvidenceTable(anywidget.AnyWidget):
+class EvidentialTable(anywidget.AnyWidget):
     """An Evidence-style interactive data table.
 
     ``data`` accepts a list of dicts, a pandas DataFrame, a pyarrow Table, a
@@ -514,7 +514,7 @@ class EvidenceTable(anywidget.AnyWidget):
         columns: Iterable[str | Mapping[str, Any]] | None = None,
         column_config: Mapping[str, Mapping[str, Any]] | None = None,
         column_groups: Mapping[str, Sequence[str] | Mapping[str, Any]] | None = None,
-    ) -> EvidenceTable:
+    ) -> EvidentialTable:
         """Replace the table data, keeping the current options."""
         if rows is None:
             normalized_rows, inferred = normalize_data(data)
@@ -542,14 +542,14 @@ class EvidenceTable(anywidget.AnyWidget):
             self.options = current
         return self
 
-    def update_options(self, **options: Any) -> EvidenceTable:
+    def update_options(self, **options: Any) -> EvidentialTable:
         """Update one or more table-level display options."""
         current = dict(self.options)
         current.update({k: v for k, v in options.items() if k in _OPTION_KEYS})
         self.options = current
         return self
 
-    def set_column(self, name: str, **overrides: Any) -> EvidenceTable:
+    def set_column(self, name: str, **overrides: Any) -> EvidentialTable:
         """Merge overrides into a single column definition."""
         columns = [dict(column) for column in self.columns]
         for column in columns:
@@ -563,21 +563,21 @@ class EvidenceTable(anywidget.AnyWidget):
 
     # ---------------------------------------------------------- constructors --
     @classmethod
-    def from_arrow(cls, table: Any, **kwargs: Any) -> EvidenceTable:
+    def from_arrow(cls, table: Any, **kwargs: Any) -> EvidentialTable:
         """Build a table from a pyarrow Table."""
         return cls(table, **kwargs)
 
     @classmethod
-    def from_pandas(cls, frame: Any, **kwargs: Any) -> EvidenceTable:
+    def from_pandas(cls, frame: Any, **kwargs: Any) -> EvidentialTable:
         """Build a table from a pandas DataFrame."""
         return cls(frame, **kwargs)
 
     @classmethod
-    def from_records(cls, records: Sequence[Mapping[str, Any]], **kwargs: Any) -> EvidenceTable:
+    def from_records(cls, records: Sequence[Mapping[str, Any]], **kwargs: Any) -> EvidentialTable:
         """Build a table from a list of dicts."""
         return cls(list(records), **kwargs)
 
     @classmethod
-    def from_duckdb(cls, connection: Any, sql: str, **kwargs: Any) -> EvidenceTable:
+    def from_duckdb(cls, connection: Any, sql: str, **kwargs: Any) -> EvidentialTable:
         """Run ``sql`` on a DuckDB connection and wrap the result."""
         return cls(connection.sql(sql), **kwargs)

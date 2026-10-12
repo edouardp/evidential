@@ -1,11 +1,11 @@
 # technical architecture
 
-How `evidence-tables` is built. For *why*, see
+How `evidential` is built. For *why*, see
 [design-and-dx.md](design-and-dx.md).
 
 ## 1. Overview
 
-`evidence-tables` is an [anywidget](https://anywidget.dev): a Python class that
+`evidential` is an [anywidget](https://anywidget.dev): a Python class that
 ships a JavaScript module and a stylesheet to the browser. The Python side
 normalises data into three JSON traits — `rows`, `columns`, `options` — and the
 JavaScript side renders them. There is no server round-trip for interaction:
@@ -15,8 +15,8 @@ sorting, searching, paging, collapsing and fullscreen all happen in the browser.
 
 ```mermaid
 flowchart LR
-  subgraph Python["Python package (src/evidence_tables)"]
-    ET["EvidenceTable / LiveEvidenceTable"]
+  subgraph Python["Python package (src/evidential)"]
+    ET["EvidentialTable / LiveEvidentialTable"]
     DATA["data.py<br/>normalise + infer"]
     G["grouped.py · pivot.py · client.py"]
     R["rules.py"]
@@ -27,7 +27,7 @@ flowchart LR
     T["rows · columns · options · loading"]
   end
   subgraph JS["Browser (frontend/src → static/)"]
-    TB["table.js<br/>EvidenceTableRenderer"]
+    TB["table.js<br/>EvidentialTableRenderer"]
     F["format.js (ssf)"]
     C["color.js (chroma-js)"]
   end
@@ -44,9 +44,9 @@ flowchart LR
 ## 2. Repository map
 
 ```text
-src/evidence_tables/        Python package (the anywidget)
+src/evidential/        Python package (the anywidget)
   __init__.py               public API re-exports
-  table.py                  EvidenceTable, option keys, column coercion
+  table.py                  EvidentialTable, option keys, column coercion
   data.py                   normalise / infer / jsonify
   grouped.py                grouped_table, decorate_grouped_rows, simple_table
   client.py                 grouped_records (in-memory grouping)
@@ -55,7 +55,7 @@ src/evidence_tables/        Python package (the anywidget)
   comparison.py             comparison_table (prior period)
   query.py                  query_table, date_range_sql
   rules.py                  gt-style cells_body / tab_* / sub_* / cols_merge_*
-  live.py                   LiveEvidenceTable, query_values
+  live.py                   LiveEvidentialTable, query_values
   duck.py                   DuckDB connections, S3, S3 Tables
   _compat.py                soft Arrow/pandas detection
   static/table.js           committed esbuild bundle
@@ -78,7 +78,7 @@ An anywidget is a Python class whose synced traitlets are mirrored into a model
 in the browser, plus an ESM module and CSS:
 
 ```python
-class EvidenceTable(anywidget.AnyWidget):
+class EvidentialTable(anywidget.AnyWidget):
     _esm = _ASSET_DIR / "table.js"
     _css = _ASSET_DIR / "table.css"
 
@@ -94,8 +94,8 @@ function:
 
 ```js
 export function render({ model, el }) {
-  el.classList.add("evidence-tables-widget");
-  const renderer = new EvidenceTableRenderer(model, el);
+  el.classList.add("evidential-widget");
+  const renderer = new EvidentialTableRenderer(model, el);
   const rerender = () => renderer.render();
   model.on("change:rows", rerender);
   model.on("change:columns", rerender);
@@ -117,7 +117,7 @@ Two details matter:
 
 ```mermaid
 classDiagram
-  class EvidenceTable {
+  class EvidentialTable {
     +rows: List[Dict]
     +columns: List[Dict]
     +options: Dict
@@ -127,26 +127,26 @@ classDiagram
     +set_column(name, **overrides)
     +from_arrow() / from_pandas() / from_records() / from_duckdb()
   }
-  class LiveEvidenceTable {
+  class LiveEvidentialTable {
     +sql: Unicode
     +run(sql, params)
     +set_controls(**params)
   }
-  class EvidenceTableRenderer {
+  class EvidentialTableRenderer {
     -_state: sort, search, page, collapsed, expanded, hidden
     +render()
     +setLoading(bool)
     +destroy()
   }
-  EvidenceTable <|-- LiveEvidenceTable
-  EvidenceTable ..> EvidenceTableRenderer : "rows · columns · options"
+  EvidentialTable <|-- LiveEvidentialTable
+  EvidentialTable ..> EvidentialTableRenderer : "rows · columns · options"
 ```
 
 ## 4. Python layer
 
 ### 4.1 `table.py` — the widget and its schema
 
-`EvidenceTable.__init__` does, in order:
+`EvidentialTable.__init__` does, in order:
 
 1. Split keyword arguments into known table options (`_OPTION_KEYS`) and the rest
    (forwarded to `AnyWidget`).
@@ -233,7 +233,7 @@ flowchart TD
   GR --> D["decorate_grouped_rows()"]
   D --> M["render_type · __level · __group_key<br/>__ancestors · __parent_key"]
   M --> A["apply_aggregations()<br/>(optional: recompute from detail)"]
-  A --> ET["EvidenceTable(rows, columns)"]
+  A --> ET["EvidentialTable(rows, columns)"]
 ```
 
 - `_parse_measure` accepts `"sum(x) AS total"`, `(alias, expr)` and
@@ -270,7 +270,7 @@ total uses all detail rows. For `weighted_mean`, `grouped_table` adds hidden
 
 ### 4.6 `pivot.py`, `comparison.py`, `query.py` — query builders
 
-These build SQL, run it, and hand rows to `EvidenceTable` (or
+These build SQL, run it, and hand rows to `EvidentialTable` (or
 `decorate_grouped_rows`).
 
 - `pivot_table` discovers distinct pivot combinations, emits one
@@ -309,7 +309,7 @@ rules travel as data; the renderer applies them in order (last match wins).
 
 ### 4.8 `live.py` — parameterised re-querying
 
-`LiveEvidenceTable` subclasses `EvidenceTable` and adds an `sql` trait. `run()`
+`LiveEvidentialTable` subclasses `EvidentialTable` and adds an `sql` trait. `run()`
 prepares the statement, executes it, and calls `set_data`.
 
 `_prepare` handles two template forms and **always binds parameters**:
@@ -377,7 +377,7 @@ rows.
 
 ## 6. Render pipeline (JavaScript)
 
-`EvidenceTableRenderer` owns all mutable UI state:
+`EvidentialTableRenderer` owns all mutable UI state:
 
 ```js
 this._state = {
@@ -569,7 +569,7 @@ stateDiagram-v2
 ```mermaid
 sequenceDiagram
   participant R as Reactive Marimo cell
-  participant W as LiveEvidenceTable
+  participant W as LiveEvidentialTable
   participant DB as DuckDB
   participant M as anywidget model
   participant J as Renderer
@@ -596,8 +596,8 @@ a data-only update triggers one re-render instead of two.
 flowchart LR
   SRC["frontend/src/*.js"] --> ES["esbuild<br/>--bundle --format=esm --minify"]
   CSS["frontend/src/table.css"] --> CP["copy"]
-  ES --> B1["src/evidence_tables/static/table.js"]
-  CP --> B2["src/evidence_tables/static/table.css"]
+  ES --> B1["src/evidential/static/table.js"]
+  CP --> B2["src/evidential/static/table.css"]
   B1 --> WHL["wheel (committed assets)"]
   B2 --> WHL
 ```
@@ -678,7 +678,7 @@ validates its projections. See [marimo-studio.md](marimo-studio.md) and
 - **A new table/column option** — add it to `_OPTION_KEYS`/`_OPTION_DEFAULTS`
   (table options) or to `make_column` (column options), document it, and add a
   notebook demo. No frontend change is needed if the option is pure CSS/data.
-- **A new Python helper** — build SQL and hand rows to `EvidenceTable` (or
+- **A new Python helper** — build SQL and hand rows to `EvidentialTable` (or
   `decorate_grouped_rows` if it should have subtotals); re-export it from
   `__init__.py`.
 
@@ -686,7 +686,7 @@ validates its projections. See [marimo-studio.md](marimo-studio.md) and
 
 | File | Responsibility |
 | --- | --- |
-| `table.py` | `EvidenceTable`, option schema, column coercion, groups |
+| `table.py` | `EvidentialTable`, option schema, column coercion, groups |
 | `data.py` | normalisation, JSON safety, type inference, blank predicates |
 | `grouped.py` | `grouped_table`, `decorate_grouped_rows`, `simple_table` |
 | `client.py` | `grouped_records` (in-memory grouping) |
@@ -695,7 +695,7 @@ validates its projections. See [marimo-studio.md](marimo-studio.md) and
 | `comparison.py` | `comparison_table` |
 | `query.py` | `query_table`, `date_range_sql` |
 | `rules.py` | `cells_body`, `tab_*`, `sub_*`, `cols_merge*`, `resolve_rules` |
-| `live.py` | `LiveEvidenceTable`, `query_values` |
+| `live.py` | `LiveEvidentialTable`, `query_values` |
 | `duck.py` | DuckDB connections, S3, S3 Tables |
 | `_compat.py` | soft Arrow/pandas detection |
 | `table.js` | renderer, pipeline, interaction, fullscreen, CSV |

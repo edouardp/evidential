@@ -16,7 +16,7 @@
 
 ## Notes for the next agent
 
-- This view deliberately does **not** project the `EvidenceTable` widget; it
+- This view deliberately does **not** project the `EvidentialTable` widget; it
   formats and draws the projected values itself. That keeps it usable in every
   runtime, including a zero-Python export.
 - The dashboard view in `../dashboard/` shows the complementary approach: let

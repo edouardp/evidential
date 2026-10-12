@@ -54,6 +54,6 @@ express. Option 3 was rejected as an unnecessary second convention.
 ## More Information
 
 - [Design and DX §4.6](../design-and-dx.md)
-- `src/evidence_tables/table.py` (`_resolve_column_groups`)
+- `src/evidential/table.py` (`_resolve_column_groups`)
 - `frontend/src/table.js` (`groupPath`, `groupKey`)
 - `notebooks/24_dotted_groups.py`

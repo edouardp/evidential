@@ -15,7 +15,7 @@ from typing import Any
 from .aggregations import apply_aggregations
 from .data import jsonify, make_column
 from .grouped import _parse_measure, decorate_grouped_rows
-from .table import EvidenceTable
+from .table import EvidentialTable
 
 __all__ = ["pivot_table"]
 
@@ -59,7 +59,7 @@ def pivot_table(
     dimension_config: Mapping[str, Mapping[str, Any]] | None = None,
     measure_config: Mapping[str, Mapping[str, Any]] | None = None,
     **table_options: Any,
-) -> EvidenceTable:
+) -> EvidentialTable:
     """Pivot ``pivots`` into columns, aggregating each measure per pivot value.
 
     ``sql`` is the base relation, ``dimensions`` are the row dimensions, and
@@ -185,4 +185,4 @@ def pivot_table(
     table_options.setdefault("show_total_row", total)
     table_options.setdefault("collapsible", subtotals)
     table_options.setdefault("subtotal_position", subtotal_position)
-    return EvidenceTable(rows=ordered, columns=columns, **table_options)
+    return EvidentialTable(rows=ordered, columns=columns, **table_options)

@@ -3,10 +3,10 @@
 # dependencies = [
 #     "marimo",
 #     "duckdb>=1.3",
-#     "evidence-tables",
+#     "evidential",
 # ]
 # ///
-"""Evidence's own sample dataset (`needful_things.orders`) rendered with EvidenceTable.
+"""Evidence's own sample dataset (`needful_things.orders`) rendered with EvidentialTable.
 
 The parquet file was copied from the published Evidence docs site
 (``legacy-docs.evidence.dev/data/needful_things/orders/.../orders.parquet``) so
@@ -26,9 +26,9 @@ def _():
     import marimo as mo
     import duckdb
 
-    from evidence_tables import EvidenceTable, grouped_table
+    from evidential import EvidentialTable, grouped_table
 
-    return EvidenceTable, Path, duckdb, grouped_table, mo
+    return EvidentialTable, Path, duckdb, grouped_table, mo
 
 
 @app.cell
@@ -73,9 +73,9 @@ def _(mo):
 
 
 @app.cell
-def _(EvidenceTable, connection, mo):
+def _(EvidentialTable, connection, mo):
     trend = mo.ui.anywidget(
-        EvidenceTable(
+        EvidentialTable(
             connection.sql(
                 """
                 WITH monthly AS (
@@ -184,9 +184,9 @@ def _(mo):
 
 
 @app.cell
-def _(EvidenceTable, connection, mo):
+def _(EvidentialTable, connection, mo):
     orders = mo.ui.anywidget(
-        EvidenceTable(
+        EvidentialTable(
             connection.sql(
                 """
                 SELECT id, order_datetime, category, item, channel_group, sales

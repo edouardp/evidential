@@ -3,7 +3,7 @@
 # dependencies = [
 #     "marimo",
 #     "duckdb>=1.3",
-#     "evidence-tables",
+#     "evidential",
 # ]
 # ///
 """Table-level display options demonstrated on Evidence's sample data."""
@@ -21,9 +21,9 @@ def _():
     import marimo as mo
     import duckdb
 
-    from evidence_tables import EvidenceTable
+    from evidential import EvidentialTable
 
-    return EvidenceTable, Path, duckdb, mo
+    return EvidentialTable, Path, duckdb, mo
 
 
 @app.cell
@@ -50,9 +50,9 @@ def _(mo):
 
 
 @app.cell
-def _(EvidenceTable, connection, mo):
+def _(EvidentialTable, connection, mo):
     summary = mo.ui.anywidget(
-        EvidenceTable(
+        EvidentialTable(
             connection.sql(
                 """
                 SELECT
@@ -103,9 +103,9 @@ def _(mo):
 
 
 @app.cell
-def _(EvidenceTable, connection, mo):
+def _(EvidentialTable, connection, mo):
     links = mo.ui.anywidget(
-        EvidenceTable(
+        EvidentialTable(
             connection.sql(
                 """
                 SELECT
@@ -149,9 +149,9 @@ def _(mo):
 
 
 @app.cell
-def _(EvidenceTable, connection, mo):
+def _(EvidentialTable, connection, mo):
     borderless = mo.ui.anywidget(
-        EvidenceTable(
+        EvidentialTable(
             connection.sql(
                 """
                 SELECT category, count(*) AS orders, round(sum(sales), 0) AS sales
@@ -186,9 +186,9 @@ def _(mo):
 
 
 @app.cell
-def _(EvidenceTable, connection, mo):
+def _(EvidentialTable, connection, mo):
     empty = mo.ui.anywidget(
-        EvidenceTable(
+        EvidentialTable(
             connection.sql("SELECT category, sales FROM needful_things.orders WHERE 1=0"),
             title="No matching orders",
             empty_message="No orders matched this filter",

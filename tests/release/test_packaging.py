@@ -11,7 +11,7 @@ ROOT = Path(__file__).resolve().parents[2]
 
 def test_inspect_flags_missing_runtime_files() -> None:
     problems = gate.inspect({})
-    assert any("missing evidence_tables/table.py" in problem for problem in problems)
+    assert any("missing evidential/table.py" in problem for problem in problems)
 
 
 def test_inspect_flags_development_files() -> None:
@@ -25,7 +25,7 @@ def test_inspect_flags_development_files() -> None:
 
 def test_inspect_rejects_empty_renderer_assets() -> None:
     members = dict.fromkeys(gate.REQUIRED, b"x" * 20000)
-    members["evidence_tables/static/table.js"] = b""
+    members["evidential/static/table.js"] = b""
     assert any("looks empty" in problem for problem in gate.inspect(members))
 
 
@@ -35,7 +35,7 @@ def test_inspect_accepts_a_complete_archive() -> None:
 
 
 def test_normalize_strips_sdist_prefix() -> None:
-    assert gate._normalize("evidence_tables-0.1.0/src/evidence_tables/table.py") == "evidence_tables/table.py"
+    assert gate._normalize("evidential-0.1.0/src/evidential/table.py") == "evidential/table.py"
 
 
 def test_committed_renderer_assets_are_present_and_substantial() -> None:
@@ -46,4 +46,4 @@ def test_committed_renderer_assets_are_present_and_substantial() -> None:
 
 
 def test_type_marker_is_shipped() -> None:
-    assert (ROOT / "src/evidence_tables/py.typed").is_file()
+    assert (ROOT / "src/evidential/py.typed").is_file()

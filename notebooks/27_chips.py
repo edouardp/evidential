@@ -2,7 +2,7 @@
 # requires-python = ">=3.12"
 # dependencies = [
 #     "marimo",
-#     "evidence-tables",
+#     "evidential",
 # ]
 # ///
 """Chips: a value in a rounded rectangle, coloured like a colour cell.
@@ -24,9 +24,9 @@ app = marimo.App(width="full")
 def _():
     import marimo as mo
 
-    from evidence_tables import EvidenceTable
+    from evidential import EvidentialTable
 
-    return EvidenceTable, mo
+    return EvidentialTable, mo
 
 
 @app.cell
@@ -67,9 +67,9 @@ def _():
 
 
 @app.cell
-def _(EvidenceTable, mo, records):
+def _(EvidentialTable, mo, records):
     aqi_chip = mo.ui.anywidget(
-        EvidenceTable(
+        EvidentialTable(
             records,
             title="A numeric chip with a colour scale",
             subtitle="color_scale from green to red, clamped to 0-250",
@@ -107,9 +107,9 @@ def _(mo):
 
 
 @app.cell
-def _(EvidenceTable, mo, records):
+def _(EvidentialTable, mo, records):
     status_chip = mo.ui.anywidget(
-        EvidenceTable(
+        EvidentialTable(
             records,
             title="A text chip with conditional colours",
             subtitle="color_options={'conditional_colors': 'status_color'}",
@@ -132,9 +132,9 @@ def _(EvidenceTable, mo, records):
 
 
 @app.cell
-def _(EvidenceTable, mo, records):
+def _(EvidentialTable, mo, records):
     neutral_chip = mo.ui.anywidget(
-        EvidenceTable(
+        EvidentialTable(
             records,
             title="A chip without a colour scale",
             subtitle="No colour options: a neutral fill, centred",
@@ -153,9 +153,9 @@ def _(EvidenceTable, mo, records):
 
 
 @app.cell
-def _(EvidenceTable, mo, records):
+def _(EvidentialTable, mo, records):
     sized_chip = mo.ui.anywidget(
-        EvidenceTable(
+        EvidentialTable(
             records,
             title="Chips with a minimum width",
             subtitle='`chip_options={"min_width": 72}` — short values are padded, long ones expand',

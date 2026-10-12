@@ -3,7 +3,7 @@
 # dependencies = [
 #     "marimo",
 #     "duckdb>=1.3",
-#     "evidence-tables",
+#     "evidential",
 # ]
 # ///
 """`query_table` / date ranges, plus `page_size="all"`."""
@@ -21,9 +21,9 @@ def _():
     import marimo as mo
     import duckdb
 
-    from evidence_tables import LiveEvidenceTable, date_range_sql, query_table
+    from evidential import LiveEvidentialTable, date_range_sql, query_table
 
-    return LiveEvidenceTable, Path, date_range_sql, duckdb, mo, query_table
+    return LiveEvidentialTable, Path, date_range_sql, duckdb, mo, query_table
 
 
 @app.cell
@@ -117,8 +117,8 @@ def _(mo):
 
 
 @app.cell
-def _(LiveEvidenceTable, connection):
-    live = LiveEvidenceTable(
+def _(LiveEvidentialTable, connection):
+    live = LiveEvidentialTable(
         connection,
         "SELECT * FROM needful_things.orders",
         auto_run=False,

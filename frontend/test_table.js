@@ -20,7 +20,7 @@ if (!dom.window.HTMLDialogElement.prototype.showModal) {
   dom.window.HTMLDialogElement.prototype.close = function () { this.open = false; this.dispatchEvent(new dom.window.Event("close")); };
 }
 
-const { EvidenceTableRenderer, holdInterval } = await import("./src/table.js");
+const { EvidentialTableRenderer, holdInterval } = await import("./src/table.js");
 
 function makeModel(rows, columns, options = {}, el) {
   const data = { rows, columns, options, selected: null };
@@ -56,7 +56,7 @@ beforeEach(() => {
 });
 
 test("renders rows and formatted cells", () => {
-  const renderer = new EvidenceTableRenderer(makeModel(ROWS, COLUMNS, { page_size: 10 }, el), el);
+  const renderer = new EvidentialTableRenderer(makeModel(ROWS, COLUMNS, { page_size: 10 }, el), el);
   const text = el.querySelector(".et-table").textContent;
   assert.match(text, /NYC/);
   assert.match(text, /\$4,200/);
@@ -67,7 +67,7 @@ test("renders rows and formatted cells", () => {
 });
 
 test("sorts by column on header click (desc -> asc -> none)", () => {
-  const renderer = new EvidenceTableRenderer(makeModel(ROWS, COLUMNS, {}, el), el);
+  const renderer = new EvidentialTableRenderer(makeModel(ROWS, COLUMNS, {}, el), el);
   const header = [...el.querySelectorAll("thead tr:last-child th")][1];
   header.dispatchEvent(new window.MouseEvent("click", { bubbles: true }));
   let first = el.querySelector("tbody tr").textContent;
@@ -79,7 +79,7 @@ test("sorts by column on header click (desc -> asc -> none)", () => {
 });
 
 test("search filters rows", () => {
-  const renderer = new EvidenceTableRenderer(makeModel(ROWS, COLUMNS, { search: true }, el), el);
+  const renderer = new EvidentialTableRenderer(makeModel(ROWS, COLUMNS, { search: true }, el), el);
   const input = el.querySelector(".et-search");
   input.value = "LA";
   input.dispatchEvent(new window.Event("input", { bubbles: true }));
@@ -90,7 +90,7 @@ test("search filters rows", () => {
 });
 
 test("pagination limits rows and pages", () => {
-  const renderer = new EvidenceTableRenderer(makeModel(ROWS, COLUMNS, { page_size: 2 }, el), el);
+  const renderer = new EvidentialTableRenderer(makeModel(ROWS, COLUMNS, { page_size: 2 }, el), el);
   assert.equal(el.querySelectorAll("tbody tr").length, 2);
   const next = [...el.querySelectorAll(".et-page-controls button")][1];
   next.dispatchEvent(new window.MouseEvent("click", { bubbles: true }));
@@ -99,7 +99,7 @@ test("pagination limits rows and pages", () => {
 });
 
 test("pagination reads as one left-aligned text run", () => {
-  const renderer = new EvidenceTableRenderer(makeModel(ROWS, COLUMNS, { page_size: 2 }, el), el);
+  const renderer = new EvidentialTableRenderer(makeModel(ROWS, COLUMNS, { page_size: 2 }, el), el);
   const footer = el.querySelector(".et-footer");
   assert.equal(footer.firstElementChild.className, "et-page-controls", "pager is first");
   assert.equal(footer.lastElementChild.className, "et-table-actions", "actions are last");
@@ -114,7 +114,7 @@ test("pagination reads as one left-aligned text run", () => {
 });
 
 test("download and fullscreen live in the footer's bottom-right actions", () => {
-  const renderer = new EvidenceTableRenderer(
+  const renderer = new EvidentialTableRenderer(
     makeModel(ROWS, COLUMNS, { download: true, page_size: 2 }, el),
     el,
   );
@@ -129,7 +129,7 @@ test("download and fullscreen live in the footer's bottom-right actions", () => 
 });
 
 test("the fullscreen action stays available without pagination or download", () => {
-  const renderer = new EvidenceTableRenderer(makeModel(ROWS, COLUMNS, {}, el), el);
+  const renderer = new EvidentialTableRenderer(makeModel(ROWS, COLUMNS, {}, el), el);
   assert.equal(el.querySelectorAll(".et-page-controls").length, 0);
   assert.ok(el.querySelector(".et-footer .et-expand-btn"), "expand stays available");
   renderer.destroy();
@@ -146,7 +146,7 @@ test("hold repeat interval eases from 700ms to 100ms by 3s", () => {
 test("holding the next button auto-repeats after a delay", (t) => {
   t.mock.timers.enable({ apis: ["setTimeout"] });
   const rows = Array.from({ length: 6 }, (_, i) => ({ city: `C${i}`, trips: i, revenue: i * 10 }));
-  const renderer = new EvidenceTableRenderer(makeModel(rows, COLUMNS, { page_size: 1 }, el), el);
+  const renderer = new EvidentialTableRenderer(makeModel(rows, COLUMNS, { page_size: 1 }, el), el);
   assert.equal(renderer._state.page, 0);
 
   const next = [...el.querySelectorAll(".et-page-controls button")][1];
@@ -175,7 +175,7 @@ test("renders grouped subtotal rows and collapses", () => {
     { name: "city", type: "string", align: "left" },
     { name: "revenue", type: "number", fmt: "usd0", align: "right" },
   ];
-  const renderer = new EvidenceTableRenderer(
+  const renderer = new EvidentialTableRenderer(
     makeModel(rows, columns, { collapsible: true, collapsed: false }, el),
     el,
   );
@@ -188,7 +188,7 @@ test("renders grouped subtotal rows and collapses", () => {
 });
 
 test("fullscreen moves the widget into the dialog", () => {
-  const renderer = new EvidenceTableRenderer(makeModel(ROWS, COLUMNS, {}, el), el);
+  const renderer = new EvidentialTableRenderer(makeModel(ROWS, COLUMNS, {}, el), el);
   const root = el.querySelector(".et-root");
   assert.ok(el.contains(root));
 
@@ -207,7 +207,7 @@ test("fullscreen moves the widget into the dialog", () => {
 });
 
 test("leaving fullscreen restores the inline height", () => {
-  const renderer = new EvidenceTableRenderer(makeModel(ROWS, COLUMNS, { page_size: 2 }, el), el);
+  const renderer = new EvidentialTableRenderer(makeModel(ROWS, COLUMNS, { page_size: 2 }, el), el);
   let natural = 120;
   // Simulate layout: the measured height is at least min-height.
   renderer.scroller.getBoundingClientRect = () => ({
@@ -233,7 +233,7 @@ test("leaving fullscreen restores the inline height", () => {
 });
 
 test("fullscreen page-size override applies and resets the inline size", () => {
-  const renderer = new EvidenceTableRenderer(makeModel(ROWS, COLUMNS, { page_size: 2 }, el), el);
+  const renderer = new EvidentialTableRenderer(makeModel(ROWS, COLUMNS, { page_size: 2 }, el), el);
   assert.equal(el.querySelectorAll("tbody tr").length, 2);
 
   renderer._pageSizeOverride = 1;
@@ -252,7 +252,7 @@ test("fullscreen page-size override applies and resets the inline size", () => {
 });
 
 test("fullscreen clears max_height so rows can expand", () => {
-  const renderer = new EvidenceTableRenderer(
+  const renderer = new EvidentialTableRenderer(
     makeModel(ROWS, COLUMNS, { page_size: 2, max_height: "200px" }, el),
     el,
   );
@@ -270,7 +270,7 @@ test("fullscreen clears max_height so rows can expand", () => {
 });
 
 test("clicking the backdrop dismisses the fullscreen dialog", () => {
-  const renderer = new EvidenceTableRenderer(makeModel(ROWS, COLUMNS, {}, el), el);
+  const renderer = new EvidentialTableRenderer(makeModel(ROWS, COLUMNS, {}, el), el);
   const dialog = el.querySelector("dialog");
   const root = el.querySelector(".et-root");
 
@@ -293,13 +293,13 @@ test("clicking the backdrop dismisses the fullscreen dialog", () => {
 });
 
 test("row shading adds alternating data rows", () => {
-  const renderer = new EvidenceTableRenderer(makeModel(ROWS, COLUMNS, { row_shading: true }, el), el);
+  const renderer = new EvidentialTableRenderer(makeModel(ROWS, COLUMNS, { row_shading: true }, el), el);
   assert.equal(el.querySelectorAll(".et-row-shaded").length, 1);
   renderer.destroy();
 });
 
 test("row_lines: false disables body row borders", () => {
-  const renderer = new EvidenceTableRenderer(makeModel(ROWS, COLUMNS, { row_lines: false }, el), el);
+  const renderer = new EvidentialTableRenderer(makeModel(ROWS, COLUMNS, { row_lines: false }, el), el);
   assert.ok(el.querySelector(".et-root").classList.contains("et-no-row-lines"));
   renderer.destroy();
 });
@@ -312,7 +312,7 @@ test("grouped columns cluster under a shared header", () => {
     { name: "total", type: "number", align: "right" },
   ];
   const rows = [{ month: "Jan", credit_card: 1, cash: 2, total: 3 }];
-  const renderer = new EvidenceTableRenderer(makeModel(rows, columns, {}, el), el);
+  const renderer = new EvidentialTableRenderer(makeModel(rows, columns, {}, el), el);
   const headers = [...el.querySelectorAll("thead tr:last-child th")].map((th) => th.textContent.trim());
   assert.deepEqual(headers, ["Month", "Credit Card", "Cash", "Total"]);
   const groupCells = [...el.querySelectorAll(".et-th-group")].map((th) => ({
@@ -329,7 +329,7 @@ test("grouped columns cluster under a shared header", () => {
 
 test("loading overlay only appears for slow updates, and fades in", (t) => {
   t.mock.timers.enable({ apis: ["setTimeout"] });
-  const renderer = new EvidenceTableRenderer(makeModel(ROWS, COLUMNS, {}, el), el);
+  const renderer = new EvidentialTableRenderer(makeModel(ROWS, COLUMNS, {}, el), el);
   const root = el.querySelector(".et-root");
   const overlay = el.querySelector(".et-loading-overlay");
   assert.ok(overlay, "overlay element exists");
@@ -354,7 +354,7 @@ test("loading overlay only appears for slow updates, and fades in", (t) => {
 });
 
 test("baseline height prevents the table shrinking when rows decrease", () => {
-  const renderer = new EvidenceTableRenderer(makeModel(ROWS, COLUMNS, {}, el), el);
+  const renderer = new EvidentialTableRenderer(makeModel(ROWS, COLUMNS, {}, el), el);
   let height = 300;
   renderer.scroller.getBoundingClientRect = () => ({ height });
   renderer.render();
@@ -379,7 +379,7 @@ test("renders line, area and bar sparklines from point arrays", () => {
     { date: "2024-03-01", sales: 15 },
   ];
   const rows = [{ category: "A", s1: series, s2: series, s3: series }];
-  const renderer = new EvidenceTableRenderer(makeModel(rows, columns, {}, el), el);
+  const renderer = new EvidentialTableRenderer(makeModel(rows, columns, {}, el), el);
   assert.equal(el.querySelectorAll("svg.et-sparkline").length, 3);
   assert.equal(el.querySelectorAll("svg.et-sparkline polyline").length, 2); // line + area outline
   assert.equal(el.querySelectorAll("svg.et-sparkline polygon").length, 1); // area fill
@@ -389,7 +389,7 @@ test("renders line, area and bar sparklines from point arrays", () => {
 
 test("sparklines accept plain numbers and [x, y] pairs", () => {
   const columns = [{ name: "s", type: "array", viz: "sparkline" }];
-  const renderer = new EvidenceTableRenderer(
+  const renderer = new EvidentialTableRenderer(
     makeModel([{ s: [1, 2, 3] }, { s: [["a", 4], ["b", 6]] }], columns, {}, el),
     el,
   );
@@ -401,7 +401,7 @@ test("sparklines accept plain numbers and [x, y] pairs", () => {
 });
 
 test("row numbers, compact density and empty message", () => {
-  const numbered = new EvidenceTableRenderer(
+  const numbered = new EvidentialTableRenderer(
     makeModel(ROWS, COLUMNS, { row_numbers: true }, el),
     el,
   );
@@ -409,11 +409,11 @@ test("row numbers, compact density and empty message", () => {
   assert.equal(el.querySelector("tbody .et-row-num").textContent, "1");
   numbered.destroy();
 
-  const compact = new EvidenceTableRenderer(makeModel(ROWS, COLUMNS, { compact: true }, el), el);
+  const compact = new EvidentialTableRenderer(makeModel(ROWS, COLUMNS, { compact: true }, el), el);
   assert.ok(el.querySelector(".et-root").classList.contains("et-compact"));
   compact.destroy();
 
-  const empty = new EvidenceTableRenderer(
+  const empty = new EvidentialTableRenderer(
     makeModel([], COLUMNS, { empty_message: "Nothing here", page_size: 4 }, el),
     el,
   );
@@ -425,13 +425,13 @@ test("row numbers, compact density and empty message", () => {
 });
 
 test("empty_rows controls how many blank rows an empty table shows", () => {
-  const renderer = new EvidenceTableRenderer(makeModel([], COLUMNS, { empty_rows: 6 }, el), el);
+  const renderer = new EvidentialTableRenderer(makeModel([], COLUMNS, { empty_rows: 6 }, el), el);
   assert.equal(el.querySelectorAll(".et-row-placeholder").length, 6);
   renderer.destroy();
 });
 
 test("an empty table with no columns falls back to a plain message", () => {
-  const renderer = new EvidenceTableRenderer(
+  const renderer = new EvidentialTableRenderer(
     makeModel([], [], { empty_message: "Nothing here" }, el),
     el,
   );
@@ -441,16 +441,16 @@ test("an empty table with no columns falls back to a plain message", () => {
 });
 
 test("border=False drops the outer frame", () => {
-  const renderer = new EvidenceTableRenderer(makeModel(ROWS, COLUMNS, { border: false }, el), el);
+  const renderer = new EvidentialTableRenderer(makeModel(ROWS, COLUMNS, { border: false }, el), el);
   assert.ok(el.querySelector(".et-root").classList.contains("et-no-border"));
   renderer.destroy();
-  const framed = new EvidenceTableRenderer(makeModel(ROWS, COLUMNS, {}, el), el);
+  const framed = new EvidentialTableRenderer(makeModel(ROWS, COLUMNS, {}, el), el);
   assert.ok(!el.querySelector(".et-root").classList.contains("et-no-border"));
   framed.destroy();
 });
 
 test("default_sort sorts on first render", () => {
-  const renderer = new EvidenceTableRenderer(
+  const renderer = new EvidentialTableRenderer(
     makeModel(ROWS, COLUMNS, { default_sort: { column: "trips", direction: "asc" } }, el),
     el,
   );
@@ -462,7 +462,7 @@ test("default_sort sorts on first render", () => {
 test("row_conditional_colors tints the whole row", () => {
   const columns = [{ name: "city", type: "string" }, { name: "tint", type: "string", hide: true }];
   const rows = [{ city: "NYC", tint: "#ff0000" }];
-  const renderer = new EvidenceTableRenderer(
+  const renderer = new EvidentialTableRenderer(
     makeModel(rows, columns, { row_conditional_colors: "tint" }, el),
     el,
   );
@@ -480,7 +480,7 @@ test("fmt_column applies a per-row format code", () => {
     { value: 0.1234, fmt: "pct1" },
     { value: 1234, fmt: "usd0" },
   ];
-  const renderer = new EvidenceTableRenderer(makeModel(rows, columns, {}, el), el);
+  const renderer = new EvidentialTableRenderer(makeModel(rows, columns, {}, el), el);
   const cells = [...el.querySelectorAll("tbody tr")].map(
     (tr) => tr.querySelector(".et-cell-value").textContent,
   );
@@ -505,7 +505,7 @@ test("delta puts the indicator after the value, with a dash when neutral", () =>
     { name: "boom", type: "number", fmt: "pct1", viz: "delta" },
   ];
   const rows = [{ up: 0.12, down: -0.04, flat: 0.03, cost: 0.05, bare: 0.12, boom: 3.0746 }];
-  const renderer = new EvidenceTableRenderer(makeModel(rows, columns, {}, el), el);
+  const renderer = new EvidentialTableRenderer(makeModel(rows, columns, {}, el), el);
   const cells = [...el.querySelectorAll(".et-delta")];
   const text = cells.map((node) => node.textContent.trim());
   assert.equal(text[0], "12.0% ▲");
@@ -527,7 +527,7 @@ test("delta puts the indicator after the value, with a dash when neutral", () =>
 test("a missing delta renders the neutral dash, like a value in range", () => {
   const columns = [{ name: "change", type: "number", fmt: "pct1", viz: "delta" }];
   const rows = [{ change: null }];
-  const renderer = new EvidenceTableRenderer(makeModel(rows, columns, {}, el), el);
+  const renderer = new EvidentialTableRenderer(makeModel(rows, columns, {}, el), el);
   const cell = el.querySelector(".et-delta");
   assert.ok(cell, "a null delta still renders a delta");
   assert.ok(cell.classList.contains("et-delta-neutral"));
@@ -548,7 +548,7 @@ test("a column can sort by another column's values", () => {
     { name: "B", score: 1, trend: 30 },
     { name: "C", score: 2, trend: 20 },
   ];
-  const renderer = new EvidenceTableRenderer(makeModel(rows, columns, {}, el), el);
+  const renderer = new EvidentialTableRenderer(makeModel(rows, columns, {}, el), el);
   const header = [...el.querySelectorAll(".et-th")].find((n) => n.textContent.includes("Trend"));
   header.click(); // first click = descending
   const order = [...el.querySelectorAll("tbody tr")].map((tr) => tr.querySelector("td").textContent.trim());
@@ -558,7 +558,7 @@ test("a column can sort by another column's values", () => {
 
 test("a newline in a column title forces a line break", () => {
   const columns = [{ name: "revenue", type: "number", title: "Revenue\n(USD thousands)" }];
-  const renderer = new EvidenceTableRenderer(makeModel([{ revenue: 1 }], columns, {}, el), el);
+  const renderer = new EvidentialTableRenderer(makeModel([{ revenue: 1 }], columns, {}, el), el);
   const title = el.querySelector("th.et-th .et-th-title");
   assert.equal(title.querySelectorAll("br").length, 1);
   assert.equal(title.childNodes.length, 3);
@@ -583,7 +583,7 @@ test("chip columns render a coloured, centred value", () => {
     { city: "A", aqi: 50 },
     { city: "B", aqi: 220 },
   ];
-  const renderer = new EvidenceTableRenderer(makeModel(rows, columns, {}, el), el);
+  const renderer = new EvidentialTableRenderer(makeModel(rows, columns, {}, el), el);
   const chips = el.querySelectorAll("tbody .et-chip");
   assert.equal(chips.length, 2);
   assert.equal(chips[0].textContent, "50");
@@ -605,7 +605,7 @@ test("a chip can take a conditional colour from another column", () => {
     { status: "Good", status_color: "#16a34a" },
     { status: "Bad", status_color: "#dc2626" },
   ];
-  const renderer = new EvidenceTableRenderer(makeModel(rows, columns, {}, el), el);
+  const renderer = new EvidentialTableRenderer(makeModel(rows, columns, {}, el), el);
   const chips = el.querySelectorAll("tbody .et-chip");
   assert.equal(chips.length, 2);
   // No numeric range is needed for conditional colours.
@@ -622,7 +622,7 @@ test("a column highlight paints the header and every cell", () => {
     { name: "y21", type: "number", fmt: "num0" },
   ];
   const rows = [{ country: "A", y20: 1, y21: 2 }];
-  const renderer = new EvidenceTableRenderer(makeModel(rows, columns, {}, el), el);
+  const renderer = new EvidentialTableRenderer(makeModel(rows, columns, {}, el), el);
   const th = el.querySelectorAll("thead tr:last-child th")[1];
   assert.equal(th.style.backgroundColor, "rgb(253, 232, 208)");
   const td = el.querySelectorAll("tbody tr td")[1];
@@ -640,7 +640,7 @@ test("a spanner is highlighted only when every column it spans shares it", () =>
     { name: "d", type: "number", column_group: "Some" },
   ];
   const rows = [{ a: 1, b: 2, c: 3, d: 4 }];
-  const renderer = new EvidenceTableRenderer(makeModel(rows, columns, {}, el), el);
+  const renderer = new EvidentialTableRenderer(makeModel(rows, columns, {}, el), el);
   assert.equal(el.querySelector('[data-group="All"]').style.backgroundColor, "rgb(238, 242, 255)");
   assert.equal(el.querySelector('[data-group="Some"]').style.backgroundColor, "");
   renderer.destroy();
@@ -648,13 +648,13 @@ test("a spanner is highlighted only when every column it spans shares it", () =>
 
 test("a chip can have a minimum width but still grows", () => {
   const columns = [{ name: "status", type: "string", viz: "chip", chip_options: { min_width: 72 } }];
-  const renderer = new EvidenceTableRenderer(makeModel([{ status: "Good" }], columns, {}, el), el);
+  const renderer = new EvidentialTableRenderer(makeModel([{ status: "Good" }], columns, {}, el), el);
   const chip = el.querySelector("tbody .et-chip");
   assert.equal(chip.style.minWidth, "72px");
   renderer.destroy();
 
   const css = [{ name: "status", type: "string", viz: "chip", chip_options: { min_width: "5rem" } }];
-  const renderer2 = new EvidenceTableRenderer(makeModel([{ status: "Good" }], css, {}, el), el);
+  const renderer2 = new EvidentialTableRenderer(makeModel([{ status: "Good" }], css, {}, el), el);
   assert.equal(el.querySelector("tbody .et-chip").style.minWidth, "5rem");
   renderer2.destroy();
 });
@@ -669,7 +669,7 @@ test("a selectable row sets the selected trait and saves it", () => {
     { country: "Canada", revenue: 200 },
   ];
   const model = makeModel(rows, columns, { select: "country" }, el);
-  const renderer = new EvidenceTableRenderer(model, el);
+  const renderer = new EvidentialTableRenderer(model, el);
   const body = el.querySelectorAll("tbody tr");
   assert.ok(body[0].classList.contains("et-row-selectable"));
   body[1].dispatchEvent(new dom.window.MouseEvent("click", { bubbles: true }));
@@ -686,14 +686,14 @@ test("a selectable row sets the selected trait and saves it", () => {
 
 test("rows are only selectable when `select` is set", () => {
   const model = makeModel(ROWS, COLUMNS, {}, el);
-  const renderer = new EvidenceTableRenderer(model, el);
+  const renderer = new EvidentialTableRenderer(model, el);
   assert.equal(el.querySelectorAll(".et-row-selectable").length, 0);
   renderer.destroy();
 });
 
 test("column info shows a native tooltip on the whole header cell", () => {
   const columns = [{ name: "city", type: "string", info: "A helpful hint" }];
-  const renderer = new EvidenceTableRenderer(makeModel([{ city: "NYC" }], columns, {}, el), el);
+  const renderer = new EvidentialTableRenderer(makeModel([{ city: "NYC" }], columns, {}, el), el);
   const th = el.querySelector("th.et-th");
   const icon = th.querySelector(".et-th-info");
   assert.ok(icon);
@@ -706,7 +706,7 @@ test("column info shows a native tooltip on the whole header cell", () => {
 
 test("page_size 'all' shows every row without pagination", () => {
   const rows = Array.from({ length: 25 }, (_, i) => ({ city: `C${i}`, trips: i, revenue: i * 10 }));
-  const renderer = new EvidenceTableRenderer(makeModel(rows, COLUMNS, { page_size: "all" }, el), el);
+  const renderer = new EvidentialTableRenderer(makeModel(rows, COLUMNS, { page_size: "all" }, el), el);
   assert.equal(el.querySelectorAll("tbody tr").length, 25);
   assert.equal(el.querySelectorAll(".et-page-controls").length, 0);
   renderer.destroy();
@@ -722,7 +722,7 @@ test("column statistics render under the header and before the data", () => {
     { city: "LA", trips: 90 },
     { city: "SF", trips: null },
   ];
-  const renderer = new EvidenceTableRenderer(makeModel(rows, columns, { column_stats: true }, el), el);
+  const renderer = new EvidentialTableRenderer(makeModel(rows, columns, { column_stats: true }, el), el);
   const first = el.querySelector("tbody tr");
   assert.ok(first.classList.contains("et-stats-row"), "stats row is the first body row");
   const cells = first.querySelectorAll(".et-stats-cell");
@@ -739,7 +739,7 @@ test("column statistics render under the header and before the data", () => {
 });
 
 test("column statistics are off unless requested", () => {
-  const renderer = new EvidenceTableRenderer(makeModel(ROWS, COLUMNS, {}, el), el);
+  const renderer = new EvidentialTableRenderer(makeModel(ROWS, COLUMNS, {}, el), el);
   assert.equal(el.querySelector(".et-stats-row"), null);
   renderer.destroy();
 });
@@ -750,7 +750,7 @@ test("logo columns render a logo.dev image", () => {
     { name: "domain", type: "string", hide: true },
   ];
   const rows = [{ company: "GitHub", domain: "github.com" }];
-  const renderer = new EvidenceTableRenderer(makeModel(rows, columns, {}, el), el);
+  const renderer = new EvidentialTableRenderer(makeModel(rows, columns, {}, el), el);
   const img = el.querySelector(".et-cell-logo");
   assert.ok(img);
   assert.match(img.getAttribute("src"), /img\.logo\.dev\/github\.com/);
@@ -764,7 +764,7 @@ test("total_fmt and subtotal_fmt override row formats", () => {
     { amount: 1000, render_type: "row_subtotal" },
     { amount: 2000, render_type: "row_total" },
   ];
-  const renderer = new EvidenceTableRenderer(makeModel(rows, columns, {}, el), el);
+  const renderer = new EvidentialTableRenderer(makeModel(rows, columns, {}, el), el);
   const cells = [...el.querySelectorAll("tbody tr .et-cell-value")].map((c) => c.textContent);
   assert.equal(cells[0], "1,000");
   assert.equal(cells[1], "$1,000.00");
@@ -785,7 +785,7 @@ test("section groups merge the dimension cell with rowspan", () => {
     { country: "Canada", city: "", revenue: 200, render_type: "row_subtotal", __level: 1, __group_key: '"Canada"', __ancestors: [] },
     { country: "Canada", city: "Toronto", revenue: 200, render_type: "cell_data", __level: 2, __ancestors: ['"Canada"'], __parent_key: '"Canada"' },
   ];
-  const renderer = new EvidenceTableRenderer(
+  const renderer = new EvidentialTableRenderer(
     makeModel(rows, columns, { group_type: "section", subtotal_position: "top" }, el),
     el,
   );
@@ -814,7 +814,7 @@ test("section total row keeps its measures aligned", () => {
     { country: "USA", city: "LA", revenue: 250, render_type: "cell_data", __level: 2, __ancestors: ['"USA"'], __parent_key: '"USA"' },
     { country: "All", city: "", revenue: 350, render_type: "row_total", __level: 0 },
   ];
-  const renderer = new EvidenceTableRenderer(
+  const renderer = new EvidentialTableRenderer(
     makeModel(rows, columns, { group_type: "section", subtotal_position: "top" }, el),
     el,
   );
@@ -838,7 +838,7 @@ test("section rows span all columns", () => {
     { render_type: "row_section", __label: "Section header" },
     { label: "Metric 2", a: 3, b: 4 },
   ];
-  const renderer = new EvidenceTableRenderer(makeModel(rows, columns, {}, el), el);
+  const renderer = new EvidentialTableRenderer(makeModel(rows, columns, {}, el), el);
   const section = el.querySelector(".et-row-section td");
   assert.ok(section);
   assert.equal(section.getAttribute("colspan"), "3");
@@ -847,7 +847,7 @@ test("section rows span all columns", () => {
 });
 
 test("caption renders below the table", () => {
-  const renderer = new EvidenceTableRenderer(
+  const renderer = new EvidentialTableRenderer(
     makeModel(ROWS, COLUMNS, { caption: "Source: example" }, el),
     el,
   );
@@ -864,7 +864,7 @@ test("blank_below/above and null_text control blank cells", () => {
     { v: 5, n: null },
     { v: 15, n: 3 },
   ];
-  const renderer = new EvidenceTableRenderer(makeModel(rows, columns, {}, el), el);
+  const renderer = new EvidentialTableRenderer(makeModel(rows, columns, {}, el), el);
   const bodyRows = el.querySelectorAll("tbody tr");
   assert.equal(bodyRows[0].querySelectorAll("td")[0].querySelector(".et-null").textContent, "–");
   assert.equal(bodyRows[0].querySelectorAll("td")[1].querySelector(".et-null").textContent, "");
@@ -884,7 +884,7 @@ test("data-driven footnotes collect notes with row numbers", () => {
     { city: "SF", trips: 3, note: "Custom processors" },
     { city: "CHI", trips: 4, note: "Smart-phone / tablet" },
   ];
-  const renderer = new EvidenceTableRenderer(makeModel(rows, columns, {}, el), el);
+  const renderer = new EvidentialTableRenderer(makeModel(rows, columns, {}, el), el);
   const items = el.querySelectorAll(".et-footnotes .et-footnote-item");
   assert.equal(items.length, 2);
   assert.match(items[0].textContent, /Custom processors/);
@@ -901,7 +901,7 @@ test("nested column groups build multiple header rows", () => {
     { name: "sales22", type: "number", column_group: ["Sales", "2022"] },
   ];
   const rows = [{ city: "NYC", sales21: 1, orders21: 2, sales22: 3 }];
-  const renderer = new EvidenceTableRenderer(makeModel(rows, columns, {}, el), el);
+  const renderer = new EvidentialTableRenderer(makeModel(rows, columns, {}, el), el);
   const groupRows = el.querySelectorAll("thead .et-header-groups");
   assert.equal(groupRows.length, 2);
   const level0 = [...groupRows[0].querySelectorAll("th")];
@@ -921,7 +921,7 @@ test("array column groups cluster at their first occurrence", () => {
     { name: "b", type: "number", column_group: ["G", "1"] },
   ];
   const rows = [{ a: 1, x: 2, b: 3 }];
-  const renderer = new EvidenceTableRenderer(makeModel(rows, columns, {}, el), el);
+  const renderer = new EvidentialTableRenderer(makeModel(rows, columns, {}, el), el);
   const leaf = [...el.querySelectorAll("thead tr:last-child .et-th-title")].map((n) => n.textContent);
   assert.deepEqual(leaf, ["A", "B", "X"]);
   renderer.destroy();
@@ -937,7 +937,7 @@ test("location rules apply per-cell style and format", () => {
     { city: "LA", trips: 8000, __row_id: 1 },
   ];
   const rules = [{ columns: ["trips"], rows: [0], style: { color: "#b91c1c" }, fmt: "num0" }];
-  const renderer = new EvidenceTableRenderer(makeModel(rows, columns, { rules }, el), el);
+  const renderer = new EvidentialTableRenderer(makeModel(rows, columns, { rules }, el), el);
   const firstTrips = el.querySelectorAll("tbody tr")[0].querySelectorAll("td")[1];
   assert.equal(firstTrips.style.color, "rgb(185, 28, 28)");
   assert.equal(firstTrips.textContent, "12,000");
@@ -945,7 +945,7 @@ test("location rules apply per-cell style and format", () => {
 });
 
 test("inline markdown renders in the title", () => {
-  const renderer = new EvidenceTableRenderer(
+  const renderer = new EvidentialTableRenderer(
     makeModel(ROWS, COLUMNS, { title: "**Bold** title" }, el),
     el,
   );
@@ -960,7 +960,7 @@ test("stub head label is used for the stub column", () => {
     { name: "city", type: "string" },
     { name: "trips", type: "number" },
   ];
-  const renderer = new EvidenceTableRenderer(
+  const renderer = new EvidentialTableRenderer(
     makeModel([{ city: "NYC", trips: 1 }], columns, { stub: "city", stub_head: "Place" }, el),
     el,
   );
@@ -980,7 +980,7 @@ test("substitution rules replace displayed values", () => {
     { type: "substitute", columns: ["v"], rows: null, kind: "zero", text: "—" },
     { type: "substitute", columns: ["v"], rows: null, kind: "small", threshold: 0.01, text: "small" },
   ];
-  const renderer = new EvidenceTableRenderer(makeModel(rows, columns, { rules }, el), el);
+  const renderer = new EvidentialTableRenderer(makeModel(rows, columns, { rules }, el), el);
   const cells = [...el.querySelectorAll("tbody .et-cell-value")].map((cell) => cell.textContent);
   assert.deepEqual(cells, ["—", "5", "small"]);
   renderer.destroy();
@@ -993,7 +993,7 @@ test("column templates merge rendered values", () => {
     { name: "range", type: "string", template: "{low}–{high}", template_fmt: { low: "num0", high: "num0" } },
   ];
   const rows = [{ low: 10, high: 20 }];
-  const renderer = new EvidenceTableRenderer(makeModel(rows, columns, {}, el), el);
+  const renderer = new EvidentialTableRenderer(makeModel(rows, columns, {}, el), el);
   const cells = [...el.querySelectorAll("tbody .et-cell-value")].map((cell) => cell.textContent);
   assert.equal(cells[2], "10–20");
   renderer.destroy();
@@ -1002,7 +1002,7 @@ test("column templates merge rendered values", () => {
 test("markdown columns render inline markdown", () => {
   const columns = [{ name: "label", type: "string", markdown: true }];
   const rows = [{ label: "**Hi** there" }];
-  const renderer = new EvidenceTableRenderer(makeModel(rows, columns, {}, el), el);
+  const renderer = new EvidentialTableRenderer(makeModel(rows, columns, {}, el), el);
   assert.ok(el.querySelector("tbody .et-cell-value strong"));
   renderer.destroy();
 });
@@ -1016,7 +1016,7 @@ test("footnote_marks letters uses letter marks", () => {
     { city: "A", note: "first" },
     { city: "B", note: "second" },
   ];
-  const renderer = new EvidenceTableRenderer(
+  const renderer = new EvidentialTableRenderer(
     makeModel(rows, columns, { footnote_marks: "letters" }, el),
     el,
   );
@@ -1028,7 +1028,7 @@ test("footnote_marks letters uses letter marks", () => {
 test("align_decimals pads numeric columns to a common precision", () => {
   const columns = [{ name: "v", type: "number", fmt: "num", align: "right" }];
   const rows = [{ v: 1.5 }, { v: 12.25 }, { v: 3 }];
-  const renderer = new EvidenceTableRenderer(
+  const renderer = new EvidentialTableRenderer(
     makeModel(rows, columns, { align_decimals: true }, el),
     el,
   );
@@ -1038,7 +1038,7 @@ test("align_decimals pads numeric columns to a common precision", () => {
 });
 
 test("stretch=false keeps the table content-sized", () => {
-  const renderer = new EvidenceTableRenderer(
+  const renderer = new EvidentialTableRenderer(
     makeModel(ROWS, COLUMNS, { stretch: false }, el),
     el,
   );
@@ -1048,7 +1048,7 @@ test("stretch=false keeps the table content-sized", () => {
 
 test("row_shading supports group sizes (3,3)", () => {
   const rows = Array.from({ length: 6 }, (_, i) => ({ city: `C${i}`, trips: i, revenue: i * 10 }));
-  const renderer = new EvidenceTableRenderer(makeModel(rows, COLUMNS, { row_shading: 3 }, el), el);
+  const renderer = new EvidentialTableRenderer(makeModel(rows, COLUMNS, { row_shading: 3 }, el), el);
   const shaded = [...el.querySelectorAll("tbody tr")].map((tr) =>
     tr.classList.contains("et-row-shaded"),
   );
@@ -1058,7 +1058,7 @@ test("row_shading supports group sizes (3,3)", () => {
 
 test("row_shading pair sets shaded/unshaded counts", () => {
   const rows = Array.from({ length: 4 }, (_, i) => ({ city: `C${i}`, trips: i, revenue: i * 10 }));
-  const renderer = new EvidenceTableRenderer(makeModel(rows, COLUMNS, { row_shading: [1, 3] }, el), el);
+  const renderer = new EvidentialTableRenderer(makeModel(rows, COLUMNS, { row_shading: [1, 3] }, el), el);
   const shaded = [...el.querySelectorAll("tbody tr")].map((tr) =>
     tr.classList.contains("et-row-shaded"),
   );
@@ -1073,14 +1073,14 @@ test("rotated headers: vertical and oblique", () => {
   ];
   const rows = [{ a: 1, b: 2 }];
 
-  const vertical = new EvidenceTableRenderer(
+  const vertical = new EvidentialTableRenderer(
     makeModel(rows, columns, { rotate_titles: "vertical" }, el),
     el,
   );
   assert.equal(el.querySelectorAll(".et-th-vertical").length, 2);
   vertical.destroy();
 
-  const oblique = new EvidenceTableRenderer(
+  const oblique = new EvidentialTableRenderer(
     makeModel(rows, columns, { rotate_titles: -45 }, el),
     el,
   );
@@ -1092,7 +1092,7 @@ test("rotated headers: vertical and oblique", () => {
 
 test("figure_style sets font-variant-numeric", () => {
   const columns = [{ name: "v", type: "number", fmt: "num0", figure_style: "oldstyle" }];
-  const renderer = new EvidenceTableRenderer(makeModel([{ v: 1234 }], columns, {}, el), el);
+  const renderer = new EvidentialTableRenderer(makeModel([{ v: 1234 }], columns, {}, el), el);
   const td = el.querySelector("tbody .et-td");
   assert.equal(td.style.fontVariantNumeric, "oldstyle-nums tabular-nums");
   renderer.destroy();
@@ -1100,7 +1100,7 @@ test("figure_style sets font-variant-numeric", () => {
 
 test("per-column font sets font-family", () => {
   const columns = [{ name: "v", type: "number", font: "'Hoefler Text', serif" }];
-  const renderer = new EvidenceTableRenderer(makeModel([{ v: 1234 }], columns, {}, el), el);
+  const renderer = new EvidentialTableRenderer(makeModel([{ v: 1234 }], columns, {}, el), el);
   const td = el.querySelector("tbody .et-td");
   assert.match(td.style.fontFamily, /Hoefler/);
   renderer.destroy();
@@ -1108,20 +1108,20 @@ test("per-column font sets font-family", () => {
 
 test("figure_style default uses the font's own figures", () => {
   const columns = [{ name: "v", type: "number", figure_style: "default" }];
-  const renderer = new EvidenceTableRenderer(makeModel([{ v: 1234 }], columns, {}, el), el);
+  const renderer = new EvidentialTableRenderer(makeModel([{ v: 1234 }], columns, {}, el), el);
   assert.equal(el.querySelector("tbody .et-td").style.fontVariantNumeric, "normal");
   renderer.destroy();
 });
 
 test("no viz badge is added to headers", () => {
   const columns = [{ name: "v", type: "number", viz: "bar", bar_options: {} }];
-  const renderer = new EvidenceTableRenderer(makeModel([{ v: 1 }], columns, {}, el), el);
+  const renderer = new EvidentialTableRenderer(makeModel([{ v: 1 }], columns, {}, el), el);
   assert.equal(el.querySelectorAll(".et-viz-badge").length, 0);
   renderer.destroy();
 });
 
 test("theme.background drives the opaque expanded surface", () => {
-  const renderer = new EvidenceTableRenderer(
+  const renderer = new EvidentialTableRenderer(
     makeModel(ROWS, COLUMNS, { theme: { background: "#123456" } }, el),
     el,
   );

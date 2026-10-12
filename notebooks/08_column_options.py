@@ -3,7 +3,7 @@
 # dependencies = [
 #     "marimo",
 #     "duckdb>=1.3",
-#     "evidence-tables",
+#     "evidential",
 # ]
 # ///
 """Column-level formatting, content types and conditional visualisations."""
@@ -19,9 +19,9 @@ def _():
     import marimo as mo
     import duckdb
 
-    from evidence_tables import EvidenceTable
+    from evidential import EvidentialTable
 
-    return EvidenceTable, duckdb, mo
+    return EvidentialTable, duckdb, mo
 
 
 @app.cell
@@ -56,9 +56,9 @@ def _(mo):
 
 
 @app.cell
-def _(EvidenceTable, connection, mo):
+def _(EvidentialTable, connection, mo):
     formatting = mo.ui.anywidget(
-        EvidenceTable(
+        EvidentialTable(
             connection.sql("SELECT name, amount, row_fmt, url, markup FROM demo"),
             title="Formatting and content",
             page_size=10,
@@ -94,9 +94,9 @@ def _(mo):
 
 
 @app.cell
-def _(EvidenceTable, connection, mo):
+def _(EvidentialTable, connection, mo):
     visuals = mo.ui.anywidget(
-        EvidenceTable(
+        EvidentialTable(
             connection.sql("SELECT name, amount, change, score, trend FROM demo"),
             title="Column visualisations",
             page_size=10,

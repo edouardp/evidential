@@ -34,7 +34,7 @@ the table's header descriptions, as DuckDB comments do
 Chosen option: "Map recognised field-metadata keys". `_arrow_field_info` reads a
 field's metadata (bytes or str keys, case-insensitive) and uses the first of
 `comment`, `description`, `info`, which becomes the column's `info`. This is how
-`EvidenceTable(pq.read_table("orders.parquet"))` shows documented columns.
+`EvidentialTable(pq.read_table("orders.parquet"))` shows documented columns.
 
 Option 2 was rejected: decoding the `ARROW:schema` flatbuffer needs PyArrow
 anyway, and DuckDB's `read_parquet` result does not carry the metadata, so there
@@ -54,5 +54,5 @@ is nothing to decode from the relation we are handed.
 ## More Information
 
 - [Technical architecture §4.2](../technical-architecture.md)
-- `src/evidence_tables/data.py` (`_arrow_field_info`)
+- `src/evidential/data.py` (`_arrow_field_info`)
 - Related: [ADR-023](023-duckdb-column-comments.md)

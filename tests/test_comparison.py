@@ -3,8 +3,8 @@ from __future__ import annotations
 import duckdb
 import pytest
 
-from evidence_tables import comparison_table
-from evidence_tables.duck import connect
+from evidential import comparison_table
+from evidential.duck import connect
 
 
 @pytest.fixture()

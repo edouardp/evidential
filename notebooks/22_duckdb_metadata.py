@@ -4,12 +4,12 @@
 #     "marimo",
 #     "duckdb>=1.3",
 #     "pyarrow>=17",
-#     "evidence-tables",
+#     "evidential",
 # ]
 # ///
 """Column metadata drives the table: types set the format, descriptions set the header.
 
-`EvidenceTable` reads column descriptions from wherever they live — DuckDB
+`EvidentialTable` reads column descriptions from wherever they live — DuckDB
 `COMMENT ON COLUMN`, Arrow field metadata (which is how a description survives
 Parquet and Feather), or an explicit `column_config={"...": {"comment": ...}}` —
 and shows them as an immediate **ⓘ** tooltip in the header. Column types default
@@ -30,9 +30,9 @@ def _():
     import duckdb
     import marimo as mo
 
-    from evidence_tables import EvidenceTable, duck
+    from evidential import EvidentialTable, duck
 
-    return EvidenceTable, Path, duck, duckdb, mo, tempfile
+    return EvidentialTable, Path, duck, duckdb, mo, tempfile
 
 
 @app.cell
@@ -85,7 +85,7 @@ def _(mo):
     - **Column descriptions** — `COMMENT ON COLUMN`, read back from
       `duckdb_columns().comment`.
 
-    `EvidenceTable` turns the type into sensible defaults (integers → `num0`,
+    `EvidentialTable` turns the type into sensible defaults (integers → `num0`,
     decimals → `num2`, numbers right-aligned, text left-aligned) and the
     description into the header **ⓘ**. Hovering it shows the text **immediately**
     (a custom tooltip, not the browser's delayed one), and the cursor is left
@@ -95,9 +95,9 @@ def _(mo):
 
 
 @app.cell
-def _(EvidenceTable, connection, mo):
+def _(EvidentialTable, connection, mo):
     from_relation = mo.ui.anywidget(
-        EvidenceTable(
+        EvidentialTable(
             connection.table("orders"),
             title="con.table('orders') — inferred from the relation",
             search=True,
@@ -109,11 +109,11 @@ def _(EvidenceTable, connection, mo):
 
 
 @app.cell
-def _(EvidenceTable, connection, mo):
+def _(EvidentialTable, connection, mo):
     rows = "\n".join(
         f"| `{column['name']}` | {column['type']} | {column.get('fmt') or 'auto'} "
         f"| {column['align']} | {column.get('info') or '—'} |"
-        for column in EvidenceTable(connection.table("orders")).columns
+        for column in EvidentialTable(connection.table("orders")).columns
     )
     mo.md(f"""
     ### What was inferred
@@ -145,9 +145,9 @@ def _(mo):
 
 
 @app.cell
-def _(EvidenceTable, connection, mo):
+def _(EvidentialTable, connection, mo):
     overridden = mo.ui.anywidget(
-        EvidenceTable(
+        EvidentialTable(
             connection.table("orders"),
             title="column_config={...: {'comment': ...}}",
             row_shading=True,
@@ -181,7 +181,7 @@ def _(Path, tempfile):
     import pyarrow as pa
     import pyarrow.parquet as pq
 
-    parquet_path = Path(tempfile.mkdtemp(prefix="evidence-tables-")) / "cities.parquet"
+    parquet_path = Path(tempfile.mkdtemp(prefix="evidential-")) / "cities.parquet"
     schema = pa.schema(
         [
             pa.field("city", pa.string(), metadata={"comment": "City name"}),
@@ -205,9 +205,9 @@ def _(Path, tempfile):
 
 
 @app.cell
-def _(EvidenceTable, mo, parquet_path, pq):
+def _(EvidentialTable, mo, parquet_path, pq):
     from_parquet = mo.ui.anywidget(
-        EvidenceTable(
+        EvidentialTable(
             pq.read_table(parquet_path),
             title="pq.read_table('cities.parquet') — descriptions from Arrow field metadata",
             row_shading=True,
@@ -218,9 +218,9 @@ def _(EvidenceTable, mo, parquet_path, pq):
 
 
 @app.cell
-def _(EvidenceTable, connection, mo, parquet_path):
+def _(EvidentialTable, connection, mo, parquet_path):
     via_duckdb = mo.ui.anywidget(
-        EvidenceTable(
+        EvidentialTable(
             connection.sql(f"SELECT * FROM read_parquet('{parquet_path}')"),
             title="con.sql('SELECT * FROM read_parquet(...)') — DuckDB does not carry the metadata",
         )
@@ -244,12 +244,12 @@ def _(mo):
 
 
 @app.cell
-def _(EvidenceTable, connection, duck, mo):
+def _(EvidentialTable, connection, duck, mo):
     comments = {
         name: {"info": text} for name, text in duck.column_comments(connection, "orders").items()
     }
     from_sql = mo.ui.anywidget(
-        EvidenceTable(
+        EvidentialTable(
             connection.sql("SELECT * FROM orders"),
             title='con.sql("SELECT * FROM orders") + duck.column_comments',
             column_config=comments,

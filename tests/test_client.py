@@ -4,7 +4,7 @@ from collections import Counter
 
 import pytest
 
-from evidence_tables import grouped_records
+from evidential import grouped_records
 
 DATA = [
     {"country": "USA", "city": "NYC", "revenue": 100.0, "orders": 1},

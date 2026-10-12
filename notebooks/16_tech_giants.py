@@ -2,7 +2,7 @@
 # requires-python = ">=3.12"
 # dependencies = [
 #     "marimo",
-#     "evidence-tables",
+#     "evidential",
 # ]
 # ///
 """Reproduce the classic Evidence / gt "Tech giants" comparison table.
@@ -21,9 +21,9 @@ app = marimo.App(width="full")
 def _():
     import marimo as mo
 
-    from evidence_tables import EvidenceTable, section_row
+    from evidential import EvidentialTable, section_row
 
-    return EvidenceTable, mo, section_row
+    return EvidentialTable, mo, section_row
 
 
 @app.cell
@@ -116,9 +116,9 @@ def _(section_row):
 
 
 @app.cell
-def _(EvidenceTable, column_config, mo, rows):
+def _(EvidentialTable, column_config, mo, rows):
     mo.ui.anywidget(
-        EvidenceTable(
+        EvidentialTable(
             rows,
             title="Tech giants invade each other's turf",
             caption="Sources: Company reports; The Economist; Bloomberg.",

@@ -1,6 +1,6 @@
 # design & DX
 
-Why `evidence-tables` works the way it does, from the point of view of the
+Why `evidential` works the way it does, from the point of view of the
 person writing the notebook.
 
 This is the *intent* document. For the mechanics, see
@@ -27,7 +27,7 @@ Evidence.dev's `DataTable` is, in our opinion, the best-executed version of this
 idea. It is a Svelte component wired to Evidence's own SQL query builder, which
 makes it hard to lift into a Python notebook.
 
-`evidence-tables` is the focused reimplementation: **the presentation half of
+`evidential` is the focused reimplementation: **the presentation half of
 Evidence's DataTable, exposed to Python, rendered in Marimo through
 [anywidget](https://anywidget.dev).**
 
@@ -49,9 +49,9 @@ JavaScript, no build step for the user, and no separate config file. The built
 bundle is committed into the wheel so `pip install` is the whole toolchain:
 
 ```python
-from evidence_tables import EvidenceTable
+from evidential import EvidentialTable
 
-EvidenceTable(rows, title="Sales", page_size=15, search=True)
+EvidentialTable(rows, title="Sales", page_size=15, search=True)
 ```
 
 ### 2.2 Data in, table out
@@ -62,7 +62,7 @@ table. Column types and default formatting are inferred; explicit config is an
 *override*, never a prerequisite.
 
 ```python
-EvidenceTable(con.sql("SELECT * FROM trips LIMIT 5000"))
+EvidentialTable(con.sql("SELECT * FROM trips LIMIT 5000"))
 ```
 
 ### 2.3 Evidence-shaped names
@@ -79,7 +79,7 @@ The simple call is simple. Depth is one dict away, and only for the columns that
 need it. You do not describe the whole table to change one cell's format.
 
 ```python
-EvidenceTable(
+EvidentialTable(
     rows,
     column_config={
         "revenue": {"fmt": "usd0", "viz": "bar"},
@@ -99,10 +99,10 @@ can be fed by DuckDB, pandas or a literal list without changing anything.
 flowchart LR
   subgraph Notebook["Notebook (Python)"]
     SQL["DuckDB SQL<br/>shape the data"]
-    API["evidence_tables<br/>bind + configure"]
+    API["evidential<br/>bind + configure"]
   end
   subgraph Browser["Browser (JavaScript)"]
-    R["EvidenceTableRenderer<br/>present + interact"]
+    R["EvidentialTableRenderer<br/>present + interact"]
   end
   SQL -->|"Arrow / DataFrame / records"| API
   API -->|"rows · columns · options (JSON)"| R
@@ -150,7 +150,7 @@ want to accept rows that never touched a database.
 **Cost.** We cannot offer Evidence's dimension/measure UI, or "change the
 metric" dropdowns, without the user writing SQL. We mitigate this with helpers
 (`grouped_table`, `pivot_table`, `query_table`, `comparison_table`,
-`date_range_sql`) and with `LiveEvidenceTable` for parameterised re-querying.
+`date_range_sql`) and with `LiveEvidentialTable` for parameterised re-querying.
 
 **Exception.** Row *selection* is a value the browser sends back ([ADR-032](adr/032-row-selection.md)):
 the table still only paints the rows it is given, but a click can put a key in a
@@ -213,7 +213,7 @@ Real examples from the codebase:
 
 ```python
 # The merged column is never in the data; it is synthesised from two hidden ones.
-EvidenceTable(
+EvidentialTable(
     rows,  # rows carry "low" and "high"
     column_config={
         "price_range": cols_merge_range("low", "high", fmt="num0"),
@@ -330,7 +330,7 @@ flowchart TD
 
 ### 4.8 Live tables work *with* Marimo's reactivity, not against it
 
-**Chose.** `LiveEvidenceTable` keeps a parameterised query and re-runs it in
+**Chose.** `LiveEvidentialTable` keeps a parameterised query and re-runs it in
 place. In Marimo the widget is created **once** in a cell that does not reference
 any control; a second, reactive cell calls `set_controls(...)`.
 
@@ -345,7 +345,7 @@ sequenceDiagram
   participant U as User
   participant C as Control cell (slider)
   participant R as Reactive cell
-  participant W as LiveEvidenceTable (Python)
+  participant W as LiveEvidentialTable (Python)
   participant B as Renderer (browser)
   U->>C: drags slider
   C-->>R: Marimo re-runs the reactive cell
@@ -376,7 +376,7 @@ point: the user's eye stays on the same cell.
 The A List Apart principles are cheap to honour and expensive to ignore, so they
 are defaults, not an afterthought.
 
-| ALA principle | How `evidence-tables` expresses it |
+| ALA principle | How `evidential` expresses it |
 | --- | --- |
 | Left-align text, right-align numbers | alignment defaults by column `type` |
 | Match headings to their data | header alignment follows the column's |
@@ -412,7 +412,7 @@ Escape and the × all return the table to its inline position.
 ### 4.12 One notebook, many audiences (marimo Studio)
 
 **Chose.** Present the table to marimo Studio by **projection**: a view places
-the cell that displays the `EvidenceTable` (`<marimo-cell>`), native controls,
+the cell that displays the `EvidentialTable` (`<marimo-cell>`), native controls,
 and individual values (`mo-value`). The notebook stays the single source of
 truth; the view owns only presentation.
 
@@ -423,7 +423,7 @@ and every result still traces back to a cell. Studio views are delivered next
 to the notebook in a committed `view_root`, and the demo is guarded by a
 repository test that needs no Studio install.
 
-See [using EvidenceTable in Studio views](marimo-studio.md) and
+See [using EvidentialTable in Studio views](marimo-studio.md) and
 [ADR-021](adr/021-marimo-studio-projections.md).
 
 ---
@@ -433,13 +433,13 @@ See [using EvidenceTable in Studio views](marimo-studio.md) and
 **Level 0 — just show me the data.**
 
 ```python
-EvidenceTable(con.sql("SELECT * FROM trips LIMIT 500"))
+EvidentialTable(con.sql("SELECT * FROM trips LIMIT 500"))
 ```
 
 **Level 1 — make a few columns readable.**
 
 ```python
-EvidenceTable(
+EvidentialTable(
     con.sql("SELECT * FROM trips LIMIT 500"),
     title="NYC yellow taxi trips",
     search=True,

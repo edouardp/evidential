@@ -6,9 +6,9 @@ and without network access.
 
 | Notebook | Features |
 | --- | --- |
-| [`01_taxi_explore.py`](01_taxi_explore.py) | EvidenceTable on the NYC TLC parquet via DuckDB httpfs; formatting, bars, colour, grouped totals, hierarchical columns. |
+| [`01_taxi_explore.py`](01_taxi_explore.py) | EvidentialTable on the NYC TLC parquet via DuckDB httpfs; formatting, bars, colour, grouped totals, hierarchical columns. |
 | [`02_s3_tables.py`](02_s3_tables.py) | Querying Amazon S3 Tables (Iceberg REST) through DuckDB. |
-| [`03_live_drilldown.py`](03_live_drilldown.py) | `LiveEvidenceTable` with a slider + dropdown re-querying in place. |
+| [`03_live_drilldown.py`](03_live_drilldown.py) | `LiveEvidentialTable` with a slider + dropdown re-querying in place. |
 | [`04_live_demo.py`](04_live_demo.py) | Full live demo: slider/dropdowns driving a persistent table. |
 | [`05_sparklines.py`](05_sparklines.py) | Line/area/bar sparklines from `ARRAY_AGG({'date','value'})`. |
 | [`06_evidence_sample_data.py`](06_evidence_sample_data.py) | Evidence's own `needful_things.orders` sample: sparklines, grouped subtotals, raw orders. |
@@ -26,7 +26,7 @@ and without network access.
 | [`18_great_tables.py`](18_great_tables.py) | Column merging, substitutions, special formatters. |
 | [`19_typography.py`](19_typography.py) | Readable table typography: decimal alignment, no stretching, minimal furniture. |
 | [`20_whitespace_grouping.py`](20_whitespace_grouping.py) | Grouping with white space and group-size stripes. |
-| [`21_studio_dashboard.py`](21_studio_dashboard.py) | An `EvidenceTable` in a marimo Studio view: live dashboard, KPI strip, filter. |
+| [`21_studio_dashboard.py`](21_studio_dashboard.py) | An `EvidentialTable` in a marimo Studio view: live dashboard, KPI strip, filter. |
 | [`22_duckdb_metadata.py`](22_duckdb_metadata.py) | Column metadata: DuckDB comments, Parquet/Arrow field metadata and `column_config` descriptions, plus type-driven formats. |
 | [`23_wdi.py`](23_wdi.py) | World Development Indicators Parquet: live filterable ranking, all-years sparklines with 5y-vs-10y % change, trend, pivot, grouped subtotals, prior-year comparison, dimensions and footnotes. |
 | [`24_dotted_groups.py`](24_dotted_groups.py) | Column groups from dotted column names: a World Bank WDI pivot aliases indicators as `"GDP Measure.GDP (nominal)"`, grouped automatically. |

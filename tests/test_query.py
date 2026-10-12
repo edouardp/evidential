@@ -3,8 +3,8 @@ from __future__ import annotations
 import duckdb
 import pytest
 
-from evidence_tables import date_range_sql, query_table
-from evidence_tables.duck import connect
+from evidential import date_range_sql, query_table
+from evidential.duck import connect
 
 
 @pytest.fixture()
@@ -57,7 +57,7 @@ def test_date_range_presets(orders: duckdb.DuckDBPyConnection) -> None:
 
 def test_page_size_all_is_documented() -> None:
     # `page_size="all"` is handled by the renderer; Python just passes it through.
-    from evidence_tables import EvidenceTable
+    from evidential import EvidentialTable
 
-    table = EvidenceTable([{"a": 1}], page_size="all")
+    table = EvidentialTable([{"a": 1}], page_size="all")
     assert table.options["page_size"] == "all"

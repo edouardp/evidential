@@ -5,8 +5,8 @@ from types import SimpleNamespace
 import duckdb
 import pytest
 
-from evidence_tables import LiveEvidenceTable, query_values
-from evidence_tables.duck import connect
+from evidential import LiveEvidentialTable, query_values
+from evidential.duck import connect
 
 
 class FakeControl:
@@ -44,14 +44,14 @@ def con() -> duckdb.DuckDBPyConnection:
 
 
 def test_live_table_runs_parameterised_query(con: duckdb.DuckDBPyConnection) -> None:
-    live = LiveEvidenceTable(con, "SELECT a FROM t WHERE a >= {min_a}", params={"min_a": 2})
+    live = LiveEvidentialTable(con, "SELECT a FROM t WHERE a >= {min_a}", params={"min_a": 2})
     assert live.rows == [{"a": 2}, {"a": 3}]
     assert live.sql == "SELECT a FROM t WHERE a >= ?"
 
 
 def test_live_table_reruns_when_bound_control_changes(con: duckdb.DuckDBPyConnection) -> None:
     control = FakeControl(2)
-    live = LiveEvidenceTable(
+    live = LiveEvidentialTable(
         con,
         "SELECT a FROM t WHERE a >= $min_a",
         params={"min_a": control},
@@ -64,7 +64,7 @@ def test_live_table_reruns_when_bound_control_changes(con: duckdb.DuckDBPyConnec
 
 
 def test_live_table_preserves_column_config_between_runs(con: duckdb.DuckDBPyConnection) -> None:
-    live = LiveEvidenceTable(
+    live = LiveEvidentialTable(
         con,
         "SELECT a, amount FROM t WHERE a >= {min_a}",
         params={"min_a": 1},
@@ -81,14 +81,14 @@ def test_live_table_preserves_column_config_between_runs(con: duckdb.DuckDBPyCon
 
 def test_live_table_supports_t_string_interpolations(con: duckdb.DuckDBPyConnection) -> None:
     template = FakeTemplate(["SELECT a FROM t WHERE a >= ", ""], [3])
-    live = LiveEvidenceTable(con, template)
+    live = LiveEvidentialTable(con, template)
     assert [row["a"] for row in live.rows] == [3]
 
 
 def test_live_table_binds_t_string_control(con: duckdb.DuckDBPyConnection) -> None:
     control = FakeControl(2)
     template = FakeTemplate(["SELECT a FROM t WHERE a >= ", ""], [control])
-    live = LiveEvidenceTable(con, template, bind_controls=True)
+    live = LiveEvidentialTable(con, template, bind_controls=True)
     assert [row["a"] for row in live.rows] == [2, 3]
     control.update(3)
     assert [row["a"] for row in live.rows] == [3]
@@ -96,7 +96,7 @@ def test_live_table_binds_t_string_control(con: duckdb.DuckDBPyConnection) -> No
 
 def test_unknown_parameter_raises(con: duckdb.DuckDBPyConnection) -> None:
     with pytest.raises(KeyError):
-        LiveEvidenceTable(con, "SELECT a FROM t WHERE a >= {missing}", params={})
+        LiveEvidentialTable(con, "SELECT a FROM t WHERE a >= {missing}", params={})
 
 
 def test_query_values(con: duckdb.DuckDBPyConnection) -> None:
@@ -105,13 +105,13 @@ def test_query_values(con: duckdb.DuckDBPyConnection) -> None:
 
 def test_set_controls(con: duckdb.DuckDBPyConnection) -> None:
     control = FakeControl(1)
-    live = LiveEvidenceTable(con, "SELECT a FROM t WHERE a >= {min_a}", params={"min_a": control})
+    live = LiveEvidentialTable(con, "SELECT a FROM t WHERE a >= {min_a}", params={"min_a": control})
     live.set_controls(min_a=2)
     assert [row["a"] for row in live.rows] == [2, 3]
 
 
 def test_run_toggles_loading(con: duckdb.DuckDBPyConnection) -> None:
-    live = LiveEvidenceTable(con, "SELECT a FROM t WHERE a >= {min_a}", params={"min_a": 1})
+    live = LiveEvidentialTable(con, "SELECT a FROM t WHERE a >= {min_a}", params={"min_a": 1})
     seen: list[bool] = []
     live.observe(lambda change: seen.append(change["new"]), names="loading")
     live.run(params={"min_a": 2})
@@ -120,7 +120,7 @@ def test_run_toggles_loading(con: duckdb.DuckDBPyConnection) -> None:
 
 
 def test_rerun_does_not_reassign_unchanged_columns(con: duckdb.DuckDBPyConnection) -> None:
-    live = LiveEvidenceTable(con, "SELECT a, amount FROM t WHERE a >= {min_a}", params={"min_a": 1})
+    live = LiveEvidentialTable(con, "SELECT a, amount FROM t WHERE a >= {min_a}", params={"min_a": 1})
     changes: list[str] = []
     live.observe(lambda change: changes.append(change["name"]), names="columns")
     live.run(params={"min_a": 2})

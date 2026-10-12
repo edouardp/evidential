@@ -33,6 +33,12 @@ once in a cell that references no control; a second cell calls
 bound as SQL parameters, never spliced into SQL text. `bind_controls=True`
 remains as a fallback for hosts without reactive cells.
 
+The fallback uses public `observe`/`unobserve` subscriptions for ipywidgets.
+Controls exposing only Marimo's private handler retain a chained callback.
+Replacing parameters or closing the table detaches subscriptions; callbacks
+hold a weak reference to the table and inactive chained callbacks do not query.
+Plain-string placeholders are resolved only outside SQL literals and comments.
+
 ### Consequences
 
 - Good, because sort, search, collapse and page state survive a re-query.

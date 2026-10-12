@@ -31,6 +31,10 @@ a list of sparse column definitions, and `options` holds table-level settings.
 touching the rows. Renderer metadata (see [ADR-006](006-hidden-helper-columns.md))
 is underscore-prefixed to avoid clashing with data columns.
 
+Normalize transform results again after Python rules run. Non-finite numeric
+values become JSON null, including non-finite decimals, so the final rows can
+be serialized with strict JSON encoding.
+
 ### Consequences
 
 - Good, because the payload is plain JSON and easy to log.

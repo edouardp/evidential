@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+import json
+from decimal import Decimal
+
 from evidential import (
     EvidentialTable,
     cells_body,
@@ -104,3 +107,15 @@ def test_rotate_titles_option() -> None:
 def test_figure_style_option() -> None:
     table = EvidentialTable([{"a": 1}], figure_style="lining-tabular")
     assert table.options["figure_style"] == "lining-tabular"
+
+
+def test_generator_rules_apply_on_initial_render() -> None:
+    table = EvidentialTable([{"a": 1}], rules=(rule for rule in [tab_format(cells_body("a"), "usd0")]))
+    assert table.options["rules"][0]["fmt"] == "usd0"
+    assert table.rows[0]["__row_id"] == 0
+
+
+def test_transform_results_are_normalized_for_json() -> None:
+    table = EvidentialTable([{"a": 1}], rules=[text_transform(cells_body("a"), lambda _: Decimal("1.5"))])
+    assert table.rows[0]["a"] == 1.5
+    json.dumps(table.rows, allow_nan=False)

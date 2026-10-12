@@ -39,12 +39,12 @@ def configure_s3(
     region: str | None = None,
     profile: str | None = None,
     secret_name: str = "evidential_s3",
-) -> None:
+) -> str:
     """Create a DuckDB S3 secret from the ambient AWS credentials.
 
     Uses boto3 when available (so ``AWS_PROFILE``/SSO/instance roles all work);
     otherwise falls back to the standard ``AWS_ACCESS_KEY_ID`` environment
-    variables. Reads the region from the argument or ``AWS_REGION``.
+    variables. Returns the resolved region for the catalog endpoint.
     """
     region = region or os.environ.get("AWS_REGION") or os.environ.get("AWS_DEFAULT_REGION")
     access_key = secret_key = session_token = None
@@ -84,6 +84,7 @@ def configure_s3(
         )
         """
     )
+    return region
 
 
 def attach_s3_tables(
@@ -101,13 +102,15 @@ def attach_s3_tables(
     for extension in ("aws", "httpfs", "iceberg"):
         connection.execute(f"INSTALL {extension}; LOAD {extension};")
     if configure_credentials:
-        configure_s3(connection, region=region)
+        region = configure_s3(connection, region=region)
     table_bucket_arn = table_bucket_arn or os.environ.get("S3TABLES_TABLE_BUCKET_ARN")
     if not table_bucket_arn:
         raise RuntimeError(
             "attach_s3_tables needs a table bucket ARN (pass table_bucket_arn= or set S3TABLES_TABLE_BUCKET_ARN)."
         )
     region = region or os.environ.get("AWS_REGION") or os.environ.get("AWS_DEFAULT_REGION")
+    if not region:
+        raise ValueError("attach_s3_tables requires a region when configure_credentials=False")
     endpoint = f"https://s3tables.{region}.amazonaws.com/iceberg"
     connection.execute(
         f"""

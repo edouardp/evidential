@@ -9,6 +9,7 @@ JSON-serialisable.
 from __future__ import annotations
 
 import datetime as dt
+import math
 import re
 from collections.abc import Iterable, Mapping, Sequence
 from decimal import Decimal
@@ -27,9 +28,9 @@ def jsonify(value: Any) -> Any:
     if value is None or isinstance(value, (bool, int, str)):
         return value
     if isinstance(value, float):
-        return value if value == value else None  # NaN -> None
+        return value if math.isfinite(value) else None
     if isinstance(value, Decimal):
-        return float(value)
+        return jsonify(float(value))
     if isinstance(value, (dt.datetime, dt.date, dt.time)):
         return value.isoformat()
     if isinstance(value, dt.timedelta):

@@ -175,6 +175,23 @@ def _normalize_column_options(data: dict[str, Any]) -> dict[str, Any]:
     ``{"color_scale": "green", "sparkY": "sales"}`` to populate
     ``color_options`` / ``sparkline_options`` / ``bar_options`` / etc.
     """
+    for alias, canonical in _COLUMN_ALIASES.items():
+        if alias in data:
+            data.setdefault(canonical, data.pop(alias))
+    content_type = str(data.pop("content_type", "")).lower()
+    if content_type:
+        viz, spark_type = _CONTENT_TYPES.get(content_type, (None, None))
+        if viz:
+            data.setdefault("viz", viz)
+        if spark_type:
+            spark_options = dict(data.get("sparkline_options") or {})
+            spark_options.setdefault("type", spark_type)
+            data["sparkline_options"] = spark_options
+        if content_type == "html":
+            data.setdefault("html", True)
+        if content_type in {"link", "image", "logo"}:
+            data.setdefault(content_type, str(data["name"]))
+
     color = dict(data.get("color_options") or {})
     for key in (
         "color_scale",
@@ -300,30 +317,10 @@ def _coerce_column(column: str | Mapping[str, Any]) -> dict[str, Any]:
     if isinstance(column, str):
         return make_column(column)
     data = dict(column)
-    for camel, snake in _COLUMN_ALIASES.items():
-        if camel in data and snake not in data:
-            data[snake] = data.pop(camel)
     data = _normalize_column_options(data)
     name = data.pop("name", None)
     if not name:
         raise ValueError(f"column definition is missing a name: {column!r}")
-    content_type = data.pop("content_type", None)
-    if content_type:
-        viz, spark_type = _CONTENT_TYPES.get(str(content_type).lower(), (None, None))
-        if viz:
-            data.setdefault("viz", viz)
-        if spark_type:
-            spark = dict(data.get("sparkline_options") or {})
-            spark.setdefault("type", spark_type)
-            data["sparkline_options"] = spark
-        if content_type == "html":
-            data.setdefault("html", True)
-        if content_type == "link":
-            data.setdefault("link", str(name))
-        if content_type == "image":
-            data.setdefault("image", str(name))
-        if content_type == "logo":
-            data.setdefault("logo", str(name))
     type_ = data.pop("type", "string")
     return make_column(str(name), type=type_, **data)
 
@@ -334,7 +331,10 @@ def _coerce_columns(
 ) -> list[dict[str, Any]]:
     columns = list(columns) if columns is not None else []
     result = [_coerce_column(column) for column in columns]
-    merged = _merge_column_config(result, column_config)
+    normalized_config = {
+        name: _normalize_column_options({"name": name, **config}) for name, config in (column_config or {}).items()
+    }
+    merged = _merge_column_config(result, normalized_config)
     # Template columns (cols_merge*) may not exist in the data; synthesise them.
     if column_config:
         existing = {column["name"] for column in merged}
@@ -468,6 +468,9 @@ class EvidentialTable(anywidget.AnyWidget):
     ) -> None:
         table_options = {key: options.pop(key) for key in list(options) if key in _OPTION_KEYS}
         self._rules = list(rules) if rules else None
+        self._explicit_columns = list(columns) if columns is not None else None
+        self._column_overrides = {name: dict(config) for name, config in (column_config or {}).items()}
+        self._configured_groups = column_groups
 
         if rows is None:
             normalized_rows, inferred = normalize_data(data)
@@ -476,12 +479,11 @@ class EvidentialTable(anywidget.AnyWidget):
             normalized_rows = [jsonify(row) for row in raw_rows]
             inferred = infer_columns(None, raw_rows)
 
-        explicit_columns = list(columns) if columns is not None else None
+        explicit_columns = self._explicit_columns
         had_explicit_columns = explicit_columns is not None
-        if columns is None and inferred:
-            columns = inferred
+        columns = explicit_columns if had_explicit_columns else inferred
         normalized_rows = apply_blank_predicates(normalized_rows, column_config)
-        normalized_rows, client_rules = resolve_rules(normalized_rows, rules)
+        normalized_rows, client_rules = resolve_rules(normalized_rows, self._rules)
         coerced = _resolve_column_groups(_coerce_columns(columns, column_config), column_groups)
         coerced = _center_chips(coerced, column_config, explicit_columns)
 
@@ -515,7 +517,15 @@ class EvidentialTable(anywidget.AnyWidget):
         column_config: Mapping[str, Mapping[str, Any]] | None = None,
         column_groups: Mapping[str, Sequence[str] | Mapping[str, Any]] | None = None,
     ) -> EvidentialTable:
-        """Replace the table data, keeping the current options."""
+        """Replace data, retaining column configuration unless replaced explicitly."""
+        if columns is not None:
+            self._explicit_columns = list(columns)
+        if column_config is not None:
+            self._column_overrides = {name: dict(config) for name, config in column_config.items()}
+        if column_groups is not None:
+            self._configured_groups = column_groups
+        column_config = self._column_overrides
+        column_groups = self._configured_groups
         if rows is None:
             normalized_rows, inferred = normalize_data(data)
         else:
@@ -523,12 +533,16 @@ class EvidentialTable(anywidget.AnyWidget):
             normalized_rows = [jsonify(row) for row in raw_rows]
             inferred = infer_columns(None, raw_rows)
 
-        explicit_columns = list(columns) if columns is not None else None
-        if columns is None:
-            columns = inferred
+        explicit_columns = self._explicit_columns
+        columns = explicit_columns if explicit_columns is not None else inferred
         if columns is not None:
             new_columns = _resolve_column_groups(_coerce_columns(columns, column_config), column_groups)
             new_columns = _center_chips(new_columns, column_config, explicit_columns)
+            link = self.options.get("link")
+            if link and explicit_columns is None and not self.options.get("show_link_column"):
+                for column in new_columns:
+                    if column["name"] == link:
+                        column["hide"] = True
             # Setting columns triggers a browser re-render; only do it when the
             # column structure actually changed so data-only updates render once.
             if new_columns != list(self.columns):
@@ -552,13 +566,17 @@ class EvidentialTable(anywidget.AnyWidget):
     def set_column(self, name: str, **overrides: Any) -> EvidentialTable:
         """Merge overrides into a single column definition."""
         columns = [dict(column) for column in self.columns]
+        normalized = _normalize_column_options({"name": name, **overrides})
+        self._column_overrides.setdefault(name, {}).update(normalized)
         for column in columns:
             if column["name"] == name:
-                column.update(overrides)
+                column.update(normalized)
                 break
         else:
-            columns.append(_coerce_column({"name": name, **overrides}))
-        self.columns = columns
+            columns.append(_coerce_column(normalized))
+        self.columns = _center_chips(
+            _resolve_column_groups(columns, self._configured_groups), self._column_overrides, self._explicit_columns
+        )
         return self
 
     # ---------------------------------------------------------- constructors --

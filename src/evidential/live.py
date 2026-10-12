@@ -39,6 +39,7 @@ Either way, values are bound as SQL parameters (never spliced into the SQL).
 from __future__ import annotations
 
 import re
+import weakref
 from collections.abc import Iterable, Mapping, Sequence
 from typing import Any
 
@@ -50,6 +51,11 @@ __all__ = ["LiveEvidentialTable", "query_values"]
 
 # `${name}`, `$name` and `{name}` placeholders in plain string SQL.
 _PARAM_RE = re.compile(r"\$\{(\w+)\}|\$(\w+)|\{(\w+)\}")
+_SQL_LITERAL_RE = re.compile(
+    r"'(?:''|[^'])*'|\"(?:\"\"|[^\"])*\"|--[^\n]*|/\*.*?\*/|"
+    r"\$(?P<tag>[A-Za-z_]\w*|)\$.*?\$(?P=tag)\$",
+    re.DOTALL,
+)
 
 
 def _value_of(control: Any) -> Any:
@@ -88,7 +94,7 @@ class LiveEvidentialTable(EvidentialTable):
         self._column_groups = column_groups
         self._bind_controls_enabled = bind_controls
         self._bound: dict[int, Any] = {}
-        super().__init__(rows=[], columns=[], **options)
+        super().__init__(rows=[], **options)
         if bind_controls:
             self._bind_controls()
         if auto_run and sql is not None:
@@ -152,7 +158,15 @@ class LiveEvidentialTable(EvidentialTable):
             positional.append(resolved[name])
             return "?"
 
-        return _PARAM_RE.sub(replace, str(template)), positional
+        source = str(template)
+        parts = []
+        last = 0
+        for literal in _SQL_LITERAL_RE.finditer(source):
+            parts.append(_PARAM_RE.sub(replace, source[last : literal.start()]))
+            parts.append(literal.group())
+            last = literal.end()
+        parts.append(_PARAM_RE.sub(replace, source[last:]))
+        return "".join(parts), positional
 
     def _iter_controls(self) -> Iterable[Any]:
         yield from self._params.values()
@@ -167,18 +181,50 @@ class LiveEvidentialTable(EvidentialTable):
         Marimo forbids replacing a public ``on_change`` after construction, so
         we chain onto the private handler it already calls.
         """
-        for control in self._iter_controls():
-            if not hasattr(control, "_on_change"):
+        controls = {id(control): control for control in self._iter_controls()}
+        for key in list(self._bound):
+            if key not in controls:
+                self._unbind_control(key)
+        owner = weakref.ref(self)
+        for key, control in controls.items():
+            observable = callable(getattr(control, "observe", None)) and callable(getattr(control, "unobserve", None))
+            if not observable and not hasattr(control, "_on_change"):
                 continue
-            key = id(control)
             if key in self._bound:
                 continue
-            self._bound[key] = control
-            existing = getattr(control, "_on_change", None)
+            existing = None if observable else getattr(control, "_on_change", None)
+            subscription: dict[str, Any] = {
+                "control": control,
+                "existing": existing,
+                "observable": observable,
+                "active": True,
+            }
 
-            def handler(value: Any = None, _existing: Any = existing) -> None:
+            def handler(value: Any = None, _existing: Any = existing, _subscription: Any = subscription) -> None:
                 if callable(_existing):
                     _existing(value)
-                self.run()
+                table = owner()
+                if table is not None and _subscription["active"]:
+                    table.run()
 
-            control._on_change = handler
+            subscription["handler"] = handler
+            self._bound[key] = subscription
+            if observable:
+                control.observe(handler, names="value")
+            else:
+                control._on_change = handler
+
+    def _unbind_control(self, key: int) -> None:
+        subscription = self._bound.pop(key)
+        subscription["active"] = False
+        control, handler = subscription["control"], subscription["handler"]
+        if subscription["observable"]:
+            control.unobserve(handler, names="value")
+        elif control._on_change is handler:
+            control._on_change = subscription["existing"]
+
+    def close(self) -> None:
+        """Detach control callbacks before closing the widget."""
+        for key in list(getattr(self, "_bound", {})):
+            self._unbind_control(key)
+        super().close()

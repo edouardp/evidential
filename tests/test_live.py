@@ -125,3 +125,38 @@ def test_rerun_does_not_reassign_unchanged_columns(con: duckdb.DuckDBPyConnectio
     live.observe(lambda change: changes.append(change["name"]), names="columns")
     live.run(params={"min_a": 2})
     assert changes == []  # column structure is unchanged, so only rows re-render
+
+
+def test_binding_supports_real_ipywidgets_and_unsubscribes(con) -> None:
+    import ipywidgets
+
+    control = ipywidgets.IntSlider(value=1)
+    replacement = ipywidgets.IntSlider(value=2)
+    live = LiveEvidentialTable(con, "SELECT {x} AS x", params={"x": control}, bind_controls=True)
+    control.value = 3
+    assert live.rows == [{"x": 3}]
+    live.run(params={"x": replacement})
+    changes = []
+    live.observe(lambda change: changes.append(change["new"]), names="loading")
+    control.value = 4
+    assert changes == []
+    live.close()
+    replacement.value = 5
+    assert changes == []
+    control.close()
+    replacement.close()
+
+
+def test_replaced_private_control_is_unbound(con) -> None:
+    original, replacement = FakeControl(1), FakeControl(2)
+    live = LiveEvidentialTable(con, "SELECT {x} AS x", params={"x": original}, bind_controls=True)
+    live.run(params={"x": replacement})
+    assert original._on_change is None
+    live.close()
+    assert replacement._on_change is None
+
+
+def test_parameter_placeholders_ignore_sql_literals_and_comments(con) -> None:
+    sql = "SELECT '{literal}' AS a, $$ $quoted $$ AS b, {x} AS c -- {comment}\n/* $block */"
+    live = LiveEvidentialTable(con, sql, params={"x": 2})
+    assert live.rows == [{"a": "{literal}", "b": " $quoted ", "c": 2}]

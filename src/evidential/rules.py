@@ -21,6 +21,8 @@ from __future__ import annotations
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from typing import Any
 
+from .data import jsonify
+
 __all__ = [
     "cells_body",
     "tab_style",
@@ -262,4 +264,4 @@ def resolve_rules(
                 if key in rule:
                     client[key] = rule[key]
             client_rules.append(client)
-    return working, client_rules
+    return [jsonify(row) for row in working], [jsonify(rule) for rule in client_rules]

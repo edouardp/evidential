@@ -8,6 +8,7 @@ date-range presets to a DuckDB boolean expression.
 
 from __future__ import annotations
 
+import datetime as dt
 import re
 from collections.abc import Mapping
 from typing import Any
@@ -21,6 +22,21 @@ def _quoted(column: str) -> str:
     if re.fullmatch(r"[A-Za-z_][\w.]*", column):
         return column
     return '"' + column.replace('"', '""') + '"'
+
+
+def _date_literal(text: str, *, end: bool = False) -> tuple[str, str]:
+    """Validate an ISO date/time; date-only ends include that whole day."""
+    try:
+        value = (
+            dt.date.fromisoformat(text) if re.fullmatch(r"\d{4}-\d{2}-\d{2}", text) else dt.datetime.fromisoformat(text)
+        )
+    except ValueError as error:
+        raise ValueError(f"Invalid date in date_range: {text!r}") from error
+    operator = "<="
+    if end and not isinstance(value, dt.datetime):
+        value += dt.timedelta(days=1)
+        operator = "<"
+    return f"TIMESTAMP '{value.isoformat()}'", operator
 
 
 def date_range_sql(spec: str, column: str) -> str | None:
@@ -47,18 +63,22 @@ def date_range_sql(spec: str, column: str) -> str | None:
     match = re.fullmatch(r"(week|month|quarter|year)\s+to\s+date", lower)
     if match:
         unit = unit_by_prefix[match.group(1)]
-        return f"{col} >= date_trunc('{unit}', CURRENT_DATE) AND {col} <= CURRENT_DATE"
+        return f"{col} >= date_trunc('{unit}', CURRENT_DATE) AND {col} < CURRENT_DATE + INTERVAL '1 day'"
 
     # Custom explicit dates.
     match = re.fullmatch(r"from\s+(\S+)", lower)
     if match:
-        return f"{col} >= TIMESTAMP '{match.group(1)}'"
+        literal, _ = _date_literal(text[match.start(1) : match.end(1)])
+        return f"{col} >= {literal}"
     match = re.fullmatch(r"until\s+(\S+)", lower)
     if match:
-        return f"{col} <= TIMESTAMP '{match.group(1)}'"
+        literal, operator = _date_literal(text[match.start(1) : match.end(1)], end=True)
+        return f"{col} {operator} {literal}"
     match = re.fullmatch(r"(\S+)\s+to\s+(\S+)", lower)
     if match:
-        return f"{col} BETWEEN TIMESTAMP '{match.group(1)}' AND TIMESTAMP '{match.group(2)}'"
+        start, _ = _date_literal(text[match.start(1) : match.end(1)])
+        end, operator = _date_literal(text[match.start(2) : match.end(2)], end=True)
+        return f"{col} >= {start} AND {col} {operator} {end}"
 
     # Dynamic "last N <unit>".
     match = re.fullmatch(r"last\s+(\d+)\s+(day|week|month|quarter|year)s?", lower)

@@ -61,6 +61,8 @@ from the first values, including whether a numeric column is wholly integral.
 
 ## More Information
 
+- Explicit settings survive refreshes as described in
+  [ADR-036](036-persistent-column-configuration.md).
 - [Technical architecture §4.2](../technical-architecture.md)
 - `src/evidential/data.py` (`_arrow_column_spec`, `_python_column_spec`)
 - Related: [ADR-007](007-ssf-format-codes.md)

@@ -1,12 +1,71 @@
 from __future__ import annotations
 
 import datetime as dt
+import json
 from decimal import Decimal
 
 import pytest
 
 from evidential import EvidentialTable, make_column
 from evidential.duck import connect
+
+
+def test_generator_columns_work_in_constructor_and_refresh() -> None:
+    table = EvidentialTable([{"a": 1}], columns=(name for name in ["a"]))
+    assert [column["name"] for column in table.columns] == ["a"]
+    table.set_data([{"b": 2}], columns=(name for name in ["b"]))
+    assert [column["name"] for column in table.columns] == ["b"]
+
+
+def test_column_aliases_are_consistent_across_configuration_paths() -> None:
+    overrides = {"contentType": "bar", "barColor": "red", "redNegatives": True}
+    table = EvidentialTable([{"a": 1}], column_config={"a": overrides})
+    assert table.columns[0]["viz"] == "bar"
+    assert table.columns[0]["red_negatives"] is True
+    assert table.columns[0]["bar_options"] == {"bar_color": "red"}
+    table.set_column("a", contentType="chip", chipMinWidth=30)
+    assert table.columns[0]["viz"] == "chip"
+    assert table.columns[0]["chip_options"] == {"min_width": 30}
+
+
+def test_refresh_preserves_configuration_and_automatic_link_hiding() -> None:
+    table = EvidentialTable(
+        [{"a": 1, "url": "/one"}],
+        link="url",
+        column_config={"a": {"fmt": "usd0"}},
+        column_groups={"Values": ["a"]},
+    )
+    table.set_data([{"a": 2, "url": "/two"}])
+    columns = {column["name"]: column for column in table.columns}
+    assert columns["a"]["fmt"] == "usd0"
+    assert columns["a"]["column_group"] == "Values"
+    assert columns["url"]["hide"] is True
+    table.set_column("a", fmt="num2")
+    table.set_data([{"a": 3, "url": "/three"}])
+    assert table.columns[0]["fmt"] == "num2"
+
+
+@pytest.mark.parametrize("value", [float("inf"), float("-inf"), Decimal("Infinity")])
+def test_nonfinite_values_are_json_null(value) -> None:
+    table = EvidentialTable([{"a": value}])
+    assert table.rows == [{"a": None}]
+    json.dumps(table.rows, allow_nan=False)
+
+
+def test_refresh_configuration_can_be_replaced_and_cleared() -> None:
+    table = EvidentialTable([{"a": 1}], column_config={"a": {"fmt": "usd0"}}, column_groups={"Values": ["a"]})
+    table.set_data([{"a": 2}], column_config={}, column_groups={})
+    assert table.columns[0]["fmt"] == "num0"
+    assert "column_group" not in table.columns[0]
+    table.set_data([{"a": 3, "b": 4}], columns=["b"])
+    table.set_data([{"a": 5, "b": 6}])
+    assert [column["name"] for column in table.columns] == ["b"]
+
+
+@pytest.mark.parametrize("content_type", ["html", "link", "image", "logo"])
+def test_content_types_work_in_column_overrides(content_type) -> None:
+    table = EvidentialTable([{"a": "value"}], column_config={"a": {"contentType": content_type}})
+    assert table.columns[0][content_type] == (True if content_type == "html" else "a")
 
 
 def test_from_records_infers_columns() -> None:

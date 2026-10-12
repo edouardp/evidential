@@ -100,6 +100,27 @@ def test_accordion_indents_child_rows(page, live_server):
     assert subtotal_pad <= 8
 
 
+def test_frozen_columns_have_an_opaque_backdrop(page, live_server):
+    """Scrolled content must not show through frozen cells (shaded or not)."""
+    open_preview(page, live_server)
+    # Scroll horizontally so non-frozen cells slide underneath the frozen ones.
+    page.eval_on_selector("#raw .et-scroller", "el => { el.scrollLeft = 300; }")
+    page.wait_for_timeout(200)
+
+    alphas = page.eval_on_selector_all(
+        "#raw tbody .et-frozen",
+        """cells => cells.map((cell) => {
+            const value = getComputedStyle(cell).backgroundColor;
+            const match = value.match(/rgba?\\(([^)]+)\\)/);
+            if (!match) return 1;
+            const parts = match[1].split(',').map((part) => parseFloat(part));
+            return parts.length === 4 ? parts[3] : 1;
+        })""",
+    )
+    assert alphas, "expected frozen cells in the preview table"
+    assert min(alphas) == 1, f"a frozen cell is translucent: {alphas}"
+
+
 def test_display_features(page, live_server):
     open_preview(page, live_server, "#features")
     page.wait_for_selector("#features tbody tr")

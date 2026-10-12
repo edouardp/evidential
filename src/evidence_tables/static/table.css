@@ -414,12 +414,27 @@
 
 /* ------------------------------------------------------------ frozen ----- */
 /* Frozen columns need an opaque backdrop, otherwise scrolled content shows
-   through. Layer translucent row backgrounds over the surface. */
-.et-frozen { background: var(--et-surface) !important; }
-.et-row-total .et-frozen { background: var(--et-total-bg), var(--et-surface) !important; }
-.et-row-subtotal .et-frozen { background: var(--et-subtotal-bg), var(--et-surface) !important; }
-.et-row-shaded .et-frozen { background: var(--et-shading), var(--et-surface) !important; }
-.et-row:hover .et-frozen { background: var(--et-hover), var(--et-surface) !important; }
+   through. Apply the row tint as a gradient over the opaque surface: a
+   translucent `background-color` would let the scrolled cells bleed through,
+   and `background: <colour>, <colour>` is invalid (only the final layer may be
+   a colour), so it silently computes to transparent. */
+.et-frozen { background-color: var(--et-surface) !important; }
+.et-row-total .et-frozen {
+  background-color: var(--et-surface) !important;
+  background-image: linear-gradient(var(--et-total-bg), var(--et-total-bg)) !important;
+}
+.et-row-subtotal .et-frozen {
+  background-color: var(--et-surface) !important;
+  background-image: linear-gradient(var(--et-subtotal-bg), var(--et-subtotal-bg)) !important;
+}
+.et-row-shaded .et-frozen {
+  background-color: var(--et-surface) !important;
+  background-image: linear-gradient(var(--et-shading), var(--et-shading)) !important;
+}
+.et-row:hover .et-frozen {
+  background-color: var(--et-surface) !important;
+  background-image: linear-gradient(var(--et-hover), var(--et-hover)) !important;
+}
 .et-frozen-last { box-shadow: 2px 0 4px -2px rgba(0, 0, 0, 0.25); }
 
 /* ------------------------------------------------------------ footer ----- */

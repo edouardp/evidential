@@ -287,7 +287,9 @@ def _(mo):
     The same **indicator** and **region** controls drive a second view: one row
     per country with every reported year packed into a sparkline — an
     `ARRAY_AGG` of `{'year': …, 'value': …}` objects. `% change` compares the
-    **last 5 years** with the **previous 10** (averages, computed in SQL).
+    **last 5 years** with the **previous 10** (averages, computed in SQL), and
+    `Kendall τ` measures the monotonic trend across every year — computed in SQL
+    with an O(n log n) bottom-up merge-sort pair count (Knight's algorithm).
     """)
     return
 
@@ -302,32 +304,86 @@ def _(EvidenceTable, connection, indicator, mo, region):
                     SELECT max(year) AS anchor
                     FROM observations
                     WHERE indicator_code = $indicator
+                ),
+                series AS (
+                    SELECT o.country_code, c."Short Name" AS country,
+                           c.Region AS region, o.year, o.value
+                    FROM observations o
+                    JOIN country c ON c."Country Code" = o.country_code
+                    WHERE o.indicator_code = $indicator
+                      AND c.Region IS NOT NULL
+                      AND ($region = 'All regions' OR c.Region = $region)
+                      AND o.year >= 2000
+                ),
+                -- Kendall's S per country: bottom-up merge-sort pair counting.
+                -- i is the 0-based year position (distinct per country); a pair
+                -- is counted once, at the highest bit where the two i differ.
+                pos AS (
+                    SELECT s.*, s.year - min(s.year) OVER () AS i
+                    FROM series s
+                ),
+                lv AS (
+                    SELECT range AS l
+                    FROM range(0, (SELECT ceil(log2(greatest(max(i) + 1, 1)))::INT FROM pos))
+                ),
+                pair_input AS (
+                    SELECT p.country_code, l, p.i >> (l + 1) AS blk,
+                           ((p.i >> l) & 1) = 0 AS is_left, p.value AS y
+                    FROM pos p, lv
+                ),
+                pair_counts AS (
+                    SELECT
+                        country_code,
+                        is_left,
+                        sum(is_left::INT) OVER (
+                            PARTITION BY country_code, l, blk ORDER BY y
+                            RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
+                        ) AS le,
+                        sum(is_left::INT) OVER (PARTITION BY country_code, l, blk, y) AS eq,
+                        sum(is_left::INT) OVER (PARTITION BY country_code, l, blk) AS tot
+                    FROM pair_input
+                ),
+                kendall AS (
+                    SELECT country_code, sum((le - eq) - (tot - le))::BIGINT AS s
+                    FROM pair_counts
+                    WHERE NOT is_left
+                    GROUP BY country_code
+                ),
+                stats AS (
+                    SELECT
+                        country_code,
+                        any_value(country) AS country,
+                        any_value(region) AS region,
+                        count(*) AS years,
+                        round(arg_max(value, year), 2) AS latest,
+                        (avg(value) FILTER (WHERE year BETWEEN a.anchor - 4 AND a.anchor)
+                         - avg(value) FILTER (WHERE year BETWEEN a.anchor - 14 AND a.anchor - 5))
+                          / nullif(avg(value) FILTER (
+                                WHERE year BETWEEN a.anchor - 14 AND a.anchor - 5), 0) AS pct_change,
+                        round(avg(value) FILTER (
+                            WHERE year BETWEEN a.anchor - 4 AND a.anchor), 2) AS avg_last_5,
+                        round(avg(value) FILTER (
+                            WHERE year BETWEEN a.anchor - 14 AND a.anchor - 5), 2) AS avg_prev_10,
+                        array_agg(
+                            {'year': year, 'value': round(value, 2)}
+                            ORDER BY year
+                        ) AS trend
+                    FROM series, anchored a
+                    GROUP BY country_code
                 )
                 SELECT
-                    c."Short Name" AS country,
-                    c.Region       AS region,
-                    count(*)        AS years,
-                    round(arg_max(o.value, o.year), 2) AS latest,
-                    (avg(o.value) FILTER (WHERE o.year BETWEEN a.anchor - 4 AND a.anchor)
-                     - avg(o.value) FILTER (WHERE o.year BETWEEN a.anchor - 14 AND a.anchor - 5))
-                      / nullif(avg(o.value) FILTER (
-                            WHERE o.year BETWEEN a.anchor - 14 AND a.anchor - 5), 0) AS pct_change,
-                    round(avg(o.value) FILTER (
-                        WHERE o.year BETWEEN a.anchor - 4 AND a.anchor), 2) AS avg_last_5,
-                    round(avg(o.value) FILTER (
-                        WHERE o.year BETWEEN a.anchor - 14 AND a.anchor - 5), 2) AS avg_prev_10,
-                    array_agg(
-                        {'year': o.year, 'value': round(o.value, 2)}
-                        ORDER BY o.year
-                    ) AS trend
-                FROM observations o
-                JOIN country c ON c."Country Code" = o.country_code
-                CROSS JOIN anchored a
-                WHERE o.indicator_code = $indicator
-                  AND c.Region IS NOT NULL
-                  AND ($region = 'All regions' OR c.Region = $region)
-                GROUP BY 1, 2, a.anchor
-                ORDER BY pct_change DESC NULLS LAST
+                    st.country,
+                    st.region,
+                    st.years,
+                    st.latest,
+                    st.pct_change,
+                    k.s / nullif(st.years * (st.years - 1) / 2.0, 0) AS kendall_tau,
+                    st.avg_last_5,
+                    st.avg_prev_10,
+                    st.trend
+                FROM stats st
+                JOIN kendall k USING (country_code)
+                ORDER BY st.country ASC
                 """,
                 params={"indicator": indicator.value, "region": region.value},
             ),
@@ -335,6 +391,7 @@ def _(EvidenceTable, connection, indicator, mo, region):
             search=True,
             page_size=12,
             row_shading=True,
+            default_sort={"column": "trend", "direction": "desc"},
             column_config={
                 "country": {"align": "left"},
                 "region": {"align": "left"},
@@ -346,15 +403,24 @@ def _(EvidenceTable, connection, indicator, mo, region):
                     "viz": "delta",
                     "align": "right",
                 },
+                "kendall_tau": {
+                    "title": "Kendall τ",
+                    "fmt": "num2",
+                    "viz": "color",
+                    "color_scale": ["#dc262633", "#f8fafc33", "#16a34a33"],
+                    "color_options": {"min": -1, "max": 1, "midpoint": 0},
+                    "align": "right",
+                },
                 "avg_last_5": {"title": "Last 5y avg", "fmt": "num2", "align": "right"},
                 "avg_prev_10": {"title": "Prev 10y avg", "fmt": "num2", "align": "right"},
                 "trend": {
-                    "title": "All years",
+                    "title": "Since 2000",
                     "viz": "sparkline",
+                    "sort_by": "kendall_tau",
                     "sparkline_options": {
                         "x": "year",
                         "y": "value",
-                        "type": "area",
+                        "type": "bar",
                         "fit_to_data": True,
                         "width": 130,
                         "height": 26,
@@ -583,7 +649,7 @@ def _(EvidenceTable, connection, mo):
             page_size=10,
             column_config={
                 "country_code": {"title": "Country", "align": "left"},
-                "year": {"fmt": "num0", "align": "left"},
+                "year": {"fmt": "yyyy", "align": "left"},
                 "description": {"align": "left", "wrap": True},
             },
         )

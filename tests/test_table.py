@@ -22,6 +22,50 @@ def test_from_records_infers_columns() -> None:
     assert table.rows[0]["when"] == "2024-01-01"
 
 
+def test_arrow_types_drive_default_format_and_alignment() -> None:
+    import pyarrow as pa
+
+    arrow = pa.table(
+        {
+            "count": pa.array([1, 2, 3], pa.int64()),
+            "ratio": pa.array([1.5, 2.25, 3.0], pa.float64()),
+            "price": pa.array([Decimal("12.00"), Decimal("34.50"), Decimal("7.25")], pa.decimal128(10, 2)),
+            "name": pa.array(["a", "b", "c"], pa.string()),
+            "when": pa.array([dt.date(2024, 1, 1), None, dt.date(2024, 1, 3)], pa.date32()),
+            "flag": pa.array([True, False, True], pa.bool_()),
+            "items": pa.array([[1, 2], [3], [4]], pa.list_(pa.int32())),
+            "meta": pa.array([{"a": 1}, {"a": 2}, {"a": 3}], pa.struct([("a", pa.int32())])),
+        }
+    )
+    columns = {column["name"]: column for column in EvidenceTable(arrow).columns}
+
+    assert (columns["count"]["type"], columns["count"]["fmt"], columns["count"]["align"]) == (
+        "number",
+        "num0",
+        "right",
+    )
+    assert columns["ratio"].get("fmt") is None  # ambiguous precision -> auto-scaling
+    assert columns["price"]["fmt"] == "num2"  # decimal scale is preserved
+    assert (columns["name"]["type"], columns["name"]["align"]) == ("string", "left")
+    assert columns["when"]["type"] == "date"
+    assert columns["flag"]["type"] == "boolean"
+    # Nested types must not be mistaken for their element type.
+    assert columns["items"]["type"] == "array"
+    assert columns["meta"]["type"] == "object"
+
+
+def test_duckdb_result_types_default_formatting() -> None:
+    import duckdb
+
+    relation = duckdb.connect().sql("SELECT 1::INTEGER AS n, 2.5::DOUBLE AS x, 'a' AS s, DATE '2024-01-01' AS d")
+    columns = {column["name"]: column for column in EvidenceTable(relation).columns}
+    assert columns["n"]["fmt"] == "num0"  # integers are whole numbers
+    assert columns["n"]["align"] == "right"
+    assert columns["x"].get("fmt") is None  # floats keep auto-scaling
+    assert (columns["s"]["type"], columns["s"]["align"]) == ("string", "left")
+    assert columns["d"]["type"] == "date"
+
+
 def test_column_config_overrides() -> None:
     table = EvidenceTable(
         [{"revenue": 4200.5}],

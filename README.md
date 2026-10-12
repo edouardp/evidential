@@ -122,6 +122,28 @@ EvidenceTable(
 In Marimo, display the widget directly or wrap it with
 `mo.ui.anywidget(EvidenceTable(...))` when you want to read state back.
 
+### Inferred defaults
+
+Columns are typed from the source schema (DuckDB, Arrow, pandas) or from the
+first values. The type picks sensible defaults that `column_config` can
+override:
+
+| Data type | `type` | default `fmt` | alignment |
+| --- | --- | --- | --- |
+| `INTEGER` / `BIGINT` | `number` | `num0` | right |
+| `DECIMAL(p, s)` | `number` | `num{s}` | right |
+| `DOUBLE` / `FLOAT` | `number` | auto (`num`/`usd`/`pct` scaling) | right |
+| `DATE` / `TIMESTAMP` | `date` | date | left |
+| `VARCHAR` | `string` | — | left |
+| `BOOLEAN` | `boolean` | — | left |
+| `LIST` | `array` | — | left |
+| `STRUCT` / `MAP` | `object` | — | left |
+
+So a DuckDB `count(*)` column renders as a whole number (`25,670`) with no
+configuration. Integers default to `num0`; set `fmt="num"` to restore the
+auto-scaling format (e.g. `26k`). DuckDB result types come back both as
+`relation.types` and in the Arrow schema — the Arrow schema is what drives this.
+
 ## Grouped tables with subtotals
 
 `grouped_table` builds the SQL for you. Pass a base query, the dimensions to

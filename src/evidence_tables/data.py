@@ -9,6 +9,7 @@ JSON-serialisable.
 from __future__ import annotations
 
 import datetime as dt
+import re
 from collections.abc import Iterable, Mapping, Sequence
 from decimal import Decimal
 from typing import Any
@@ -80,59 +81,103 @@ def make_column(name: str, *, type: str = "string", **overrides: Any) -> dict[st
     return {k: v for k, v in column.items() if v is not None or k in {"name", "type"}}
 
 
+# Match the *outer* Arrow type only: the string form of a nested type (e.g.
+# ``list<item: int32>``) contains its element type, so a substring search would
+# classify a list of ints as a number.
 _ARROW_TYPE_MAP = (
+    ("large_list", "array"),
+    ("list", "array"),
+    ("struct", "object"),
+    ("map", "object"),
     ("date", "date"),
     ("time", "date"),
-    ("timestamp", "date"),
     ("bool", "boolean"),
     ("int", "number"),
     ("uint", "number"),
     ("float", "number"),
     ("double", "number"),
     ("decimal", "number"),
-    ("list", "array"),
-    ("large_list", "array"),
-    ("struct", "object"),
-    ("map", "object"),
 )
 
 
+def _arrow_head(field_type: Any) -> str:
+    """The outer Arrow type name, e.g. ``list`` for ``list<item: int32>``."""
+    return re.split(r"[<\[(]", str(field_type).lower(), maxsplit=1)[0]
+
+
 def _arrow_type_name(field_type: Any) -> str:
-    name = str(field_type).lower()
-    for needle, mapped in _ARROW_TYPE_MAP:
-        if needle in name:
+    head = _arrow_head(field_type)
+    for prefix, mapped in _ARROW_TYPE_MAP:
+        if head.startswith(prefix):
             return mapped
     return "string"
 
 
-def _infer_python_type(values: Iterable[Any]) -> str:
+def _column_spec(type_name: str, *, integer: bool = False, scale: int | None = None) -> dict[str, Any]:
+    """Infer a column's ``type``, ``fmt`` and ``align`` from its data type."""
+    if type_name != "number":
+        return {"type": type_name, "fmt": None, "align": "left"}
+    if integer:
+        # Counts and ids read better as whole numbers than the magnitude-based
+        # auto format, which would render 12 as "12.0".
+        fmt: str | None = "num0"
+    elif scale is not None:
+        fmt = f"num{min(max(scale, 0), 4)}"
+    else:
+        fmt = None  # leave it to the auto-scaling num/usd/... format
+    return {"type": "number", "fmt": fmt, "align": "right"}
+
+
+def _arrow_column_spec(field_type: Any) -> dict[str, Any]:
+    type_name = _arrow_type_name(field_type)
+    if type_name != "number":
+        return _column_spec(type_name)
+    head = _arrow_head(field_type)
+    if head.startswith(("int", "uint")):
+        return _column_spec("number", integer=True)
+    if head.startswith("decimal"):
+        scale = getattr(field_type, "scale", None)
+        return _column_spec("number", scale=scale if isinstance(scale, int) else None)
+    return _column_spec("number")
+
+
+def _python_column_spec(values: Iterable[Any]) -> dict[str, Any]:
+    numeric = False
+    integer = True
     for value in values:
         if value is None:
             continue
         if isinstance(value, bool):
-            return "boolean"
-        if isinstance(value, (int, float, Decimal)):
-            return "number"
+            return _column_spec("boolean")
+        if isinstance(value, int):
+            numeric = True
+            continue
+        if isinstance(value, (float, Decimal)):
+            numeric = True
+            integer = False
+            continue
         if isinstance(value, (dt.datetime, dt.date, dt.time)):
-            return "date"
+            return _column_spec("date")
         if isinstance(value, (list, tuple)):
-            return "array"
+            return _column_spec("array")
         if isinstance(value, Mapping):
-            return "object"
-        return "string"
-    return "string"
+            return _column_spec("object")
+        return _column_spec("string")
+    if numeric:
+        return _column_spec("number", integer=integer)
+    return _column_spec("string")
 
 
 def infer_columns(data: Any, rows: Sequence[Mapping[str, Any]]) -> list[dict[str, Any]]:
-    """Infer widget column definitions from a data object or sampled rows."""
-    names: list[str]
+    """Infer widget column definitions from a data object or sampled rows.
+
+    Arrow-backed sources (including DuckDB relations) use the result schema, so
+    integer columns default to ``num0``, decimals keep their scale, and nested
+    types are recognised; other sources are inferred from the first values.
+    """
     schema = getattr(data, "schema", None)
     if schema is not None and hasattr(schema, "names"):  # pyarrow-style schema
-        names = list(schema.names)
-        columns = []
-        for field in schema:
-            columns.append(make_column(field.name, type=_arrow_type_name(field.type)))
-        return columns
+        return [make_column(field.name, **_arrow_column_spec(field.type)) for field in schema]
     if hasattr(data, "columns") and not callable(data.columns):  # pandas
         names = [str(c) for c in data.columns]
     elif rows:
@@ -142,7 +187,7 @@ def infer_columns(data: Any, rows: Sequence[Mapping[str, Any]]) -> list[dict[str
     columns = []
     for name in names:
         values = [row.get(name) for row in rows[:200]]
-        columns.append(make_column(name, type=_infer_python_type(values)))
+        columns.append(make_column(name, **_python_column_spec(values)))
     return columns
 
 

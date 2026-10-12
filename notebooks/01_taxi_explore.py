@@ -229,7 +229,7 @@ def _(EvidenceTable, connection, mo):
             row_shading=True,
             column_groups={
                 "Payment type": ["credit_card", "cash", "no_charge", "dispute"],
-                "Totals": ["total_trips", "total_revenue"],
+                "Totals": ["total.trips", "total_revenue"],
             },
             column_config={
                 "day":           {"title": "Day",         "fmt": "yyyy-mm-dd", "align": "left"},
@@ -243,6 +243,11 @@ def _(EvidenceTable, connection, mo):
         )
     )
     pivoted
+    return
+
+
+@app.cell
+def _():
     return
 
 

@@ -30,6 +30,7 @@ and without network access.
 | [`22_duckdb_metadata.py`](22_duckdb_metadata.py) | Column metadata: DuckDB comments, Parquet/Arrow field metadata and `column_config` descriptions, plus type-driven formats. |
 | [`23_wdi.py`](23_wdi.py) | World Development Indicators Parquet: live filterable ranking, all-years sparklines with 5y-vs-10y % change, trend, pivot, grouped subtotals, prior-year comparison, dimensions and footnotes. |
 | [`24_dotted_groups.py`](24_dotted_groups.py) | Column groups from dotted column names: a World Bank WDI pivot aliases indicators as `"GDP Measure.GDP (nominal)"`, grouped automatically. |
+| [`25_column_stats.py`](25_column_stats.py) | Optional per-column statistics under the header (`min`/`max`/`avg`/`null`, `distinct`/`null`), toggled with a checkbox. |
 
 `sample_data/needful_things/orders.parquet` is Evidence's demo dataset, copied
 from the published docs site.

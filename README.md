@@ -277,6 +277,9 @@ footer with footnotes and source notes. `EvidenceTable` covers:
   `align_decimals=True` pads each numeric column to a common precision so the
   decimal points line up. `row_lines=False` / `row_shading=False` keep the
   furniture minimal. See `notebooks/19_typography.py`.
+- **Column statistics** — `column_stats=True` adds a summary block under each
+  header (`min`/`max`/`avg`/`null` for numbers, `distinct`/`null` otherwise),
+  formatted with the column's `fmt`. See `notebooks/25_column_stats.py`.
 - **Grouping with white space or stripes** — `group_gap=True` adds room around
   group boundaries, `section_row(...)` inserts full-width dividers, and
   `row_shading` accepts `True` (alternating), an integer for groups of *n*
@@ -526,7 +529,7 @@ See `notebooks/02_s3_tables.py` for a full example (it gracefully stops if
 `freeze_columns`, `wrap`, `wrap_titles`, `format_titles`, `show_total_row`,
 `total_label`, `total_position`, `subtotal_position`, `collapsible`,
 `collapsed`, `link`, `width`, `max_height`, `order_columns_by_group`, `theme`,
-`color_scale`.
+`color_scale`, `row_numbers`, `column_stats`.
 
 ## Architecture
 

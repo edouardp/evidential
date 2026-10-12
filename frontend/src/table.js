@@ -520,6 +520,7 @@ export class EvidenceTableRenderer {
           rowspans,
           footnotes,
           decimals,
+          stats: opts.column_stats ? this._columnStats(columns, allRows) : null,
         }),
       );
     }
@@ -664,9 +665,92 @@ export class EvidenceTableRenderer {
     table.append(this._renderHeader(columns, ctx));
     const tbody = h("tbody");
     ctx.shadingCounter = { value: 0 };
+    if (ctx.stats) tbody.append(this._renderStatsRow(columns, ctx));
     rows.forEach((row, index) => tbody.append(this._renderRow(row, columns, ctx, index)));
     table.append(tbody);
     return table;
+  }
+
+  /** Per-column summary over the full dataset: min/max/avg/null for numeric
+   *  columns, distinct/null for everything else. Subtotal/total rows are
+   *  ignored. */
+  _columnStats(columns, rows) {
+    const data = rows.filter((row) => !row.render_type || row.render_type === "cell_data");
+    const stats = new Map();
+    for (const col of columns) {
+      let min = null;
+      let max = null;
+      let sum = 0;
+      let numeric = 0;
+      let nulls = 0;
+      const distinct = new Set();
+      for (const row of data) {
+        const value = row[col.name];
+        if (value === null || value === undefined) {
+          nulls += 1;
+          continue;
+        }
+        distinct.add(typeof value === "object" ? JSON.stringify(value) : String(value));
+        if (col.type === "number") {
+          const num = Number(value);
+          if (!Number.isNaN(num) && Number.isFinite(num)) {
+            if (min === null || num < min) min = num;
+            if (max === null || num > max) max = num;
+            sum += num;
+            numeric += 1;
+          }
+        }
+      }
+      stats.set(col.name, {
+        min,
+        max,
+        avg: numeric ? sum / numeric : null,
+        nulls,
+        distinct: distinct.size,
+      });
+    }
+    return stats;
+  }
+
+  /** The row of `[TYPE] min/max/…` (or `distinct`) blocks under the header. */
+  _renderStatsRow(columns, ctx) {
+    const opts = this.options;
+    const row = h("tr", { class: "et-row et-stats-row" });
+    if (ctx.rowNumbers) row.append(h("td", { class: "et-td et-row-num" }, ""));
+    for (const col of columns) {
+      const stat = ctx.stats.get(col.name) || { min: null, max: null, avg: null, nulls: 0, distinct: 0 };
+      const block = h("div", { class: "et-stats" });
+      block.append(
+        h("div", { class: "et-stats-type" }, `[${String(col.type || "string").toUpperCase()}]`),
+      );
+      if (col.type === "number") {
+        const range =
+          ctx.formatRanges.get(col.name) ||
+          (stat.min != null ? { min: stat.min, max: stat.max } : undefined);
+        for (const [label, value] of [["min", stat.min], ["max", stat.max], ["avg", stat.avg]]) {
+          block.append(this._statsLine(label, this._formatStat(col, value, range)));
+        }
+      } else {
+        block.append(this._statsLine("distinct", formatValue(stat.distinct, "num0")));
+      }
+      block.append(this._statsLine("null", formatValue(stat.nulls, "num0")));
+      row.append(
+        h("td", { class: `et-td et-stats-cell${opts.stub === col.name ? " et-stub" : ""}` }, block),
+      );
+    }
+    return row;
+  }
+
+  _statsLine(label, value) {
+    return h("div", { class: "et-stats-line" }, [
+      h("span", { class: "et-stats-label" }, `${label}: `),
+      h("span", { class: "et-stats-value" }, value),
+    ]);
+  }
+
+  _formatStat(col, value, range) {
+    if (value === null || value === undefined) return "–";
+    return formatValue(value, col.fmt, { type: "number", range, fallback: optString(value) });
   }
 
   _renderHeader(columns, ctx) {

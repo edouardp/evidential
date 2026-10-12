@@ -550,6 +550,38 @@ test("page_size 'all' shows every row without pagination", () => {
   renderer.destroy();
 });
 
+test("column statistics render under the header and before the data", () => {
+  const columns = [
+    { name: "city", type: "string" },
+    { name: "trips", type: "number", fmt: "num0" },
+  ];
+  const rows = [
+    { city: "NYC", trips: 120 },
+    { city: "LA", trips: 90 },
+    { city: "SF", trips: null },
+  ];
+  const renderer = new EvidenceTableRenderer(makeModel(rows, columns, { column_stats: true }, el), el);
+  const first = el.querySelector("tbody tr");
+  assert.ok(first.classList.contains("et-stats-row"), "stats row is the first body row");
+  const cells = first.querySelectorAll(".et-stats-cell");
+  assert.equal(cells.length, 2);
+  assert.match(cells[0].textContent, /\[STRING\]/);
+  assert.match(cells[0].textContent, /distinct: 3/);
+  assert.match(cells[0].textContent, /null: 0/);
+  assert.match(cells[1].textContent, /\[NUMBER\]/);
+  assert.match(cells[1].textContent, /min: 90/);
+  assert.match(cells[1].textContent, /max: 120/);
+  assert.match(cells[1].textContent, /avg: 105/);
+  assert.match(cells[1].textContent, /null: 1/);
+  renderer.destroy();
+});
+
+test("column statistics are off unless requested", () => {
+  const renderer = new EvidenceTableRenderer(makeModel(ROWS, COLUMNS, {}, el), el);
+  assert.equal(el.querySelector(".et-stats-row"), null);
+  renderer.destroy();
+});
+
 test("logo columns render a logo.dev image", () => {
   const columns = [
     { name: "company", type: "string", logo: "domain" },

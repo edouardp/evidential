@@ -488,6 +488,40 @@
 }
 .et-frozen-last { box-shadow: 2px 0 4px -2px rgba(0, 0, 0, 0.25); }
 
+/* --------------------------------------------------- column statistics -- */
+/* The section is bounded by the same rule that separates the header from the
+   columns, with matching vertical separators between the blocks. */
+.et-stats-row .et-stats-cell {
+  font-size: 0.72rem;
+  line-height: 1.35;
+  color: var(--et-muted);
+  text-align: left;
+  vertical-align: top;
+}
+.et-root .et-stats-row .et-stats-cell {
+  border-bottom: 1px solid var(--et-header-border);
+}
+.et-root .et-stats-row .et-stats-cell:not(:last-child),
+.et-root .et-stats-row .et-row-num {
+  border-right: 1px solid var(--et-header-border);
+}
+.et-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 0.05rem;
+}
+.et-stats-type {
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  color: var(--et-text);
+}
+.et-stats-line { white-space: nowrap; }
+.et-stats-value {
+  color: var(--et-text);
+  font-variant-numeric: lining-nums tabular-nums;
+}
+
 /* ------------------------------------------------------------ footer ----- */
 .et-footer {
   display: flex;

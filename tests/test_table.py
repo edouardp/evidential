@@ -282,6 +282,7 @@ def test_new_table_options_round_trip() -> None:
     table = EvidenceTable(
         [{"a": 1}],
         row_numbers=True,
+        column_stats=True,
         compact=True,
         empty_message="Nothing here",
         default_sort={"column": "a", "direction": "asc"},
@@ -289,11 +290,16 @@ def test_new_table_options_round_trip() -> None:
         header_color="#eeeeee",
     )
     assert table.options["row_numbers"] is True
+    assert table.options["column_stats"] is True
     assert table.options["compact"] is True
     assert table.options["empty_message"] == "Nothing here"
     assert table.options["default_sort"] == {"column": "a", "direction": "asc"}
     assert table.options["row_conditional_colors"] == "tint"
     assert table.options["header_color"] == "#eeeeee"
+
+
+def test_column_stats_is_off_by_default() -> None:
+    assert EvidenceTable([{"a": 1}]).options["column_stats"] is False
 
 
 def test_show_link_column() -> None:

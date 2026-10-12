@@ -102,8 +102,9 @@ def _(mo):
 @app.cell
 def _(show_stats, table):
     # A separate reactive cell keeps the widget alive: only its options change,
-    # so Marimo does not recreate the table when the checkbox flips.
-    table.widget.update_options(column_stats=show_stats.value)
+    # so Marimo does not recreate the table when the checkbox flips. Assigning
+    # to `_` avoids rendering the widget returned by `update_options`.
+    _ = table.widget.update_options(column_stats=show_stats.value)
     return
 
 

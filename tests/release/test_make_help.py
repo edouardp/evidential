@@ -17,6 +17,7 @@ SECTIONS = (
     "Testing",
     "Dependencies",
     "Build",
+    "Release",
     "Cleanup",
     "Validation",
 )

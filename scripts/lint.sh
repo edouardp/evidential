@@ -38,9 +38,9 @@ checkmake --config=.checkmake Makefile
 
 echo "=== rumdl ==="
 if [[ -n "$FIX" ]]; then
-    uvx rumdl fmt README.md docs notebooks
+    uvx rumdl fmt README.md CHANGELOG.md docs notebooks
 else
-    uvx rumdl check README.md docs notebooks
+    uvx rumdl check README.md CHANGELOG.md docs notebooks
 fi
 
 echo "All lints passed"

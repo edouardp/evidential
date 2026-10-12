@@ -40,6 +40,27 @@ builds the wheel and sdist and verifies they contain every runtime module plus
 `static/table.js` and `static/table.css`, and that no `tests/`, `notebooks/` or
 `frontend/` files leak into a release.
 
+## Releasing
+
+Releases follow the house flow (`../galaga`, `../gamr`):
+
+1. `make release` (or `make release-patch` / `release-minor` / `release-major`)
+   prompts for the bump type, then [`scripts/release.sh`](scripts/release.sh):
+   - guards that you are on `main` with a clean tree,
+   - bumps `version` in `pyproject.toml` and refreshes `uv.lock`,
+   - prepends a `CHANGELOG.md` entry and opens `$EDITOR` for the notes,
+   - commits, runs `make validate`, builds and `twine check`s the artifacts,
+   - publishes with `uv publish` (token via keyring) and tags `vX.Y.Z`.
+2. `make check` runs `twine check` on an existing `dist/`; `make pypi` builds and
+   publishes without bumping.
+3. CI ([`.github/workflows/tests.yml`](.github/workflows/tests.yml)) runs the
+   lint gate, `marimo check`, the Python/frontend tests and the artifact check on
+   every push and pull request.
+
+`tests/release/test_release.py` keeps the metadata, changelog entry, release
+script and CI in place — in particular, the `version` in `pyproject.toml` must
+have a matching `CHANGELOG.md` section.
+
 ## Marimo notebooks
 
 - The cell that creates a widget must **not** reference controls; a separate

@@ -137,7 +137,7 @@ typecheck: ## Type-check the package with pyrefly
 
 .PHONY: markdown-lint
 markdown-lint: ## Lint documentation markdown with rumdl
-	uvx rumdl check README.md docs notebooks
+	uvx rumdl check README.md CHANGELOG.md docs notebooks
 
 # ============================================================================
 # Testing
@@ -179,6 +179,35 @@ build: frontend-build ## Build a wheel/sdist (bundling the latest frontend)
 .PHONY: check-artifact
 check-artifact: build ## Verify the built distributions contain the renderer assets
 	uv run python scripts/check_artifact.py
+
+# ============================================================================
+# Release
+# ============================================================================
+
+.PHONY: check
+check: check-artifact ## Check the built distributions pass `twine check`
+	uvx twine check dist/*
+
+.PHONY: pypi
+pypi: check ## Publish the built distributions to PyPI (prompts for a token)
+	uv publish
+
+.PHONY: release
+release: ## Release interactively (choose patch, minor or major)
+	@CHOICE=$$(uv run scripts/chooser.py --title "Release type?" patch minor major 3>&1 1>&2) || exit 1; \
+	./scripts/release.sh $$CHOICE
+
+.PHONY: release-patch
+release-patch: ## Release a patch version (bug fixes)
+	./scripts/release.sh patch
+
+.PHONY: release-minor
+release-minor: ## Release a minor version (new features)
+	./scripts/release.sh minor
+
+.PHONY: release-major
+release-major: ## Release a major version (breaking changes)
+	./scripts/release.sh major
 
 # ============================================================================
 # Cleanup

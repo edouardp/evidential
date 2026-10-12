@@ -1,5 +1,10 @@
 # evidential
 
+[![PyPI](https://img.shields.io/pypi/v/evidential.svg)](https://pypi.org/project/evidential/)
+[![Python versions](https://img.shields.io/pypi/pyversions/evidential.svg)](https://pypi.org/project/evidential/)
+[![CI](https://github.com/edouardp/evidential/actions/workflows/tests.yml/badge.svg)](https://github.com/edouardp/evidential/actions/workflows/tests.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
 Evidence.dev-style interactive data tables for [Marimo](https://marimo.io),
 packaged as an [anywidget](https://anywidget.dev) and powered by
 [DuckDB](https://duckdb.org).
@@ -73,7 +78,14 @@ themed with `theme={"surface": "#0b1220"}`.
 
 ## Install
 
-The package is not on PyPI yet. From a checkout:
+```bash
+pip install evidential        # or: uv add evidential
+```
+
+Optional extras: `evidential[duckdb]` (DuckDB, Arrow, pandas),
+`evidential[marimo]`, and `evidential[studio]` (marimo Studio).
+
+To work from a checkout:
 
 ```bash
 uv sync                  # Python dependencies (incl. dev tools)
@@ -81,16 +93,9 @@ make frontend-install    # JavaScript build/test dependencies
 make frontend-build      # bundle table.js / table.css into the package
 ```
 
-To use it from another project, add the local path:
-
-```bash
-uv add evidential --path /path/to/evidential
-```
-
-Optional extras: `evidential[duckdb]` (DuckDB, Arrow, pandas),
-`evidential[marimo]`, and `evidential[studio]` (marimo Studio). The
-repository uses [`uv`](https://docs.astral.sh/uv/); `make` with no arguments
-lists every available target.
+The repository uses [`uv`](https://docs.astral.sh/uv/); `make` with no arguments
+lists every available target, and [AGENTS.md](AGENTS.md) documents the
+contributor and release workflow.
 
 ## Quick start
 

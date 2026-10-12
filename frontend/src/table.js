@@ -1096,7 +1096,11 @@ export class EvidenceTableRenderer {
       let vizStyles = null;
       if (col.viz === "color" && !(isTotal) && !(isSubtotal && col.viz_include_subtotals === false)) {
         const range = ctx.ranges.get(col.name);
-        if (range) vizStyles = calculateColorStyles(col, row, range, ctx.colorScales.get(col.name));
+        // `conditional_colors` needs no numeric range (the hex column may be
+        // the only colour source, e.g. a text status column).
+        if (range || (col.color_options || {}).conditional_colors) {
+          vizStyles = calculateColorStyles(col, row, range || { min: 0, max: 0 }, ctx.colorScales.get(col.name));
+        }
       }
 
       let content;
@@ -1140,9 +1144,10 @@ export class EvidenceTableRenderer {
         ]);
       } else if (col.viz === "chip") {
         const chipRange = ctx.ranges.get(col.name);
-        const chipStyles = chipRange
-          ? calculateColorStyles(col, row, chipRange, ctx.colorScales.get(col.name))
-          : null;
+        const chipStyles =
+          chipRange || (col.color_options || {}).conditional_colors
+            ? calculateColorStyles(col, row, chipRange || { min: 0, max: 0 }, ctx.colorScales.get(col.name))
+            : null;
         const chip = h("span", { class: "et-chip" }, formatted);
         if (chipStyles) {
           chip.style.backgroundColor = chipStyles.backgroundColor;

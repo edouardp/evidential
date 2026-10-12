@@ -564,6 +564,25 @@ test("chip columns render a coloured, centred value", () => {
   renderer.destroy();
 });
 
+test("a chip can take a conditional colour from another column", () => {
+  const columns = [
+    { name: "status", type: "string", viz: "chip", color_options: { conditional_colors: "status_color" } },
+    { name: "status_color", type: "string" },
+  ];
+  const rows = [
+    { status: "Good", status_color: "#16a34a" },
+    { status: "Bad", status_color: "#dc2626" },
+  ];
+  const renderer = new EvidenceTableRenderer(makeModel(rows, columns, {}, el), el);
+  const chips = el.querySelectorAll("tbody .et-chip");
+  assert.equal(chips.length, 2);
+  // No numeric range is needed for conditional colours.
+  assert.equal(chips[0].style.backgroundColor, "rgb(22, 163, 74)");
+  assert.equal(chips[1].style.backgroundColor, "rgb(220, 38, 38)");
+  assert.equal(chips[0].style.color, "rgb(255, 255, 255)");
+  renderer.destroy();
+});
+
 test("column info shows a native tooltip on the whole header cell", () => {
   const columns = [{ name: "city", type: "string", info: "A helpful hint" }];
   const renderer = new EvidenceTableRenderer(makeModel([{ city: "NYC" }], columns, {}, el), el);

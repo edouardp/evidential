@@ -153,6 +153,39 @@ def _(EvidenceTable, mo, records):
 
 
 @app.cell
+def _(EvidenceTable, mo, records):
+    sized_chip = mo.ui.anywidget(
+        EvidenceTable(
+            records,
+            title="Chips with a minimum width",
+            subtitle='`chip_options={"min_width": 72}` — short values are padded, long ones expand',
+            row_shading=True,
+            column_config={
+                "rank": {"hide": True},
+                "city": {"align": "left"},
+                "aqi": {
+                    "title": "AQI (US)",
+                    "viz": "chip",
+                    "fmt": "num0",
+                    "chip_options": {"min_width": 72},
+                    "color_scale": ["#16a34a", "#f59e0b", "#dc2626", "#7e22ce"],
+                    "color_options": {"min": 0, "max": 250},
+                },
+                "status": {
+                    "title": "Status",
+                    "viz": "chip",
+                    "chip_min_width": 72,
+                    "color_options": {"conditional_colors": "status_color"},
+                },
+                "status_color": {"hide": True},
+            },
+        )
+    )
+    sized_chip
+    return
+
+
+@app.cell
 def _(mo):
     mo.md("""
     ### Notes
@@ -161,6 +194,9 @@ def _(mo):
       `conditional_colors`, `scale_column`, `min`/`max`/`midpoint`.
     - The text is black or white by the fill's luminance, so it stays legible.
     - Chips are centred unless the column sets `align` (`left` or `right`).
+    - `chip_options={"min_width": 72}` gives a column of chips a common minimum
+      width (the whole chip, padding included); a longer value still expands the
+      chip. `chip_min_width` is a top-level alias.
     - `content_type="chip"` is an alias for `viz="chip"`.
     """)
     return

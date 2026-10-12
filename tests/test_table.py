@@ -322,6 +322,24 @@ def test_content_type_chip_sets_viz() -> None:
     assert table.columns[0]["viz"] == "chip"
 
 
+def test_chip_min_width_options() -> None:
+    table = EvidenceTable(
+        [{"aqi": 1}],
+        column_config={"aqi": {"viz": "chip", "chip_options": {"min_width": 72}}},
+    )
+    assert table.columns[0]["chip_options"] == {"min_width": 72}
+    top_level = EvidenceTable(
+        [{"aqi": 1}],
+        column_config={"aqi": {"viz": "chip", "chip_min_width": 64}},
+    )
+    assert top_level.columns[0]["chip_options"] == {"min_width": 64}
+    camel = EvidenceTable(
+        [{"aqi": 1}],
+        column_config={"aqi": {"viz": "chip", "chipMinWidth": 80}},
+    )
+    assert camel.columns[0]["chip_options"] == {"min_width": 80}
+
+
 def test_column_highlight_round_trips() -> None:
     table = EvidenceTable([{"a": 1}], column_config={"a": {"highlight": "#eef2ff"}})
     assert table.columns[0]["highlight"] == "#eef2ff"

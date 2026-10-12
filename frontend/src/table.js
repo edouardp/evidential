@@ -1157,6 +1157,11 @@ export class EvidenceTableRenderer {
             ? calculateColorStyles(col, row, chipRange || { min: 0, max: 0 }, ctx.colorScales.get(col.name))
             : null;
         const chip = h("span", { class: "et-chip" }, formatted);
+        // An optional minimum width; the chip still grows for wider content.
+        const minWidth = (col.chip_options || {}).min_width;
+        if (minWidth != null) {
+          chip.style.minWidth = typeof minWidth === "number" ? `${minWidth}px` : String(minWidth);
+        }
         if (chipStyles) {
           chip.style.backgroundColor = chipStyles.backgroundColor;
           chip.style.color = contrastTextColor(chipStyles.backgroundColor);

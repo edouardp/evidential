@@ -520,6 +520,7 @@ See `notebooks/02_s3_tables.py` for a full example (it gracefully stops if
 | `color_options` | `color_scale`, `color_stops`, `conditional_colors`, `scale_column`, `scale_mode`, `min`, `max`, `midpoint`. `viz="chip"` uses these for the chip fill. |
 | `delta_options` | `down_is_good` (flip green/red), `show_symbol`, `show_value`, `symbol_position` (`"right"` default), `neutral_range` (`"lo:hi"`, a `[lo, hi]` pair, or a ±value), `chip`. The same keys also work at the top level of the column config. |
 | `sparkline_options` | `type` (`line`/`area`/`bar`), `x`/`y` (field names for struct arrays), `color`, `fit_to_data`, `y_fmt`; `width`/`height` set the SVG viewBox (aspect ratio) — the rendered sparkline scales to the row height. |
+| `chip_options` | `min_width` (a number of px or a CSS length): a minimum chip width. The chip still grows for wider content; `chip_min_width` is a top-level alias. |
 | `link`, `link_label`, `link_new_tab` | Per-cell links. |
 | `html`, `image`, `image_options`, `logo` | Custom cell content (HTML, image URL, or logo.dev domain). |
 | `footnote` | Name of a column whose value is this cell's footnote text. |

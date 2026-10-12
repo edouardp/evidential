@@ -614,6 +614,19 @@ test("a spanner is highlighted only when every column it spans shares it", () =>
   renderer.destroy();
 });
 
+test("a chip can have a minimum width but still grows", () => {
+  const columns = [{ name: "status", type: "string", viz: "chip", chip_options: { min_width: 72 } }];
+  const renderer = new EvidenceTableRenderer(makeModel([{ status: "Good" }], columns, {}, el), el);
+  const chip = el.querySelector("tbody .et-chip");
+  assert.equal(chip.style.minWidth, "72px");
+  renderer.destroy();
+
+  const css = [{ name: "status", type: "string", viz: "chip", chip_options: { min_width: "5rem" } }];
+  const renderer2 = new EvidenceTableRenderer(makeModel([{ status: "Good" }], css, {}, el), el);
+  assert.equal(el.querySelector("tbody .et-chip").style.minWidth, "5rem");
+  renderer2.destroy();
+});
+
 test("column info shows a native tooltip on the whole header cell", () => {
   const columns = [{ name: "city", type: "string", info: "A helpful hint" }];
   const renderer = new EvidenceTableRenderer(makeModel([{ city: "NYC" }], columns, {}, el), el);

@@ -248,6 +248,19 @@ def _normalize_column_options(data: dict[str, Any]) -> dict[str, Any]:
     if delta:
         data["delta_options"] = delta
 
+    chip = dict(data.get("chip_options") or {})
+    for camel, snake in (
+        ("chipMinWidth", "min_width"),
+        ("chipWidth", "min_width"),
+    ):
+        if camel in data:
+            chip.setdefault(snake, data.pop(camel))
+    # Allow the chip option at the top level too.
+    if "chip_min_width" in data:
+        chip.setdefault("min_width", data.pop("chip_min_width"))
+    if chip:
+        data["chip_options"] = chip
+
     image = dict(data.get("image_options") or {})
     for key in ("height", "width", "alt"):
         if key in data:

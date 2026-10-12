@@ -41,6 +41,11 @@ Option 2 was rejected: a chip is a distinct cell style, not a variation of the
 whole-cell fill. Option 3 was rejected: the fill depends on the per-row colour,
 which is data, not CSS.
 
+A chip may set a minimum **width** with `chip_options={"min_width": 72}` (or the
+`chip_min_width` alias). The chip is `box-sizing: border-box`, so the width
+includes its padding, and `min-width` only floors it — a longer value still
+grows the chip.
+
 ### Consequences
 
 - Good, because chips reuse every colour rule: `color_scale`, `color_stops`,

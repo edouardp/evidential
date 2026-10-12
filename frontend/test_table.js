@@ -443,6 +443,8 @@ test("delta puts the indicator after the value, with a dash when neutral", () =>
   assert.equal(text[2], "3.0% –"); // neutral -> dash
   assert.equal(text[3], "5.0% ▲");
   assert.equal(text[4], "▲"); // show_value: false
+  assert.equal(cells[0].querySelector(".et-delta-indicator").textContent, "▲");
+  assert.equal(cells[2].querySelector(".et-delta-indicator").textContent, "–");
   assert.ok(cells[0].classList.contains("et-delta-good"));
   assert.ok(cells[1].classList.contains("et-delta-bad"));
   assert.ok(cells[2].classList.contains("et-delta-neutral"));

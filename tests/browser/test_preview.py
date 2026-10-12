@@ -145,6 +145,19 @@ def test_delta_indicator_follows_the_value(page, live_server):
     assert text.endswith("▲") or text.endswith("▼")  # ...indicator last
 
 
+def test_delta_indicator_width_is_constant(page, live_server):
+    open_preview(page, live_server)
+    widths = page.eval_on_selector_all(
+        "#raw .et-delta-indicator",
+        "nodes => nodes.map((node) => Math.round(node.getBoundingClientRect().width * 100) / 100)",
+    )
+    assert widths, "expected delta indicators"
+    assert len(set(widths)) == 1, f"indicator widths differ: {widths}"
+    indicators = page.eval_on_selector_all("#raw .et-delta-indicator", "nodes => nodes.map((node) => node.textContent)")
+    # the preview mixes increases, decreases and neutral values
+    assert "▲" in indicators and "▼" in indicators and "–" in indicators, indicators
+
+
 def test_display_features(page, live_server):
     open_preview(page, live_server, "#features")
     page.wait_for_selector("#features tbody tr")

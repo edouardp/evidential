@@ -36,7 +36,7 @@
       { name: "revenue", type: "number", fmt: "usd0", viz: "bar", bar_options: {}, align: "right" },
       { name: "tip_rate", type: "number", fmt: "pct1", viz: "color", color_scale: ["#fee2e2", "#fef9c3", "#bbf7d0", "#15803d"], color_options: { min: 0, max: 0.4 }, align: "right" },
       { name: "trend", type: "array", viz: "sparkline", sparkline_options: { type: "area", fit_to_data: true }, align: "center" },
-      { name: "change", type: "number", viz: "delta", delta_options: { down_is_good: false }, align: "right" },
+      { name: "change", type: "number", viz: "delta", delta_options: { down_is_good: false, neutral_range: "-0.05:0.05" }, align: "right" },
       { name: "notes", type: "string", align: "left" },
     ];
 

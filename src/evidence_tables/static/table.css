@@ -409,6 +409,10 @@
 
 /* ----------------------------------------------------------- delta ------- */
 .et-delta { font-weight: 600; white-space: nowrap; }
+/* ▲, ▼ and – have different advance widths; give the indicator a fixed box so
+   the numbers stay aligned down the column. */
+.et-delta-indicator { display: inline-block; width: 1em; text-align: center; }
+.et-delta-value { font-variant-numeric: lining-nums tabular-nums; }
 .et-delta-good { color: #16a34a; }
 .et-delta-bad { color: var(--et-negative); }
 .et-delta-neutral { color: var(--et-muted); }

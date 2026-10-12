@@ -1169,11 +1169,21 @@ export class EvidenceTableRenderer {
         ? Math.abs(num * 100).toFixed(1) + "%"
         : Math.abs(num).toLocaleString(undefined, { maximumFractionDigits: 1 });
     const valueText = opts.show_value === false ? "" : pct;
+    const valueNode = valueText ? h("span", { class: "et-delta-value" }, valueText) : null;
+    const indicatorNode = indicator
+      ? h("span", { class: "et-delta-indicator" }, indicator)
+      : null;
     // The indicator follows the value by default (e.g. "12.0% ▲").
-    const parts = opts.symbol_position === "left" ? [indicator, valueText] : [valueText, indicator];
-    const text = parts.filter(Boolean).join(" ");
+    const ordered =
+      opts.symbol_position === "left" ? [indicatorNode, valueNode] : [valueNode, indicatorNode];
+    const content = [];
+    for (const node of ordered) {
+      if (!node) continue;
+      if (content.length) content.push(" ");
+      content.push(node);
+    }
     const classes = ["et-delta", cls, opts.chip ? "et-delta-chip" : ""].filter(Boolean).join(" ");
-    return h("span", { class: classes }, text || "–");
+    return h("span", { class: classes }, content.length ? content : "–");
   }
 
   _renderSparkline(col, value) {

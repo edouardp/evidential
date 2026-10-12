@@ -464,7 +464,8 @@ flowchart TD
   (or `symbol_position="left"`), a good/bad class — green for an increase, red
   for a decrease, flipped by `down_is_good` — and a grey dash for a value inside
   `neutral_range`, which accepts a `"lo:hi"` string, a `[lo, hi]` pair or a
-  ±value. Optional chip and percentage-aware formatting.
+  ±value. The indicator sits in a fixed-width box so ▲/▼/– keep the numbers
+  aligned. Optional chip and percentage-aware formatting.
 
 ### 6.3 `format.js` and `color.js`
 

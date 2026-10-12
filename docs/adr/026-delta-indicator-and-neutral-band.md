@@ -38,7 +38,8 @@ and colours by direction — green for an increase, red for a decrease — unles
 `down_is_good` flips them. `neutral_range` accepts a `"lo:hi"` string, a
 `[lo, hi]` pair, a single ±value, or `neutral_min`/`neutral_max`; these keys work
 at the top level of `column_config` / `measure_config` as well as inside
-`delta_options`.
+`delta_options`. The indicator lives in a fixed-width (`1em`) box, because ▲, ▼
+and – have different advance widths and the numbers must still line up.
 
 Option 3 was rejected: the magnitude of a neutral change is still useful.
 

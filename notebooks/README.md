@@ -29,6 +29,7 @@ and without network access.
 | [`20_whitespace_grouping.py`](20_whitespace_grouping.py) | Grouping with white space and group-size stripes. |
 | [`21_studio_dashboard.py`](21_studio_dashboard.py) | An `EvidenceTable` in a marimo Studio view: live dashboard, KPI strip, filter. |
 | [`22_duckdb_metadata.py`](22_duckdb_metadata.py) | Column metadata: DuckDB comments, Parquet/Arrow field metadata and `column_config` descriptions, plus type-driven formats. |
+| [`23_wdi.py`](23_wdi.py) | World Development Indicators Parquet: live filterable ranking, trend, pivot, grouped subtotals, prior-year comparison, dimensions and footnotes. |
 
 `sample_data/needful_things/orders.parquet` is Evidence's demo dataset, copied
 from the published docs site.

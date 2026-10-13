@@ -52,9 +52,9 @@ def intro(mo):
 def _():
     import marimo as mo
 
-    from evidential import EvidentialTable
+    from evidential import EvidentialTable, col
 
-    return EvidentialTable, mo
+    return EvidentialTable, col, mo
 
 
 @app.cell
@@ -110,7 +110,7 @@ def kpis(filtered):
 
 
 @app.cell
-def revenue_table(EvidentialTable, filtered):
+def revenue_table(EvidentialTable, col, filtered):
     # The live EvidentialTable widget is this cell's output; <marimo-cell
     # name="revenue_table"> mounts it in the view.
     EvidentialTable(
@@ -118,19 +118,15 @@ def revenue_table(EvidentialTable, filtered):
         title="Revenue by city",
         subtitle="Bars, colour scales and deltas",
         row_shading=True,
-        column_config={
-            "region": {"title": "Region", "align": "left"},
-            "city": {"title": "City", "align": "left"},
-            "trips": {"title": "Trips", "fmt": "num0"},
-            "revenue": {"title": "Revenue", "fmt": "usd0", "viz": "bar"},
-            "tip_rate": {
-                "title": "Tip rate",
-                "fmt": "pct1",
-                "viz": "color",
-                "color_scale": ["#fee2e2", "#fef9c3", "#bbf7d0", "#15803d"],
-                "color_options": {"min": 0, "max": 0.35},
-            },
-        },
+        columns=[
+            col.text("region", title="Region"),
+            col.text("city", title="City"),
+            col.integer("trips", title="Trips"),
+            col.currency("revenue", decimals=0, title="Revenue").bar(),
+            col.percent("tip_rate", decimals=1, title="Tip rate").color(
+                scale=["#fee2e2", "#fef9c3", "#bbf7d0", "#15803d"], min=0, max=0.35
+            ),
+        ],
     )
     return
 

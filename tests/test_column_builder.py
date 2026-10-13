@@ -195,6 +195,16 @@ def test_auto_alias_wins_over_the_inferred_default() -> None:
     assert table.columns[0]["red_negatives"] is True
 
 
+def test_merge_names_a_cols_merge_spec() -> None:
+    from evidential import cols_merge_range
+
+    spec = cols_merge_range("low", "high", fmt="num0", title="Range")
+    assert "name" not in spec
+    merged = col.merge("range", spec)
+    assert merged["name"] == "range"
+    assert merged["title"] == "Range"
+
+
 def test_grouped_helpers_accept_the_builder() -> None:
     import duckdb
 

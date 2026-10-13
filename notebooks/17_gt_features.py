@@ -21,12 +21,13 @@ def _():
     from evidential import (
         EvidentialTable,
         cells_body,
+        col,
         tab_format,
         tab_style,
         text_transform,
     )
 
-    return EvidentialTable, cells_body, mo, tab_format, tab_style, text_transform
+    return EvidentialTable, cells_body, col, mo, tab_format, tab_style, text_transform
 
 
 @app.cell
@@ -46,7 +47,7 @@ def _(mo):
 
 
 @app.cell
-def _():
+def _(col):
     rows = [
         {"product": "Widget", "sales_2021": 1200, "orders_2021": 40, "sales_2022": 1500, "orders_2022": 52},
         {"product": "Gadget", "sales_2021": 900, "orders_2021": 30, "sales_2022": 700, "orders_2022": 22},
@@ -54,11 +55,11 @@ def _():
     ]
 
     columns = [
-        {"name": "product", "type": "string"},
-        {"name": "sales_2021", "type": "number", "title": "Sales", "column_group": ["2021", "Sales"]},
-        {"name": "orders_2021", "type": "number", "title": "Orders", "column_group": ["2021", "Orders"]},
-        {"name": "sales_2022", "type": "number", "title": "Sales", "column_group": ["2022", "Sales"]},
-        {"name": "orders_2022", "type": "number", "title": "Orders", "column_group": ["2022", "Orders"]},
+        col.text("product"),
+        col.number("sales_2021", title="Sales").group(["2021", "Sales"]),
+        col.number("orders_2021", title="Orders").group(["2021", "Orders"]),
+        col.number("sales_2022", title="Sales").group(["2022", "Sales"]),
+        col.number("orders_2022", title="Orders").group(["2022", "Orders"]),
     ]
     return columns, rows
 

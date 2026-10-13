@@ -38,6 +38,7 @@ __all__ = [
     "link",
     "logo",
     "markdown",
+    "merge",
     "number",
     "percent",
     "sparkline",
@@ -824,6 +825,28 @@ def auto(name: str, **overrides: Any) -> Column:
     thing about a column: ``column_config={"gdp": col.auto("gdp").fmt("usd0")}``.
     """
     return Column(name, _clean(**overrides))
+
+
+def merge(name: str, spec: Mapping[str, Any]) -> Column:
+    """Name a derived column built by a ``cols_merge_*`` helper.
+
+    The ``cols_merge_*`` helpers return a partial definition (a template and the
+    formats of its fields) with no name, so this gives it one and lets it join
+    ``columns=[...]``.
+
+    :param name: the name of the rendered column.
+    :param spec: the mapping returned by ``cols_merge_range`` /
+        ``cols_merge_uncert`` / ``cols_merge_n_pct``.
+
+    Example::
+
+        columns=[
+            col.auto("low").hide(),
+            col.auto("high").hide(),
+            col.merge("range", cols_merge_range("low", "high", fmt="num0", title="Range")),
+        ]
+    """
+    return Column(name, {key: value for key, value in spec.items() if key != "name"})
 
 
 def text(name: str, *, title: str | None = None, **extra: Any) -> Column:

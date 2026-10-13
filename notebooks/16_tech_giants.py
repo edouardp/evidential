@@ -22,9 +22,9 @@ app = marimo.App(width="full")
 def _():
     import marimo as mo
 
-    from evidential import EvidentialTable, section_row
+    from evidential import EvidentialTable, col, section_row
 
-    return EvidentialTable, mo, section_row
+    return EvidentialTable, col, mo, section_row
 
 
 @app.cell
@@ -41,7 +41,7 @@ def _(mo):
 
 
 @app.cell
-def _(section_row):
+def _(col, section_row):
     companies = ["Apple", "Google", "Microsoft", "Intel", "HP", "IBM", "Oracle", "Cisco"]
 
     metrics = [
@@ -94,30 +94,31 @@ def _(section_row):
             row[f"{company}_note"] = notes.get((label, company))
         rows.append(row)
 
-    column_config = {
-        "metric": {"title": "Company", "align": "left"},
-        "metric_fmt": {"hide": True},
-    }
+    columns = [
+        col.text("metric", title="Company"),
+        col.auto("metric_fmt").hide(),
+    ]
     for company in companies:
-        column_config[company] = {
-            "title": company,
-            "align": "right",
-            "fmt_column": "metric_fmt",
-            # blank activity cells render as truly empty (not "–")
-            "null_text": "",
+        columns.append(
+            col.number(
+                company,
+                title=company,
+                fmt_column="metric_fmt",
+                # blank activity cells render as truly empty (not "–")
+                null_text="",
+            )
             # conditional cell colour from the hidden colour column
-            "viz": "color",
-            "color_options": {"conditional_colors": f"{company}_color"},
+            .color(conditional_colors=f"{company}_color")
             # data-driven footnote from the hidden note column
-            "footnote": f"{company}_note",
-        }
-        column_config[f"{company}_color"] = {"hide": True}
-        column_config[f"{company}_note"] = {"hide": True}
-    return column_config, rows
+            .footnote(f"{company}_note")
+        )
+        columns.append(col.auto(f"{company}_color").hide())
+        columns.append(col.auto(f"{company}_note").hide())
+    return columns, rows
 
 
 @app.cell
-def _(EvidentialTable, column_config, mo, rows):
+def _(EvidentialTable, columns, mo, rows):
     mo.ui.anywidget(
         EvidentialTable(
             rows,
@@ -126,7 +127,7 @@ def _(EvidentialTable, column_config, mo, rows):
             row_lines=True,
             row_shading=False,
             header_color="transparent",
-            column_config=column_config,
+            columns=columns,
         )
     )
     return
@@ -202,7 +203,7 @@ def footnote_example_data():
 
 
 @app.cell
-def footnote_example_table(EvidentialTable, footnote_records, mo):
+def footnote_example_table(EvidentialTable, col, footnote_records, mo):
     footnote_table = mo.ui.anywidget(
         EvidentialTable(
             footnote_records[:12],
@@ -211,10 +212,10 @@ def footnote_example_table(EvidentialTable, footnote_records, mo):
             row_shading=True,
             row_lines=False,
             stretch=False,
-            column_config={
-                "value": {"fmt": "num1", "footnote": "note"},
-                "note": {"hide": True},
-            },
+            columns=[
+                col.number("value", fmt="num1").footnote("note"),
+                col.auto("note").hide(),
+            ],
             footnotes=["Illustrative data; this unmarked source note does not consume a symbol."],
         )
     )

@@ -23,6 +23,7 @@ def _():
 
     from evidential import (
         EvidentialTable,
+        col,
         cols_merge_n_pct,
         cols_merge_range,
         cols_merge_uncert,
@@ -35,6 +36,7 @@ def _():
 
     return (
         EvidentialTable,
+        col,
         cols_merge_n_pct,
         cols_merge_range,
         cols_merge_uncert,
@@ -76,6 +78,7 @@ def _():
 @app.cell
 def _(
     EvidentialTable,
+    col,
     cols_merge_n_pct,
     cols_merge_range,
     cols_merge_uncert,
@@ -87,25 +90,25 @@ def _(
             measurements,
             title="Column merging & special formatters",
             all_caps=True,
-            column_config={
-                "site": {"title": "Site", "align": "left"},
+            columns=[
+                col.text("site", title="Site"),
                 # hidden source columns
-                "low": {"hide": True},
-                "high": {"hide": True},
-                "value": {"hide": True},
-                "uncert": {"hide": True},
-                "n": {"hide": True},
-                "pct": {"hide": True},
+                col.auto("low").hide(),
+                col.auto("high").hide(),
+                col.auto("value").hide(),
+                col.auto("uncert").hide(),
+                col.auto("n").hide(),
+                col.auto("pct").hide(),
                 # merged display columns
-                "range": cols_merge_range("low", "high", fmt="num0", title="Range"),
-                "measurement": cols_merge_uncert("value", "uncert", fmt="num1", title="Value"),
-                "share": cols_merge_n_pct("n", "pct", title="Share"),
+                col.merge("range", cols_merge_range("low", "high", fmt="num0", title="Range")),
+                col.merge("measurement", cols_merge_uncert("value", "uncert", fmt="num1", title="Value")),
+                col.merge("share", cols_merge_n_pct("n", "pct", title="Share")),
                 # special formatters
-                "size": {"title": "Size", "fmt": "bytes"},
-                "elapsed": {"title": "Elapsed", "fmt": "duration"},
-                "year": {"title": "Year", "fmt": "roman"},
-                "country": {"title": "Country", "fmt": "flag"},
-            },
+                col.number("size", fmt="bytes", title="Size"),
+                col.number("elapsed", fmt="duration", title="Elapsed"),
+                col.number("year", fmt="roman", title="Year"),
+                col.flag("country", title="Country"),
+            ],
         )
     )
     merged
@@ -139,6 +142,7 @@ def _():
 @app.cell
 def _(
     EvidentialTable,
+    col,
     mo,
     readings,
     sub_large_vals,
@@ -151,11 +155,11 @@ def _(
             readings,
             title="Substitutions",
             footnote_marks="letters",
-            column_config={
-                "sensor": {"align": "left"},
-                "amount": {"title": "Reading", "fmt": "num1", "align": "right"},
-                "status": {"title": "Status", "markdown": True},
-            },
+            columns=[
+                col.text("sensor"),
+                col.number("amount", fmt="num1", title="Reading"),
+                col.markdown("status", title="Status"),
+            ],
             rules=[
                 sub_missing(columns="amount", missing_text="n/a"),
                 sub_zero(columns="amount", zero_text="—"),

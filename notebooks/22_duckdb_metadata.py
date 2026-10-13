@@ -30,9 +30,9 @@ def _():
     import duckdb
     import marimo as mo
 
-    from evidential import EvidentialTable, duck
+    from evidential import EvidentialTable, col, duck
 
-    return EvidentialTable, Path, duck, duckdb, mo, tempfile
+    return EvidentialTable, Path, col, duck, duckdb, mo, tempfile
 
 
 @app.cell
@@ -145,15 +145,15 @@ def _(mo):
 
 
 @app.cell
-def _(EvidentialTable, connection, mo):
+def _(EvidentialTable, col, connection, mo):
     overridden = mo.ui.anywidget(
         EvidentialTable(
             connection.table("orders"),
             title="column_config={...: {'comment': ...}}",
             row_shading=True,
             column_config={
-                "revenue": {"comment": "Net revenue in USD (set in column_config)"},
-                "discount": {"comment": "Discount rate (0-1)", "fmt": "pct0"},
+                "revenue": col.auto("revenue").info("Net revenue in USD (set in column_config)"),
+                "discount": col.auto("discount").info("Discount rate (0-1)").fmt("pct0"),
             },
         )
     )
@@ -244,9 +244,9 @@ def _(mo):
 
 
 @app.cell
-def _(EvidentialTable, connection, duck, mo):
+def _(EvidentialTable, col, connection, duck, mo):
     comments = {
-        name: {"info": text} for name, text in duck.column_comments(connection, "orders").items()
+        name: col.auto(name).info(text) for name, text in duck.column_comments(connection, "orders").items()
     }
     from_sql = mo.ui.anywidget(
         EvidentialTable(

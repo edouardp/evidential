@@ -39,6 +39,7 @@ and without network access.
 | [`31_imdb_media.py`](31_imdb_media.py) | IMDb-Media CSV: top-rated ranking, dotted-name column groups, column stats, a decade pivot and a row-selection cast drill-down. |
 | [`32_column_builder.py`](32_column_builder.py) | The `col.*` column builder and the `settings(...)` bundle: a configured report plus a default table to experiment with. |
 | [`33_relative_time.py`](33_relative_time.py) | Temporal kinds (`col.date` / `col.time` / `col.datetime`) and `relative=` for localised "3 days ago" rendering. |
+| [`34_centered_bars.py`](34_centered_bars.py) | Centred (diverging) `bar(center=True)`: a zero line, the bar left/right by sign, and the value on the opposite side — The Economist's league-table bar. |
 
 `sample_data/needful_things/orders.parquet` is Evidence's demo dataset, copied
 from the published docs site.

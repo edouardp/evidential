@@ -396,11 +396,18 @@
 /* Full height: the line and bars run edge-to-edge so the centre line reads as
    one continuous rule down the column (the cell's negative margins pull it into
    the row padding, joining the neighbouring rows). */
+/* The value and the bar share the cell 50/50: a two-column grid puts the label in
+   the half opposite the bar (the label is the in-flow item that gives the cell its
+   height), while the axis and bar are absolutely positioned inside it. */
+.et-bar-center {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  align-items: center;
+  min-width: 8rem;
+}
+/* Full height: the line and bars run edge-to-edge so the centre line joins the
+   neighbouring rows into one rule down the column. */
 .et-bar-center .et-bar-wrap { inset: 0; }
-/* The value and the bar share the cell 50/50, so give the centred cell room for
-   a wide value on its half and keep the value on one line. */
-.et-bar-center { min-width: 8rem; }
-.et-bar-center .et-bar-label { white-space: nowrap; }
 .et-bar-center .et-bar-axis {
   position: absolute;
   top: 0;
@@ -412,22 +419,18 @@
 .et-bar-center .et-bar-right { left: 50%; }
 .et-bar-center .et-bar-left { left: auto; right: 50%; }
 .et-bar-center .et-bar-label {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  display: flex;
-  align-items: center;
+  position: relative;
+  z-index: 1;
+  white-space: nowrap;
 }
 .et-bar-center .et-bar-label-left {
-  left: 0;
-  right: 50%;
-  justify-content: flex-end;
+  grid-column: 1;
+  justify-self: end;
   padding-right: 0.4rem;
 }
 .et-bar-center .et-bar-label-right {
-  left: 50%;
-  right: 0;
-  justify-content: flex-start;
+  grid-column: 2;
+  justify-self: start;
   padding-left: 0.4rem;
 }
 

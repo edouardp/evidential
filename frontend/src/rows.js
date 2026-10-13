@@ -141,6 +141,8 @@ export function columnStats(columns, rows) {
     let sum = 0;
     let numeric = 0;
     let nulls = 0;
+    let trues = 0;
+    let falses = 0;
     const distinct = new Set();
     for (const row of data) {
       const value = row[col.name];
@@ -157,6 +159,9 @@ export function columnStats(columns, rows) {
           sum += num;
           numeric += 1;
         }
+      } else if (col.type === "boolean") {
+        if (value === true) trues += 1;
+        else if (value === false) falses += 1;
       }
     }
     stats.set(col.name, {
@@ -165,6 +170,8 @@ export function columnStats(columns, rows) {
       avg: numeric ? sum / numeric : null,
       nulls,
       distinct: distinct.size,
+      trues,
+      falses,
     });
   }
   return stats;

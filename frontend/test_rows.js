@@ -16,7 +16,8 @@ test("row pipeline preserves grouping and never mutates its inputs", () => {
   const searched = searchRows(rows, columns, "match", new Set());
   assert.deepEqual(searched, [rows[0], rows[2], rows[3]]);
   assert.deepEqual(visibleRows(searched, () => true), [rows[2], rows[3]]);
-  assert.deepEqual(columnStats(columns, rows).get("x"), { min: 1, max: 2, avg: 1.5, nulls: 0, distinct: 2 });
+  assert.deepEqual(columnStats(columns, rows).get("x"),
+    { min: 1, max: 2, avg: 1.5, nulls: 0, distinct: 2, trues: 0, falses: 0 });
 });
 
 test("pagination clamps stale pages when results shrink", () => {

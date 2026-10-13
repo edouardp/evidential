@@ -10,9 +10,12 @@ function statsLine(label, value) {
 }
 
 function summary(col, stats, formatRanges) {
-  const stat = stats.get(col.name) || {min: null, max: null, avg: null, nulls: 0, distinct: 0};
+  const stat = stats.get(col.name) ||
+    {min: null, max: null, avg: null, nulls: 0, distinct: 0, trues: 0, falses: 0};
+  const type = String(col.type || "string").toUpperCase();
   const content = h("div", {class: "et-stats-summary"}, [
-    h("div", {class: "et-stats-type"}, `[${String(col.type || "string").toUpperCase()}]`),
+    h("div", {class: "et-stats-type"}, `${type} (nulls = ${formatValue(stat.nulls, "num0")})`),
+    h("div", {class: "et-stats-name"}, `"${col.name}"`),
   ]);
   if (col.type === "number") {
     const range = formatRanges.get(col.name) ||
@@ -22,10 +25,12 @@ function summary(col, stats, formatRanges) {
       content.append(statsLine(label, value == null ? "–" :
         formatValue(value, col.fmt, {type: "number", range, fallback: String(value)})));
     }
+  } else if (col.type === "boolean") {
+    content.append(statsLine("true", formatValue(stat.trues, "num0")));
+    content.append(statsLine("false", formatValue(stat.falses, "num0")));
   } else {
     content.append(statsLine("distinct", formatValue(stat.distinct, "num0")));
   }
-  content.append(statsLine("null", formatValue(stat.nulls, "num0")));
   return content;
 }
 

@@ -953,14 +953,26 @@ test("column statistics render under the header and before the data", () => {
   assert.ok(first.classList.contains("et-stats-row"), "stats row is the first body row");
   const cells = first.querySelectorAll(".et-stats-cell");
   assert.equal(cells.length, 2);
-  assert.match(cells[0].textContent, /\[STRING\]/);
+  assert.match(cells[0].textContent, /STRING \(nulls = 0\)/);
+  assert.match(cells[0].textContent, /"city"/);
   assert.match(cells[0].textContent, /distinct: 3/);
-  assert.match(cells[0].textContent, /null: 0/);
-  assert.match(cells[1].textContent, /\[NUMBER\]/);
+  assert.match(cells[1].textContent, /NUMBER \(nulls = 1\)/);
+  assert.match(cells[1].textContent, /"trips"/);
   assert.match(cells[1].textContent, /min: 90/);
   assert.match(cells[1].textContent, /max: 120/);
   assert.match(cells[1].textContent, /avg: 105/);
-  assert.match(cells[1].textContent, /null: 1/);
+  renderer.destroy();
+});
+
+test("column statistics report boolean true/false counts", () => {
+  const columns = [{ name: "active", type: "boolean" }];
+  const rows = [{ active: true }, { active: true }, { active: false }, { active: null }];
+  const renderer = new EvidentialTableRenderer(makeModel(rows, columns, { column_stats: true }, el), el);
+  const cell = el.querySelector(".et-stats-cell");
+  assert.match(cell.textContent, /BOOLEAN \(nulls = 1\)/);
+  assert.match(cell.textContent, /"active"/);
+  assert.match(cell.textContent, /true: 2/);
+  assert.match(cell.textContent, /false: 1/);
   renderer.destroy();
 });
 
@@ -1473,7 +1485,7 @@ test("statistics cycle independently across shared headers and preserve state on
   assert.equal(el.querySelector(".et-row-selectable"), dataRow);
   buttons[0].click();
   assert.equal(buttons[0].textContent, "○○●");
-  assert.match(cells[1].textContent, /null: 1/);
+  assert.match(cells[1].textContent, /nulls = 1/);
   buttons[1].click();
   assert.equal(cells[3].dataset.statsColumn, "month");
   renderer._gotoPage(1);

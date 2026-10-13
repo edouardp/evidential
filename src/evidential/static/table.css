@@ -453,7 +453,8 @@
   font-weight: normal;
   text-decoration: none;
   font-size: 0.7em;
-  vertical-align: super;
+  /* A smaller rise than native `super`; override the variable to fine-tune. */
+  vertical-align: var(--et-footnote-rise, 0.25em);
   cursor: default;
 }
 .et-footnote-rows { color: var(--et-muted); }
@@ -571,6 +572,12 @@
   font-weight: 600;
   letter-spacing: 0.03em;
   color: var(--et-text);
+}
+.et-stats-name {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.68rem;
+  color: var(--et-muted);
+  overflow-wrap: anywhere;
 }
 .et-stats-line { white-space: nowrap; }
 .et-stats-value {

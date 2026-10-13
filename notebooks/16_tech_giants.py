@@ -8,7 +8,8 @@
 """Reproduce the classic Evidence / gt "Tech giants" comparison table.
 
 Demonstrates section rows, blank cells (`null_text`), conditional cell colours
-and data-driven footnotes with row references.
+and data-driven footnotes with row references. An interactive example explores
+single symbols, interleaved doubles and numeric fallback.
 """
 
 import marimo
@@ -33,7 +34,7 @@ def _(mo):
 
     A plain header, a full-width section divider, per-cell conditional colours,
     blank cells where a company isn't in a market, and **data-driven footnotes**
-    (the note text lives in a column and is linked into the company cells; the
+    (the note text lives in a column and is attached to the company cells; the
     footer lists each note with the rows it appears on).
     """)
     return
@@ -128,6 +129,103 @@ def _(EvidentialTable, column_config, mo, rows):
             column_config=column_config,
         )
     )
+    return
+
+
+@app.cell
+def footnote_explanation(mo):
+    mo.md("""
+    ## Footnote symbols
+
+    Footnotes are **plain superscripts**, in the surrounding text colour, with
+    no link styling. Hovering a mark still shows the note text. Repeated note
+    text shares one mark and one footer entry.
+
+    The default singles are:
+
+    **`*`, `†`, `‡`, `§`, `¶`, `#`, `+`, `◆`, `◇`, `△`**
+
+    Move the slider to inspect the boundaries:
+
+    - **10 notes**: every single symbol is used once.
+    - **11 notes**: `*`, `**`, `†`, `‡`, … .
+    - **12 notes**: `*`, `**`, `†`, `††`, `‡`, … .
+    - **20 notes**: every single is followed by its double.
+    - **21–23 notes**: the remaining marks are `1`, `2`, `3`.
+
+    Explicit `footnote_marks="numbers"` or `"letters"` remains available.
+    The sample values and notes below are illustrative, with no external data
+    required. The widget persists when the slider changes; only its rows update.
+    """)
+    return
+
+
+@app.cell
+def footnote_controls(mo):
+    footnote_count = mo.ui.slider(start=1, stop=23, step=1, value=12, label="Unique footnotes", show_value=True)
+    footnote_count
+    return (footnote_count,)
+
+
+@app.cell
+def footnote_example_data():
+    footnote_descriptions = [
+        "Estimated from the previous reporting period.",
+        "Seasonally adjusted.",
+        "Provisional result.",
+        "Revised after publication.",
+        "Different reporting period.",
+        "Series starts after a methodology change.",
+        "Rounded to one decimal place.",
+        "Includes overseas territories.",
+        "Excludes small establishments.",
+        "Survey estimate.",
+        "Forecast rather than an observed value.",
+        "Adjusted for exchange rates.",
+        "Measured at constant prices.",
+        "Includes imputed observations.",
+        "Excludes one-off transactions.",
+        "Reported on a fiscal-year basis.",
+        "Data coverage is incomplete.",
+        "Comparable series begins this year.",
+        "Definition differs from the earlier period.",
+        "Population-weighted estimate.",
+        "Model-based estimate.",
+        "Source changed in the latest period.",
+        "Classification changed this year.",
+    ]
+    footnote_records = [
+        {"observation": f"Observation {index + 1}", "value": 10 + index / 10, "note": description}
+        for index, description in enumerate(footnote_descriptions)
+    ]
+    return (footnote_records,)
+
+
+@app.cell
+def footnote_example_table(EvidentialTable, footnote_records, mo):
+    footnote_table = mo.ui.anywidget(
+        EvidentialTable(
+            footnote_records[:12],
+            title="Single symbols, interleaved doubles, then numbers",
+            page_size="all",
+            row_shading=True,
+            row_lines=False,
+            stretch=False,
+            column_config={
+                "value": {"fmt": "num1", "footnote": "note"},
+                "note": {"hide": True},
+            },
+            footnotes=["Illustrative data; this unmarked source note does not consume a symbol."],
+        )
+    )
+    footnote_table
+    return (footnote_table,)
+
+
+@app.cell
+def update_footnote_example(footnote_count, footnote_records, footnote_table):
+    # Keep widget creation independent of controls so the renderer persists.
+    _ = footnote_table.widget.set_data(footnote_records[:footnote_count.value])
     return
 
 

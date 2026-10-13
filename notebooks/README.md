@@ -21,7 +21,7 @@ and without network access.
 | [`13_hierarchical_rows.py`](13_hierarchical_rows.py) | Accordion and section (merged-cell) hierarchical groups, collapsed-by-default. |
 | [`14_aggregations.py`](14_aggregations.py) | Built-in and Python-callable aggregations for subtotals/totals. |
 | [`15_client_grouping.py`](15_client_grouping.py) | `grouped_records`: grouping in-memory rows without a database. |
-| [`16_tech_giants.py`](16_tech_giants.py) | gt-style table: section dividers, blanks, conditional colours, data-driven footnotes. |
+| [`16_tech_giants.py`](16_tech_giants.py) | gt-style table: section dividers, blanks, conditional colours, data-driven footnotes; slider demonstrates singles, interleaved doubles and numeric fallback. |
 | [`17_gt_features.py`](17_gt_features.py) | Nested spanners, stub, markdown titles, location rules. |
 | [`18_great_tables.py`](18_great_tables.py) | Column merging, substitutions, special formatters. |
 | [`19_typography.py`](19_typography.py) | Readable table typography: decimal alignment, no stretching, minimal furniture. |

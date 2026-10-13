@@ -21,9 +21,9 @@ def _():
     import marimo as mo
     import duckdb
 
-    from evidential import BUILTIN_AGGREGATIONS, grouped_table
+    from evidential import BUILTIN_AGGREGATIONS, col, grouped_table
 
-    return BUILTIN_AGGREGATIONS, Path, duckdb, grouped_table, mo
+    return BUILTIN_AGGREGATIONS, Path, col, duckdb, grouped_table, mo
 
 
 @app.cell
@@ -57,7 +57,7 @@ def _(BUILTIN_AGGREGATIONS, mo):
 
 
 @app.cell
-def _(connection, grouped_table, mo):
+def _(col, connection, grouped_table, mo):
     default_sum = mo.ui.anywidget(
         grouped_table(
             connection,
@@ -67,7 +67,7 @@ def _(connection, grouped_table, mo):
             subtotal_position="top",
             title="Default (sum)",
             max_height="360px",
-            measure_config={"sales": {"fmt": "usd0"}},
+            measure_config={"sales": col.currency("sales", decimals=0)},
         )
     )
     default_sum
@@ -75,7 +75,7 @@ def _(connection, grouped_table, mo):
 
 
 @app.cell
-def _(connection, grouped_table, mo):
+def _(col, connection, grouped_table, mo):
     means = mo.ui.anywidget(
         grouped_table(
             connection,
@@ -86,7 +86,7 @@ def _(connection, grouped_table, mo):
             aggregations={"sales": "mean"},
             title='aggregations={"sales": "mean"}',
             max_height="360px",
-            measure_config={"sales": {"fmt": "usd2"}},
+            measure_config={"sales": col.currency("sales", decimals=2)},
         )
     )
     means
@@ -94,7 +94,7 @@ def _(connection, grouped_table, mo):
 
 
 @app.cell
-def _(connection, grouped_table, mo):
+def _(col, connection, grouped_table, mo):
     medians = mo.ui.anywidget(
         grouped_table(
             connection,
@@ -105,7 +105,7 @@ def _(connection, grouped_table, mo):
             aggregations={"sales": "median"},
             title='aggregations={"sales": "median"}',
             max_height="360px",
-            measure_config={"sales": {"fmt": "usd2"}},
+            measure_config={"sales": col.currency("sales", decimals=2)},
         )
     )
     medians
@@ -113,7 +113,7 @@ def _(connection, grouped_table, mo):
 
 
 @app.cell
-def _(connection, grouped_table, mo):
+def _(col, connection, grouped_table, mo):
     # A custom Python callable receives the list of detail values.
     def spread(values):
         return max(values) - min(values)
@@ -128,7 +128,7 @@ def _(connection, grouped_table, mo):
             aggregations={"sales": spread},
             title="aggregations={'sales': spread} (max - min)",
             max_height="360px",
-            measure_config={"sales": {"fmt": "usd0"}},
+            measure_config={"sales": col.currency("sales", decimals=0)},
         )
     )
     custom

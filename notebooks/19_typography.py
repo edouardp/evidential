@@ -23,9 +23,9 @@ app = marimo.App(width="full")
 def _():
     import marimo as mo
 
-    from evidential import EvidentialTable
+    from evidential import EvidentialTable, col
 
-    return EvidentialTable, mo
+    return EvidentialTable, col, mo
 
 
 @app.cell
@@ -59,7 +59,7 @@ def _():
 
 
 @app.cell
-def _(EvidentialTable, mo, rows):
+def _(EvidentialTable, col, mo, rows):
     mo.ui.anywidget(
         EvidentialTable(
             rows,
@@ -73,13 +73,13 @@ def _(EvidentialTable, mo, rows):
             # right-align numbers and pad to a common precision so the
             # decimal points line up down each column
             align_decimals=True,
-            column_config={
-                "item": {"title": "Item", "align": "left"},
-                "quantity": {"title": "Quantity", "fmt": "num0", "align": "right"},
-                "unit_price": {"title": "Unit price", "fmt": "num", "align": "right"},
-                "total": {"title": "Total", "fmt": "usd", "align": "right"},
-                "share": {"title": "Share", "fmt": "pct", "align": "right"},
-            },
+            columns=[
+                col.text("item", title="Item"),
+                col.integer("quantity", title="Quantity"),
+                col.number("unit_price", fmt="num", title="Unit price"),
+                col.currency("total", title="Total"),
+                col.percent("share", title="Share"),
+            ],
         )
     )
     return
@@ -98,7 +98,7 @@ def _(mo):
 
 
 @app.cell
-def _(EvidentialTable, mo):
+def _(EvidentialTable, col, mo):
     months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
     monthly = [
         {"metric": "Revenue", **{month: 1000 + index * 137 for index, month in enumerate(months)}},
@@ -112,17 +112,14 @@ def _(EvidentialTable, mo):
             stretch=False,
             row_lines=False,
             align_decimals=True,
-            column_config={
-                "metric": {"align": "left"},
-                **{month: {"fmt": "num0"} for month in months},
-            },
+            columns=[col.text("metric"), *[col.number(month, fmt="num0") for month in months]],
         )
     )
     return
 
 
 @app.cell
-def _(EvidentialTable, mo):
+def _(EvidentialTable, col, mo):
     quarters = ["Q1 2024", "Q2 2024", "Q3 2024", "Q4 2024", "Q1 2025", "Q2 2025"]
     per_quarter = [
         {"metric": "Revenue", "metric_fmt": "usd0", **{quarter: 120000 + index * 9000 for index, quarter in enumerate(quarters)}},
@@ -135,11 +132,11 @@ def _(EvidentialTable, mo):
             rotate_titles=-60,
             stretch=False,
             row_lines=False,
-            column_config={
-                "metric": {"align": "left"},
-                "metric_fmt": {"hide": True},
-                **{quarter: {"fmt_column": "metric_fmt"} for quarter in quarters},
-            },
+            columns=[
+                col.text("metric"),
+                col.auto("metric_fmt").hide(),
+                *[col.number(quarter, fmt_column="metric_fmt") for quarter in quarters],
+            ],
         )
     )
     return
@@ -160,7 +157,7 @@ def _(mo):
 
 
 @app.cell
-def _(EvidentialTable, mo):
+def _(EvidentialTable, col, mo):
     numerals = [
         {"glyphs": "Sequence", "lining": 1111111111, "lowercase": 1111111111},
         {"glyphs": "Mixed", "lining": 104729.54, "lowercase": 104729.54},
@@ -172,22 +169,21 @@ def _(EvidentialTable, mo):
             title="Numerals",
             stretch=False,
             row_lines=False,
-            column_config={
-                "glyphs": {"align": "left"},
-                "lining": {
-                    "title": "Lining — Iowan Old Style",
-                    "fmt": "num2",
-                    "align": "right",
-                    "font": "'Iowan Old Style', Georgia, serif",
-                },
-                "lowercase": {
-                    "title": "Lowercase — Hoefler Text",
-                    "fmt": "num2",
-                    "align": "right",
-                    "font": "'Hoefler Text', Georgia, serif",
-                    "figure_style": "default",
-                },
-            },
+            columns=[
+                col.text("glyphs"),
+                col.number(
+                    "lining",
+                    fmt="num2",
+                    title="Lining — Iowan Old Style",
+                    font="'Iowan Old Style', Georgia, serif",
+                ),
+                col.number(
+                    "lowercase",
+                    fmt="num2",
+                    title="Lowercase — Hoefler Text",
+                    font="'Hoefler Text', Georgia, serif",
+                ).figure_style("default"),
+            ],
         )
     )
     return

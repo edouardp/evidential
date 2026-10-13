@@ -23,9 +23,9 @@ app = marimo.App(width="full")
 def _():
     import marimo as mo
 
-    from evidential import EvidentialTable
+    from evidential import EvidentialTable, col
 
-    return EvidentialTable, mo
+    return EvidentialTable, col, mo
 
 
 @app.cell
@@ -51,19 +51,19 @@ def _():
 
 
 @app.cell
-def _(EvidentialTable, mo, records):
+def _(EvidentialTable, col, mo, records):
     multiline = mo.ui.anywidget(
         EvidentialTable(
             records,
             title="Forced line breaks",
             subtitle="A newline in the title, and every header sits on the rule",
             row_shading=True,
-            column_config={
-                "region": {"align": "left"},
-                "revenue": {"title": "Revenue\n(USD thousands)", "fmt": "usd0"},
-                "orders": {"title": "Orders\n(count)", "fmt": "num0"},
-                "growth": {"title": "Growth\n(year over year)", "fmt": "pct1"},
-            },
+            columns=[
+                col.text("region"),
+                col.currency("revenue", decimals=0, title="Revenue\n(USD thousands)"),
+                col.integer("orders", title="Orders\n(count)"),
+                col.percent("growth", decimals=1, title="Growth\n(year over year)"),
+            ],
         )
     )
     multiline
@@ -84,18 +84,18 @@ def _(mo):
 
 
 @app.cell
-def _(EvidentialTable, mo, records):
+def _(EvidentialTable, col, mo, records):
     wrapped = mo.ui.anywidget(
         EvidentialTable(
             records,
             title="Wrapping titles (default)",
             width="420px",
-            column_config={
-                "region": {"title": "Region or territory", "align": "left"},
-                "revenue": {"title": "Total revenue in USD thousands", "fmt": "usd0"},
-                "orders": {"title": "Number of orders placed", "fmt": "num0"},
-                "growth": {"title": "Year over year growth", "fmt": "pct1"},
-            },
+            columns=[
+                col.text("region", title="Region or territory"),
+                col.currency("revenue", decimals=0, title="Total revenue in USD thousands"),
+                col.integer("orders", title="Number of orders placed"),
+                col.percent("growth", decimals=1, title="Year over year growth"),
+            ],
         )
     )
     wrapped
@@ -103,19 +103,19 @@ def _(EvidentialTable, mo, records):
 
 
 @app.cell
-def _(EvidentialTable, mo, records):
+def _(EvidentialTable, col, mo, records):
     nowrap = mo.ui.anywidget(
         EvidentialTable(
             records,
             title="wrap_titles=False",
             width="420px",
             wrap_titles=False,
-            column_config={
-                "region": {"title": "Region or territory", "align": "left"},
-                "revenue": {"title": "Total revenue in USD thousands", "fmt": "usd0"},
-                "orders": {"title": "Number of orders placed", "fmt": "num0"},
-                "growth": {"title": "Year over year growth", "fmt": "pct1"},
-            },
+            columns=[
+                col.text("region", title="Region or territory"),
+                col.currency("revenue", decimals=0, title="Total revenue in USD thousands"),
+                col.integer("orders", title="Number of orders placed"),
+                col.percent("growth", decimals=1, title="Year over year growth"),
+            ],
         )
     )
     nowrap

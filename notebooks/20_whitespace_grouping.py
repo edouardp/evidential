@@ -25,9 +25,9 @@ def _():
     import marimo as mo
     import duckdb
 
-    from evidential import EvidentialTable, grouped_table, section_row
+    from evidential import EvidentialTable, col, grouped_table, section_row
 
-    return EvidentialTable, Path, duckdb, grouped_table, mo
+    return EvidentialTable, Path, col, duckdb, grouped_table, mo
 
 
 @app.cell
@@ -61,7 +61,7 @@ def _(mo):
 
 
 @app.cell
-def _(EvidentialTable, connection, mo):
+def _(EvidentialTable, col, connection, mo):
     mo.ui.anywidget(
         EvidentialTable(
             connection.sql(
@@ -75,7 +75,7 @@ def _(EvidentialTable, connection, mo):
             title="Flat list",
             max_height="360px",
             row_lines=True,
-            column_config={"sales": {"fmt": "usd0"}},
+            columns=[col.auto("category"), col.auto("item"), col.currency("sales", decimals=0)],
         )
     )
     return
@@ -93,7 +93,7 @@ def _(mo):
 
 
 @app.cell
-def _(connection, grouped_table, mo):
+def _(col, connection, grouped_table, mo):
     mo.ui.anywidget(
         grouped_table(
             connection,
@@ -106,7 +106,7 @@ def _(connection, grouped_table, mo):
             row_lines=False,
             title="Grouped by category",
             max_height="420px",
-            measure_config={"sales": {"fmt": "usd0", "viz": "bar"}},
+            measure_config={"sales": col.currency("sales", decimals=0).bar()},
         )
     )
     return
@@ -125,7 +125,7 @@ def _(mo):
 
 
 @app.cell
-def _(EvidentialTable, connection, mo):
+def _(EvidentialTable, col, connection, mo):
     mo.ui.anywidget(
         EvidentialTable(
             connection.sql(
@@ -140,7 +140,7 @@ def _(EvidentialTable, connection, mo):
             max_height="360px",
             row_shading=3,
             row_lines=False,
-            column_config={"sales": {"fmt": "usd0"}},
+            columns=[col.auto("category"), col.auto("item"), col.currency("sales", decimals=0)],
         )
     )
     return
@@ -158,7 +158,7 @@ def _(mo):
 
 
 @app.cell
-def _(EvidentialTable, mo):
+def _(EvidentialTable, col, mo):
     rows = [
         {"metric": "Revenue", "q1": 120000, "q2": 135000},
         {"metric": "Cost of sales", "q1": 54000, "q2": 61000},
@@ -172,11 +172,11 @@ def _(EvidentialTable, mo):
         EvidentialTable(
             rows,
             title="Income statement (illustrative)",
-            column_config={
-                "metric": {"title": "", "align": "left"},
-                "q1": {"title": "Q1", "fmt": "usd0"},
-                "q2": {"title": "Q2", "fmt": "usd0"},
-            },
+            columns=[
+                col.text("metric", title=""),
+                col.currency("q1", decimals=0, title="Q1"),
+                col.currency("q2", decimals=0, title="Q2"),
+            ],
         )
     )
     return

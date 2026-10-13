@@ -33,9 +33,9 @@ def _():
     import duckdb
     import marimo as mo
 
-    from evidential import EvidentialTable
+    from evidential import EvidentialTable, col
 
-    return EvidentialTable, Path, duckdb, mo, os
+    return EvidentialTable, col, Path, duckdb, mo, os
 
 
 @app.cell
@@ -66,7 +66,7 @@ def _(Path, duckdb, mo, os):
 
 
 @app.cell
-def _():
+def _(col):
     detail_sql = """
         SELECT
             year,
@@ -81,16 +81,16 @@ def _():
         GROUP BY year
         ORDER BY year DESC
     """
-    detail_config = {
-        "year": {"fmt": "yyyy", "align": "left"},
-        "GDP (current US$)": {"fmt": "usd"},
-        "GDP per capita (US$)": {"fmt": "usd"},
-        "Population": {"fmt": "num"},
-        "Life expectancy": {"fmt": "num1"},
-        "Urban share (%)": {"fmt": '0.0"%"'},
-        "Inflation (%)": {"fmt": '0.0"%"'},
-    }
-    return detail_config, detail_sql
+    detail_columns = [
+        col.number("year", fmt="yyyy"),
+        col.currency("GDP (current US$)"),
+        col.currency("GDP per capita (US$)"),
+        col.number("Population", fmt="num"),
+        col.number("Life expectancy", fmt="num1"),
+        col.number("Urban share (%)", fmt='0.0"%"'),
+        col.number("Inflation (%)", fmt='0.0"%"'),
+    ]
+    return detail_columns, detail_sql
 
 
 @app.cell
@@ -118,7 +118,7 @@ def _(mo):
 
 
 @app.cell
-def _(EvidentialTable, connection, mo):
+def _(EvidentialTable, col, connection, mo):
     countries = mo.ui.anywidget(
         EvidentialTable(
             connection.sql(
@@ -144,13 +144,13 @@ def _(EvidentialTable, connection, mo):
             page_size=10,
             row_shading=True,
             freeze_columns=2,
-            column_config={
-                "country_code": {"title": "Code", "align": "left"},
-                "country": {"align": "left"},
-                "region": {"align": "left"},
-                "Population": {"fmt": "num0"},
-                "GDP per capita": {"fmt": "usd0"},
-            },
+            columns=[
+                col.text("country_code", title="Code"),
+                col.text("country"),
+                col.text("region"),
+                col.integer("Population"),
+                col.currency("GDP per capita", decimals=0),
+            ],
         )
     )
     countries
@@ -174,7 +174,7 @@ def _(mo, selected):
 
 
 @app.cell
-def _(EvidentialTable, connection, detail_config, detail_sql, mo):
+def _(EvidentialTable, connection, detail_columns, detail_sql, mo):
     # Created once with an empty result: the headers and placeholder rows are
     # already there, so the table never disappears (and its height holds).
     detail = mo.ui.anywidget(
@@ -185,7 +185,7 @@ def _(EvidentialTable, connection, detail_config, detail_sql, mo):
             empty_message="Click a country above to see its data",
             page_size=12,
             row_shading=True,
-            column_config=detail_config,
+            columns=detail_columns,
         )
     )
     detail

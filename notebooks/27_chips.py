@@ -155,7 +155,7 @@ def _(EvidentialTable, col, mo, records):
             columns=[
                 col.text("city"),
                 col.number("aqi", title="AQI (US)").chip(
-                    min_width=72, scale=["#16a34a", "#f59e0b", "#dc2626", "#7e22ce"], min=0, max=250
+                    min_width=72, scale="ylorrd", min=0, max=250
                 ),
                 col.chip("status", title="Status", min_width=72, scale="@status_color"),
             ],
@@ -172,6 +172,9 @@ def _(mo):
 
     - `viz="chip"` reuses `viz="color"`'s options: `color_scale`, `color_stops`,
       `conditional_colors`, `scale_column`, `min`/`max`/`midpoint`.
+    - `scale` takes a list of colours, a **named scale** — the Evidence presets
+      plus the 30 matplotlib colormaps (`viridis`, `RdBu`, `ylorrd`, …) — or
+      `"@column"` to shade each chip from another column.
     - The text is black or white by the fill's luminance, so it stays legible.
     - Chips are centred unless the column sets `align` (`left` or `right`).
     - `chip_options={"min_width": 72}` gives a column of chips a common minimum

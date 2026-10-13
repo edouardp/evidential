@@ -112,22 +112,22 @@ def _(LiveEvidentialTable, col, connection):
         WHERE fare_amount >= {min_fare}
           AND ({payment} = 'All' OR payment = {payment})
         ORDER BY tpep_pickup_datetime DESC
-        LIMIT 500
+        --LIMIT 500
         """,
         auto_run=False,
         title="Live filtered taxi trips",
         search=True,
         page_size=12,
         row_shading=True,
-        column_config={
-            "payment": col.text("payment", title="Payment"),
-            "trip_distance": col.bar("trip_distance", title="Distance"),
-            "fare_amount": col.currency("fare_amount", decimals=2),
-            "tip_amount": col.currency("tip_amount", decimals=2, title="Tip"),
-            "tip_rate": col.percent("tip_rate", decimals=1, title="Tip rate").color(
+        columns=[
+            col.text("payment"),
+            col.bar("trip_distance"),
+            col.currency("fare_amount", decimals=2),
+            col.currency("tip_amount", decimals=2, title="Tip"),
+            col.percent("tip_rate", decimals=1).color(
                 scale=["#fee2e2", "#fef9c3", "#bbf7d0", "#15803d"], midpoint=0.15, min=0, max=0.4
             ),
-        },
+        ],
     )
     live
     return (live,)

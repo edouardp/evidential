@@ -91,23 +91,14 @@ def _(
             title="Column merging & special formatters",
             all_caps=True,
             columns=[
-                col.text("site", title="Site"),
-                # hidden source columns
-                col.auto("low").hide(),
-                col.auto("high").hide(),
-                col.auto("value").hide(),
-                col.auto("uncert").hide(),
-                col.auto("n").hide(),
-                col.auto("pct").hide(),
-                # merged display columns
-                col.merge("range", cols_merge_range("low", "high", fmt="num0", title="Range")),
+                col.text("site"),
+                col.merge("range", cols_merge_range("low", "high", fmt="num0")),
                 col.merge("measurement", cols_merge_uncert("value", "uncert", fmt="num1", title="Value")),
-                col.merge("share", cols_merge_n_pct("n", "pct", title="Share")),
-                # special formatters
-                col.number("size", fmt="bytes", title="Size"),
-                col.number("elapsed", fmt="duration", title="Elapsed"),
-                col.number("year", fmt="roman", title="Year"),
-                col.flag("country", title="Country"),
+                col.merge("share", cols_merge_n_pct("n", "pct")),
+                col.number("size", fmt="bytes"),
+                col.number("elapsed", fmt="duration"),
+                col.number("year", fmt="roman"),
+                col.flag("country"),
             ],
         )
     )

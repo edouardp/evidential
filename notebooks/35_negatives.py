@@ -66,25 +66,23 @@ def _():
 
 
 @app.cell
-def _(EvidentialTable, col, mo, pnl, settings):
+def _(EvidentialTable, col, mo, pnl):
     table = mo.ui.anywidget(
         EvidentialTable(
             pnl,
-            settings=settings(
-                title="Income statement (illustrative)",
-                row_shading=True,
-                row_lines=False,
-                border=False,
-                stretch=False,
-                width="820px",
-            ),
+
+            title="Income statement (illustrative)",
+            row_shading=True,
+            row_lines=False,
+            border=False,
+            stretch=False,
+            width="820px",
+
             columns=[
-                col.text("line_item", title=""),
+                col.text("line_item", title="").bold(),
                 col.currency("amount", decimals=0, title="Plain"),
                 col.currency("amount", decimals=0, title=".neg()").neg(),
-                col.currency("amount", decimals=0, title=".neg(color=…, bracket=True)").neg(
-                    color="#b91c1c", bracket=True
-                ),
+                col.currency("amount", decimals=0, title=".neg(color=…, bracket=True)").neg(color="darkred", bracket=True),
             ],
         )
     )
@@ -123,19 +121,21 @@ def _(EvidentialTable, changes, col, mo, settings):
             changes,
             settings=settings(
                 title="Revenue, month over month",
+                subtitle="Hero graphic for monthly growth",
+                caption="In the style of The Economist",
                 row_shading=True,
                 row_lines=False,
+                font_size="+8",
                 border=False,
-                stretch=False,
-                width="760px",
+                stretch=True,
+                width="600px",
             ),
             columns=[
                 col.text("month"),
                 col.currency("revenue", decimals=0, title="Revenue"),
                 col.percent("mom_pct", whole=True, decimals=1, title="Change").neg(bracket=True),
-                col.percent("mom_pct", whole=True, decimals=1, title="Change (bar)").bar(
-                    center=True, color="tab:blue", negative_color="tab:red"
-                ),
+                col.percent("mom_pct", whole=True, decimals=1, title="Change (bar)", align="center")
+                    .bar(center=True, pad=3, color="tab:blue", negative_color="tab:red"),
             ],
         )
     )

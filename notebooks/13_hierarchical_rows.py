@@ -10,7 +10,7 @@
 
 import marimo
 
-__generated_with = "0.20.0"
+__generated_with = "0.25.1"
 app = marimo.App(width="full")
 
 
@@ -73,7 +73,7 @@ def _(col, connection, grouped_table, mo):
             max_height="460px",
             dimension_config={"category": col.text("category"), "item": col.text("item")},
             measure_config={
-                "sales": col.currency("sales", decimals=0).bar(),
+                "sales": col.currency("sales", decimals=0).bar(color="green"),
                 "orders": col.integer("orders"),
             },
         )

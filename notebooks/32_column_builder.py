@@ -155,12 +155,12 @@ def _(EvidentialTable, col, connection, mo, summary_sql):
                 col.text("category"),
                 col.text("item"),
                 col.chip("channel_group", min_width=100),
-                col.bar("sales").fmt("num"),
+                col.bar("sales", color="green").fmt("num0"),
                 col.integer("orders"),
                 col.currency("avg_sale", decimals=2),
                 col.percent("share"),
                 col.percent("growth").delta(down_is_good=False),
-                col.sparkline("trend", type="area")
+                col.sparkline("trend", type="area"),
             ],
         )
     )
@@ -186,27 +186,26 @@ def _(mo):
 
 
 @app.cell
-def _(EvidentialTable, col, connection, mo, settings, summary_sql):
+def _(EvidentialTable, col, connection, mo, summary_sql):
     grouped = mo.ui.anywidget(
         EvidentialTable(
             connection.sql(summary_sql),
-            settings=settings(search=True, page_size=8, row_shading=True),
+            title="Sporting Goods Sales",
+            search=True, page_size=8, row_shading=True,
             columns=[
                 col.text("category"),
                 col.text("item"),
-                col.subcolumns("Volume",
-                    [
+                col.subcolumns("Volume", [
                         col.currency("sales").bar(color="#93c5fd", fit_to_data=True),
                         col.integer("orders"),
                     ],
                 ),
-                col.group("Performance",
-                    [
+                col.group("Performance", [
                         col.percent("share"),
                         col.percent("growth").delta(down_is_good=False),
                         col.currency("avg_sale", decimals=2).title("Avg sale"),
                     ],
-                    highlight="#f8fafc",
+                    highlight="#6688aa22",
                 ),
             ],
         )
@@ -218,15 +217,58 @@ def _(EvidentialTable, col, connection, mo, settings, summary_sql):
 @app.cell
 def _(mo):
     mo.md("""
+    ## Dates and times
+
+    The temporal kinds are `col.date`, `col.time` and `col.datetime`. Each takes a
+    `relative=` unit (or `True` for an automatic unit) to show the value relative
+    to now, e.g. `col.datetime("order_datetime", relative="day")`.
+    """)
+    return
+
+
+@app.cell
+def _(EvidentialTable, col, connection, mo):
+    recent = mo.ui.anywidget(
+        EvidentialTable(
+            connection.sql(
+                """
+                SELECT first_name || ' ' || last_name AS customer, item, sales, order_datetime
+                FROM orders
+                ORDER BY RANDOM()
+                LIMIT 12
+                """
+            ),
+            row_lines=False,
+            columns=[
+                col.text("customer"),
+                col.text("item"),
+                col.currency("sales").color(),
+                col.group("Date Formats", [
+                    col.date("order_datetime").title("Placed"),
+                    col.datetime("order_datetime").title("Placed (time)"),
+                    col.datetime("order_datetime", fmt="dd mmm yyy").title("Placed (formated)"),
+                    col.datetime("order_datetime", relative=True).title("Placed (relative)")
+                ]),
+            ],
+        )
+    )
+    recent
+    return
+
+
+@app.cell
+def _(mo):
+    mo.md("""
     ### Notes
 
     - `col.*` names a column's **kind** — the first decision. Kinds: `text`,
-      `number`, `integer`, `percent`, `currency`, `date`, `boolean`, `array`,
-      `flag`, `bar`, `color`, `chip`, `sparkline`, `delta`, `link`/`url`,
-      `image`, `logo`, `markdown`, `html`. Each sets a sensible baseline with no
-      configuration: `col.currency("sales")` auto-scales, `col.percent("share")`
-      picks decimals, and `col.percent("rate", whole=True)` treats the value as
-      an already-percent number.
+      `number`, `integer`, `percent`, `currency`, `date`, `time`, `datetime`,
+      `boolean`, `array`, `flag`, `bar`, `color`, `chip`, `sparkline`, `delta`,
+      `link`/`url`, `image`, `logo`, `markdown`, `html`. Each sets a sensible
+      baseline with no configuration: `col.currency("sales")` auto-scales,
+      `col.percent("share")` picks decimals, `col.percent("rate", whole=True)`
+      treats the value as an already-percent number, and a temporal kind's
+      `relative=` (a unit or `True`) renders it relative to now.
     - Chain methods refine any kind: `.fmt()`, `.title()`, `.align()`, `.group()`,
       `.info()`, `.bar()`, `.color()`, `.delta()`, `.sparkline()`, `.chip()`…
       Each returns a new column, so specs are reusable.

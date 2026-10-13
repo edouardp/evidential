@@ -127,13 +127,13 @@ def _(EvidentialTable, col, mo, ranking, reference_year):
             columns=[
                 col.auto("country"),
                 col.auto("region"),
-                col.number("GDP Measure.GDP (nominal)", fmt="usd"),
-                col.number("GDP Measure.GDP (PPP)", fmt="usd"),
-                col.number("GDP Measure.GDP per capita", fmt="usd"),
+                col.currency("GDP Measure.GDP (nominal)"),
+                col.currency("GDP Measure.GDP (PPP)"),
+                col.currency("GDP Measure.GDP per capita").color(scale="purple"),
                 col.number("Population.total", fmt='#,##0.0,,"M"'),
-                col.number("Population.urban share", fmt='0.0"%"'),
-                col.number("Labour.unemployment", fmt='0.0"%"'),
-                col.number("Labour.labor force", fmt="num"),
+                col.percent("Population.urban share"),
+                col.percent("Labour.unemployment"),
+                col.number("Labour.labor force"),
             ],
         )
     )

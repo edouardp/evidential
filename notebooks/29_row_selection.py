@@ -35,7 +35,7 @@ def _():
 
     from evidential import EvidentialTable, col
 
-    return EvidentialTable, col, Path, duckdb, mo, os
+    return EvidentialTable, Path, col, duckdb, mo, os
 
 
 @app.cell
@@ -141,9 +141,10 @@ def _(EvidentialTable, col, connection, mo):
             subtitle="Click a row to drill in",
             select="country_code",
             search=True,
-            page_size=10,
+            page_size=12,
             row_shading=True,
-            freeze_columns=2,
+            row_lines=False,
+            freeze_columns=1,
             columns=[
                 col.text("country_code", title="Code"),
                 col.text("country"),

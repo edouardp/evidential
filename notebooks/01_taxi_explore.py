@@ -18,9 +18,9 @@ def _():
     import marimo as mo
     import duckdb
 
-    from evidential import EvidentialTable, grouped_table
+    from evidential import EvidentialTable, col, grouped_table
 
-    return EvidentialTable, duckdb, grouped_table, mo
+    return EvidentialTable, col, duckdb, grouped_table, mo
 
 
 @app.cell
@@ -122,25 +122,21 @@ def _(EvidentialTable, connection, mo, source_label):
             subtitle=f"`{source_label}`",
             #search=True,
             #page_size=15,
-            #row_shading=3,
+            #row_shading=True,
             #freeze_columns=2,
             #max_height="520px",
-            #column_config={
-            #    "pickup": {"title": "Pickup", "fmt": "shortdate", "align": "left"},
-            #    "payment": {"align": "left"},
-            #    "passenger_count": {"title": "Pax", "fmt": "id"},
-            #    "trip_distance": {"title": "Distance", "fmt": "num1", "viz": "bar"},
-            #    "fare_amount": {"fmt": "usd2"},
-            #    "tip_amount": {"title": "Tip", "fmt": "usd2", "viz": "bar"},
-            #    "total_amount": {"title": "Total", "fmt": "usd2"},
-            #    "tip_rate": {
-            #        "title": "Tip rate",
-            #        "fmt": "pct1",
-            #        "viz": "color",
-            #        "color_scale": ["#fee2e2", "#fef9c3", "#bbf7d0", "#15803d"],
-            #        "color_options": {"midpoint": 0.15, "min": 0, "max": 0.4},
-            #    },
-            #},
+            #columns=[
+            #    col.date("pickup", fmt="shortdate", title="Pickup"),
+            #    col.text("payment"),
+            #    col.integer("passenger_count", fmt="id", title="Pax"),
+            #    col.number("trip_distance", fmt="num1", title="Distance").bar(),
+            #    col.currency("fare_amount", decimals=2),
+            #    col.currency("tip_amount", decimals=2, title="Tip").bar(),
+            #    col.currency("total_amount", decimals=2, title="Total"),
+            #    col.percent("tip_rate", decimals=1, title="Tip rate").color(
+            #        scale=["#fee2e2", "#fef9c3", "#bbf7d0", "#15803d"], midpoint=0.15, min=0, max=0.4
+            #    ),
+            #],
         )
     )
     sample_table
@@ -160,7 +156,7 @@ def _(mo):
 
 
 @app.cell
-def _(connection, grouped_table, mo):
+def _(col, connection, grouped_table, mo):
     grouped = mo.ui.anywidget(
         grouped_table(
             connection,
@@ -178,13 +174,13 @@ def _(connection, grouped_table, mo):
             search=True,
             max_height="460px",
             dimension_config={
-                "is_weekend": {"title": "Weekend", "type": "boolean"},
+                "is_weekend": col.boolean("is_weekend", title="Weekend"),
             },
             measure_config={
-                "trips": {"fmt": "num0"},
-                "distance": {"fmt": "num0", "viz": "bar"},
-                "revenue": {"fmt": "usd0"},
-                "avg_tip_pct": {"title": "Avg tip %", "fmt": "num1"},
+                "trips": col.integer("trips"),
+                "distance": col.integer("distance").bar(),
+                "revenue": col.currency("revenue", decimals=0),
+                "avg_tip_pct": col.number("avg_tip_pct", fmt="num1", title="Avg tip %"),
             },
         )
     )
@@ -205,7 +201,7 @@ def _(mo):
 
 
 @app.cell
-def _(EvidentialTable, connection, mo):
+def _(EvidentialTable, col, connection, mo):
     pivoted = mo.ui.anywidget(
         EvidentialTable(
             connection.sql(
@@ -227,19 +223,25 @@ def _(EvidentialTable, connection, mo):
             title="Monthly trips pivoted by payment type",
             search=True,
             row_shading=True,
-            column_groups={
-                "Payment type": ["credit_card", "cash", "no_charge", "dispute"],
-                "Totals": ["total.trips", "total_revenue"],
-            },
-            column_config={
-                "day":           {"title": "Day",         "fmt": "yyyy-mm-dd", "align": "left"},
-                "credit_card":   {"title": "Credit card", "fmt": "num0",       "viz": "bar"},
-                "cash":          {"title": "Cash",        "fmt": "num0",       "viz": "bar"},
-                "no_charge":     {"title": "No charge",   "fmt": "num0",       "viz": "bar"},
-                "dispute":       {"title": "Dispute",     "fmt": "num0",       "viz": "bar"},
-                "total.trips":   {"title": "Total trips", "fmt": "num0"},
-                "total_revenue": {"title": "Revenue",     "fmt": "usd0"},
-            },
+            columns=[
+                col.date("day", fmt="yyyy-mm-dd", title="Day"),
+                col.group(
+                    "Payment type",
+                    [
+                        col.integer("credit_card", title="Credit card").bar(),
+                        col.integer("cash", title="Cash").bar(),
+                        col.integer("no_charge", title="No charge").bar(),
+                        col.integer("dispute", title="Dispute").bar(),
+                    ],
+                ),
+                col.group(
+                    "Totals",
+                    [
+                        col.integer("total.trips", title="Total trips"),
+                        col.currency("total_revenue", decimals=0, title="Revenue"),
+                    ],
+                ),
+            ],
         )
     )
     pivoted

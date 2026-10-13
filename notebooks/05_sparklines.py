@@ -18,9 +18,9 @@ def _():
     import marimo as mo
     import duckdb
 
-    from evidential import EvidentialTable
+    from evidential import EvidentialTable, col
 
-    return EvidentialTable, duckdb, mo
+    return EvidentialTable, col, duckdb, mo
 
 
 @app.cell
@@ -87,7 +87,7 @@ def _(duckdb, mo):
 
 
 @app.cell
-def _(EvidentialTable, connection, mo):
+def _(EvidentialTable, col, connection, mo):
     # One ARRAY_AGG per sparkline column, each an array of {date, value} structs.
     trend_query = """
         WITH daily AS (
@@ -120,36 +120,14 @@ def _(EvidentialTable, connection, mo):
             subtitle="Each row carries three sparkline series built with ARRAY_AGG",
             page_size=10,
             row_shading=True,
-            column_config={
-                "category": {"title": "Category", "align": "left"},
-                "total_trips": {"title": "Total trips", "fmt": "num0"},
-                "total_revenue": {"title": "Revenue", "fmt": "usd0"},
-                "trip_trend": {
-                    "title": "Orders",
-                    "viz": "sparkline",
-                    "sparkline_options": {"x": "date", "y": "trips", "type": "line"},
-                },
-                "revenue_trend": {
-                    "title": "Sales",
-                    "viz": "sparkline",
-                    "sparkline_options": {
-                        "x": "date",
-                        "y": "revenue",
-                        "type": "area",
-                        "color": "#53768a",
-                    },
-                },
-                "aov_trend": {
-                    "title": "AOV",
-                    "viz": "sparkline",
-                    "sparkline_options": {
-                        "x": "date",
-                        "y": "aov",
-                        "type": "bar",
-                        "color": "#97ba99",
-                    },
-                },
-            },
+            columns=[
+                col.text("category", title="Category"),
+                col.integer("total_trips", title="Total trips"),
+                col.currency("total_revenue", decimals=0, title="Revenue"),
+                col.sparkline("trip_trend", title="Orders", x="date", y="trips", type="line"),
+                col.sparkline("revenue_trend", title="Sales", x="date", y="revenue", type="area", color="#53768a"),
+                col.sparkline("aov_trend", title="AOV", x="date", y="aov", type="bar", color="#97ba99"),
+            ],
         )
     )
     table

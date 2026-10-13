@@ -195,12 +195,14 @@ def pivot_table(
     columns: list[dict[str, Any]] = []
     for dim in dims:
         overrides = dict((dimension_config or {}).get(dim, {}))
+        overrides.pop("name", None)  # a col.* builder carries its name; the key is the name
         overrides.setdefault("type", "string")
         overrides.setdefault("align", "left")
         columns.append(make_column(dim, **overrides))
 
     def make_measure_column(name: str, group: str, alias: str) -> dict[str, Any]:
         overrides = dict((measure_config or {}).get(alias, {}))
+        overrides.pop("name", None)
         overrides.setdefault("type", "number")
         overrides.setdefault("align", "right")
         overrides.setdefault("column_group", group)

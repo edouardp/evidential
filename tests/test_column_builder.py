@@ -50,6 +50,20 @@ def test_kind_factories_set_a_baseline() -> None:
     assert col.url("link")["link"] == "link"
 
 
+def test_sparkline_factory_routes_its_options() -> None:
+    # Regression: the factory used to drop x/y/color/fit_to_data at the top level
+    # (where color became font_color and fit_to_data landed in bar_options).
+    spec = dict(col.sparkline("trend", type="area", x="date", y="trips", color="#53768a", fit_to_data=True))
+    assert spec["sparkline_options"] == {
+        "type": "area",
+        "x": "date",
+        "y": "trips",
+        "color": "#53768a",
+        "fit_to_data": True,
+    }
+    assert "color" not in spec and "fit_to_data" not in spec
+
+
 def test_kind_factories_validate_and_chain() -> None:
     with pytest.raises(ValueError, match="unknown currency code"):
         col.currency("sales", code="xyz")
@@ -179,3 +193,23 @@ def test_auto_alias_wins_over_the_inferred_default() -> None:
         columns=[{"name": "x", "redNegatives": True}],
     )
     assert table.columns[0]["red_negatives"] is True
+
+
+def test_grouped_helpers_accept_the_builder() -> None:
+    import duckdb
+
+    from evidential import grouped_table
+
+    connection = duckdb.connect()
+    connection.execute("CREATE TABLE t AS SELECT * FROM (VALUES ('a', 1, 10), ('b', 2, 20)) AS v(g, n, sales)")
+    table = grouped_table(
+        connection,
+        "SELECT g, n, sales FROM t",
+        dimensions=["g"],
+        measures=["count(*) AS n", "sum(sales) AS sales"],
+        dimension_config={"g": col.text("g", title="Group")},
+        measure_config={"sales": col.currency("sales", decimals=0)},
+    )
+    by_name = {column["name"]: column for column in table.columns}
+    assert by_name["g"]["title"] == "Group"
+    assert by_name["sales"]["fmt"] == "usd0"

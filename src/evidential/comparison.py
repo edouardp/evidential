@@ -117,12 +117,14 @@ def comparison_table(
     columns: list[dict[str, Any]] = []
     for dim in dims:
         overrides = dict((dimension_config or {}).get(dim, {}))
+        overrides.pop("name", None)  # a col.* builder carries its name; the key is the name
         overrides.setdefault("type", "string")
         overrides.setdefault("align", "left")
         columns.append(make_column(dim, **overrides))
 
     for alias, _ in parsed:
         base = dict((measure_config or {}).get(alias, {}))
+        base.pop("name", None)
         base.setdefault("type", "number")
         base.setdefault("align", "right")
         columns.append(make_column(alias, **base))

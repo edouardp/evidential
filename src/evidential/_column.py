@@ -1142,19 +1142,42 @@ def color(name: str, *, title: str | None = None, **options: Any) -> Column:
     return number(name, title=title).color(**options)
 
 
-def sparkline(name: str, *, type: Literal["line", "area", "bar"] = "line", **extra: Any) -> Column:
+def sparkline(
+    name: str,
+    *,
+    type: Literal["line", "area", "bar"] = "line",
+    x: str | None = None,
+    y: str | None = None,
+    color: str | None = None,
+    fit_to_data: bool | None = None,
+    y_fmt: str | None = None,
+    width: float | None = None,
+    height: float | None = None,
+    title: str | None = None,
+    **extra: Any,
+) -> Column:
     """An array column drawn as a sparkline.
 
     :param name: the column holding the array.
     :param type: ``"line"`` (default), ``"area"`` or ``"bar"``.
+    :param x: field for the x values.
+    :param y: field for the y values.
+    :param color: stroke/fill colour.
+    :param fit_to_data: scale to the data's range rather than zero.
+    :param y_fmt: format code for the tooltip y value.
+    :param width: chart width (the viewBox, in pixels).
+    :param height: chart height (the viewBox, in pixels).
+    :param title: header text.
 
-    See :meth:`Column.sparkline` for the other options.
+    See :meth:`Column.sparkline` for the same options on the chain.
 
     Example::
 
-        col.sparkline("trend", type="area")
+        col.sparkline("trend", type="area", x="date", y="trips", color="#53768a")
     """
-    return Column(name, {"type": "array", "viz": "sparkline", "sparkline_options": {"type": type}, **_clean(**extra)})
+    return array(name, title=title, **extra).sparkline(
+        type=type, x=x, y=y, color=color, fit_to_data=fit_to_data, y_fmt=y_fmt, width=width, height=height
+    )
 
 
 def chip(

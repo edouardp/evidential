@@ -316,7 +316,8 @@ export class EvidentialTableRenderer {
         }),
       );
     }
-    this._renderFooter(page, pageCount, total);
+    const hasBelow = Boolean(opts.caption) || footnotes.length > 0 || (opts.footnotes || []).length > 0;
+    this._renderFooter(page, pageCount, total, hasBelow);
     this._renderFootnotes(footnotes, opts.footnotes);
     this.caption.replaceChildren();
     if (opts.caption) this.caption.append(inlineMarkdown(opts.caption));
@@ -750,12 +751,13 @@ export class EvidentialTableRenderer {
     this.footnotesEl.append(list);
   }
 
-  _renderFooter(page, pageCount, total) {
+  _renderFooter(page, pageCount, total, hasBelow) {
     this.footer.replaceChildren();
-    // With a single page there is no pager row to hold the actions, so they
-    // float at the bottom-right and the footnotes/caption sit right under the
-    // table (see `.et-no-pager` in the stylesheet).
-    this.root.classList.toggle("et-no-pager", pageCount <= 1);
+    // With a single page there is no pager row to hold the actions. If
+    // something sits below the table (footnotes or a caption) the actions float
+    // at the bottom-right so that content keeps its place; with nothing below,
+    // the footer stays in flow so the actions do not land on the last row.
+    this.root.classList.toggle("et-float-actions", pageCount <= 1 && !!hasBelow);
     if (pageCount > 1) {
       const left = h("div", { class: "et-page-controls" });
       const pageSize = this._effectivePageSize();

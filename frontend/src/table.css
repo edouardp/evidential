@@ -556,9 +556,10 @@
   color: var(--et-muted);
   font-size: 0.78rem;
 }
-/* With no pager the footer has no row of its own, so the actions float at the
-   bottom-right of the table and the footnotes/caption are not pushed down. */
-.et-root.et-no-pager .et-footer {
+/* With no pager the footer has no row of its own, so when footnotes/caption sit
+   below the table the actions float at the bottom-right and that content is not
+   pushed down. With nothing below, the footer is an ordinary row. */
+.et-root.et-float-actions .et-footer {
   position: absolute;
   right: 0.15rem;
   bottom: 0;

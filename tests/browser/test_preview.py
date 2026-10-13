@@ -98,6 +98,20 @@ def test_pagination(page, live_server):
     assert "2/" in page.locator("#paged .et-page-current").inner_text()
 
 
+def test_actions_sit_below_the_table_with_no_pager_or_notes(page, live_server):
+    # The #features table has page_size=0 and no caption/footnotes, so the actions
+    # must not float — that would drop them onto the last row.
+    open_preview(page, live_server, "#features")
+    page.wait_for_selector("#features .et-table")
+    page.hover("#features .et-root")
+    page.wait_for_timeout(300)
+    floats = page.locator("#features .et-root").evaluate("e => e.classList.contains('et-float-actions')")
+    assert floats is False
+    scroller = page.locator("#features .et-scroller").bounding_box()
+    actions = page.locator("#features .et-table-actions").bounding_box()
+    assert actions["y"] >= scroller["y"] + scroller["height"] - 1, "actions overlap the table"
+
+
 def test_fullscreen_round_trip(page, live_server):
     open_preview(page, live_server, "#pages")
     dialog = page.locator("#paged dialog.et-dialog")

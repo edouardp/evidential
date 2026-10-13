@@ -268,13 +268,35 @@ test("pagination reads as one left-aligned text run", () => {
   renderer.destroy();
 });
 
-test("an unpaginated table floats the actions so the footnotes keep their place", () => {
-  const single = new EvidentialTableRenderer(makeModel(ROWS, COLUMNS, { page_size: "all" }, el), el);
-  assert.ok(el.querySelector(".et-root").classList.contains("et-no-pager"));
-  single.destroy();
-  const paged = new EvidentialTableRenderer(makeModel(ROWS, COLUMNS, { page_size: 1 }, el), el);
-  assert.ok(!el.querySelector(".et-root").classList.contains("et-no-pager"));
-  paged.destroy();
+test("the actions float only when content below would otherwise be pushed down", () => {
+  const rows = [
+    { site: "A", value: 1, note: "first" },
+    { site: "B", value: 2, note: "second" },
+    { site: "C", value: 3, note: "first" },
+  ];
+  // All combinations of pager / caption / footnote. The actions float only with
+  // no pager *and* something below it; otherwise the footer stays in flow.
+  for (const pageSize of ["all", 2]) {
+    for (const caption of [false, true]) {
+      for (const footnote of [false, true]) {
+        const site = { name: "site", type: "string", align: "left" };
+        if (footnote) site.footnote = "note";
+        const options = { page_size: pageSize };
+        if (caption) options.caption = "Source: test.";
+        const renderer = new EvidentialTableRenderer(
+          makeModel(rows.map((row) => ({ ...row })), [site, { name: "value", type: "number", fmt: "num0" }], options, el),
+          el,
+        );
+        const floats = pageSize === "all" && (caption || footnote);
+        assert.equal(
+          el.querySelector(".et-root").classList.contains("et-float-actions"),
+          floats,
+          `page_size=${pageSize} caption=${caption} footnote=${footnote}`,
+        );
+        renderer.destroy();
+      }
+    }
+  }
 });
 
 test("download and fullscreen live in the footer's bottom-right actions", () => {

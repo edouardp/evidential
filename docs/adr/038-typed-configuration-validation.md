@@ -36,6 +36,8 @@ The accepted table-key set derives from the type rather than a second list.
 Validate column settings after alias normalization, through construction,
 refresh, `set_column`, and `make_column`. Validate table updates before state
 changes. Constructors continue forwarding recognized anywidget trait arguments.
+Refreshes prepare their rows and configuration before committing widget state,
+so rejected updates cannot retain part of a replacement configuration.
 Raw dictionary inputs remain supported; callers may annotate them with the
 public types for editor assistance.
 

@@ -6,13 +6,13 @@ import duckdb
 import pytest
 
 from evidential import BUILTIN_AGGREGATIONS, grouped_table, resolve_aggregation
-from evidential.aggregations import weighted_mean_values
+from evidential.aggregations import apply_aggregations, weighted_mean_values
 from evidential.duck import connect
 
 
 @pytest.fixture()
 def sales() -> duckdb.DuckDBPyConnection:
-    connection = connect()
+    connection = connect(extensions=())
     connection.execute(
         """
         CREATE TABLE sales AS SELECT * FROM (VALUES
@@ -126,3 +126,22 @@ def test_weighted_mean_keeps_missing_values_and_weights_paired() -> None:
 def test_weighted_mean_rejects_mismatched_lengths(weights: list[float]) -> None:
     with pytest.raises(ValueError, match="same length"):
         weighted_mean_values([10, 20], weights)
+
+
+def test_subtotal_descendant_lookup_scales_with_details_not_group_count() -> None:
+    lookups = 0
+
+    class Record(dict):
+        def get(self, key, default=None):
+            nonlocal lookups
+            if key == "__ancestors":
+                lookups += 1
+            return super().get(key, default)
+
+    details = [Record(value=1, render_type="cell_data", __ancestors=[str(index // 5)]) for index in range(100)]
+    summaries = [{"render_type": "row_subtotal", "__group_key": str(index)} for index in range(20)]
+    rows = [*details, *summaries, {"render_type": "row_total"}]
+    apply_aggregations(rows, {"value": "sum"}, ["value"])
+    assert [row["value"] for row in summaries] == [5] * 20
+    assert rows[-1]["value"] == 100
+    assert lookups <= len(details), f"descendant lookup rescanned details {lookups} times"

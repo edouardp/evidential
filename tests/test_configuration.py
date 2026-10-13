@@ -86,3 +86,22 @@ def test_widget_traits_still_pass_through() -> None:
     layout = ipywidgets.Layout(width="400px")
     table = EvidentialTable([], layout=layout)
     assert table.layout is layout
+
+
+def test_rejected_refresh_does_not_retain_replacement_configuration() -> None:
+    table = EvidentialTable([{"value": 1}], column_config={"value": {"fmt": "usd0"}})
+    with pytest.raises(TypeError, match="fmt"):
+        table.set_data([{"value": 2}], columns=["replacement"], column_config={"value": {"fmt": 10}})
+    assert table.rows == [{"value": 1}]
+    table.set_data([{"value": 3}])
+    assert table.columns[0]["name"] == "value"
+    assert table.columns[0]["fmt"] == "usd0"
+
+
+def test_make_column_normalizes_aliases_before_validation() -> None:
+    column = make_column("value", contentType="bar", barColor="red", redNegatives=True)
+    assert column["viz"] == "bar"
+    assert column["bar_options"] == {"bar_color": "red"}
+    assert column["red_negatives"] is True
+    assert "contentType" not in column
+    assert make_column("value", contentType=None).get("viz") is None

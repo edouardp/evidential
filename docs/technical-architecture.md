@@ -265,7 +265,8 @@ signature, so custom functions and built-ins share a path.
 
 `apply_aggregations` walks the decorated rows: a subtotal's descendants are the
 detail rows whose `__ancestors` contain the subtotal's `__group_key`; the grand
-total uses all detail rows. For `weighted_mean`, `grouped_table` adds hidden
+total uses all detail rows. An ancestor index is built once to avoid scanning
+every detail for every subtotal. For `weighted_mean`, `grouped_table` adds hidden
 `__w_<alias>` weight-sum columns and passes their values through as weights.
 
 ### 4.6 `pivot.py`, `comparison.py`, `query.py` — query builders
@@ -666,10 +667,11 @@ tools and locked dependency installs.
   large result sets should be limited or aggregated in SQL.
 - **Full re-render.** Every interaction rebuilds the table body. This is simple
   and fast for a page; it is not intended for 10⁴ visible rows.
-- **Ranges recompute per render.** `calculateVizRanges` and
-  `calculateFormatRanges` scan the full searched/sorted dataset each time,
-  including rows outside the current page. Their cost grows with rows and
-  columns; they are the first thing to memoise for larger in-memory datasets.
+- **Derived values are cached.** `RowPipeline` retains one searched/sorted
+  projection, its ranges, scales, statistics, and decimal alignment. Page
+  navigation and selection reuse them; source/configuration/search/sort changes
+  invalidate them. Model change events explicitly invalidate even updates
+  using the same array identity. See [performance measurements](performance.md).
 - **ResizeObserver.** Frozen-column offsets and fullscreen fitting react to
   size changes; the observer is disconnected in `destroy()`.
 
@@ -706,6 +708,7 @@ validates its projections. See [marimo-studio.md](marimo-studio.md) and
 | --- | --- |
 | `table.py` | `EvidentialTable`, option schema, column coercion, groups |
 | `configuration.py` | public configuration types, defaults, recursive validation |
+| `_column_options.py` | shared Evidence alias and nested-option normalization |
 | `data.py` | normalisation, JSON safety, type inference, blank predicates |
 | `grouped.py` | `grouped_table`, `decorate_grouped_rows`, `simple_table` |
 | `client.py` | `grouped_records` (in-memory grouping) |
@@ -719,6 +722,7 @@ validates its projections. See [marimo-studio.md](marimo-studio.md) and
 | `_compat.py` | soft Arrow/pandas detection |
 | `table.js` | renderer, pipeline, interaction, fullscreen, CSV |
 | `rows.js` | pure searching, sorting, grouping, pagination, statistics |
+| `derived.js` | cached dataset projections and independently keyed group visibility |
 | `cells.js`, `visualizations.js` | cell content, decoration, bars, deltas, sparklines |
 | `interactions.js`, `loading.js`, `viewport.js` | event binding and asynchronous lifecycles |
 | `dom.js` | DOM construction and shared presentation utilities |

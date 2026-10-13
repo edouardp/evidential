@@ -20,7 +20,7 @@ if (!dom.window.HTMLDialogElement.prototype.showModal) {
   dom.window.HTMLDialogElement.prototype.close = function () { this.open = false; this.dispatchEvent(new dom.window.Event("close")); };
 }
 
-const { EvidentialTableRenderer, holdInterval } = await import("./src/table.js");
+const { EvidentialTableRenderer, holdInterval, render } = await import("./src/table.js");
 
 test("numeric color and chip scales use inferred ranges", () => {
   for (const viz of ["color", "chip"]) {
@@ -110,6 +110,71 @@ test("keyboard selection restores focus after a model-driven render", (t) => {
   t.mock.timers.tick(1);
   assert.equal(document.activeElement, el.querySelector("tbody tr"));
   renderer.destroy();
+});
+
+test("page navigation reuses dataset summaries and invalidates changed inputs", () => {
+  let reads = 0;
+  const rows = Array.from({ length: 1000 }, (_, index) => ({ get value() { reads++; return index; } }));
+  const model = makeModel(rows, [{ name: "value", type: "number", fmt: "num" }],
+    { page_size: 2, column_stats: true }, el);
+  const renderer = new EvidentialTableRenderer(model, el);
+  reads = 0;
+  renderer._gotoPage(1);
+  assert.ok(reads < 10, `navigation scanned ${reads} values`);
+  reads = 0;
+  model.data.options = { ...model.data.options, align_decimals: true };
+  renderer.render();
+  assert.ok(reads >= rows.length, "changed options recompute dataset summaries");
+  model.data.rows = [{ value: 3000 }, { value: 4000 }];
+  renderer.render();
+  assert.match(el.querySelector(".et-stats").textContent, /4k/);
+  model.data.columns = [{ name: "value", type: "number", fmt: "usd0" }];
+  renderer.render();
+  assert.match(el.querySelector("tbody .et-cell-value").textContent, /\$/);
+  renderer.destroy();
+});
+
+test("decimal alignment handles datasets beyond JavaScript argument limits", () => {
+  const rows = Array.from({ length: 200000 }, (_, index) => ({ value: index + 0.125 }));
+  const renderer = new EvidentialTableRenderer(makeModel(rows,
+    [{ name: "value", type: "number", fmt: "num" }], { page_size: 2, align_decimals: true }, el), el);
+  assert.equal(el.querySelectorAll("tbody tr").length, 2);
+  assert.match(el.querySelector("tbody tr").textContent, /0\.125/);
+  renderer.destroy();
+});
+
+test("comm updates invalidate caches even when array identity is unchanged", async () => {
+  const model = makeModel([{value: 1}], [{name: "value", type: "number"}], {column_stats: true}, el);
+  const events = new Map();
+  model.on = (event, callback) => events.set(event, callback);
+  model.off = (event) => events.delete(event);
+  const dispose = render({model, el});
+  model.data.rows[0].value = 99;
+  events.get("change:rows")();
+  await Promise.resolve();
+  assert.match(el.querySelector(".et-stats").textContent, /99/);
+  dispose();
+  assert.equal(events.size, 0);
+});
+
+test("batched comm changes render once and pending work stops on disposal", async () => {
+  const model = makeModel([{value: 1}], [{name: "value"}], {}, el);
+  const events = new Map();
+  model.on = (event, callback) => events.set(event, callback);
+  model.off = (event) => events.delete(event);
+  const dispose = render({model, el});
+  const initial = Number(el.dataset.renderCount);
+  model.data.rows = [{value: 2}];
+  model.data.columns = [{name: "value", type: "number", fmt: "num0"}];
+  model.data.options = {column_stats: true};
+  for (const trait of ["rows", "columns", "options"]) events.get(`change:${trait}`)();
+  await Promise.resolve();
+  assert.equal(Number(el.dataset.renderCount), initial + 1);
+  assert.match(el.querySelector(".et-stats").textContent, /2/);
+  events.get("change:rows")();
+  dispose();
+  await Promise.resolve();
+  assert.equal(Number(el.dataset.renderCount), initial + 1);
 });
 
 function makeModel(rows, columns, options = {}, el) {

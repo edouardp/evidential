@@ -161,6 +161,11 @@ test: test-python frontend-test ## Run Python and JavaScript tests
 .PHONY: test-all
 test-all: test ## Alias for test
 
+.PHONY: benchmark
+benchmark: ## Profile table navigation and grouped summary overrides
+	node frontend/benchmark.js
+	uv run --locked python scripts/benchmark_aggregations.py
+
 # ============================================================================
 # Dependencies
 # ============================================================================

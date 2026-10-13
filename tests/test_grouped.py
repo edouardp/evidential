@@ -9,7 +9,7 @@ from evidential.duck import connect
 
 @pytest.fixture()
 def sales() -> duckdb.DuckDBPyConnection:
-    connection = connect()
+    connection = connect(extensions=())
     connection.execute(
         """
         CREATE TABLE sales AS SELECT * FROM (VALUES

@@ -170,10 +170,10 @@ export function sortRows(rows, columns, sort) {
   return out;
 }
 
-export function paginateRows(rows, pageSize, pageIndex, options) {
+export function paginateRows(rows, pageSize, pageIndex, options,
+  hasGroups = rows.some((row) => row.render_type && row.render_type !== "cell_data")) {
   const opts = options;
 
-  const hasGroups = rows.some((r) => r.render_type && r.render_type !== "cell_data");
   if (!pageSize || pageSize === "all" || pageSize <= 0 || hasGroups || opts.collapsible) {
     return { rows, pageCount: 1, page: 0, total: rows.length };
   }

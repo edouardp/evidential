@@ -139,6 +139,10 @@ def apply_aggregations(
         return rows
 
     detail_rows = [row for row in rows if row.get("render_type") == "cell_data"]
+    by_group: dict[str, list[dict[str, Any]]] = {}
+    for detail in detail_rows:
+        for ancestor in detail.get("__ancestors") or []:
+            by_group.setdefault(ancestor, []).append(detail)
     for alias, aggregate in resolved.items():
         weight_column = (weight_columns or {}).get(alias)
         for row in rows:
@@ -148,7 +152,7 @@ def apply_aggregations(
             if row.get("render_type") == "row_total" or key == "__total__":
                 descendants = detail_rows
             else:
-                descendants = [candidate for candidate in detail_rows if key in (candidate.get("__ancestors") or [])]
+                descendants = by_group.get(key, []) if key is not None else []
             members = [candidate for candidate in descendants if candidate.get(alias) is not None]
             # A missing value or weight excludes the whole pair; filtering the
             # lists independently can silently assign a weight to another row.

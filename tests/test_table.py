@@ -284,7 +284,7 @@ def test_jsonify_handles_decimal_and_nan() -> None:
 
 
 def test_from_duckdb_relation() -> None:
-    connection = connect()
+    connection = connect(extensions=())
     connection.execute("CREATE TABLE t AS SELECT 1 AS a, 'x' AS b")
     table = EvidentialTable.from_duckdb(connection, "SELECT * FROM t")
     assert table.rows == [{"a": 1, "b": "x"}]

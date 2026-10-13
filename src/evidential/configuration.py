@@ -301,7 +301,7 @@ def validate_options(options: Mapping[str, Any], schema: Any, path: str) -> None
     fields = _fields(schema)
     for name, value in options.items():
         if name not in fields:
-            raise unknown_option(str(name), list(fields), path)
+            raise unknown_option(name, list(fields), path)
         if not _matches(value, fields[name], f"{path}.{name}"):
             raise TypeError(f"{path}.{name} expects {fields[name]}, got {value!r}")
         if name in {"row_shading", "neutral_range"} and isinstance(value, (list, tuple)) and len(value) != 2:

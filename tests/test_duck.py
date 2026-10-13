@@ -3,7 +3,7 @@ from unittest.mock import Mock
 
 import pytest
 
-from evidential.duck import attach_s3_tables
+from evidential.duck import attach_s3_tables, connect
 
 
 def test_s3_tables_uses_profile_region(monkeypatch) -> None:
@@ -25,3 +25,12 @@ def test_s3_tables_requires_region_without_credential_configuration(monkeypatch)
     monkeypatch.delenv("AWS_DEFAULT_REGION", raising=False)
     with pytest.raises(ValueError, match="region"):
         attach_s3_tables(Mock(), table_bucket_arn="bucket", configure_credentials=False)
+
+
+def test_explicit_extensions_are_installed_and_loaded(monkeypatch) -> None:
+    import duckdb
+
+    connection = Mock()
+    monkeypatch.setattr(duckdb, "connect", Mock(return_value=connection))
+    assert connect(extensions=("httpfs",)) is connection
+    connection.execute.assert_called_once_with("INSTALL httpfs; LOAD httpfs;")

@@ -9,7 +9,7 @@ from evidential.duck import connect
 
 @pytest.fixture()
 def orders() -> duckdb.DuckDBPyConnection:
-    connection = connect()
+    connection = connect(extensions=())
     connection.execute(
         """
         CREATE TABLE orders AS SELECT * FROM (VALUES

@@ -1,3 +1,4 @@
+import { RowPipeline } from "./derived.js";
 // Evidence-style data table renderer for the anywidget frontend.
 //
 // The widget receives fully JSON-serializable `rows`, `columns`, and `options`
@@ -11,13 +12,10 @@ import { TableViewport } from "./viewport.js";
 import { h, optString, inlineMarkdown, withFigure, formatRowRanges } from "./dom.js";
 import { hiddenColumns, orderedColumns, visibleRows, searchRows, sortRows, paginateRows,
   columnStats, computeRowspans, shaded, groupPath,
-  decimalPlaces, buildHeaderLevels } from "./rows.js";
+  buildHeaderLevels } from "./rows.js";
 import { renderCell, alignStyle, footnoteMark } from "./cells.js";
 import { formatValue, formatTitle } from "./format.js";
 import {
-  calculateVizRanges,
-  calculateFormatRanges,
-  buildColorVizScale,
   colorStylesFromHex,
 } from "./color.js";
 
@@ -25,6 +23,7 @@ export class EvidentialTableRenderer {
   constructor(model, el) {
     this.model = model;
     this.el = el;
+    this.destroyed = false;
     this._state = {
       sort: null,
       search: "",
@@ -33,6 +32,8 @@ export class EvidentialTableRenderer {
       expanded: new Set(),
       hidden: new Set(),
     };
+    this._pipeline = new RowPipeline();
+    this._groupVersion = 0;
     this._pageCount = 1;
     this._pageSizeOverride = null;
     this._holdController = new HoldController((direction) => this._advance(direction));
@@ -137,9 +138,11 @@ export class EvidentialTableRenderer {
   }
 
   destroy() {
+    this.destroyed = true;
     this._stopHold();
     this._loadingController.destroy();
     this._viewport.destroy();
+    this._pipeline.clear();
     this.dialog.remove();
     this.placeholder.remove();
     this.root.remove();
@@ -161,6 +164,7 @@ export class EvidentialTableRenderer {
     const set = this._defaultCollapsed() ? this._state.expanded : this._state.collapsed;
     if (set.has(key)) set.delete(key);
     else set.add(key);
+    this._groupVersion++;
     this.render();
     if (focus) {
       const cell = [...this.scroller.querySelectorAll("td[data-group-key]")]
@@ -191,8 +195,8 @@ export class EvidentialTableRenderer {
     return this._pageSizeOverride ?? this.options.page_size;
   }
 
-  _paginate(rows) {
-    const page = paginateRows(rows, this._effectivePageSize(), this._state.page, this.options);
+  _paginate(rows, hasGroups) {
+    const page = paginateRows(rows, this._effectivePageSize(), this._state.page, this.options, hasGroups);
     this._state.page = page.page;
     return page;
   }
@@ -227,41 +231,25 @@ export class EvidentialTableRenderer {
     this._renderTitle();
     this._renderToolbar();
 
-    const hidden = this._hiddenColumns();
-    const columns = this._orderedColumns(this.columns.filter((c) => !hidden.has(c.name)));
-    const allRows = this.rows;
-    const hasGroups = allRows.some((r) => r.render_type && r.render_type !== "cell_data");
-    const headerRowCount = columns.some((c) => c.column_group) ? 2 : 1;
-
-    const searched = this._searchRows(allRows);
-    const sorted = this._sortRows(searched);
-    const visible = this._visibleRows(sorted);
-    const { rows, pageCount, page, total } = this._paginate(visible);
+    const processed = this._pipeline.get({
+      rows: this.rows, columns: this.columns, options: opts,
+      search: this._state.search, hidden: this._hiddenColumns(), sort: this._state.sort,
+    });
+    const { columns, hasGroups, dimCount, ranges, formatRanges, decimals, colorScales, stats } = processed;
+    const headerRowCount = columns.some((column) => column.column_group) ? 2 : 1;
+    const visibility = this._pipeline.visible(processed, this._groupVersion, (key) => this._isCollapsed(key));
+    const { rows, pageCount, page, total } = this._paginate(visibility.rows, visibility.hasGroups);
     this._pageCount = pageCount;
 
     // Section-style groups merge each group's dimension cell across its rows.
     // Count levels over all rows (not just the page) so a fully collapsed table
     // still knows how many dimensions it has.
-    const dimCount = allRows.reduce((max, row) => Math.max(max, row.__level ?? 0), 0);
     const section = opts.group_type === "section" && hasGroups && dimCount > 0;
     // Accordion groups indent child/parent dimension cells (Evidence parity).
     const accordion = hasGroups && !section && dimCount > 0;
     const rowspans = section
       ? this._computeRowspans(rows, dimCount, opts.subtotal_position !== "bottom")
       : null;
-
-    const ranges = calculateVizRanges(columns, sorted);
-    const formatRanges = calculateFormatRanges(columns, sorted);
-    const decimals = new Map();
-    if (opts.align_decimals) {
-      for (const col of columns) {
-        if (col.type !== "number" || col.align_decimals === false) continue;
-        const places = sorted
-          .map((row) => decimalPlaces(row[col.name]))
-          .filter((value) => value != null);
-        if (places.length) decimals.set(col.name, Math.max(...places));
-      }
-    }
 
     // Oblique headings need a taller header and a little right padding.
     let obliqueAngle = null;
@@ -284,13 +272,6 @@ export class EvidentialTableRenderer {
       this.root.classList.remove("et-oblique");
       this.root.style.removeProperty("--et-th-oblique-height");
     }
-    const colorScales = new Map();
-    for (const col of columns) {
-      if ((col.viz === "color" || col.viz === "chip") && ranges.has(col.name)) {
-        colorScales.set(col.name, buildColorVizScale(col, ranges.get(col.name), opts.color_scale));
-      }
-    }
-
     this.scroller.replaceChildren();
     const footnotes = [];
     const isEmpty = rows.length === 0;
@@ -318,7 +299,7 @@ export class EvidentialTableRenderer {
           rowspans,
           footnotes,
           decimals,
-          stats: opts.column_stats ? this._columnStats(columns, allRows) : null,
+          stats,
           selected: opts.select ? this.model.get("selected") : null,
           isEmpty,
           emptyRows: isEmpty ? this._emptyRowCount(opts) : 0,
@@ -917,16 +898,26 @@ export function render({ model, el }) {
   el.classList.add("evidential-widget");
   const renderer = new EvidentialTableRenderer(model, el);
   const rerender = () => renderer.render();
+  let pendingDataRender = false;
+  const dataChanged = () => {
+    renderer._pipeline.clear();
+    if (pendingDataRender) return;
+    pendingDataRender = true;
+    queueMicrotask(() => {
+      pendingDataRender = false;
+      if (!renderer.destroyed) renderer.render();
+    });
+  };
   const setLoading = () => renderer.setLoading(model.get("loading"));
-  model.on("change:rows", rerender);
-  model.on("change:columns", rerender);
-  model.on("change:options", rerender);
+  model.on("change:rows", dataChanged);
+  model.on("change:columns", dataChanged);
+  model.on("change:options", dataChanged);
   model.on("change:loading", setLoading);
   model.on("change:selected", rerender);
   return () => {
-    model.off("change:rows", rerender);
-    model.off("change:columns", rerender);
-    model.off("change:options", rerender);
+    model.off("change:rows", dataChanged);
+    model.off("change:columns", dataChanged);
+    model.off("change:options", dataChanged);
     model.off("change:selected", rerender);
     model.off("change:loading", setLoading);
     renderer.destroy();

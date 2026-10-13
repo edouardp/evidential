@@ -57,6 +57,7 @@ dated, immutable record of the decisions behind them.
 | [036](036-persistent-column-configuration.md) | Preserve Explicit Column Configuration Across Refreshes | Accepted |
 | [037](037-renderer-module-boundaries.md) | Separate Renderer Processing, Cells, and Lifecycles | Accepted |
 | [038](038-typed-configuration-validation.md) | Typed Configuration with Early Runtime Validation | Accepted |
+| [039](039-derived-data-cache-and-group-index.md) | Cache Derived Table Data and Index Group Descendants | Accepted |
 
 ## Creating New ADRs
 

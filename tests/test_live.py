@@ -44,7 +44,7 @@ def test_real_t_string_control_updates(con) -> None:
 
 @pytest.fixture()
 def con() -> duckdb.DuckDBPyConnection:
-    connection = connect()
+    connection = connect(extensions=())
     connection.execute(
         """
         CREATE TABLE t AS SELECT * FROM (VALUES

@@ -8,12 +8,15 @@
 # ///
 """IMDb media: ~249k titles with ratings, genres, casts and budgets.
 
-The BrightData IMDb-Media dataset, read from a local CSV with DuckDB and shown
-with EvidentialTable: dotted-name column groups, a colour-scaled rating, a
+The BrightData IMDb-Media dataset, converted to Parquet with DuckDB (ZSTD,
+Parquet v2, bloom filters on url/title/media_type) and read back with DuckDB,
+shown with EvidentialTable: dotted-name column groups, a colour-scaled rating, a
 bar-charted vote count, media-type chips, column statistics, a link column, a
 pivot by decade, and a row-selection drill-down into the cast.
 
-Point it at the CSV with ``IMDB_CSV`` (default ``~/Downloads/IMDB media.csv``).
+Point it at the Parquet with ``IMDB_PARQUET`` (default
+``~/Downloads/imdb_media.parquet``); with no Parquet it falls back to
+``IMDB_CSV`` (default ``~/Downloads/IMDB media.csv``).
 """
 
 import marimo
@@ -37,23 +40,34 @@ def _():
 
 @app.cell
 def _(Path, duckdb, mo, os):
+    parquet_path = Path(os.environ.get("IMDB_PARQUET", "~/Downloads/imdb_media.parquet")).expanduser()
     csv_path = Path(os.environ.get("IMDB_CSV", "~/Downloads/IMDB media.csv")).expanduser()
-    if not csv_path.is_file():
+    parquet_literal = "'" + str(parquet_path).replace("'", "''") + "'"
+    csv_literal = "'" + str(csv_path).replace("'", "''") + "'"
+
+    if parquet_path.is_file():
+        source, reader = "Parquet", f"read_parquet({parquet_literal})"
+    elif csv_path.is_file():
+        source, reader = "CSV", f"read_csv_auto({csv_literal}, header = true)"
+    else:
         mo.stop(
             True,
-            mo.md(f"No IMDb CSV at `{csv_path}`. Set `IMDB_CSV` to the file path."),
+            mo.md(
+                f"No IMDb data. Put the Parquet at `{parquet_path}` (or set "
+                f"`IMDB_PARQUET`), or set `IMDB_CSV` to `{csv_path}`."
+            ),
         )
 
     connection = duckdb.connect()
-    # Only the columns used below, so the CSV scan stays quick.
+    # Only the columns used below, so the scan stays quick.
     connection.execute(
         "CREATE TABLE media AS SELECT "
         "title, media_type, imdb_rating, imdb_rating_count, genres, "
         "details_release_date, popularity, url, review_count, review_rating, "
         "awards, boxoffice_budget, top_cast "
-        f"FROM read_csv_auto('{str(csv_path).replace(chr(39), chr(39) * 2)}', header = true)"
+        f"FROM {reader}"
     )
-    return connection, csv_path
+    return connection, source
 
 
 @app.cell
@@ -61,8 +75,10 @@ def _(mo):
     mo.md("""
     # IMDb media
 
-    The BrightData **IMDb-Media** dataset, read from a CSV with DuckDB and shown
-    with `EvidentialTable`. It mixes the library's features on real data:
+    The BrightData **IMDb-Media** dataset, converted to **Parquet** with DuckDB
+    (ZSTD, Parquet v2, `url`/`title`/`media_type` bloom filters) and read back
+    with DuckDB, shown with `EvidentialTable`. It mixes the library's features on
+    real data:
 
     - a **top-rated** ranking with a colour-scaled IMDb rating, a bar-charted
       vote count, media-type chips and a link on every title;
@@ -75,7 +91,7 @@ def _(mo):
 
 
 @app.cell
-def _(connection, mo):
+def _(connection, mo, source):
     films, types, y0, y1, avg_rating, rated = connection.sql(r"""
         SELECT count(*),
                count(DISTINCT media_type),
@@ -91,6 +107,7 @@ def _(connection, mo):
     mo.md(f"""
     | | |
     | --- | --- |
+    | Loaded from | **{source}** |
     | Titles | **{films:,}** |
     | Rated on IMDb | **{rated:,}** |
     | Media types | **{types}** |
@@ -131,7 +148,7 @@ def _(EvidentialTable, connection, mo):
             title="Top rated titles",
             subtitle="50,000+ votes. Click a row to see its cast; the Rating band is a column-group highlight",
             select="imdb",
-            column_stats=True,
+            #column_stats=True,
             search=True,
             page_size=12,
             row_shading=True,
@@ -305,6 +322,13 @@ def _(mo):
       headers and height while nothing is selected (see ADR-033).
     - `genres` and `top_cast` are JSON arrays stored as text; DuckDB unpacks them
       with `from_json(...)`.
+    - The Parquet is built once from the CSV with DuckDB:
+      `COPY (SELECT * FROM read_csv_auto('IMDB media.csv', header = true))` `TO
+      'imdb_media.parquet' (FORMAT PARQUET, COMPRESSION ZSTD, COMPRESSION_LEVEL
+      9, ROW_GROUP_SIZE 122880, PARQUET_VERSION V2, KV_METADATA {...})`. DuckDB
+      does not write Parquet **bloom filters**, so a short PyArrow pass adds them
+      afterwards (`bloom_filter_options={"url": ..., "title": ...,
+      "media_type": True}`).
     """)
     return
 

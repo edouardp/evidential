@@ -367,11 +367,14 @@
    back out by the same amount, so the value keeps its position but the bar fills
    the row, leaving ~2px to the separators, without growing the cell. */
 .et-bar-cell {
+  /* The bar area's 50% must line up with the grid's content-box centre, so the
+     right padding is shared between the cell and the centred bar area. */
+  --et-bar-pad-right: 0.75rem;
   position: relative;
   display: block;
   min-width: 60px;
-  margin: -0.25rem -0.75rem -0.25rem 0;
-  padding: 0.25rem 0.75rem 0.25rem 0;
+  margin: -0.25rem calc(-1 * var(--et-bar-pad-right)) -0.25rem 0;
+  padding: 0.25rem var(--et-bar-pad-right) 0.25rem 0;
 }
 .et-bar-wrap { position: absolute; inset: 0 4px 0 0; }
 .et-bar-negative { left: 4px; right: 0; }
@@ -407,7 +410,7 @@
 }
 /* Full height: the line and bars run edge-to-edge so the centre line joins the
    neighbouring rows into one rule down the column. */
-.et-bar-center .et-bar-wrap { inset: 0; }
+.et-bar-center .et-bar-wrap { inset: 0 var(--et-bar-pad-right) 0 0; }
 .et-bar-center .et-bar { top: 0; bottom: 0; }
 .et-bar-center .et-bar-axis {
   position: absolute;

@@ -37,6 +37,7 @@ and without network access.
 | [`29_row_selection.py`](29_row_selection.py) | Click a country row to drive a second table: the year-by-year drill-down re-queries on `table.widget.selected`. |
 | [`30_subcolumns.py`](30_subcolumns.py) | Shared-header sub-columns: economic value/period pairs and a three-part right-aligned value, left-aligned text, centered chip, plus a close recreation of the supplied Economist economic data table. |
 | [`31_imdb_media.py`](31_imdb_media.py) | IMDb-Media CSV: top-rated ranking, dotted-name column groups, column stats, a decade pivot and a row-selection cast drill-down. |
+| [`32_column_builder.py`](32_column_builder.py) | The `col.*` column builder and the `settings(...)` bundle: a configured report plus a default table to experiment with. |
 
 `sample_data/needful_things/orders.parquet` is Evidence's demo dataset, copied
 from the published docs site.

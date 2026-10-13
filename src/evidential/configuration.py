@@ -7,7 +7,7 @@ import types
 from collections.abc import Callable, Mapping, Sequence
 from difflib import get_close_matches
 from functools import cache
-from typing import Any, Literal, TypedDict, Union, get_args, get_origin, get_type_hints, is_typeddict
+from typing import Any, Literal, TypedDict, Union, Unpack, cast, get_args, get_origin, get_type_hints, is_typeddict
 
 Length = str | float
 Palette = str | Sequence[str]
@@ -290,6 +290,21 @@ TABLE_DEFAULTS: TableOptions = {
 @cache
 def _fields(schema: Any) -> dict[str, Any]:
     return get_type_hints(schema)
+
+
+def settings(**options: Unpack[TableOptions]) -> TableOptions:
+    """Collect and validate table-level options, for ``**``-splatting.
+
+    ``EvidentialTable(rows, **settings(title="Sales", page_size=15))`` is the
+    same as passing those keywords directly, but a bundle can be reused and
+    overridden::
+
+        REPORT = settings(page_size=15, row_shading=True, border=False)
+        EvidentialTable(rows, **REPORT)
+        EvidentialTable(rows, settings=REPORT, title="This month")
+    """
+    validate_options(options, TableOptions, "table")
+    return cast(TableOptions, dict(options))
 
 
 def unknown_option(name: str, allowed: Sequence[str], path: str) -> ValueError:

@@ -29,11 +29,12 @@ Quick start::
     )
 """
 
+from . import column as col
 from . import duck
 from .aggregations import BUILTIN_AGGREGATIONS, apply_aggregations, resolve_aggregation
 from .client import grouped_records
 from .comparison import comparison_table
-from .configuration import ColumnOptions, TableOptions
+from .configuration import ColumnOptions, TableOptions, settings
 from .data import make_column
 from .grouped import grouped_table, simple_table
 from .live import LiveEvidentialTable, query_values
@@ -60,6 +61,8 @@ from .table import EvidentialTable, section_row
 __all__ = [
     "TableOptions",
     "ColumnOptions",
+    "col",
+    "settings",
     "EvidentialTable",
     "section_row",
     "LiveEvidentialTable",

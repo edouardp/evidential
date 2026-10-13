@@ -60,6 +60,7 @@ dated, immutable record of the decisions behind them.
 | [039](039-derived-data-cache-and-group-index.md) | Cache Derived Table Data and Index Group Descendants | Accepted |
 | [040](040-shared-header-subcolumns.md) | Shared-Header Sub-columns | Accepted |
 | [041](041-adaptive-symbol-footnotes.md) | Adaptive Symbol Footnotes | Accepted |
+| [042](042-column-builder-and-settings.md) | The `col` Column Builder and the `settings` Bundle | Accepted |
 
 ## Creating New ADRs
 

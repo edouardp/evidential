@@ -179,8 +179,12 @@ class EvidentialTable(anywidget.AnyWidget):
         column_config: Mapping[str, Mapping[str, Any]] | None = None,
         column_groups: Mapping[str, Sequence[str] | Mapping[str, Any]] | None = None,
         rules: Iterable[Mapping[str, Any]] | None = None,
+        settings: Mapping[str, Any] | None = None,
         **options: Any,
     ) -> None:
+        if settings is not None:
+            validate_options(settings, TableOptions, "table")
+            options = {**settings, **options}
         allowed = _OPTION_KEYS | set(type(self).class_traits())
         for key in options:
             if key not in allowed:

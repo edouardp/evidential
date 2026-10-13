@@ -1,31 +1,9 @@
-"""The ``col`` column-spec builder.
+"""Implementation of the ``col`` column builder (private).
 
-``col.*`` names a column's **kind** — the first decision you make. A kind sets a
-baseline (its type, and a default format and/or visualisation); every method
-returns a *new* column, so specs are built, reused and composed::
-
-    from evidential import col
-
-    columns=[
-        col.text("city"),
-        col.currency("sales", code="usd").bar(color="#93c5fd"),
-        col.percent("share"),
-        col.integer("orders"),
-        col.flag("country"),
-        col.sparkline("trend", type="area"),
-        col.chip("status", min_width=72),
-        col.percent("change").delta(down_is_good=True),
-    ]
-
-The kinds cover the common cases with no configuration; ``.fmt("…")`` is the
-escape hatch for a custom code (``num0k``, date codes, ``bytes``…).
-
-Every method below documents the option it sets and shows an example, so the
-same help is available from the editor's completion popup.
-
-A :class:`Column` is a :class:`~collections.abc.Mapping`, so it is accepted
-anywhere a column definition is — including
-``column_config={"sales": col.currency("sales").bar(...)}``.
+The public, completable surface is :mod:`evidential.col`, which re-exports only
+the factory entry points. ``Column``, ``ColumnGroup``, ``CURRENCY_CODES`` and
+the helpers live here so that ``col.`` completion shows only the kinds you can
+build a column from.
 """
 
 from __future__ import annotations

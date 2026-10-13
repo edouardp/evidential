@@ -63,6 +63,7 @@ dated, immutable record of the decisions behind them.
 | [042](042-column-builder-and-settings.md) | The `col` Column Builder and the `settings` Bundle | Accepted |
 | [043](043-column-kinds.md) | Column Kinds as the Entry Point | Accepted |
 | [044](044-column-group-builders.md) | Column Group Builders | Accepted |
+| [045](045-col-namespace-surface.md) | The `col` Namespace Exposes Only Chain Entry Points | Accepted |
 
 ## Creating New ADRs
 

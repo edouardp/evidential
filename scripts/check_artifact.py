@@ -20,9 +20,11 @@ PACKAGE = "evidential"
 REQUIRED = (
     f"{PACKAGE}/__init__.py",
     f"{PACKAGE}/_compat.py",
+    f"{PACKAGE}/_column.py",
     f"{PACKAGE}/_column_options.py",
     f"{PACKAGE}/aggregations.py",
     f"{PACKAGE}/client.py",
+    f"{PACKAGE}/col.py",
     f"{PACKAGE}/comparison.py",
     f"{PACKAGE}/configuration.py",
     f"{PACKAGE}/data.py",

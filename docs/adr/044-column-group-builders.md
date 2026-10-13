@@ -83,8 +83,8 @@ rejected in ADR-040 (it loses independent alignment and visualisation).
 
 ## More Information
 
-- `src/evidential/column.py` (`ColumnGroup`, `subcolumns`, `group`),
-  `src/evidential/table.py` (`_flatten_columns`).
+- `src/evidential/col.py`, `src/evidential/_column.py` (`ColumnGroup`,
+  `subcolumns`, `group`), `src/evidential/table.py` (`_flatten_columns`).
 - `tests/test_column_builder.py`, `notebooks/32_column_builder.py`.
 - Extends [ADR-040](040-shared-header-subcolumns.md) and
   [ADR-042](042-column-builder-and-settings.md).

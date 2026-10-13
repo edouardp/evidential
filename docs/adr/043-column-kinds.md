@@ -88,6 +88,7 @@ was rejected in ADR-042.
 
 ## More Information
 
-- `src/evidential/column.py`, `tests/test_column_builder.py`
+- `src/evidential/col.py`, `src/evidential/_column.py`,
+  `tests/test_column_builder.py`
 - `notebooks/32_column_builder.py`
 - ADR-042 (the builder and `settings`)

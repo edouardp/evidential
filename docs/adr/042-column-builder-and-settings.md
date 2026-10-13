@@ -68,5 +68,6 @@ unbounded nested dicts.
 
 ## More Information
 
-- `src/evidential/column.py`, `src/evidential/configuration.py`
+- `src/evidential/col.py`, `src/evidential/_column.py`,
+  `src/evidential/configuration.py`
 - `notebooks/32_column_builder.py`

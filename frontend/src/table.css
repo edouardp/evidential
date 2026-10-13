@@ -458,9 +458,12 @@ tbody tr:last-child .et-bar-center .et-bar-axis { bottom: var(--et-bar-pad, 0); 
 .et-symbol-image.et-symbol-empty { opacity: 0.25; }
 .et-symbol-box {
   display: inline-block;
-  width: 0.8em;
-  height: 0.8em;
+  width: 0.85em;
+  height: 0.85em;
   background-color: currentColor;
+  /* A glyph carries its own side bearings, a box none — so a box needs extra
+     space (on top of the flex gap) to keep the run from reading as one bar. */
+  margin: 0 0.14em;
 }
 .et-symbol-box-rounded { border-radius: 0.2em; }
 .et-symbol-box-circle { border-radius: 50%; }

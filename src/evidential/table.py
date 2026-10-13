@@ -9,6 +9,7 @@ from typing import Any
 import anywidget
 import traitlets
 
+from .configuration import TABLE_DEFAULTS, ColumnOptions, TableOptions, unknown_option, validate_options
 from .data import _merge_column_config, apply_blank_predicates, infer_columns, jsonify, make_column, normalize_data
 from .rules import resolve_rules
 
@@ -17,125 +18,8 @@ __all__ = ["EvidentialTable"]
 _ASSET_DIR = Path(__file__).parent / "static"
 
 #: Table-level options forwarded to the browser. Mirrors Evidence's prop names.
-_OPTION_KEYS = {
-    "title",
-    "subtitle",
-    "caption",
-    "null_text",
-    "stub",
-    "stub_head",
-    "footnote_marks",
-    "all_caps",
-    "stretch",
-    "align_decimals",
-    "group_gap",
-    "rotate_titles",
-    "figure_style",
-    "footnote_column",
-    "footnotes",
-    "info",
-    "info_link",
-    "info_link_title",
-    "search",
-    "page_size",
-    "sortable",
-    "download",
-    "row_shading",
-    "row_lines",
-    "border",
-    "freeze_columns",
-    "wrap",
-    "wrap_titles",
-    "format_titles",
-    "show_total_row",
-    "total_label",
-    "total_position",
-    "subtotal_position",
-    "collapsible",
-    "collapsed",
-    "groups_open",
-    "group_type",
-    "link",
-    "width",
-    "max_height",
-    "order_columns_by_group",
-    "row_numbers",
-    "column_stats",
-    "compact",
-    "empty_message",
-    "empty_rows",
-    "default_sort",
-    "row_conditional_colors",
-    "show_link_column",
-    "select",
-    "header_color",
-    "header_font_color",
-    "total_row_color",
-    "total_font_color",
-    "background_color",
-    "theme",
-    "color_scale",
-}
-
-_OPTION_DEFAULTS: dict[str, Any] = {
-    "title": None,
-    "subtitle": None,
-    "caption": None,
-    "null_text": None,
-    "stub": None,
-    "stub_head": None,
-    "footnote_marks": None,
-    "all_caps": False,
-    "stretch": True,
-    "align_decimals": False,
-    "group_gap": False,
-    "rotate_titles": None,
-    "figure_style": None,
-    "footnote_column": None,
-    "footnotes": None,
-    "info": None,
-    "info_link": None,
-    "info_link_title": None,
-    "search": False,
-    "page_size": 10,
-    "sortable": True,
-    "download": True,
-    "row_shading": False,
-    "row_lines": True,
-    "border": True,
-    "freeze_columns": 0,
-    "wrap": False,
-    "wrap_titles": True,
-    "format_titles": True,
-    "show_total_row": False,
-    "total_label": "Total",
-    "total_position": "bottom",
-    "subtotal_position": "bottom",
-    "collapsible": False,
-    "collapsed": None,
-    "groups_open": None,
-    "group_type": None,
-    "link": None,
-    "width": None,
-    "max_height": None,
-    "order_columns_by_group": True,
-    "row_numbers": False,
-    "column_stats": False,
-    "compact": False,
-    "empty_message": "No records",
-    "empty_rows": None,
-    "default_sort": None,
-    "row_conditional_colors": None,
-    "show_link_column": False,
-    "select": None,
-    "header_color": None,
-    "header_font_color": None,
-    "total_row_color": None,
-    "total_font_color": None,
-    "background_color": None,
-    "theme": None,
-    "color_scale": None,
-}
+_OPTION_KEYS = set(TableOptions.__annotations__)
+_OPTION_DEFAULTS = TABLE_DEFAULTS
 
 
 # Evidence `contentType` → (viz, sparkline type)
@@ -161,6 +45,7 @@ _COLUMN_ALIASES = {
     "openInNewTab": "link_new_tab",
     "wrapTitle": "wrap_title",
     "description": "info",
+    "footnote_column": "footnote",
     "sortBy": "sort_by",
     "sortColumn": "sort_by",
     "highlightColor": "highlight",
@@ -181,6 +66,8 @@ def _normalize_column_options(data: dict[str, Any]) -> dict[str, Any]:
     content_type = str(data.pop("content_type", "")).lower()
     if content_type:
         viz, spark_type = _CONTENT_TYPES.get(content_type, (None, None))
+        if content_type not in {*_CONTENT_TYPES, "html", "link", "image", "logo"}:
+            raise ValueError(f"Unknown column content type: {content_type!r}")
         if viz:
             data.setdefault("viz", viz)
         if spark_type:
@@ -241,6 +128,11 @@ def _normalize_column_options(data: dict[str, Any]) -> dict[str, Any]:
     ):
         if camel in data:
             bar.setdefault(snake, data.pop(camel))
+    # Allow the bar options at the top level too (snake_case), like the colour
+    # and delta options, so `bar_color="#..."` is not silently ignored.
+    for key in ("bar_color", "bar_color_negative", "hide_labels", "fit_to_data"):
+        if key in data:
+            bar.setdefault(key, data.pop(key))
     if bar:
         data["bar_options"] = bar
 
@@ -305,6 +197,7 @@ def _normalize_column_options(data: dict[str, Any]) -> dict[str, Any]:
     for key in ("highlightColor", "highlight_color"):
         if key in data and "highlight" not in data:
             data["highlight"] = data.pop(key)
+    validate_options(data, ColumnOptions, "column")
     return data
 
 
@@ -466,7 +359,12 @@ class EvidentialTable(anywidget.AnyWidget):
         rules: Iterable[Mapping[str, Any]] | None = None,
         **options: Any,
     ) -> None:
+        allowed = _OPTION_KEYS | set(type(self).class_traits())
+        for key in options:
+            if key not in allowed:
+                raise unknown_option(key, sorted(allowed), "table")
         table_options = {key: options.pop(key) for key in list(options) if key in _OPTION_KEYS}
+        validate_options(table_options, TableOptions, "table")
         self._rules = list(rules) if rules else None
         self._explicit_columns = list(columns) if columns is not None else None
         self._column_overrides = {name: dict(config) for name, config in (column_config or {}).items()}
@@ -521,6 +419,8 @@ class EvidentialTable(anywidget.AnyWidget):
         if columns is not None:
             self._explicit_columns = list(columns)
         if column_config is not None:
+            for name, config in column_config.items():
+                _normalize_column_options({"name": name, **config})
             self._column_overrides = {name: dict(config) for name, config in column_config.items()}
         if column_groups is not None:
             self._configured_groups = column_groups
@@ -558,8 +458,9 @@ class EvidentialTable(anywidget.AnyWidget):
 
     def update_options(self, **options: Any) -> EvidentialTable:
         """Update one or more table-level display options."""
+        validate_options(options, TableOptions, "table")
         current = dict(self.options)
-        current.update({k: v for k, v in options.items() if k in _OPTION_KEYS})
+        current.update(options)
         self.options = current
         return self
 

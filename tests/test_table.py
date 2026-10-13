@@ -28,6 +28,25 @@ def test_column_aliases_are_consistent_across_configuration_paths() -> None:
     assert table.columns[0]["chip_options"] == {"min_width": 30}
 
 
+def test_bar_options_work_at_the_top_level() -> None:
+    table = EvidentialTable(
+        [{"x": 1}],
+        column_config={
+            "x": {
+                "viz": "bar",
+                "bar_color": "#f00",
+                "bar_color_negative": "#900",
+                "hide_labels": True,
+            },
+        },
+    )
+    assert table.columns[0]["bar_options"] == {
+        "bar_color": "#f00",
+        "bar_color_negative": "#900",
+        "hide_labels": True,
+    }
+
+
 def test_refresh_preserves_configuration_and_automatic_link_hiding() -> None:
     table = EvidentialTable(
         [{"a": 1, "url": "/one"}],

@@ -17,9 +17,9 @@ app = marimo.App(width="full")
 def imports():
     import marimo as mo
 
-    from evidential import EvidentialTable
+    from evidential import EvidentialTable, col
 
-    return EvidentialTable, mo
+    return EvidentialTable, col, mo
 
 
 @app.cell
@@ -54,31 +54,46 @@ def sample_data():
 
 
 @app.cell
-def economic_table(EvidentialTable, mo, records):
+def economic_table(EvidentialTable, col, mo, records):
     economy = mo.ui.anywidget(
         EvidentialTable(
             records,
             title="Economic data",
             subtitle="Value + reporting period under Latest; independent annual forecast",
-            columns=["country", "gdp", "quarter", "forecast", "inflation", "month", "unemployment"],
+            columns=[
+                col.text("country", title="Country"),
+                col.group(
+                    "Gross domestic product",
+                    [
+                        col.subcolumns(
+                            "Latest",
+                            [
+                                col.number("gdp", fmt="num1", align="right").red_negatives(),
+                                col.auto("quarter").align("left").font_color("#808080"),
+                            ],
+                        ),
+                        col.number("forecast", fmt="num1", align="right", title="Annual forecast"),
+                    ],
+                ),
+                col.group(
+                    "Consumer prices",
+                    [
+                        col.subcolumns(
+                            "Latest",
+                            [
+                                col.number("inflation", fmt="num1", align="right").red_negatives(),
+                                col.auto("month").align("left").font_color("#808080"),
+                            ],
+                        ),
+                    ],
+                ),
+                col.number("unemployment", fmt="num1", align="right", title="Unemployment (%)"),
+            ],
             page_size="all",
             row_shading=True,
             row_lines=False,
             border=False,
             stretch=False,
-            column_groups={
-                "Gross domestic product": ["gdp", "quarter", "forecast"],
-                "Consumer prices": ["inflation", "month"],
-            },
-            column_config={
-                "country": {"title": "Country", "align": "left"},
-                "gdp": {"type": "number", "fmt": "num1", "align": "right", "subcolumn_group": "Latest", "red_negatives": True},
-                "quarter": {"align": "left", "color": "#808080", "subcolumn_group": "Latest"},
-                "forecast": {"title": "Annual forecast", "type": "number", "fmt": "num1", "align": "right"},
-                "inflation": {"type": "number", "fmt": "num1", "align": "right", "subcolumn_group": "Latest", "red_negatives": True},
-                "month": {"align": "left", "font_color": "#808080", "subcolumn_group": "Latest"},
-                "unemployment": {"title": "Unemployment (%)", "type": "number", "fmt": "num1", "align": "right"},
-            },
             caption="Illustrative data. GDP and consumer prices: percentage change on a year earlier.",
         )
     )
@@ -105,29 +120,28 @@ def three_part_explanation(mo):
 
 
 @app.cell
-def three_part_table(EvidentialTable, mo, records):
+def three_part_table(EvidentialTable, col, mo, records):
     observations = mo.ui.anywidget(
         EvidentialTable(
             records,
             title="GDP observations",
-            columns=["country", "gdp", "quarter", "status"],
+            columns=[
+                col.text("country", title="Country"),
+                col.subcolumns(
+                    "Latest observation",
+                    [
+                        col.number("gdp", fmt="num1", align="right"),
+                        col.auto("quarter").align("left").font_color("#808080"),
+                        col.chip("status", align="center", conditional_colors="status_color"),
+                    ],
+                ),
+            ],
             page_size="all",
             row_shading=True,
             row_lines=False,
             border=False,
             stretch=False,
             search=True,
-            column_config={
-                "country": {"title": "Country", "align": "left"},
-                "gdp": {"type": "number", "fmt": "num1", "align": "right", "subcolumn_group": "Latest observation"},
-                "quarter": {"align": "left", "color": "#808080", "subcolumn_group": "Latest observation"},
-                "status": {
-                    "align": "center",
-                    "viz": "chip",
-                    "subcolumn_group": "Latest observation",
-                    "color_options": {"conditional_colors": "status_color"},
-                },
-            },
             caption="Illustrative data. Chips demonstrate independently rendered content.",
         )
     )

@@ -398,17 +398,18 @@ this._state = {
 ```
 
 `render()` is a full re-render of the table body from the traits plus this
-state. It is the only entry point; every interaction mutates `_state` and calls
-it. The pipeline is deliberately linear and pure:
+state. State-changing table interactions call it; cycling statistics updates its
+summary cell in place. The data pipeline uses pure helpers with cached derived
+results:
 
 ```mermaid
 flowchart TD
-  S["rows (trait)"] --> SE["_searchRows<br/>case-insensitive substring"]
-  SE --> SO["_sortRows<br/>typed comparator (number/date/string, 3-state)"]
-  SO --> VI["_visibleRows<br/>drop rows under collapsed groups"]
+  S["rows (trait)"] --> SE["rows.js: searchRows<br/>case-insensitive substring"]
+  SE --> SO["rows.js: sortRows<br/>typed comparator (number/date/string, 3-state)"]
+  SO --> RG["derived.js: cache ranges, scales,<br/>decimal padding and dataset statistics"]
+  RG --> VI["rows.js: visibleRows<br/>drop rows under collapsed groups"]
   VI --> PA["_paginate<br/>page_size · _pageSizeOverride"]
-  PA --> RG["compute ranges:<br/>blocks calculateVizRanges · calculateFormatRanges<br/>· colour scales · decimal padding"]
-  RG --> TB["_renderTable<br/>header (spanners) + rows"]
+  PA --> TB["_renderTable<br/>header (spanners) + rows"]
   TB --> FT["footer · footnotes · caption"]
 ```
 
@@ -434,10 +435,10 @@ flowchart TD
   E -->|yes| Z3["null_text (default –)"]
   E -->|no| F["formatValue(value, fmt)<br/>fmt_column · tab_format · total/subtotal_fmt"]
   F --> G{"viz?"}
-  G -->|bar| BAR["_renderBar"]
+  G -->|bar| BAR["renderBar"]
   G -->|color| COL["cell background from colour scale"]
-  G -->|sparkline| SPARK["_renderSparkline (SVG)"]
-  G -->|delta| DELTA["_renderDelta (▲/▼ chip)"]
+  G -->|sparkline| SPARK["renderSparkline (SVG)"]
+  G -->|delta| DELTA["renderDelta (▲/▼ chip)"]
   G -->|html / markdown / image / logo| MEDIA["rich content"]
   G -->|none| TEXT["plain formatted text"]
   BAR --> H["link? red_negatives? footnote? rule style?"]
@@ -459,7 +460,7 @@ cell formatting/decorating in `cells.js`, and the visualizations below in
 `visualizations.js`. Loading, hold-repeat, and viewport controllers own their
 timers and observers. See [ADR-037](adr/037-renderer-module-boundaries.md).
 
-- **Bar** (`_renderBar`). The bar is a positioned div behind a right-aligned
+- **Bar** (`renderBar` in `visualizations.js`). The bar is a positioned div behind a right-aligned
   label. The cell pulls into the cell padding with negative margins and the
   value is pushed back out by the same padding, so the bar can fill the row
   (2px clearance to the separators) and extend past the number for clearance —
@@ -477,13 +478,13 @@ timers and observers. See [ADR-037](adr/037-renderer-module-boundaries.md).
   `calculateColorStyles` (a colour scale or `conditional_colors`), with a
   black/white text colour from the fill's luminance. Chips are centred by
   default: `_center_chips` sets the align unless the column asked otherwise.
-- **Sparkline** (`_renderSparkline`). Builds an inline SVG from an array in a
+- **Sparkline** (`renderSparkline`). Builds an inline SVG from an array in a
   cell: `[y, …]`, `[[x, y], …]`, or `ARRAY_AGG({'date': …, 'value': …})`
   objects. Line/area/bar, optional zero baseline, tooltips via `<title>`. The
   SVG scales to the text size (`height: 1.25em`, width from the viewBox), so a
   sparkline never grows the row; `sparkline_options.width`/`height` set the
   viewBox (i.e. the aspect ratio).
-- **Delta** (`_renderDelta`). The value first with the ▲/▼ indicator after it
+- **Delta** (`renderDelta`). The value first with the ▲/▼ indicator after it
   (or `symbol_position="left"`), a good/bad class — green for an increase, red
   for a decrease, flipped by `down_is_good` — and a grey dash for a value inside
   `neutral_range`, which accepts a `"lo:hi"` string, a `[lo, hi]` pair or a
@@ -509,17 +510,18 @@ alpha-3 country code).
 
 - **Accordion groups** (`group_type="accordion"`, the default): subtotal rows
   render a chevron in their own dimension column; clicking toggles the group key
-  in `_state.collapsed`, and `_visibleRows` drops rows whose `__ancestors`
+  in `_state.collapsed`, and `visibleRows` drops rows whose `__ancestors`
   include a collapsed key. Dimension cells are indented to show nesting
   (Evidence's `getIndentAmount`): detail rows indent their *parent* dimension
   columns but not the leaf, and subtotal rows indent their ancestors.
-- **Section groups** (`group_type="section"`): `_computeRowspans` merges each
+- **Section groups** (`group_type="section"`): `computeRowspans` merges each
   subtotal's dimension cell across its members via `rowSpan`, giving the merged
   group cells of a classic sectioned table.
-- **Frozen columns**: `_applyFrozenOffsets` measures the first *n* header cells
-  and sets cumulative `left` offsets with `position: sticky`, on both header and
-  body cells. It runs in `requestAnimationFrame` after every render and on
-  resize, because widths depend on layout.
+- **Frozen columns**: `TableViewport.applyFrozenOffsets` measures physical
+  column edges and sets sticky `left` offsets. Headers and statistics cells
+  spanning multiple columns freeze only if their full span is frozen. It runs
+  in `requestAnimationFrame` after rendering and on resize, because widths
+  depend on layout.
 
 ### 6.5 Interaction details
 
@@ -642,7 +644,7 @@ flowchart TD
 
 - **jsdom unit tests** (`frontend/test_*.js`) exercise the pure JS:
   formatting, colour maths and renderer output (with a fake model), plus the
-  exported `holdInterval` easing.
+  `holdInterval` easing from `interactions.js`.
 - **pytest unit tests** (`tests/`) exercise the Python: normalisation,
   inference, SQL generation, rule resolution, aggregation and the live
   parameter binding. They do not need a browser.

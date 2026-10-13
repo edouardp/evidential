@@ -23,6 +23,7 @@ export function optString(value) {
   return String(value);
 }
 
+/** Minimal inline markdown: bold, italic and code; never raw HTML. */
 export function inlineMarkdown(text) {
   const fragment = document.createDocumentFragment();
   const source = String(text ?? "");
@@ -41,6 +42,7 @@ export function inlineMarkdown(text) {
   return fragment;
 }
 
+/** Map a figure style to its font-variant-numeric value. */
 export function figureVariant(style) {
   switch (style) {
     case "oldstyle":
@@ -73,6 +75,7 @@ export function withFigure(baseStyle, col, opts) {
   return style;
 }
 
+/** Compress sorted row numbers into ranges such as "1–3, 5". */
 export function formatRowRanges(rows) {
   if (!rows.length) return "";
   const ranges = [];
@@ -91,6 +94,7 @@ export function formatRowRanges(rows) {
   return ranges.join(", ");
 }
 
+/** Explicit alignment wins; otherwise numbers go right and chips center. */
 export function alignStyle(col) {
   const fallback = col.type === "number" ? "right" : "left";
   const align = col.align || (col.viz === "chip" ? "center" : fallback);

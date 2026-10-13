@@ -38,7 +38,7 @@ their own formats, alignment, colour, links and visualizations. Singleton groups
 ordinary outer padding. Hiding members recalculates spans and boundaries.
 
 `headers.js` owns column ordering, the pure header plan, header rendering and
-member decoration. `rows.js` re-exports existing layout helpers for compatibility.
+member decoration. The row pipeline imports ordering directly from this module.
 Shared headers sort on the first visible member, including its `sort_by`;
 keyboard focus survives rerendering. Physical body indexes and header spans let
 `TableViewport` measure actual frozen-column edges. A header crossing the frozen

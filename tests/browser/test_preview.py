@@ -451,6 +451,7 @@ def test_statistics_demo_cycles_small_centered_dots_without_moving_rows(page, li
     notebook = Path(__file__).resolve().parents[2] / "notebooks" / "25_column_stats.py"
     _, definitions = runpy.run_path(str(notebook))["app"].run()
     table = definitions["subcolumn_stats"].widget
+    # Exercise pagination independently of the demo's display defaults.
     open_preview(page, live_server)
     page.evaluate(
         """async ({rows, columns, options}) => {
@@ -463,7 +464,7 @@ def test_statistics_demo_cycles_small_centered_dots_without_moving_rows(page, li
         widget.render({el, model: {get: key => data[key], on: () => {}, off: () => {}}});
         el.scrollIntoView();
     }""",
-        {"rows": table.rows, "columns": table.columns, "options": table.options},
+        {"rows": table.rows, "columns": table.columns, "options": {**table.options, "page_size": 4}},
     )
     cells = page.locator("#mixed-stats .et-stats-cell")
     assert cells.count() == 5

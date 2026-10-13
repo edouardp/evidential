@@ -20,7 +20,7 @@ if (!dom.window.HTMLDialogElement.prototype.showModal) {
   dom.window.HTMLDialogElement.prototype.close = function () { this.open = false; this.dispatchEvent(new dom.window.Event("close")); };
 }
 
-const { EvidentialTableRenderer, holdInterval, render } = await import("./src/table.js");
+const { EvidentialTableRenderer, render } = await import("./src/table.js");
 
 test("numeric color and chip scales use inferred ranges", () => {
   for (const viz of ["color", "chip"]) {
@@ -321,14 +321,6 @@ test("the fullscreen action stays available without pagination or download", () 
   renderer.destroy();
 });
 
-test("hold repeat interval eases from 700ms to 100ms by 3s", () => {
-  assert.equal(holdInterval(0), 700);
-  assert.equal(holdInterval(700), 700);
-  assert.equal(holdInterval(1850), 400);
-  assert.equal(holdInterval(3000), 100);
-  assert.equal(holdInterval(10000), 100);
-});
-
 test("holding the next button auto-repeats after a delay", (t) => {
   t.mock.timers.enable({ apis: ["setTimeout"] });
   const rows = Array.from({ length: 6 }, (_, i) => ({ city: `C${i}`, trips: i, revenue: i * 10 }));
@@ -344,7 +336,7 @@ test("holding the next button auto-repeats after a delay", (t) => {
   t.mock.timers.tick(700);
   assert.equal(renderer._state.page, 2, "next repeat after the initial interval");
 
-  renderer._stopHold();
+  window.dispatchEvent(new window.Event("pointerup"));
   t.mock.timers.tick(10000);
   assert.equal(renderer._state.page, 2, "releasing stops the repeat");
   renderer.destroy();
@@ -380,11 +372,11 @@ test("fullscreen moves the widget into the dialog", () => {
 
   const expand = el.querySelector(".et-expand-btn");
   expand.dispatchEvent(new window.MouseEvent("click", { bubbles: true }));
-  assert.equal(renderer._expanded, true);
+  assert.equal(renderer._viewport.expanded, true);
   assert.ok(el.querySelector("dialog").contains(root));
 
-  renderer._closeExpanded();
-  assert.equal(renderer._expanded, false);
+  el.querySelector(".et-close-btn").click();
+  assert.equal(renderer._viewport.expanded, false);
   // The widget must return to the cell, not vanish into the closed dialog.
   assert.ok(el.contains(root));
   assert.ok(!el.querySelector("dialog").contains(root));
@@ -405,7 +397,7 @@ test("expanded mode offers a close icon in the corner", () => {
   // The footer toggle stays, marked with the × that means "close it".
   assert.equal(expand.textContent, "× Expand");
   close.click();
-  assert.equal(renderer._expanded, false);
+  assert.equal(renderer._viewport.expanded, false);
   renderer.destroy();
 });
 
@@ -420,7 +412,7 @@ test("leaving fullscreen restores the inline height", () => {
   assert.equal(renderer.scroller.style.minHeight, "120px");
 
   // Enter fullscreen: taller viewport, larger fitted page size.
-  renderer._expanded = true;
+  renderer._viewport.expanded = true;
   natural = 600;
   renderer._pageSizeOverride = 20;
   el.querySelector("dialog").append(el.querySelector(".et-root"));
@@ -429,7 +421,7 @@ test("leaving fullscreen restores the inline height", () => {
 
   // Leave fullscreen: natural inline height again; must not keep 600px.
   natural = 120;
-  renderer._restoreInline();
+  renderer._viewport.restore();
   assert.equal(renderer._pageSizeOverride, null);
   assert.equal(renderer.scroller.style.minHeight, "120px", "fullscreen height not retained");
   renderer.destroy();
@@ -445,9 +437,9 @@ test("fullscreen page-size override applies and resets the inline size", () => {
   assert.equal(el.querySelectorAll("tbody tr").length, 1);
 
   // Simulate being expanded, then returning inline.
-  renderer._expanded = true;
+  renderer._viewport.expanded = true;
   el.querySelector("dialog").append(el.querySelector(".et-root"));
-  renderer._restoreInline();
+  renderer._viewport.restore();
   assert.equal(renderer._pageSizeOverride, null);
   assert.equal(renderer._effectivePageSize(), 2);
   assert.equal(el.querySelectorAll("tbody tr").length, 2);
@@ -462,11 +454,11 @@ test("fullscreen clears max_height so rows can expand", () => {
   const scroller = el.querySelector(".et-scroller");
   assert.equal(scroller.style.maxHeight, "200px");
 
-  renderer._expanded = true;
+  renderer._viewport.expanded = true;
   renderer.render();
   assert.equal(scroller.style.maxHeight, "none");
 
-  renderer._expanded = false;
+  renderer._viewport.expanded = false;
   renderer.render();
   assert.equal(scroller.style.maxHeight, "200px");
   renderer.destroy();
@@ -478,20 +470,20 @@ test("clicking the backdrop dismisses the fullscreen dialog", () => {
   const root = el.querySelector(".et-root");
 
   el.querySelector(".et-expand-btn").click();
-  assert.equal(renderer._expanded, true);
+  assert.equal(renderer._viewport.expanded, true);
   dialog.dispatchEvent(new window.Event("pointerdown", { bubbles: true }));
   dialog.dispatchEvent(new window.MouseEvent("click", { bubbles: true }));
-  assert.equal(renderer._expanded, false);
+  assert.equal(renderer._viewport.expanded, false);
   assert.ok(el.contains(root));
 
   // A drag that starts inside the content and ends on the backdrop must not close.
   el.querySelector(".et-expand-btn").click();
-  assert.equal(renderer._expanded, true);
+  assert.equal(renderer._viewport.expanded, true);
   root.dispatchEvent(new window.Event("pointerdown", { bubbles: true }));
   dialog.dispatchEvent(new window.MouseEvent("click", { bubbles: true }));
-  assert.equal(renderer._expanded, true);
+  assert.equal(renderer._viewport.expanded, true);
 
-  renderer._closeExpanded();
+  el.querySelector(".et-close-btn").click();
   renderer.destroy();
 });
 
@@ -1556,4 +1548,54 @@ test("paging recalculates the symbol budget for the currently displayed notes", 
   renderer._gotoPage(1);
   assert.deepEqual([...el.querySelectorAll("tbody .et-footnote-mark")].map((mark) => mark.textContent), ["*", "†"]);
   renderer.destroy();
+});
+
+test("CSV download preserves search, indirect sorting, grouped column order and all matching pages", async (t) => {
+  const columns = [
+    {name: "city"},
+    {name: "value", type: "number", sort_by: "rank", column_group: "Observation", subcolumn_group: "Latest"},
+    {name: "forecast", type: "number"},
+    {name: "period", column_group: "Observation", subcolumn_group: "Latest"},
+    {name: "rank", type: "number", hide: true},
+  ];
+  const rows = [
+    {city: 'keep "A",\nline', value: 2, forecast: 4, period: "Q3", rank: 9},
+    {city: "keep B", value: 1, forecast: null, period: "Nov", rank: 1},
+    {city: "drop C", value: 3, forecast: 5, period: "Dec", rank: 99},
+  ];
+  const renderer = new EvidentialTableRenderer(makeModel(rows, columns, {
+    title: "Clean Table", search: true, download: true, page_size: 1,
+  }, el), el);
+  const originalCreate = URL.createObjectURL;
+  const originalRevoke = URL.revokeObjectURL;
+  let blob;
+  let clicked;
+  const revoked = [];
+  URL.createObjectURL = (value) => { blob = value; return "blob:csv-test"; };
+  URL.revokeObjectURL = (value) => revoked.push(value);
+  t.mock.method(window.HTMLAnchorElement.prototype, "click", function () {
+    clicked = {href: this.href, filename: this.download};
+  });
+  t.after(() => {
+    if (originalCreate === undefined) delete URL.createObjectURL;
+    else URL.createObjectURL = originalCreate;
+    if (originalRevoke === undefined) delete URL.revokeObjectURL;
+    else URL.revokeObjectURL = originalRevoke;
+    renderer.destroy();
+  });
+  const search = el.querySelector(".et-search");
+  search.value = "keep";
+  search.dispatchEvent(new window.Event("input", {bubbles: true}));
+  el.querySelector('th[data-column="value"]').click();
+  assert.equal(el.querySelectorAll("tbody tr").length, 1);
+  el.querySelector(".et-download-btn").click();
+  const csv = await new Promise((resolve, reject) => {
+    const reader = new window.FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = () => reject(reader.error);
+    reader.readAsText(blob);
+  });
+  assert.equal(csv, 'City,Value,Period,Forecast\n"keep ""A"",\nline",2,Q3,4\nkeep B,1,Nov,');
+  assert.deepEqual(clicked, {href: "blob:csv-test", filename: "clean_table.csv"});
+  assert.deepEqual(revoked, ["blob:csv-test"]);
 });

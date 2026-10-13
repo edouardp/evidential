@@ -34,6 +34,13 @@ renders bars, deltas, and sparklines; `dom.js` supplies presentation utilities.
 asynchronous work. Controllers receive callbacks and DOM nodes rather than the
 entire renderer. `table.js` orchestrates model state, headers, rows, and chrome.
 
+Private forwarding methods and the legacy fullscreen-state alias have been
+removed from `EvidentialTableRenderer`. The renderer calls the owning helpers
+and controllers directly. Internal helpers are imported from their defining
+module rather than re-exported through unrelated modules. Documentation lives
+beside the implementation it describes. Tests exercise controls and controller
+behavior rather than keeping old renderer wrappers alive.
+
 The existing anywidget entry point and bundle remain unchanged. Controllers
 dispose timers, observers, and scheduled layout frames when the widget closes.
 

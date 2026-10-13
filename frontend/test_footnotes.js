@@ -1,6 +1,6 @@
 import {test} from "node:test";
 import assert from "node:assert/strict";
-import {footnoteMark} from "./src/cells.js";
+import {footnoteMark} from "./src/footnotes.js";
 
 const SYMBOLS = ["*", "†", "‡", "§", "¶", "#", "+", "◆", "◇", "△"];
 const marks = (total, options = {}) => Array.from({length: total}, (_, index) => footnoteMark(index + 1, options, total));

@@ -1,11 +1,10 @@
-export { footnoteMark } from "./footnotes.js";
-export { alignStyle } from "./dom.js";
 import { alignStyle, h, optString, inlineMarkdown, withFigure } from "./dom.js";
 import { formatValue } from "./format.js";
 import { withDecimals, indentForCell } from "./rows.js";
 import { calculateColorStyles, contrastTextColor } from "./color.js";
 import { renderBar, renderDelta, renderSparkline } from "./visualizations.js";
 
+/** Return the first matching substitution text, or null. */
 export function matchSubstitution(col, row, value, options) {
   const rules = options.rules;
   if (!rules) return null;
@@ -29,6 +28,7 @@ export function matchSubstitution(col, row, value, options) {
   return null;
 }
 
+/** Merge matching format/style rules in order; later rules win. */
 export function matchingRules(col, row, options) {
   const rules = options.rules;
   if (!rules || !rules.length) return { fmt: null, style: null };
@@ -43,6 +43,7 @@ export function matchingRules(col, row, options) {
   return { fmt, style };
 }
 
+/** Apply effects shared by ordinary, null, substituted and template cells. */
 export function decorateCell(td, col, row, ctx, rowIndex, style, includeFootnote, options) {
   if (col.font_color) td.style.color = col.font_color;
   const footnoteColumn = col.footnote || options.footnote_column;

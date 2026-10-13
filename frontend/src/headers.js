@@ -7,10 +7,12 @@ export function groupPath(group) {
   return Array.isArray(group) ? group.map(String) : [String(group)];
 }
 
+/** Stable map key for a single group or a nested group path. */
 export function groupKey(group) {
   return Array.isArray(group) ? group.join("\u0000") : String(group);
 }
 
+/** Build one row of contiguous spanners per hierarchy level. */
 export function buildHeaderLevels(paths, depth) {
   const levels = Array.from({ length: depth }, () => []);
   function recurse(start, end, level) {
@@ -29,6 +31,7 @@ export function buildHeaderLevels(paths, depth) {
   return levels;
 }
 
+/** Cluster matching parent groups and sub-columns at their first occurrence. */
 export function orderedColumns(columns, options) {
   if (options.order_columns_by_group === false) return columns;
   const grouped = new Map();

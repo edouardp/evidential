@@ -3,6 +3,7 @@ const LOADING_SHOW_DELAY = 180; // don't show the overlay for updates faster tha
 const FADE_MS = 600; // fade current data out and "Processing…" in over this long
 const LOADING_HIDE_DEBOUNCE = 120; // settle time before revealing new data
 
+/** Suppress fast-update flashes and keep slow-update fades visible until settled. */
 export class LoadingController {
   constructor(root, overlay, el) {
     Object.assign(this, {root, overlay, el});

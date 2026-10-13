@@ -1,4 +1,5 @@
-import { orderedColumns, searchRows, sortRows, visibleRows, columnStats, decimalPlaces } from "./rows.js";
+import { searchRows, sortRows, visibleRows, columnStats, decimalPlaces } from "./rows.js";
+import { orderedColumns } from "./headers.js";
 import { calculateVizRanges, calculateFormatRanges, buildColorVizScale } from "./color.js";
 
 /** One current dataset projection per widget; pagination/selection do not invalidate it. */

@@ -1,25 +1,22 @@
-import { footnoteMark, labelFootnotes } from "./footnotes.js";
-import { renderStatsRow } from "./statistics.js";
-import { renderHeader, headerLayout, decorateSubcolumn } from "./headers.js";
-import { RowPipeline } from "./derived.js";
 // Evidence-style data table renderer for the anywidget frontend.
 //
 // The widget receives fully JSON-serializable `rows`, `columns`, and `options`
 // from Python and renders a sortable, searchable, formattable table with
 // conditional visualizations, collapsible groups, frozen columns, pagination,
 // CSV export, and a fullscreen dialog.
+import { footnoteMark, labelFootnotes } from "./footnotes.js";
+import { renderStatsRow } from "./statistics.js";
+import { renderHeader, headerLayout, decorateSubcolumn, orderedColumns } from "./headers.js";
+import { RowPipeline } from "./derived.js";
 import { HoldController, bindRowSelection } from "./interactions.js";
-export { holdInterval } from "./interactions.js";
 import { LoadingController } from "./loading.js";
 import { TableViewport } from "./viewport.js";
-import { h, inlineMarkdown, withFigure, formatRowRanges } from "./dom.js";
-import { hiddenColumns, orderedColumns, visibleRows, searchRows, sortRows, paginateRows,
-  columnStats, computeRowspans, shaded } from "./rows.js";
-import { renderCell, alignStyle } from "./cells.js";
+import { h, inlineMarkdown, withFigure, formatRowRanges, alignStyle } from "./dom.js";
+import { hiddenColumns, visibleRows, searchRows, sortRows, paginateRows,
+  computeRowspans, shaded } from "./rows.js";
+import { renderCell } from "./cells.js";
 import { formatTitle } from "./format.js";
-import {
-  colorStylesFromHex,
-} from "./color.js";
+import { colorStylesFromHex } from "./color.js";
 
 export class EvidentialTableRenderer {
   constructor(model, el) {
@@ -46,8 +43,6 @@ export class EvidentialTableRenderer {
   get rows() { return this.model.get("rows") || []; }
   get columns() { return this.model.get("columns") || []; }
   get options() { return this.model.get("options") || {}; }
-  get _expanded() { return this._viewport?.expanded ?? false; }
-  set _expanded(value) { if (this._viewport) this._viewport.expanded = value; }
 
   _build() {
     this.root = h("div", { class: "et-root", dataset: { widget: "evidence-table" } });
@@ -78,12 +73,12 @@ export class EvidentialTableRenderer {
     this._baselineHeight = 0;
     this._baselinePageSize = null;
 
-    // Fullscreen dialog (same pattern as galaga's cga3d widget).
+    // Fullscreen dialog and its controls.
     this.dialog = h("dialog", { class: "et-dialog", "aria-label": "Expanded data table" });
     this.expandBtn = h("button", {
       class: "et-text-btn et-expand-btn", type: "button", title: "Expand table",
       "aria-label": "Expand table", "aria-expanded": "false",
-      onclick: () => this._toggleExpanded(),
+      onclick: () => this._viewport.toggle(),
     });
     this.expandBtn.textContent = "⛶ Expand";
     // A conventional close icon in the top-right corner, shown only while the
@@ -91,7 +86,7 @@ export class EvidentialTableRenderer {
     this.closeBtn = h("button", {
       class: "et-text-btn et-close-btn", type: "button",
       title: "Close expanded table", "aria-label": "Close expanded table",
-      onclick: () => this._closeExpanded(),
+      onclick: () => this._viewport.close(),
     });
     this.closeBtn.textContent = "✕";
     this.root.append(this.closeBtn);
@@ -151,7 +146,7 @@ export class EvidentialTableRenderer {
 
   destroy() {
     this.destroyed = true;
-    this._stopHold();
+    this._holdController.stop();
     this._loadingController.destroy();
     this._viewport.destroy();
     this._pipeline.clear();
@@ -190,24 +185,7 @@ export class EvidentialTableRenderer {
     }
   }
 
-  _hiddenColumns() {
-    return hiddenColumns(this.columns, this._state.hidden);
-  }
-  /** Cluster columns that share a `column_group` at the group's first
-   * occurrence, preserving the relative order of ungrouped columns. */
-  _orderedColumns(columns) {
-    return orderedColumns(columns, this.options);
-  }
-  // --------------------------------------------------------------- filter ---
-  _visibleRows(rows) {
-    return visibleRows(rows, (key) => this._isCollapsed(key));
-  }
-  _searchRows(rows) {
-    return searchRows(rows, this.columns, this._state.search, this._hiddenColumns());
-  }
-  _sortRows(rows) {
-    return sortRows(rows, this.columns, this._state.sort);
-  }
+  // ----------------------------------------------------------- pagination ---
   _effectivePageSize() {
     return this._pageSizeOverride ?? this.options.page_size;
   }
@@ -229,7 +207,7 @@ export class EvidentialTableRenderer {
           : String(opts.width);
     // Inline max_height is for the compact notebook view; fullscreen must be
     // free to grow to the dialog height.
-    if (this._expanded) {
+    if (this._viewport.expanded) {
       this.scroller.style.maxHeight = "none";
     } else if (opts.max_height) {
       this.scroller.style.maxHeight =
@@ -250,7 +228,7 @@ export class EvidentialTableRenderer {
 
     const processed = this._pipeline.get({
       rows: this.rows, columns: this.columns, options: opts,
-      search: this._state.search, hidden: this._hiddenColumns(), sort: this._state.sort,
+      search: this._state.search, hidden: hiddenColumns(this.columns, this._state.hidden), sort: this._state.sort,
     });
     const { columns, hasGroups, dimCount, ranges, formatRanges, decimals, colorScales, stats } = processed;
     const layout = headerLayout(columns);
@@ -266,7 +244,7 @@ export class EvidentialTableRenderer {
     // Accordion groups indent child/parent dimension cells (Evidence parity).
     const accordion = hasGroups && !section && dimCount > 0;
     const rowspans = section
-      ? this._computeRowspans(rows, dimCount, opts.subtotal_position !== "bottom")
+      ? computeRowspans(rows, dimCount, opts.subtotal_position !== "bottom")
       : null;
 
     // Oblique headings need a taller header and a little right padding.
@@ -332,20 +310,14 @@ export class EvidentialTableRenderer {
     this.caption.replaceChildren();
     if (opts.caption) this.caption.append(inlineMarkdown(opts.caption));
     this._updateBaselineHeight();
-    this._viewport.frame(() => this._applyFrozenOffsets());
+    this._viewport.frame(() => this._viewport.applyFrozenOffsets());
 
     this.el.dataset.rowCount = String(total);
     this.el.dataset.renderCount = String((Number(this.el.dataset.renderCount) || 0) + 1);
   }
 
   // ------------------------------------------------------------- loading ---
-  /** Reflect the `loading` trait in the UI.
-   *
-   * Fast updates finish within `LOADING_SHOW_DELAY`, so they never flash the
-   * overlay — the table simply swaps in place (no flicker). Slower updates fade
-   * the current data out over `FADE_MS`; once shown, the overlay is held until
-   * the fade completes and then removed immediately to reveal the new data.
-   */
+  /** Reflect the loading trait through its lifecycle controller. */
   setLoading(loading) {
     this._loadingController.set(loading);
   }
@@ -467,7 +439,7 @@ export class EvidentialTableRenderer {
       tr.append(first);
     }
     for (const [index, col] of columns.entries()) {
-      const td = h("td", { class: "et-td", style: withFigure(this._alignStyle(col), col, opts) });
+      const td = h("td", { class: "et-td", style: withFigure(alignStyle(col), col, opts) });
       if (!first) first = td;
       decorateSubcolumn(td, col, index, ctx);
       tr.append(td);
@@ -478,17 +450,11 @@ export class EvidentialTableRenderer {
     return tr;
   }
 
-  /** Per-column summary over the full dataset: min/max/avg/null for numeric
-   *  columns, distinct/null for everything else. Subtotal/total rows are
-   *  ignored. */
-  _columnStats(columns, rows) {
-    return columnStats(columns, rows);
-  }
   _renderStatsRow(columns, ctx) {
     return renderStatsRow({columns, layout: ctx.layout, stats: ctx.stats,
       formatRanges: ctx.formatRanges, options: this.options, rowNumbers: ctx.rowNumbers,
       selections: this._state.statsMembers,
-      onLayout: () => this._viewport.frame(() => this._applyFrozenOffsets())});
+      onLayout: () => this._viewport.frame(() => this._viewport.applyFrozenOffsets())});
   }
 
   _renderHeader(columns, ctx) {
@@ -501,9 +467,6 @@ export class EvidentialTableRenderer {
       }});
   }
 
-  _alignStyle(col) {
-    return alignStyle(col);
-  }
   _sortColumn(name) {
     const current = this._state.sort;
     if (!current || current.column !== name) {
@@ -517,27 +480,6 @@ export class EvidentialTableRenderer {
     this.render();
   }
 
-  /** Rowspan each subtotal's dimension cell should span in section mode. */
-  _computeRowspans(rows, dimCount, top) {
-    return computeRowspans(rows, dimCount, top);
-  }
-  /** Indent (in rem) for a dimension cell in accordion mode.
-   *
-   * Matches Evidence's `getIndentAmount`: detail rows indent their *parent*
-   * dimension columns but not the leaf dimension, and subtotal rows indent
-   * their ancestor columns. Non-dimension columns are never indented.
-   */
-  /** Substitute a displayed value per `sub_*` rules (returns text or null). */
-  /** Footnote mark for a 1-based index under the chosen scheme. */
-  _footnoteMark(index, total) {
-    return footnoteMark(index, this.options, total);
-  }
-  /** Merge the style/format rules matching a cell (last match wins). */
-  /** Whether the nth data row should be shaded, per `row_shading`.
-   * `true` = alternating (1,1); a number = groups (n,n); a pair = [shaded, unshaded]. */
-  _shaded(index) {
-    return shaded(index, this.options);
-  }
   _renderRow(row, columns, ctx, index) {
     const opts = this.options;
     const renderType = row.render_type || "cell_data";
@@ -563,7 +505,7 @@ export class EvidentialTableRenderer {
         isSubtotal ? "et-row-subtotal" : "",
         hasLink ? "et-row-link" : "",
         isSubtotal ? "et-row-collapsible" : "",
-        renderType === "cell_data" && this._shaded(ctx.shadingCounter.value++) ? "et-row-shaded" : "",
+        renderType === "cell_data" && shaded(ctx.shadingCounter.value++, opts) ? "et-row-shaded" : "",
       ].filter(Boolean).join(" "),
     });
     if (hasLink) tr.addEventListener("click", () => { window.location.href = String(row[opts.link]); });
@@ -603,22 +545,12 @@ export class EvidentialTableRenderer {
     return tr;
   }
 
-  /** Apply effects shared by ordinary, null, substituted and template cells. */
-  /** Neutral band from `neutral_range`.
-   * Accepts a `"lo:hi"` string (e.g. `"-0.1:0.1"`), a `[lo, hi]` pair, a single
-   * ±value, or `neutral_min` / `neutral_max`. Defaults to "only exactly 0". */
-  /** Normalise a cell value into ``[x, y]`` sparkline points.
-   *
-   * Accepts an array of numbers, an array of ``[x, y]`` pairs, or an array of
-   * objects (e.g. DuckDB ``ARRAY_AGG({'date': date, 'sales': sales})``). For
-   * objects, ``sparkline_options.x`` / ``.y`` name the fields; otherwise the
-   * first numeric field is used for y and the first non-numeric field for x. */
   /** Render the footer notes collected while building rows, plus any static
    * `footnotes`, with the row numbers each note appears on. */
   _renderFootnotes(footnotes, staticFootnotes) {
     this.footnotesEl.replaceChildren();
     const items = footnotes.map((note) => ({
-      mark: this._footnoteMark(note.index, footnotes.length),
+      mark: footnoteMark(note.index, this.options, footnotes.length),
       text: note.text,
       rows: [...note.rows].sort((a, b) => a - b),
     }));
@@ -665,7 +597,7 @@ export class EvidentialTableRenderer {
         );
         button.addEventListener("pointerdown", (event) => {
           if (event.button !== undefined && event.button !== 0) return;
-          this._startHold(direction);
+          this._holdController.start(direction);
         });
         button.addEventListener("click", () => {
           if (this._holdController.consumeClick()) return;
@@ -716,16 +648,6 @@ export class EvidentialTableRenderer {
     this.render();
   }
 
-  // Press-and-hold pagination: after HOLD_DELAY, advance one page every
-  // HOLD_START_INTERVAL ms, easing linearly to HOLD_END_INTERVAL ms.
-  _startHold(direction) {
-    return this._holdController.start(direction);
-  }
-
-  _stopHold() {
-    return this._holdController.stop();
-  }
-
   _advance(direction) {
     const next = this._state.page + (direction === "next" ? 1 : -1);
     if (next < 0 || next >= this._pageCount) return false;
@@ -734,17 +656,6 @@ export class EvidentialTableRenderer {
   }
 
   // ----------------------------------------------------------- fullscreen ---
-  _toggleExpanded() {
-    return this._viewport.toggle();
-  }
-
-  _closeExpanded() {
-    return this._viewport.close();
-  }
-
-  _restoreInline() {
-    return this._viewport.restore();
-  }
 
   _resetBaselineHeight() {
     this._baselineHeight = 0;
@@ -752,21 +663,13 @@ export class EvidentialTableRenderer {
     this.scroller.style.minHeight = "";
   }
 
-  // Size the fullscreen page so the rows fill the available viewport height.
-  _fitFullscreen() {
-    return this._viewport.fit();
-  }
-
-  // --------------------------------------------------------- frozen cols ---
-  _applyFrozenOffsets() {
-    return this._viewport.applyFrozenOffsets();
-  }
-
   // ------------------------------------------------------------- download ---
   _downloadCsv() {
-    const hidden = this._hiddenColumns();
-    const columns = this._orderedColumns(this.columns.filter((c) => !hidden.has(c.name)));
-    const rows = this._visibleRows(this._sortRows(this._searchRows(this.rows)));
+    const hidden = hiddenColumns(this.columns, this._state.hidden);
+    const columns = orderedColumns(this.columns.filter((c) => !hidden.has(c.name)), this.options);
+    const searched = searchRows(this.rows, this.columns, this._state.search, hidden);
+    const sorted = sortRows(searched, this.columns, this._state.sort);
+    const rows = visibleRows(sorted, (key) => this._isCollapsed(key));
     const escape = (v) => {
       if (v === null || v === undefined) return "";
       const s = typeof v === "object" ? JSON.stringify(v) : String(v);
@@ -785,18 +688,6 @@ export class EvidentialTableRenderer {
     URL.revokeObjectURL(url);
   }
 }
-
-/** Minimal inline markdown: **bold**, *italic* and `code` (no raw HTML). */
-
-/** Map a figure style to a `font-variant-numeric` value (ALA). */
-
-/** Stable Map/Set key for a group, which may be a string or a path array. */
-
-/** Force a base format (num/usd/pct/…) to a fixed number of decimals. */
-
-/** Build one row of header cells per group level, nesting sub-groups. */
-
-/** Compress a sorted list of row numbers into ranges, e.g. [1,2,3,5] -> "1–3, 5". */
 
 export function render({ model, el }) {
   el.classList.add("evidential-widget");

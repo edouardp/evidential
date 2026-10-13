@@ -30,7 +30,7 @@ a **helper column** that is not meant to be displayed.
 
 ## Decision Outcome
 
-Chosen option: "A per-column `sort_by` option". `_sortRows` resolves the
+Chosen option: "A per-column `sort_by` option". `sortRows` in `rows.js` resolves the
 comparison key to `column.sort_by ?? column.name` and the type from the resolved
 column. Because it reads the row objects directly, the target may be a column
 with `hide=true` — present in the data but not displayed — or a field absent
@@ -52,5 +52,5 @@ sort belongs with the other presentation logic (ADR-005).
 
 ## More Information
 
-- `frontend/src/table.js` (`_sortRows`)
+- `frontend/src/rows.js` (`sortRows`)
 - `notebooks/23_wdi.py` — the sparkline column sorts by `kendall_tau`

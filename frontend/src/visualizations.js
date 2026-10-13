@@ -22,6 +22,7 @@ export function renderBar(col, value, formatted, range) {
   return cell;
 }
 
+/** Resolve a neutral band from a string, pair, symmetric bound or explicit min/max. */
 export function neutralBounds(opts) {
   const range = opts.neutral_range;
   if (typeof range === "string") {
@@ -174,6 +175,7 @@ export function renderSparkline(col, value) {
   return svg;
 }
 
+/** Normalize numbers, [x, y] pairs or objects into sparkline points. */
 export function sparklinePoints(value, opts) {
   if (!Array.isArray(value)) return [];
   const xKey = opts.x;

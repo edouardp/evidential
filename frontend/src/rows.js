@@ -1,4 +1,3 @@
-export { groupPath, groupKey, buildHeaderLevels, orderedColumns } from "./headers.js";
 // Pure row and column processing; input records are never mutated.
 export function compareValues(a, b, type) {
   if (a === null || a === undefined) return b === null || b === undefined ? 0 : 1;
@@ -25,6 +24,7 @@ export function decimalPlaces(value) {
   return dot === -1 ? 0 : text.length - dot - 1;
 }
 
+/** Apply a fixed decimal precision to a supported base format. */
 export function withDecimals(format, decimals) {
   const code = String(format || "num");
   const base = code.replace(/\d+$/, "");
@@ -132,6 +132,7 @@ export function paginateRows(rows, pageSize, pageIndex, options,
   return { rows: rows.slice(page * pageSize, (page + 1) * pageSize), pageCount, page, total };
 }
 
+/** Summarize all detail rows; subtotal and total rows are excluded. */
 export function columnStats(columns, rows) {
   const data = rows.filter((row) => !row.render_type || row.render_type === "cell_data");
   const stats = new Map();
@@ -177,6 +178,7 @@ export function columnStats(columns, rows) {
   return stats;
 }
 
+/** Span each section subtotal across its adjacent descendant rows. */
 export function computeRowspans(rows, dimCount, top) {
   const spans = new Array(rows.length).fill(1);
   rows.forEach((row, index) => {
@@ -193,6 +195,7 @@ export function computeRowspans(rows, dimCount, top) {
   return spans;
 }
 
+/** Indent ancestor dimensions in accordion groups, leaving leaf dimensions unindented. */
 export function indentForCell(row, columnIndex, ctx) {
   if (columnIndex >= ctx.dimCount) return 0;
   const level = row.__level ?? 0;
@@ -204,6 +207,7 @@ export function indentForCell(row, columnIndex, ctx) {
   return 0;
 }
 
+/** Support alternating stripes, fixed-size bands and [shaded, unshaded] pairs. */
 export function shaded(index, options) {
   const shading = options.row_shading;
   if (!shading) return false;

@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { JSDOM } from "jsdom";
-import { HoldController } from "./src/interactions.js";
+import { HoldController, holdInterval } from "./src/interactions.js";
 import { LoadingController } from "./src/loading.js";
 import { TableViewport } from "./src/viewport.js";
 
@@ -72,4 +72,12 @@ test("frozen offsets use physical columns and preserve nested header heights", (
   assert.equal(rows[1].children[1].style.left, "100px");
   assert.ok(rows[0].children[0].classList.contains("et-frozen"));
   viewport.destroy();
+});
+
+test("hold repeat interval eases from 700ms to 100ms by 3s", () => {
+  assert.equal(holdInterval(0), 700);
+  assert.equal(holdInterval(700), 700);
+  assert.equal(holdInterval(1850), 400);
+  assert.equal(holdInterval(3000), 100);
+  assert.equal(holdInterval(10000), 100);
 });

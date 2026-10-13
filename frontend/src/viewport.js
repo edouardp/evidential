@@ -7,20 +7,20 @@ export class TableViewport {
     Object.assign(this, {root, dialog, button, placeholder, scroller, getOptions,
       rerender, resetBaseline, getPageSizeOverride, setPageSizeOverride});
     if (dialog) {
-    this.dialog.addEventListener("close", () => this.restore());
-    this.dialog.addEventListener("cancel", (e) => { e.preventDefault(); this.close(); });
-    // Clicking the backdrop (the dialog element itself, outside the content)
-    // dismisses. Track where the press started so a drag that begins inside
-    // the content and ends on the backdrop does not close it.
-    this.backdropPress = false;
-    this.dialog.addEventListener("pointerdown", (e) => {
-      this.backdropPress = e.target === this.dialog;
-    });
-    this.dialog.addEventListener("click", (e) => {
-      const onBackdrop = e.target === this.dialog && this.backdropPress;
+      this.dialog.addEventListener("close", () => this.restore());
+      this.dialog.addEventListener("cancel", (e) => { e.preventDefault(); this.close(); });
+      // Clicking the backdrop (the dialog element itself, outside the content)
+      // dismisses. Track where the press started so a drag that begins inside
+      // the content and ends on the backdrop does not close it.
       this.backdropPress = false;
-      if (onBackdrop) this.close();
-    });
+      this.dialog.addEventListener("pointerdown", (e) => {
+        this.backdropPress = e.target === this.dialog;
+      });
+      this.dialog.addEventListener("click", (e) => {
+        const onBackdrop = e.target === this.dialog && this.backdropPress;
+        this.backdropPress = false;
+        if (onBackdrop) this.close();
+      });
     }
     this.expanded = false;
     this.fitting = false;
@@ -93,6 +93,7 @@ export class TableViewport {
     this.frame(() => this.applyFrozenOffsets());
   }
 
+  /** Size the fullscreen page to fit the available viewport height. */
   fit() {
     if (!this.expanded || this.fitting) return;
     this.fitting = true;

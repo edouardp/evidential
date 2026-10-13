@@ -519,7 +519,8 @@ class Column(Mapping[str, Any]):
     ) -> Column:
         """Shade each cell with a background colour for its value.
 
-        :param scale: named colour scale (e.g. ``"redgreen"``, ``"blues"``).
+        :param scale: a named preset (``"green"``, ``"blue"``, ``"red"``,
+            ``"orange"``, ``"purple"``, ``"grey"``/``"gray"``) or a list of colours.
         :param stops: explicit colour stops.
         :param conditional_colors: a rule column name supplying per-row colours.
         :param scale_column: take the scale range from another column.
@@ -529,7 +530,7 @@ class Column(Mapping[str, Any]):
 
         Example::
 
-            col.number("rating").color(scale="redgreen", min=6, max=10)
+            col.number("rating").color(scale="green", min=6, max=10)
         """
         return self._with(
             viz="color",
@@ -652,7 +653,7 @@ class Column(Mapping[str, Any]):
         Example::
 
             col.chip("status", min_width=72)
-            col.number("aqi").chip(scale="redgreen", min=0, max=250)
+            col.number("aqi").chip(scale="red", min=0, max=250)
         """
         changes: dict[str, Any] = {"viz": "chip"}
         chip = _clean(min_width=min_width)
@@ -1160,7 +1161,7 @@ def color(name: str, *, title: str | None = None, **options: Any) -> Column:
 
     Example::
 
-        col.color("rating", scale="redgreen", min=6, max=10)
+        col.color("rating", scale="green", min=6, max=10)
     """
     return number(name, title=title).color(**options)
 

@@ -545,5 +545,12 @@ def test_footnote_symbols_are_plain_superscripts_with_matching_footer_marks(page
     assert style["cursor"] == "default"
     assert style["color"] == style["parentColor"]
     assert style["underline"] == "none"
-    assert style["verticalAlign"] == "super"
+    assert float(style["verticalAlign"].removesuffix("px")) == pytest.approx(style["fontSize"] * 0.25, abs=0.01)
+    assert marks.first.evaluate("""el => {
+        const lowerTop = el.getBoundingClientRect().top;
+        el.style.verticalAlign = 'super';
+        const higherTop = el.getBoundingClientRect().top;
+        el.style.verticalAlign = '';
+        return lowerTop > higherTop;
+    }""")
     assert style["fontSize"] < style["parentFontSize"]

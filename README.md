@@ -268,7 +268,9 @@ footer with footnotes and source notes. `EvidentialTable` covers:
   `column_config={"Intel": {"footnote": "intel_note"}}`. Cells then show a
   superscript mark and the footer lists each unique note with the rows it
   appears on (`rows 6, 14`, compressed to ranges for hierarchical tables).
-  Marks are plain superscripts in the surrounding text color. The default
+  Marks are plain superscripts in the surrounding text color. Their rise is
+  `0.25em`; set the CSS variable `--et-footnote-rise` to adjust it (smaller
+  values lower the marks). The default
   symbol list is `*`, `†`, `‡`, `§`, `¶`, `#`, `+`, `◆`, `◇`, `△`. Once more
   than ten unique visible notes are needed, doubles are interleaved beside
   singles: eleven notes use `*`, `**`, `†`, `‡`, …; twelve use `*`, `**`, `†`,

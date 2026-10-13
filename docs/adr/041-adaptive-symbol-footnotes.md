@@ -42,7 +42,9 @@ to the rendered rows; paging, filtering or collapsing can change the sequence.
 Static source notes remain unmarked and do not consume symbol slots.
 
 Marks inherit the surrounding color, have normal weight and a default cursor,
-and retain their tooltip. They remain outside per-cell links. Explicit
+and retain their tooltip. Their rise defaults to `0.25em`, lower than native
+`super`, and can be adjusted with the CSS variable `--et-footnote-rise`.
+They remain outside per-cell links. Explicit
 `footnote_marks="numbers"` or `"letters"` keeps the existing scheme.
 
 ### Consequences

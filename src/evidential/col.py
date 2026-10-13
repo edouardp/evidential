@@ -32,6 +32,13 @@ be built, reused and composed:
 codes, ``bytes``…). The result of :func:`subcolumns` / :func:`group` is a
 sequence and goes straight into ``columns=[...]``.
 
+Wherever an option names a column, ``"@name"`` is shorthand for that column —
+and ``scale="@name"`` on :meth:`~evidential.Column.color` /
+:meth:`~evidential.Column.chip` colours each cell from the column ``name``::
+
+    col.chip("status", scale="@status_color")   # per-row colours from a column
+    col.number("votes").sort_by("@rating")      # same as sort_by("rating")
+
 A :class:`~evidential.Column` is a :class:`~collections.abc.Mapping`, so it is
 accepted anywhere a column definition is — including
 ``column_config={"sales": col.currency("sales").bar(...)}``.

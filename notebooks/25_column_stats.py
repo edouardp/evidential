@@ -188,7 +188,7 @@ def mixed_statistics_table(EvidentialTable, col, mixed_records, mo):
                     [
                         col.currency("fare", decimals=2),
                         col.auto("payment").font_color("#808080"),
-                        col.chip("status", conditional_colors="status_color"),
+                        col.chip("status", scale="@status_color"),
                     ],
                 ),
                 col.percent("tip_rate", decimals=1, title="Tip rate"),

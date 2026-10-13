@@ -118,7 +118,7 @@ def three_part_table(EvidentialTable, col, mo, records):
                 col.subcolumns("Latest observation", [
                         col.number("gdp", fmt="num1", align="right"),
                         col.auto("quarter").align("left").font_color("#808080"),
-                        col.chip("status", align="center", conditional_colors="status_color"),
+                        col.chip("status", align="center", scale="@status_color", min_width=80),
                     ],
                 ),
             ],
@@ -234,7 +234,7 @@ def economist_recreation(EvidentialTable, col, economist_records, mo):
                         col.subcolumns(
                             "latest",
                             [
-                                col.number("gdp", fmt="num1").color(conditional_colors="gdp_color"),
+                                col.number("gdp", fmt="num1").color(scale="@gdp_color"),
                                 col.auto("gdp_period").fmt("@").font_color("#808080"),
                             ],
                         ),
@@ -248,13 +248,11 @@ def economist_recreation(EvidentialTable, col, economist_records, mo):
                         col.subcolumns(
                             "latest",
                             [
-                                col.number("cpi", fmt_column="cpi_format").color(
-                                    conditional_colors="cpi_color"
-                                ),
+                                col.number("cpi", fmt_column="@cpi_format").color(scale="@cpi_color"),
                                 col.auto("cpi_period").font_color("#808080"),
                             ],
                         ),
-                        col.number("cpi_annual", fmt_column="cpi_annual_format", title="2023†"),
+                        col.number("cpi_annual", fmt_column="@cpi_annual_format", title="2023†"),
                     ],
                 ),
                 col.group(

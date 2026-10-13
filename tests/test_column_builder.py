@@ -195,6 +195,31 @@ def test_auto_alias_wins_over_the_inferred_default() -> None:
     assert table.columns[0]["red_negatives"] is True
 
 
+def test_at_column_reference_convention() -> None:
+    # `@name` references a column wherever a column name is expected.
+    assert dict(col.chip("status", scale="@status_color"))["color_options"] == {"conditional_colors": "status_color"}
+    assert dict(col.number("x").color(scale="@c"))["color_options"] == {"conditional_colors": "c"}
+    assert col.number("x").sort_by("@k")["sort_by"] == "k"
+    assert col.number("x").fmt_column("@f")["fmt_column"] == "f"
+    assert col.number("x").footnote("@n")["footnote"] == "n"
+    assert col.text("t").link("@url")["link"] == "url"
+    assert col.number("x").color(scale="blue", scale_column="@other")["color_options"] == {
+        "color_scale": "blue",
+        "scale_column": "other",
+    }
+
+
+def test_at_column_reference_works_in_a_dict_config() -> None:
+    table = EvidentialTable(
+        [{"status": "ok", "status_color": "#c7e8d2"}],
+        columns=[{"name": "status", "viz": "chip", "color_options": {"conditional_colors": "@status_color"}}],
+    )
+    assert table.columns[0]["color_options"] == {"conditional_colors": "status_color"}
+    assert col.number("x").fmt_column("@f")["fmt_column"] == "f"
+    # `fmt="@"` (the Excel text code) is NOT a column reference.
+    assert col.number("x", fmt="@")["fmt"] == "@"
+
+
 def test_neg_marks_and_brackets_negatives() -> None:
     assert col.currency("profit").neg()["red_negatives"] is True
     spec = col.currency("profit").neg(color="#b91c1c", bracket=True)

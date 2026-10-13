@@ -74,11 +74,11 @@ def _(EvidentialTable, col, mo, rows):
             # decimal points line up down each column
             align_decimals=True,
             columns=[
-                col.text("item", title="Item"),
-                col.integer("quantity", title="Quantity"),
-                col.number("unit_price", fmt="num", title="Unit price"),
-                col.currency("total", title="Total"),
-                col.percent("share", title="Share"),
+                col.text("item"),
+                col.integer("quantity"),
+                col.number("unit_price", fmt="num"),
+                col.currency("total"),
+                col.percent("share", decimals=1),
             ],
         )
     )
@@ -135,7 +135,7 @@ def _(EvidentialTable, col, mo):
             columns=[
                 col.text("metric"),
                 col.auto("metric_fmt").hide(),
-                *[col.number(quarter, fmt_column="metric_fmt") for quarter in quarters],
+                *[col.number(quarter, fmt_column="@metric_fmt") for quarter in quarters],
             ],
         )
     )
@@ -180,12 +180,17 @@ def _(EvidentialTable, col, mo):
                 col.number(
                     "lowercase",
                     fmt="num2",
-                    title="Lowercase — Hoefler Text",
-                    font="'Hoefler Text', Georgia, serif",
+                    title="Lowercase — Georgia",
+                    font="Georgia, serif",
                 ).figure_style("default"),
             ],
         )
     )
+    return
+
+
+@app.cell
+def _():
     return
 
 

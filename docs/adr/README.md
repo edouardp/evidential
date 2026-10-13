@@ -69,6 +69,7 @@ dated, immutable record of the decisions behind them.
 | [048](048-fluent-derived-columns.md) | Fluent Construction of Derived Columns | Accepted |
 | [049](049-align-decimals-explicit-precision.md) | `align_decimals` Respects an Explicit Precision | Accepted |
 | [050](050-negative-styling.md) | Negative Styling — `.neg(color=, bracket=)` | Accepted |
+| [051](051-at-column-reference.md) | The `@column` Reference Convention | Accepted |
 
 ## Creating New ADRs
 

@@ -194,5 +194,19 @@ def _normalize_column_options(data: dict[str, Any]) -> dict[str, Any]:
     for key in ("highlightColor", "highlight_color"):
         if key in data and "highlight" not in data:
             data["highlight"] = data.pop(key)
+    # The `@column` reference convention: `"@name"` names the column `name`.
+    for key in ("sort_by", "fmt_column", "footnote", "link", "image", "logo"):
+        value = data.get(key)
+        if isinstance(value, str) and value.startswith("@"):
+            data[key] = value[1:]
+    for key in ("color_options", "chip_options"):
+        options = data.get(key)
+        if isinstance(options, Mapping):
+            options = dict(options)
+            for field in ("conditional_colors", "scale_column"):
+                value = options.get(field)
+                if isinstance(value, str) and value.startswith("@"):
+                    options[field] = value[1:]
+            data[key] = options
     validate_options(data, ColumnOptions, "column")
     return data

@@ -75,14 +75,13 @@ def _(EvidentialTable, col, mo, records):
             subtitle="color_scale from green to red, clamped to 0-250",
             row_shading=True,
             row_lines=False,
+            stretch=False,
             columns=[
                 col.text("rank", title="#"),
                 col.text("city", title="Major city"),
-                col.number("aqi", title="AQI (US)").chip(
+                col.number("aqi", fmt="num0", title="AQI (US)").chip(
                     scale=["#16a34a", "#f59e0b", "#dc2626", "#7e22ce"], min=0, max=250
-                ),
-                col.auto("status").hide(),
-                col.auto("status_color").hide(),
+                )
             ],
         )
     )
@@ -108,12 +107,13 @@ def _(EvidentialTable, col, mo, records):
         EvidentialTable(
             records,
             title="A text chip with conditional colours",
-            subtitle="color_options={'conditional_colors': 'status_color'}",
+            subtitle="`color_options={'conditional_colors': 'status_color'}`",
             row_shading=True,
+            stretch=False,
             columns=[
                 col.text("rank", title="#"),
                 col.text("city", title="Major city"),
-                col.chip("status", title="Status", conditional_colors="status_color"),
+                col.chip("status", title="Status", scale="@status_color"),
                 col.auto("aqi").hide(),
                 col.auto("status_color").hide(),
             ],
@@ -131,12 +131,11 @@ def _(EvidentialTable, col, mo, records):
             title="A chip without a colour scale",
             subtitle="No colour options: a neutral fill, centred",
             row_shading=True,
+            stretch=False,
             columns=[
                 col.auto("rank").hide(),
                 col.text("city"),
                 col.chip("status", title="Category"),
-                col.auto("aqi").hide(),
-                col.auto("status_color").hide(),
             ],
         )
     )
@@ -152,14 +151,13 @@ def _(EvidentialTable, col, mo, records):
             title="Chips with a minimum width",
             subtitle='`chip_options={"min_width": 72}` — short values are padded, long ones expand',
             row_shading=True,
+            stretch=False,
             columns=[
-                col.auto("rank").hide(),
                 col.text("city"),
                 col.number("aqi", title="AQI (US)").chip(
                     min_width=72, scale=["#16a34a", "#f59e0b", "#dc2626", "#7e22ce"], min=0, max=250
                 ),
-                col.chip("status", title="Status", min_width=72, conditional_colors="status_color"),
-                col.auto("status_color").hide(),
+                col.chip("status", title="Status", min_width=72, scale="@status_color"),
             ],
         )
     )

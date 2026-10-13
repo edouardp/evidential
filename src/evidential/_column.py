@@ -57,6 +57,11 @@ def _clean(**values: Any) -> dict[str, Any]:
     return {key: value for key, value in values.items() if value is not None}
 
 
+def _field(value: Any) -> Any:
+    """``"@column"`` names the column ``column`` (the reference convention)."""
+    return value[1:] if isinstance(value, str) and value.startswith("@") else value
+
+
 class Column(Mapping[str, Any]):
     """An immutable column definition; every method returns a new ``Column``.
 
@@ -166,7 +171,7 @@ class Column(Mapping[str, Any]):
 
             col.number("amount").fmt_column("row_fmt")
         """
-        return self._with(fmt_column=column)
+        return self._with(fmt_column=_field(column))
 
     def total_fmt(self, code: str) -> Column:
         """Format the total row differently from the cells.
@@ -375,7 +380,7 @@ class Column(Mapping[str, Any]):
 
             col.text("estimate").footnote("estimate_note")
         """
-        return self._with(footnote=column)
+        return self._with(footnote=_field(column))
 
     def sort_by(self, column: str) -> Column:
         """Sort this column by another column's values.
@@ -386,7 +391,7 @@ class Column(Mapping[str, Any]):
 
             col.sparkline("trend").sort_by("growth")
         """
-        return self._with(sort_by=column)
+        return self._with(sort_by=_field(column))
 
     def highlight(self, color: str) -> Column:
         """Shade the column with a background colour band.
@@ -431,7 +436,7 @@ class Column(Mapping[str, Any]):
             col.text("title").link("url", label="Open", new_tab=True)
         """
         return self._with(
-            **_clean(link=column or self._name, link_label=label, link_new_tab=new_tab or None),
+            **_clean(link=_field(column) or self._name, link_label=label, link_new_tab=new_tab or None),
         )
 
     def image(
@@ -454,7 +459,7 @@ class Column(Mapping[str, Any]):
             col.text("poster").image(height=48)
         """
         return self._with(
-            image=column or self._name, **_merge_options("image_options", height=height, width=width, alt=alt)
+            image=_field(column) or self._name, **_merge_options("image_options", height=height, width=width, alt=alt)
         )
 
     def logo(self, column: str | None = None, *, height: float | None = None) -> Column:
@@ -464,7 +469,7 @@ class Column(Mapping[str, Any]):
 
             col.text("team").logo(height=20)
         """
-        return self._with(logo=column or self._name, **_merge_options("logo_options", height=height))
+        return self._with(logo=_field(column) or self._name, **_merge_options("logo_options", height=height))
 
     def template(self, value: str, **formats: str) -> Column:
         """Render the cell with a template, e.g. ``"{last}, {first}"``.
@@ -537,8 +542,8 @@ class Column(Mapping[str, Any]):
         """Shade each cell with a background colour for its value.
 
         :param scale: a named preset (``"green"``, ``"blue"``, ``"red"``,
-            ``"orange"``, ``"purple"``, ``"grey"``/``"gray"``) or a list of colours.
-        :param stops: explicit colour stops.
+            ``"orange"``, ``"purple"``, ``"grey"``/``"gray"``), a list of colours,
+            or ``"@column"`` to colour each cell from that column's values.
         :param conditional_colors: a rule column name supplying per-row colours.
         :param scale_column: take the scale range from another column.
         :param min: lower bound of the scale.
@@ -548,15 +553,19 @@ class Column(Mapping[str, Any]):
         Example::
 
             col.number("rating").color(scale="green", min=6, max=10)
+            col.chip("status").color(scale="@status_color")
         """
+        if isinstance(scale, str) and scale.startswith("@"):
+            # `scale="@column"` colours each cell from that column's values.
+            conditional_colors, scale = scale[1:], None
         return self._with(
             viz="color",
             **_merge_options(
                 "color_options",
                 color_scale=scale,
                 color_stops=stops,
-                conditional_colors=conditional_colors,
-                scale_column=scale_column,
+                conditional_colors=_field(conditional_colors),
+                scale_column=_field(scale_column),
                 min=min,
                 max=max,
                 midpoint=midpoint,
@@ -660,7 +669,8 @@ class Column(Mapping[str, Any]):
 
         :param min_width: minimum chip width (a number of pixels or a CSS length).
         :param conditional_colors: a rule column name supplying per-row colours.
-        :param scale: a colour scale for numeric chips.
+        :param scale: a colour scale for numeric chips, or ``"@column"`` to colour
+            each chip from that column's values.
         :param stops: explicit colour stops.
         :param scale_column: take the scale range from another column.
         :param min: lower bound of the colour scale.
@@ -671,16 +681,19 @@ class Column(Mapping[str, Any]):
 
             col.chip("status", min_width=72)
             col.number("aqi").chip(scale="red", min=0, max=250)
+            col.chip("status").chip(scale="@status_color")
         """
+        if isinstance(scale, str) and scale.startswith("@"):
+            conditional_colors, scale = scale[1:], None
         changes: dict[str, Any] = {"viz": "chip"}
         chip = _clean(min_width=min_width)
         if chip:
             changes["chip_options"] = {**dict(self._spec.get("chip_options") or {}), **chip}
         color = _clean(
-            conditional_colors=conditional_colors,
+            conditional_colors=_field(conditional_colors),
             color_scale=scale,
             color_stops=stops,
-            scale_column=scale_column,
+            scale_column=_field(scale_column),
             min=min,
             max=max,
             midpoint=midpoint,

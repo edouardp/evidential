@@ -42,6 +42,8 @@ project as a package for `uv sync`/editable installs.
 
 The `uv_build` build requirement is a bounded range (`>=0.11.7,<0.12.0`) because
 the backend versions in lockstep with `uv`; keep it in step when bumping `uv`.
+CI pins `uv` to `0.11.7` and uses locked installs rather than upgrading the tool
+or resolving dependencies during validation.
 
 Option 2 was rejected as more configuration for the same result here: hatchling's
 default sdist is VCS-wide, so it would need an `include`/`exclude` list to satisfy

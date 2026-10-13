@@ -63,6 +63,10 @@ frontend-dev: ## Rebuild the bundle on every change
 frontend-test: ## Run the JavaScript formatting/colour/renderer tests
 	cd frontend && node --test test_*.js
 
+.PHONY: frontend-check
+frontend-check: ## Verify committed renderer assets match a fresh build
+	cd frontend && npm run check-bundle
+
 # ============================================================================
 # Notebooks
 # ============================================================================
@@ -230,7 +234,7 @@ clean-all: clean ## Remove caches, build artifacts, the virtualenv and node_modu
 all: validate ## Run full validation
 
 .PHONY: validate
-validate: lint check-notebooks test build ## Run lint, notebook checks, tests and a build
+validate: lint check-notebooks test frontend-check build ## Run lint, notebook checks, tests and a build
 	@echo ""
 	@echo "Validation complete."
 

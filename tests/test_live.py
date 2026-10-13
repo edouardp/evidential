@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import sys
 from types import SimpleNamespace
 
 import duckdb
@@ -28,6 +29,17 @@ class FakeTemplate:
     def __init__(self, strings: list[str], values: list[object]) -> None:
         self.strings = tuple(strings)
         self.interpolations = tuple(SimpleNamespace(value=value) for value in values)
+
+
+@pytest.mark.skipif(sys.version_info < (3, 14), reason="t-strings require Python 3.14")
+def test_real_t_string_control_updates(con) -> None:
+    control = FakeControl(2)
+    template = eval("t'SELECT {control} AS value'", {"control": control})
+    live = LiveEvidentialTable(con, template, bind_controls=True)
+    assert live.rows == [{"value": 2}]
+    control.update(3)
+    assert live.rows == [{"value": 3}]
+    live.close()
 
 
 @pytest.fixture()

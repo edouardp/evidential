@@ -3,7 +3,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "esbuild src/index.js --bundle --format=esm --minify --legal-comments=linked --outfile=../src/evidential/static/table.js && cp src/table.css ../src/evidential/static/table.css",
+    "build": "node build.js",
+    "check-bundle": "node check_bundle.js",
     "dev": "esbuild src/index.js --bundle --format=esm --sourcemap --outfile=../src/evidential/static/table.js --watch",
     "test": "node --test test_*.js"
   },

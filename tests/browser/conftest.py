@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import functools
 import http.server
+import os
 import socket
 import threading
 from pathlib import Path
@@ -38,13 +39,15 @@ def live_server():
         thread.join(timeout=5)
 
 
-def _launch(playwright):
+def _launch(playwright, *, required=False):
     """Prefer an installed browser so tests need no `playwright install`."""
     for kwargs in ({"channel": "msedge"}, {"channel": "chrome"}, {}):
         try:
             return playwright.chromium.launch(headless=True, **kwargs)
         except Exception:  # pragma: no cover - depends on the machine
             continue
+    if required:
+        pytest.fail("A Chromium browser is required; run uv run playwright install chromium")
     return None
 
 
@@ -53,7 +56,7 @@ def browser():
     from playwright.sync_api import sync_playwright
 
     with sync_playwright() as playwright:
-        browser = _launch(playwright)
+        browser = _launch(playwright, required=os.environ.get("EVIDENTIAL_REQUIRE_BROWSER") == "1")
         if browser is None:
             pytest.skip("No Chromium-based browser (msedge/chrome/chromium) available")
         yield browser

@@ -9,7 +9,7 @@ permissions:
   contents: read
 
 jobs:
-  test:
+  quality:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -30,13 +30,13 @@ jobs:
 
       - name: Install dependencies
         run: |
-          python -m pip install --upgrade uv
-          uv sync
+          python -m pip install uv==0.11.7
+          uv sync --locked
           npm --prefix frontend ci
 
       - name: Install checkmake
         run: |
-          go install github.com/mrtazz/checkmake/cmd/checkmake@latest
+          go install github.com/mrtazz/checkmake/cmd/checkmake@v0.3.2
           echo "$(go env GOPATH)/bin" >> "$GITHUB_PATH"
 
       - name: Lint (ruff, bandit, pip-audit, pyrefly, shellcheck, checkmake, rumdl)
@@ -45,11 +45,52 @@ jobs:
       - name: Notebook checks
         run: make check-notebooks
 
-      - name: Python tests
-        run: make test-python
+      - name: Verify committed frontend assets
+        run: make frontend-check
 
       - name: Frontend tests
         run: make frontend-test
 
       - name: Build and verify the distributions
         run: make check-artifact
+
+  python:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ["3.11", "3.12", "3.13", "3.14"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Install locked dependencies
+        run: |
+          python -m pip install uv==0.11.7
+          uv sync --locked
+      - name: Python tests
+        run: make test-python
+
+  browser:
+    runs-on: ubuntu-latest
+    env:
+      EVIDENTIAL_REQUIRE_BROWSER: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Install locked dependencies and Chromium
+        run: |
+          python -m pip install uv==0.11.7
+          uv sync --locked
+          npm --prefix frontend ci
+          uv run playwright install --with-deps chromium
+      - name: Browser tests
+        run: make test-browser

@@ -60,3 +60,14 @@ def test_ci_workflow_runs_the_gates() -> None:
     assert "make test-python" in workflow
     assert "make frontend-test" in workflow
     assert "make check-artifact" in workflow
+    assert "make frontend-check" in workflow
+    assert "make test-browser" in workflow
+    assert 'EVIDENTIAL_REQUIRE_BROWSER: "1"' in workflow
+    assert "playwright install --with-deps chromium" in workflow
+    classifiers = PROJECT["classifiers"]
+    supported = [value.rsplit(" ", 1)[-1] for value in classifiers if re.search(r" :: 3\.\d+$", value)]
+    for version in supported:
+        assert f'"{version}"' in workflow
+    assert "uv sync --locked" in workflow
+    assert "pip install --upgrade uv" not in workflow
+    assert "checkmake@latest" not in workflow

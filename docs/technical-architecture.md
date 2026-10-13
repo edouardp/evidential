@@ -648,7 +648,10 @@ flowchart TD
   with 2px clearance and does not grow the row).
 
 `make validate` runs lint, `marimo check` on every notebook, both unit suites,
-and builds the wheel. `make test-browser` runs the Playwright suite.
+checks committed frontend freshness, and builds the wheel. `make test-browser`
+runs the Playwright suite. CI runs quality/build checks, Python tests on
+3.11–3.14, and required Playwright Chromium tests in separate jobs using pinned
+tools and locked dependency installs.
 
 ## 10. Performance notes and limits
 

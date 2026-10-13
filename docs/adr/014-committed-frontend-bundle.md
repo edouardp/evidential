@@ -31,6 +31,11 @@ Chosen option: "Commit the bundle". `frontend/src/` is the source of truth;
 `src/evidential/static/table.js` and copies `table.css`, and both files are
 committed. The wheel therefore contains the renderer with no build step.
 
+`frontend/build.js` defines the build flags once for both writing the package
+assets and checking freshness. `make frontend-check` builds in a temporary
+directory and compares bytes without rewriting the committed assets. CI runs
+this check before any packaging step can replace stale files.
+
 ### Consequences
 
 - Good, because the Python package works with no JS toolchain.

@@ -23,9 +23,9 @@ app = marimo.App(width="full")
 def _():
     import marimo as mo
 
-    from evidential import EvidentialTable
+    from evidential import EvidentialTable, col
 
-    return EvidentialTable, mo
+    return EvidentialTable, col, mo
 
 
 @app.cell
@@ -37,7 +37,7 @@ def _(mo):
     the header and every cell — like a "projection" or "total" column:
 
     ```python
-    column_config={"usd_2020": {"title": "2020 Projection", "highlight": "#fde8d0"}}
+    columns=[col.number("usd_2020", fmt="num0", title="2020 Projection").highlight("#fde8d0")]
     ```
 
     A whole **column group** can be highlighted by giving its `column_groups`
@@ -67,7 +67,7 @@ def _():
 
 
 @app.cell
-def _(EvidentialTable, mo, records):
+def _(EvidentialTable, col, mo, records):
     projection = mo.ui.anywidget(
         EvidentialTable(
             records,
@@ -78,17 +78,17 @@ def _(EvidentialTable, mo, records):
                 "Billions of USD": ["usd_2017", "usd_2018", "usd_2019", "usd_2020"],
                 "Percent of GDP": ["pct_2017", "pct_2018", "pct_2019", "pct_2020"],
             },
-            column_config={
-                "country": {"align": "left"},
-                "usd_2017": {"title": "2017", "fmt": "num0"},
-                "usd_2018": {"title": "2018", "fmt": "num0"},
-                "usd_2019": {"title": "2019", "fmt": "num0"},
-                "usd_2020": {"title": "2020\nProjection", "fmt": "num0", "highlight": "#fde8d0"},
-                "pct_2017": {"title": "2017", "fmt": "num1"},
-                "pct_2018": {"title": "2018", "fmt": "num1"},
-                "pct_2019": {"title": "2019", "fmt": "num1"},
-                "pct_2020": {"title": "2020\nProjection", "fmt": "num1", "highlight": "#fde8d0"},
-            },
+            columns=[
+                col.text("country"),
+                col.number("usd_2017", fmt="num0", title="2017"),
+                col.number("usd_2018", fmt="num0", title="2018"),
+                col.number("usd_2019", fmt="num0", title="2019"),
+                col.number("usd_2020", fmt="num0", title="2020\nProjection").highlight("#fde8d0"),
+                col.number("pct_2017", fmt="num1", title="2017"),
+                col.number("pct_2018", fmt="num1", title="2018"),
+                col.number("pct_2019", fmt="num1", title="2019"),
+                col.number("pct_2020", fmt="num1", title="2020\nProjection").highlight("#fde8d0"),
+            ],
         )
     )
     projection
@@ -108,7 +108,7 @@ def _(mo):
 
 
 @app.cell
-def _(EvidentialTable, mo, records):
+def _(EvidentialTable, col, mo, records):
     group_band = mo.ui.anywidget(
         EvidentialTable(
             records,
@@ -118,17 +118,17 @@ def _(EvidentialTable, mo, records):
                 "History": ["usd_2017", "usd_2018", "usd_2019"],
                 "Projected": {"columns": ["usd_2020"], "highlight": "#eef2ff"},
             },
-            column_config={
-                "country": {"align": "left"},
-                "usd_2017": {"title": "2017", "fmt": "num0"},
-                "usd_2018": {"title": "2018", "fmt": "num0"},
-                "usd_2019": {"title": "2019", "fmt": "num0"},
-                "usd_2020": {"title": "2020", "fmt": "num0"},
-                "pct_2017": {"hide": True},
-                "pct_2018": {"hide": True},
-                "pct_2019": {"hide": True},
-                "pct_2020": {"hide": True},
-            },
+            columns=[
+                col.text("country"),
+                col.number("usd_2017", fmt="num0", title="2017"),
+                col.number("usd_2018", fmt="num0", title="2018"),
+                col.number("usd_2019", fmt="num0", title="2019"),
+                col.number("usd_2020", fmt="num0", title="2020"),
+                col.auto("pct_2017").hide(),
+                col.auto("pct_2018").hide(),
+                col.auto("pct_2019").hide(),
+                col.auto("pct_2020").hide(),
+            ],
         )
     )
     group_band

@@ -19,9 +19,9 @@ def _():
     import marimo as mo
     import duckdb
 
-    from evidential import EvidentialTable
+    from evidential import EvidentialTable, col
 
-    return EvidentialTable, duckdb, mo
+    return EvidentialTable, col, duckdb, mo
 
 
 @app.cell
@@ -60,7 +60,7 @@ def _(mo):
 
 
 @app.cell
-def _(EvidentialTable, connection, mo):
+def _(EvidentialTable, col, connection, mo):
     scales = mo.ui.anywidget(
         EvidentialTable(
             connection.sql(
@@ -84,72 +84,44 @@ def _(EvidentialTable, connection, mo):
             title="Color scale options",
             page_size=10,
             row_lines=False,
-            column_config={
-                "label": {"title": "Row", "align": "left"},
-                "value": {"title": "Value", "fmt": "num0", "align": "right"},
+            columns=[
+                col.text("label", title="Row"),
+                col.number("value", fmt="num0", title="Value"),
                 # default two-colour scale
-                "default_scale": {"title": "Default", "fmt": "num0", "viz": "color"},
+                col.number("default_scale", fmt="num0", title="Default").color(),
                 # explicit list of colours
-                "custom_list": {
-                    "title": "Custom list",
-                    "fmt": "num0",
-                    "viz": "color",
-                    "color_scale": ["#fee2e2", "#fef9c3", "#bbf7d0", "#15803d"],
-                },
+                col.number("custom_list", fmt="num0", title="Custom list").color(
+                    scale=["#fee2e2", "#fef9c3", "#bbf7d0", "#15803d"]
+                ),
                 # named preset
-                "named_preset": {
-                    "title": "Preset (blue)",
-                    "fmt": "num0",
-                    "viz": "color",
-                    "color_scale": "blue",
-                },
+                col.number("named_preset", fmt="num0", title="Preset (blue)").color(scale="blue"),
                 # clamp values above the max
-                "bounded": {
-                    "title": "Bounded 0–50",
-                    "fmt": "num0",
-                    "viz": "color",
-                    "color_scale": ["#eff6ff", "#1d4ed8"],
-                    "color_options": {"min": 0, "max": 50},
-                },
+                col.number("bounded", fmt="num0", title="Bounded 0–50").color(
+                    scale=["#eff6ff", "#1d4ed8"], min=0, max=50
+                ),
                 # diverging scale anchored at 50
-                "diverging": {
-                    "title": "Diverging @50",
-                    "fmt": "num0",
-                    "viz": "color",
-                    "color_scale": ["#dc2626", "#f8fafc", "#16a34a"],
-                    "color_options": {"midpoint": 50, "min": 0, "max": 100},
-                },
+                col.number("diverging", fmt="num0", title="Diverging @50").color(
+                    scale=["#dc2626", "#f8fafc", "#16a34a"], min=0, max=100, midpoint=50
+                ),
                 # explicit value→colour breakpoints
-                "stops": {
-                    "title": "Color stops",
-                    "fmt": "num0",
-                    "viz": "color",
-                    "color_options": {
-                        "color_stops": [
-                            {"value": 0, "color": "#7f1d1d"},
-                            {"value": 50, "color": "#fbbf24"},
-                            {"value": 100, "color": "#065f46"},
-                        ]
-                    },
-                },
+                col.number("stops", fmt="num0", title="Color stops").color(
+                    stops=[
+                        {"value": 0, "color": "#7f1d1d"},
+                        {"value": 50, "color": "#fbbf24"},
+                        {"value": 100, "color": "#065f46"},
+                    ]
+                ),
                 # scale by a different column than the displayed value
-                "scaled_by_other": {
-                    "title": "Scaled by 'other'",
-                    "fmt": "num0",
-                    "viz": "color",
-                    "color_scale": "purple",
-                    "color_options": {"scale_column": "other", "min": 0, "max": 100},
-                },
+                col.number("scaled_by_other", fmt="num0", title="Scaled by 'other'").color(
+                    scale="purple", scale_column="other", min=0, max=100
+                ),
                 # per-row colours (conditional_colors names the hex column)
-                "conditional": {
-                    "title": "Conditional colors",
-                    "fmt": "num0",
-                    "viz": "color",
-                    "color_options": {"conditional_colors": "band"},
-                },
-                "other": {"hide": True},
-                "band": {"hide": True},
-            },
+                col.number("conditional", fmt="num0", title="Conditional colors").color(
+                    conditional_colors="band"
+                ),
+                col.auto("other").hide(),
+                col.auto("band").hide(),
+            ],
         )
     )
     scales

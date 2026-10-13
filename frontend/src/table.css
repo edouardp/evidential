@@ -74,7 +74,7 @@
   background: color-mix(in srgb, var(--et-surface) 55%, transparent);
   backdrop-filter: blur(1px);
   z-index: 40;
-  font-size: 0.8rem;
+  font-size: 1.07em;
   color: var(--et-muted);
   pointer-events: none;
   opacity: 0;
@@ -105,17 +105,17 @@
   margin-bottom: 0.35rem;
 }
 .et-title {
-  font-size: 1.05rem;
+  font-size: 1.4em;
   font-weight: 600;
 }
 .et-subtitle {
   color: var(--et-muted);
-  font-size: 0.8rem;
+  font-size: 1.07em;
   margin-top: 0.1rem;
 }
 .et-info, .et-info-link {
   color: var(--et-muted);
-  font-size: 0.8rem;
+  font-size: 1.07em;
   cursor: help;
   text-decoration: none;
 }
@@ -164,7 +164,7 @@
   background: transparent;
 }
 .et-page-btn:active { transform: scale(0.94); }
-.et-icon-btn { padding: 0.22rem 0.5rem; font-size: 0.95rem; }
+.et-icon-btn { padding: 0.22rem 0.5rem; font-size: 1.27em; }
 .et-btn:hover, .et-icon-btn:hover { background: var(--et-hover); }
 .et-btn:disabled { opacity: 0.4; cursor: default; }
 
@@ -285,7 +285,7 @@
 .et-th:not(.et-th-group):hover { background: var(--et-hover); }
 .et-th-inner { display: inline-flex; align-items: center; gap: 0.3rem; }
 .et-th-sorted { color: var(--et-accent); }
-.et-sort-arrow { font-size: 0.6rem; }
+.et-sort-arrow { font-size: 0.8em; }
 
 /* ----------------------------------------------------------------- rows --- */
 .et-td {
@@ -347,7 +347,7 @@
 .et-cell-image { height: 1.25em; width: auto; border-radius: 3px; }
 .et-cell-logo { height: 1.25em; width: auto; border-radius: 3px; }
 .et-td-chevron { width: 1.5rem; text-align: center; color: var(--et-muted); }
-.et-row-chevron { font-size: 1.1rem; }
+.et-row-chevron { font-size: 1.47em; }
 
 /* ------------------------------------------------------------ chevron --- */
 .et-chevron {
@@ -358,7 +358,7 @@
   font-family: inherit;
   display: inline-block;
   margin-right: 0.35rem;
-  font-size: 0.6rem;
+  font-size: 0.8em;
   color: var(--et-muted);
   transition: transform 0.15s ease;
 }
@@ -485,7 +485,7 @@ tbody tr:last-child .et-bar-center .et-bar-axis { bottom: var(--et-bar-pad, 0); 
 .et-caption {
   margin-top: 0.35rem;
   color: var(--et-muted);
-  font-size: 0.75rem;
+  font-size: 1em;
   line-height: 1.35;
 }
 .et-caption:empty { display: none; }
@@ -494,7 +494,7 @@ tbody tr:last-child .et-bar-center .et-bar-axis { bottom: var(--et-bar-pad, 0); 
 .et-footnotes {
   margin-top: 0.35rem;
   color: var(--et-muted);
-  font-size: 0.75rem;
+  font-size: 1em;
 }
 .et-footnotes-list {
   margin: 0;
@@ -575,7 +575,7 @@ tbody tr:last-child .et-bar-center .et-bar-axis { bottom: var(--et-bar-pad, 0); 
 /* The section is bounded by the same rule that separates the header from the
    columns, with matching vertical separators between the blocks. */
 .et-stats-row .et-stats-cell {
-  font-size: 0.72rem;
+  font-size: 0.96em;
   line-height: 1.35;
   color: var(--et-muted);
   text-align: left;
@@ -612,7 +612,7 @@ tbody tr:last-child .et-bar-center .et-bar-axis { bottom: var(--et-bar-pad, 0); 
   background: transparent;
   color: var(--et-text);
   font: inherit;
-  font-size: 0.55rem;
+  font-size: 0.73em;
   line-height: 1;
   min-height: 1.5rem;
   letter-spacing: 0.15em;
@@ -622,14 +622,14 @@ tbody tr:last-child .et-bar-center .et-bar-axis { bottom: var(--et-bar-pad, 0); 
 .et-stats-cycle:hover { background: var(--et-hover); }
 .et-stats-cycle:focus-visible { outline: 2px solid var(--et-accent); }
 .et-stats-type {
-  font-size: 0.68rem;
+  font-size: 0.91em;
   font-weight: 600;
   letter-spacing: 0.03em;
   color: var(--et-text);
 }
 .et-stats-name {
   font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-  font-size: 0.68rem;
+  font-size: 0.91em;
   color: var(--et-muted);
   overflow-wrap: anywhere;
 }
@@ -647,7 +647,7 @@ tbody tr:last-child .et-bar-center .et-bar-axis { bottom: var(--et-bar-pad, 0); 
   gap: 0.75rem;
   padding: 0.45rem 0.15rem;
   color: var(--et-muted);
-  font-size: 0.78rem;
+  font-size: 1.04em;
 }
 /* With no pager the footer has no row of its own, so when footnotes/caption sit
    below the table the actions float at the bottom-right and that content is not
@@ -666,7 +666,7 @@ tbody tr:last-child .et-bar-center .et-bar-axis { bottom: var(--et-bar-pad, 0); 
   right: 0.6rem;
   display: none;
   /* Beat `.et-text-btn { font: inherit }`, which is later in this file. */
-  font-size: 1.3rem;
+  font-size: 1.73em;
   line-height: 1;
   color: var(--et-muted);
   padding: 0.15rem 0.4rem;
@@ -723,7 +723,7 @@ tbody tr:last-child .et-bar-center .et-bar-axis { bottom: var(--et-bar-pad, 0); 
   justify-content: center;
   background: color-mix(in srgb, var(--et-surface) 30%, transparent);
   color: var(--et-muted);
-  font-size: 0.85rem;
+  font-size: 1.13em;
   pointer-events: none;
 }
 

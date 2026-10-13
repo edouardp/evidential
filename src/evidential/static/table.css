@@ -21,8 +21,10 @@
   --et-link: #2563eb;
   --et-negative: #dc2626;
   --et-accent: #2563eb;
-  /* Evidence uses Tailwind's text-xs for the table. */
-  --et-font-size: 0.75rem;
+  /* Evidence uses Tailwind's text-xs for the table; `font_size` can raise or
+     lower it (absolutely, or relatively as `+N` / `-N` steps). */
+  --et-font-size-base: 0.75rem;
+  --et-font-size: var(--et-font-size-base);
 }
 
 .et-root {
@@ -72,7 +74,7 @@
   background: color-mix(in srgb, var(--et-surface) 55%, transparent);
   backdrop-filter: blur(1px);
   z-index: 40;
-  font-size: 0.8rem;
+  font-size: 1.07em;
   color: var(--et-muted);
   pointer-events: none;
   opacity: 0;
@@ -103,17 +105,17 @@
   margin-bottom: 0.35rem;
 }
 .et-title {
-  font-size: 1.05rem;
+  font-size: 1.4em;
   font-weight: 600;
 }
 .et-subtitle {
   color: var(--et-muted);
-  font-size: 0.8rem;
+  font-size: 1.07em;
   margin-top: 0.1rem;
 }
 .et-info, .et-info-link {
   color: var(--et-muted);
-  font-size: 0.8rem;
+  font-size: 1.07em;
   cursor: help;
   text-decoration: none;
 }
@@ -162,7 +164,7 @@
   background: transparent;
 }
 .et-page-btn:active { transform: scale(0.94); }
-.et-icon-btn { padding: 0.22rem 0.5rem; font-size: 0.95rem; }
+.et-icon-btn { padding: 0.22rem 0.5rem; font-size: 1.27em; }
 .et-btn:hover, .et-icon-btn:hover { background: var(--et-hover); }
 .et-btn:disabled { opacity: 0.4; cursor: default; }
 
@@ -283,7 +285,7 @@
 .et-th:not(.et-th-group):hover { background: var(--et-hover); }
 .et-th-inner { display: inline-flex; align-items: center; gap: 0.3rem; }
 .et-th-sorted { color: var(--et-accent); }
-.et-sort-arrow { font-size: 0.6rem; }
+.et-sort-arrow { font-size: 0.8em; }
 
 /* ----------------------------------------------------------------- rows --- */
 .et-td {
@@ -345,7 +347,7 @@
 .et-cell-image { height: 1.25em; width: auto; border-radius: 3px; }
 .et-cell-logo { height: 1.25em; width: auto; border-radius: 3px; }
 .et-td-chevron { width: 1.5rem; text-align: center; color: var(--et-muted); }
-.et-row-chevron { font-size: 1.1rem; }
+.et-row-chevron { font-size: 1.47em; }
 
 /* ------------------------------------------------------------ chevron --- */
 .et-chevron {
@@ -356,7 +358,7 @@
   font-family: inherit;
   display: inline-block;
   margin-right: 0.35rem;
-  font-size: 0.6rem;
+  font-size: 0.8em;
   color: var(--et-muted);
   transition: transform 0.15s ease;
 }
@@ -367,18 +369,21 @@
    back out by the same amount, so the value keeps its position but the bar fills
    the row, leaving ~2px to the separators, without growing the cell. */
 .et-bar-cell {
+  /* The bar area's 50% must line up with the grid's content-box centre, so the
+     right padding is shared between the cell and the centred bar area. */
+  --et-bar-pad-right: 0.75rem;
   position: relative;
   display: block;
   min-width: 60px;
-  margin: -0.25rem -0.75rem -0.25rem 0;
-  padding: 0.25rem 0.75rem 0.25rem 0;
+  margin: -0.25rem calc(-1 * var(--et-bar-pad-right)) -0.25rem 0;
+  padding: 0.25rem var(--et-bar-pad-right) 0.25rem 0;
 }
-.et-bar-wrap { position: absolute; inset: 2px 4px 2px 0; }
+.et-bar-wrap { position: absolute; inset: 0 4px 0 0; }
 .et-bar-negative { left: 4px; right: 0; }
 .et-bar {
   position: absolute;
-  top: 0;
-  bottom: 0;
+  top: var(--et-bar-pad, 2px);
+  bottom: var(--et-bar-pad, 2px);
   left: 0;
   min-width: 1px;
   /* rectangular (no rounded corners) */
@@ -389,6 +394,55 @@
 .et-bar-label { position: relative; z-index: 1; }
 .et-hidden { visibility: hidden; }
 .et-no-viz .et-bar-cell { display: none; }
+
+/* Zero-centred "diverging" bar (`.bar(center=True)`): a centre line, the bar
+   growing left (negative) or right (positive) by magnitude, and the value on
+   the opposite side of the line (the Economist's league-table bar). */
+/* Full height: the line and bars run edge-to-edge so the centre line reads as
+   one continuous rule down the column (the cell's negative margins pull it into
+   the row padding, joining the neighbouring rows). */
+/* The value and the bar share the cell 50/50: a two-column grid puts the label in
+   the half opposite the bar (the label is the in-flow item that gives the cell its
+   height), while the axis and bar are absolutely positioned inside it. */
+.et-bar-center {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  align-items: center;
+  min-width: 8rem;
+}
+/* Full height: the line and bars run edge-to-edge so the centre line joins the
+   neighbouring rows into one rule down the column. */
+.et-bar-center .et-bar-wrap { inset: 0 var(--et-bar-pad-right) 0 0; }
+.et-bar-center .et-bar { top: var(--et-bar-pad, 0); bottom: var(--et-bar-pad, 0); }
+/* Under `pad`, the centre line's ends line up with the first/last bar: it is
+   inset only at the top of the first row and the bottom of the last. */
+tbody tr:first-child .et-bar-center .et-bar-axis { top: var(--et-bar-pad, 0); }
+tbody tr:last-child .et-bar-center .et-bar-axis { bottom: var(--et-bar-pad, 0); }
+.et-bar-center .et-bar-axis {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 1px;
+  background: color-mix(in srgb, CanvasText 30%, transparent);
+}
+.et-bar-center .et-bar-right { left: 50%; }
+.et-bar-center .et-bar-left { left: auto; right: 50%; }
+.et-bar-center .et-bar-label {
+  position: relative;
+  z-index: 1;
+  white-space: nowrap;
+}
+.et-bar-center .et-bar-label-left {
+  grid-column: 1;
+  justify-self: end;
+  padding-right: 0.4rem;
+}
+.et-bar-center .et-bar-label-right {
+  grid-column: 2;
+  justify-self: start;
+  padding-left: 0.4rem;
+}
 
 /* Rotated headers (ALA): vertical 90° CCW, or oblique at a given angle. */
 .et-th-vertical {
@@ -431,7 +485,7 @@
 .et-caption {
   margin-top: 0.35rem;
   color: var(--et-muted);
-  font-size: 0.75rem;
+  font-size: 1em;
   line-height: 1.35;
 }
 .et-caption:empty { display: none; }
@@ -440,7 +494,7 @@
 .et-footnotes {
   margin-top: 0.35rem;
   color: var(--et-muted);
-  font-size: 0.75rem;
+  font-size: 1em;
 }
 .et-footnotes-list {
   margin: 0;
@@ -521,7 +575,7 @@
 /* The section is bounded by the same rule that separates the header from the
    columns, with matching vertical separators between the blocks. */
 .et-stats-row .et-stats-cell {
-  font-size: 0.72rem;
+  font-size: 0.96em;
   line-height: 1.35;
   color: var(--et-muted);
   text-align: left;
@@ -558,7 +612,7 @@
   background: transparent;
   color: var(--et-text);
   font: inherit;
-  font-size: 0.55rem;
+  font-size: 0.73em;
   line-height: 1;
   min-height: 1.5rem;
   letter-spacing: 0.15em;
@@ -568,14 +622,14 @@
 .et-stats-cycle:hover { background: var(--et-hover); }
 .et-stats-cycle:focus-visible { outline: 2px solid var(--et-accent); }
 .et-stats-type {
-  font-size: 0.68rem;
+  font-size: 0.91em;
   font-weight: 600;
   letter-spacing: 0.03em;
   color: var(--et-text);
 }
 .et-stats-name {
   font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-  font-size: 0.68rem;
+  font-size: 0.91em;
   color: var(--et-muted);
   overflow-wrap: anywhere;
 }
@@ -593,7 +647,7 @@
   gap: 0.75rem;
   padding: 0.45rem 0.15rem;
   color: var(--et-muted);
-  font-size: 0.78rem;
+  font-size: 1.04em;
 }
 /* With no pager the footer has no row of its own, so when footnotes/caption sit
    below the table the actions float at the bottom-right and that content is not
@@ -612,7 +666,7 @@
   right: 0.6rem;
   display: none;
   /* Beat `.et-text-btn { font: inherit }`, which is later in this file. */
-  font-size: 1.3rem;
+  font-size: 1.73em;
   line-height: 1;
   color: var(--et-muted);
   padding: 0.15rem 0.4rem;
@@ -669,7 +723,7 @@
   justify-content: center;
   background: color-mix(in srgb, var(--et-surface) 30%, transparent);
   color: var(--et-muted);
-  font-size: 0.85rem;
+  font-size: 1.13em;
   pointer-events: none;
 }
 

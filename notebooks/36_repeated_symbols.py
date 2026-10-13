@@ -209,12 +209,12 @@ def _(EvidentialTable, col, mo, ratings, settings):
                 row_lines=False,
                 border=False,
                 stretch=False,
-                width="720px",
+                #width="800px"
             ),
             columns=[
                 col.text("place"),
                 col.rating("stars", max=5, title="Of 5"),
-                col.symbols("score", shape="square", title="shape=circle"),
+                col.symbols("score", shape="square", title="shape=square", color="green"),
                 col.rating("score", max=10, title="Of 10", color="#eab308"),
                 col.symbols("score", symbol="⭐", title="Emoji"),
                 col.number("score").title("Image").symbols(image=dot, gap=0.1),

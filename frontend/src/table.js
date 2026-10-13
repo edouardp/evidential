@@ -4,77 +4,22 @@
 // from Python and renders a sortable, searchable, formattable table with
 // conditional visualizations, collapsible groups, frozen columns, pagination,
 // CSV export, and a fullscreen dialog.
-import { formatValue, formatTitle, BASE_AUTO_FORMATS } from "./format.js";
+import { HoldController, bindRowSelection } from "./interactions.js";
+export { holdInterval } from "./interactions.js";
+import { LoadingController } from "./loading.js";
+import { TableViewport } from "./viewport.js";
+import { h, optString, inlineMarkdown, withFigure, formatRowRanges } from "./dom.js";
+import { hiddenColumns, orderedColumns, visibleRows, searchRows, sortRows, paginateRows,
+  columnStats, computeRowspans, shaded, groupPath,
+  decimalPlaces, buildHeaderLevels } from "./rows.js";
+import { renderCell, alignStyle, footnoteMark } from "./cells.js";
+import { formatValue, formatTitle } from "./format.js";
 import {
   calculateVizRanges,
   calculateFormatRanges,
   buildColorVizScale,
-  calculateColorStyles,
   colorStylesFromHex,
-  contrastTextColor,
 } from "./color.js";
-
-const ROW_HEIGHT = 28;
-const MODAL_OVERHEAD = 150;
-
-// Loading transition timing (ms).
-const LOADING_SHOW_DELAY = 180; // don't show the overlay for updates faster than this
-const FADE_MS = 600; // fade current data out and "Processing…" in over this long
-const LOADING_HIDE_DEBOUNCE = 120; // settle time before revealing new data
-
-// Pagination press-and-hold repeat schedule.
-const HOLD_DELAY = 700; // wait before auto-repeat starts
-const HOLD_START_INTERVAL = 700; // slowest repeat interval (ms)
-const HOLD_END_INTERVAL = 100; // fastest repeat interval (ms)
-const HOLD_RAMP = 2300; // time spent easing from slow to fast (reaches 100ms at 3s total)
-
-/** Repeat interval (ms) after the pointer has been held for `elapsedMs`. */
-export function holdInterval(elapsedMs) {
-  const t = Math.min(Math.max(elapsedMs - HOLD_DELAY, 0), HOLD_RAMP);
-  return HOLD_START_INTERVAL + (HOLD_END_INTERVAL - HOLD_START_INTERVAL) * (t / HOLD_RAMP);
-}
-
-function h(tag, attrs = {}, children = []) {
-  const el = document.createElement(tag);
-  for (const [k, v] of Object.entries(attrs)) {
-    if (v === null || v === undefined || v === false) continue;
-    if (k === "class") el.className = v;
-    else if (k === "dataset") Object.assign(el.dataset, v);
-    else if (k === "style" && typeof v === "object") Object.assign(el.style, v);
-    else if (k.startsWith("on") && typeof v === "function") el.addEventListener(k.slice(2), v);
-    else if (k === "html") el.innerHTML = v;
-    else el.setAttribute(k, v);
-  }
-  const kids = Array.isArray(children) ? children : [children];
-  for (const child of kids) {
-    if (child === null || child === undefined || child === false) continue;
-    el.append(child instanceof Node ? child : document.createTextNode(String(child)));
-  }
-  return el;
-}
-
-function _isNumeric(value) {
-  if (typeof value === "number") return Number.isFinite(value);
-  if (typeof value === "string") return value.trim() !== "" && !isNaN(Number(value));
-  return false;
-}
-
-function compareValues(a, b, type) {
-  if (a === null || a === undefined) return b === null || b === undefined ? 0 : 1;
-  if (b === null || b === undefined) return -1;
-  if (type === "number") {
-    const na = Number(a);
-    const nb = Number(b);
-    if (!isNaN(na) && !isNaN(nb)) return na - nb;
-  }
-  if (a instanceof Date || b instanceof Date) return new Date(a) - new Date(b);
-  if (typeof a === "string" && typeof b === "string") {
-    return a.localeCompare(b, undefined, { numeric: true, sensitivity: "base" });
-  }
-  if (a < b) return -1;
-  if (a > b) return 1;
-  return 0;
-}
 
 export class EvidentialTableRenderer {
   constructor(model, el) {
@@ -88,22 +33,19 @@ export class EvidentialTableRenderer {
       expanded: new Set(),
       hidden: new Set(),
     };
-    this._columnWidths = [];
     this._pageCount = 1;
     this._pageSizeOverride = null;
-    this._fitting = false;
-    this._hold = null;
-    this._holdFired = false;
-    this._onPointerUp = () => this._stopHold();
+    this._holdController = new HoldController((direction) => this._advance(direction));
     this._build();
   }
 
   get rows() { return this.model.get("rows") || []; }
   get columns() { return this.model.get("columns") || []; }
   get options() { return this.model.get("options") || {}; }
+  get _expanded() { return this._viewport?.expanded ?? false; }
+  set _expanded(value) { if (this._viewport) this._viewport.expanded = value; }
 
   _build() {
-    const opts = this.options;
     this.root = h("div", { class: "et-root", dataset: { widget: "evidence-table" } });
     this.titlebar = h("div", { class: "et-titlebar" });
     this.toolbar = h("div", { class: "et-toolbar" });
@@ -121,7 +63,7 @@ export class EvidentialTableRenderer {
     this.footnotesEl = h("div", { class: "et-footnotes" });
     this.caption = h("div", { class: "et-caption" });
     this.root.append(this.titlebar, this.toolbar, this.body, this.footer, this.footnotesEl, this.caption);
-    this._loading = !!this.model.get("loading");
+    this._loadingController = new LoadingController(this.root, this.loadingOverlay, this.el);
     const defaultSort = this.options.default_sort;
     if (defaultSort && defaultSort.column) {
       this._state.sort = {
@@ -129,10 +71,6 @@ export class EvidentialTableRenderer {
         direction: defaultSort.direction === "asc" ? "asc" : "desc",
       };
     }
-    this._loadingShown = false;
-    this._showTimer = null;
-    this._hideTimer = null;
-    this._loadingSince = 0;
     this._baselineHeight = 0;
     this._baselinePageSize = null;
 
@@ -150,30 +88,17 @@ export class EvidentialTableRenderer {
     this.placeholder = document.createComment("evidence-table inline position");
     this.el.append(this.placeholder, this.root, this.dialog);
 
-    this.dialog.addEventListener("close", () => this._restoreInline());
-    this.dialog.addEventListener("cancel", (e) => { e.preventDefault(); this._closeExpanded(); });
-    // Clicking the backdrop (the dialog element itself, outside the content)
-    // dismisses. Track where the press started so a drag that begins inside
-    // the content and ends on the backdrop does not close it.
-    this._backdropPress = false;
-    this.dialog.addEventListener("pointerdown", (e) => {
-      this._backdropPress = e.target === this.dialog;
+    this._viewport = new TableViewport({
+      root: this.root, dialog: this.dialog, button: this.expandBtn,
+      placeholder: this.placeholder, scroller: this.scroller,
+      getOptions: () => this.options, rerender: () => this.render(),
+      resetBaseline: () => this._resetBaselineHeight(),
+      getPageSizeOverride: () => this._pageSizeOverride,
+      setPageSizeOverride: (value) => { this._pageSizeOverride = value; },
     });
-    this.dialog.addEventListener("click", (e) => {
-      const onBackdrop = e.target === this.dialog && this._backdropPress;
-      this._backdropPress = false;
-      if (onBackdrop) this._closeExpanded();
-    });
-    this._expanded = false;
 
-    this._applyTheme();
     this.render();
-
-    this._resizeObserver = new ResizeObserver(() => {
-      this._applyFrozenOffsets();
-      if (this._expanded) this._fitFullscreen();
-    });
-    this._resizeObserver.observe(this.scroller);
+    this.setLoading(this.model.get("loading"));
   }
 
   _applyTheme() {
@@ -213,9 +138,8 @@ export class EvidentialTableRenderer {
 
   destroy() {
     this._stopHold();
-    if (this._showTimer) clearTimeout(this._showTimer);
-    if (this._hideTimer) clearTimeout(this._hideTimer);
-    this._resizeObserver?.disconnect();
+    this._loadingController.destroy();
+    this._viewport.destroy();
     this.dialog.remove();
     this.placeholder.remove();
     this.root.remove();
@@ -233,144 +157,45 @@ export class EvidentialTableRenderer {
     return this._state.collapsed.has(key);
   }
 
-  _toggleGroup(key) {
+  _toggleGroup(key, focus = false) {
     const set = this._defaultCollapsed() ? this._state.expanded : this._state.collapsed;
     if (set.has(key)) set.delete(key);
     else set.add(key);
     this.render();
+    if (focus) {
+      const cell = [...this.scroller.querySelectorAll("td[data-group-key]")]
+        .find((cell) => cell.dataset.groupKey === key);
+      cell?.querySelector("button.et-chevron")?.focus({ preventScroll: true });
+    }
   }
 
   _hiddenColumns() {
-    const set = new Set(this._state.hidden);
-    for (const col of this.columns) if (col.hide) set.add(col.name);
-    return set;
+    return hiddenColumns(this.columns, this._state.hidden);
   }
-
   /** Cluster columns that share a `column_group` at the group's first
    * occurrence, preserving the relative order of ungrouped columns. */
   _orderedColumns(columns) {
-    if (this.options.order_columns_by_group === false) return columns;
-    const grouped = new Map();
-    for (const col of columns) {
-      if (!col.column_group) continue;
-      const key = groupKey(col.column_group);
-      if (!grouped.has(key)) grouped.set(key, []);
-      grouped.get(key).push(col);
-    }
-    if (!grouped.size) return columns;
-    const emitted = new Set();
-    const ordered = [];
-    for (const col of columns) {
-      const group = col.column_group;
-      if (!group) {
-        ordered.push(col);
-        continue;
-      }
-      const key = groupKey(group);
-      if (emitted.has(key)) continue;
-      emitted.add(key);
-      ordered.push(...grouped.get(key));
-    }
-    return ordered;
+    return orderedColumns(columns, this.options);
   }
-
   // --------------------------------------------------------------- filter ---
   _visibleRows(rows) {
-    const hasGroups = rows.some((r) => r.render_type && r.render_type !== "cell_data");
-    if (!hasGroups) return rows;
-    const collapsed = new Set();
-    for (const row of rows) {
-      const key = row.__group_key;
-      if ((row.render_type === "row_subtotal" || row.render_type === "row_total") && key && this._isCollapsed(key)) {
-        collapsed.add(key);
-      }
-    }
-    return rows.filter((row) => {
-      const ancestors = row.__ancestors || [];
-      return !ancestors.some((k) => collapsed.has(k));
-    });
+    return visibleRows(rows, (key) => this._isCollapsed(key));
   }
-
   _searchRows(rows) {
-    const term = this._state.search.trim().toLowerCase();
-    if (!term) return rows;
-    const hidden = this._hiddenColumns();
-    const cols = this.columns.filter((c) => !hidden.has(c.name));
-    const matches = (row) => cols.some((c) => {
-      const v = row[c.name];
-      return v !== null && v !== undefined && String(v).toLowerCase().includes(term);
-    });
-    const keepGroups = new Set();
-    for (const row of rows) {
-      if (row.render_type && row.render_type !== "cell_data") {
-        if (row.render_type === "row_total") keepGroups.add(row.__group_key);
-        continue;
-      }
-      if (matches(row)) for (const key of row.__ancestors || []) keepGroups.add(key);
-    }
-    return rows.filter((row) => {
-      if (row.render_type === "row_total") return true;
-      if (row.render_type === "row_subtotal") return keepGroups.has(row.__group_key);
-      return matches(row);
-    });
+    return searchRows(rows, this.columns, this._state.search, this._hiddenColumns());
   }
-
   _sortRows(rows) {
-    const sort = this._state.sort;
-    if (!sort) return rows;
-    const col = this.columns.find((c) => c.name === sort.column);
-    // A column can sort by another column's values (e.g. a sparkline sorted by
-    // a score). `sort_by` may name a column that is hidden from the table — or
-    // one that is in the data but not a configured column at all.
-    const key = col?.sort_by || sort.column;
-    const keyType = this.columns.find((c) => c.name === key)?.type;
-    const dir = sort.direction === "asc" ? 1 : -1;
-
-    const hasGroups = rows.some((r) => r.render_type && r.render_type !== "cell_data");
-    const cmp = (a, b) => dir * compareValues(a[key], b[key], keyType);
-
-    if (!hasGroups) return [...rows].sort(cmp);
-
-    // Grouped: sort only detail rows inside each parent group, preserving the
-    // position of subtotal/total rows.
-    const queues = new Map();
-    for (const row of rows) {
-      if (row.render_type && row.render_type !== "cell_data") continue;
-      const key = row.__parent_key ?? "__root__";
-      if (!queues.has(key)) queues.set(key, []);
-      queues.get(key).push(row);
-    }
-    for (const queue of queues.values()) queue.sort(cmp);
-    const out = [];
-    for (const row of rows) {
-      if (row.render_type && row.render_type !== "cell_data") {
-        out.push(row);
-      } else {
-        const key = row.__parent_key ?? "__root__";
-        out.push(queues.get(key).shift());
-      }
-    }
-    return out;
+    return sortRows(rows, this.columns, this._state.sort);
   }
-
   _effectivePageSize() {
     return this._pageSizeOverride ?? this.options.page_size;
   }
 
   _paginate(rows) {
-    const opts = this.options;
-    const pageSize = this._effectivePageSize();
-    const hasGroups = rows.some((r) => r.render_type && r.render_type !== "cell_data");
-    if (!pageSize || pageSize === "all" || pageSize <= 0 || hasGroups || opts.collapsible) {
-      return { rows, pageCount: 1, page: 0, total: rows.length };
-    }
-    const total = rows.length;
-    const pageCount = Math.max(1, Math.ceil(total / pageSize));
-    const page = Math.min(Math.max(0, this._state.page), pageCount - 1);
-    this._state.page = page;
-    return { rows: rows.slice(page * pageSize, (page + 1) * pageSize), pageCount, page, total };
+    const page = paginateRows(rows, this._effectivePageSize(), this._state.page, this.options);
+    this._state.page = page.page;
+    return page;
   }
-
   // --------------------------------------------------------------- render ---
   render() {
     const opts = this.options;
@@ -506,7 +331,7 @@ export class EvidentialTableRenderer {
     this.caption.replaceChildren();
     if (opts.caption) this.caption.append(inlineMarkdown(opts.caption));
     this._updateBaselineHeight();
-    requestAnimationFrame(() => this._applyFrozenOffsets());
+    this._viewport.frame(() => this._applyFrozenOffsets());
 
     this.el.dataset.rowCount = String(total);
     this.el.dataset.renderCount = String((Number(this.el.dataset.renderCount) || 0) + 1);
@@ -521,44 +346,7 @@ export class EvidentialTableRenderer {
    * the fade completes and then removed immediately to reveal the new data.
    */
   setLoading(loading) {
-    this._loading = !!loading;
-    this.el.dataset.loading = String(this._loading);
-    if (this._loading) {
-      if (this._hideTimer) {
-        clearTimeout(this._hideTimer);
-        this._hideTimer = null;
-      }
-      if (this._loadingShown || this._showTimer) return;
-      this._showTimer = setTimeout(() => {
-        this._showTimer = null;
-        this._loadingShown = true;
-        this._loadingSince = performance.now();
-        this._applyLoadingClass();
-      }, LOADING_SHOW_DELAY);
-    } else {
-      if (this._showTimer) {
-        // Finished before the overlay was shown: never flash it.
-        clearTimeout(this._showTimer);
-        this._showTimer = null;
-        return;
-      }
-      if (!this._loadingShown) return;
-      const elapsed = performance.now() - this._loadingSince;
-      const wait = Math.max(LOADING_HIDE_DEBOUNCE, FADE_MS - elapsed);
-      if (this._hideTimer) clearTimeout(this._hideTimer);
-      this._hideTimer = setTimeout(() => {
-        this._hideTimer = null;
-        this._loadingShown = false;
-        this._applyLoadingClass();
-      }, wait);
-    }
-  }
-
-  _applyLoadingClass() {
-    this.root.classList.toggle("et-loading", this._loadingShown);
-    this.loadingOverlay.setAttribute("aria-hidden", String(!this._loadingShown));
-    this.el.dataset.loading = String(this._loading);
-    this.el.dataset.loadingShown = String(this._loadingShown);
+    this._loadingController.set(loading);
   }
 
   /** Keep the table from shrinking below the tallest page seen for the
@@ -691,43 +479,8 @@ export class EvidentialTableRenderer {
    *  columns, distinct/null for everything else. Subtotal/total rows are
    *  ignored. */
   _columnStats(columns, rows) {
-    const data = rows.filter((row) => !row.render_type || row.render_type === "cell_data");
-    const stats = new Map();
-    for (const col of columns) {
-      let min = null;
-      let max = null;
-      let sum = 0;
-      let numeric = 0;
-      let nulls = 0;
-      const distinct = new Set();
-      for (const row of data) {
-        const value = row[col.name];
-        if (value === null || value === undefined) {
-          nulls += 1;
-          continue;
-        }
-        distinct.add(typeof value === "object" ? JSON.stringify(value) : String(value));
-        if (col.type === "number") {
-          const num = Number(value);
-          if (!Number.isNaN(num) && Number.isFinite(num)) {
-            if (min === null || num < min) min = num;
-            if (max === null || num > max) max = num;
-            sum += num;
-            numeric += 1;
-          }
-        }
-      }
-      stats.set(col.name, {
-        min,
-        max,
-        avg: numeric ? sum / numeric : null,
-        nulls,
-        distinct: distinct.size,
-      });
-    }
-    return stats;
+    return columnStats(columns, rows);
   }
-
   /** The row of `[TYPE] min/max/…` (or `distinct`) blocks under the header. */
   _renderStatsRow(columns, ctx) {
     const opts = this.options;
@@ -873,11 +626,8 @@ export class EvidentialTableRenderer {
   }
 
   _alignStyle(col) {
-    const fallback = col.type === "number" ? "right" : "left";
-    const align = col.align || (col.viz === "chip" ? "center" : fallback);
-    return { textAlign: align };
+    return alignStyle(col);
   }
-
   _sortColumn(name) {
     const current = this._state.sort;
     if (!current || current.column !== name) {
@@ -893,104 +643,25 @@ export class EvidentialTableRenderer {
 
   /** Rowspan each subtotal's dimension cell should span in section mode. */
   _computeRowspans(rows, dimCount, top) {
-    const spans = new Array(rows.length).fill(1);
-    rows.forEach((row, index) => {
-      if (row.render_type !== "row_subtotal") return;
-      const level = row.__level ?? dimCount;
-      let count = 1;
-      if (top) {
-        for (let j = index + 1; j < rows.length && (rows[j].__level ?? dimCount) > level; j++) count++;
-      } else {
-        for (let j = index - 1; j >= 0 && (rows[j].__level ?? dimCount) > level; j--) count++;
-      }
-      spans[index] = count;
-    });
-    return spans;
+    return computeRowspans(rows, dimCount, top);
   }
-
   /** Indent (in rem) for a dimension cell in accordion mode.
    *
    * Matches Evidence's `getIndentAmount`: detail rows indent their *parent*
    * dimension columns but not the leaf dimension, and subtotal rows indent
    * their ancestor columns. Non-dimension columns are never indented.
    */
-  _indentForCell(row, columnIndex, ctx) {
-    if (columnIndex >= ctx.dimCount) return 0;
-    const level = row.__level ?? 0;
-    const renderType = row.render_type || "cell_data";
-    if (renderType === "cell_data") {
-      return columnIndex === ctx.dimCount - 1 ? 0 : 2;
-    }
-    if (renderType === "row_subtotal" && columnIndex < level - 1) return 2;
-    return 0;
-  }
-
   /** Substitute a displayed value per `sub_*` rules (returns text or null). */
-  _matchSubstitution(col, row, value) {
-    const rules = this.options.rules;
-    if (!rules) return null;
-    for (const rule of rules) {
-      if (rule.type !== "substitute") continue;
-      if (rule.columns !== "*" && !rule.columns.includes(col.name)) continue;
-      if (rule.rows && !rule.rows.includes(row.__row_id)) continue;
-      if (rule.kind === "missing") {
-        if (value === null || value === undefined) return rule.text;
-        continue;
-      }
-      if (value === null || value === undefined) continue;
-      if (rule.kind === "zero" && Number(value) === 0) return rule.text;
-      if (rule.kind === "values" && (rule.values || []).includes(value)) return rule.text;
-      if (!isNaN(Number(value))) {
-        const numeric = Number(value);
-        if (rule.kind === "small" && numeric < rule.threshold) return rule.text;
-        if (rule.kind === "large" && numeric > rule.threshold) return rule.text;
-      }
-    }
-    return null;
-  }
-
   /** Footnote mark for a 1-based index under the chosen scheme. */
   _footnoteMark(index) {
-    const scheme = this.options.footnote_marks || "numbers";
-    if (scheme === "letters") return String.fromCharCode(96 + ((index - 1) % 26) + 1);
-    if (scheme === "symbols") {
-      return ["*", "†", "‡", "§", "¶", "#"][(index - 1) % 6];
-    }
-    return String(index);
+    return footnoteMark(index, this.options);
   }
-
   /** Merge the style/format rules matching a cell (last match wins). */
-  _matchingRules(col, row) {
-    const rules = this.options.rules;
-    if (!rules || !rules.length) return { fmt: null, style: null };
-    let fmt = null;
-    let style = null;
-    for (const rule of rules) {
-      if (rule.columns !== "*" && !rule.columns.includes(col.name)) continue;
-      if (rule.rows && !rule.rows.includes(row.__row_id)) continue;
-      if (rule.fmt != null) fmt = rule.fmt;
-      if (rule.style) style = { ...(style || {}), ...rule.style };
-    }
-    return { fmt, style };
-  }
-
   /** Whether the nth data row should be shaded, per `row_shading`.
    * `true` = alternating (1,1); a number = groups (n,n); a pair = [shaded, unshaded]. */
   _shaded(index) {
-    const shading = this.options.row_shading;
-    if (!shading) return false;
-    let shaded = 1;
-    let unshaded = 1;
-    if (Array.isArray(shading)) {
-      shaded = Math.max(1, Number(shading[0]) || 1);
-      unshaded = Math.max(1, Number(shading[1]) || shaded);
-    } else if (typeof shading === "number") {
-      shaded = Math.max(1, shading);
-      unshaded = shaded;
-    }
-    return index % (shaded + unshaded) >= unshaded;
+    return shaded(index, this.options);
   }
-
   _renderRow(row, columns, ctx, index) {
     const opts = this.options;
     const renderType = row.render_type || "cell_data";
@@ -1005,7 +676,6 @@ export class EvidentialTableRenderer {
     const isSubtotal = renderType === "row_subtotal";
     const isCollapsed = isSubtotal && row.__group_key && this._isCollapsed(row.__group_key);
     const hasLink = opts.link && row[opts.link];
-    const hidden = row.__hide_cell || {};
     const rowColorValue = opts.row_conditional_colors ? row[opts.row_conditional_colors] : null;
     const rowColorStyles =
       typeof rowColorValue === "string" ? colorStylesFromHex(rowColorValue) : null;
@@ -1022,36 +692,9 @@ export class EvidentialTableRenderer {
     });
     if (hasLink) tr.addEventListener("click", () => { window.location.href = String(row[opts.link]); });
 
-    const selectKey = opts.select ? row[opts.select] : undefined;
-    if (opts.select && selectKey !== undefined && selectKey !== null) {
-      const isSelected =
-        ctx.selected !== null && ctx.selected !== undefined && String(ctx.selected) === String(selectKey);
-      tr.classList.add("et-row-selectable");
-      tr.tabIndex = 0;
-      tr.dataset.selectKey = String(selectKey);
-      tr.setAttribute("aria-selected", String(isSelected));
-      if (isSelected) tr.classList.add("et-row-selected");
-      const select = (event) => {
-        if (event.target.closest && event.target.closest("a, button, input, select, textarea")) return;
-        // Clicking the selected row again clears the selection. `save_changes`
-        // is what lets Marimo treat the new value as a cell dependency.
-        this.model.set("selected", isSelected ? null : selectKey);
-        this.model.save_changes();
-        if (event.type === "keydown") {
-          requestAnimationFrame(() => {
-            const replacement = [...this.scroller.querySelectorAll("tr.et-row-selectable")]
-              .find((row) => row.dataset.selectKey === String(selectKey));
-            replacement?.focus({ preventScroll: true });
-          });
-        }
-      };
-      tr.addEventListener("click", select);
-      tr.addEventListener("keydown", (event) => {
-        if (event.target !== tr || (event.key !== "Enter" && event.key !== " ")) return;
-        event.preventDefault();
-        select(event);
-      });
-    }
+    bindRowSelection(tr, row, ctx.selected, opts, this.model, (key) =>
+      [...this.scroller.querySelectorAll("tr.et-row-selectable")]
+        .find((row) => row.dataset.selectKey === String(key)));
 
     if (ctx.rowNumbers) {
       const numberCell = h(
@@ -1067,238 +710,10 @@ export class EvidentialTableRenderer {
     }
 
     const rowIndex = index;
-    columns.forEach((col, index) => {
-      const tdStyle = withFigure(this._alignStyle(col), col, opts);
-      // In accordion mode, indent dimension cells so children read as nested.
-      const indent = ctx.accordion ? this._indentForCell(row, index, ctx) : 0;
-      if (indent > 0) {
-        const base = index === 0 && !ctx.rowNumbers ? "0.25rem" : "0.375rem";
-        tdStyle.paddingLeft = `calc(${base} + ${indent}rem)`;
-      }
-      const td = h("td", { class: `et-td${opts.stub === col.name ? " et-stub" : ""}`, style: tdStyle });
-      const matched = this._matchingRules(col, row);
-      const finish = (includeFootnote = true) => {
-        this._decorateCell(td, col, row, ctx, rowIndex, matched.style, includeFootnote);
-        tr.append(td);
-      };
-      if (ctx.section && index < ctx.dimCount) {
-        // Section mode merges each dimension cell vertically. A data row renders
-        // only its leaf dimension (the rest sit under ancestor rowSpans); a
-        // subtotal renders its own dimension cell; the total renders the first.
-        // Columns to the *right* of that cell are not covered by any rowSpan,
-        // so they must still occupy their place — blank — or the measure cells
-        // slide one column early.
-        const dimIndex = isTotal
-          ? 0
-          : isSubtotal
-            ? (row.__level ?? ctx.dimCount) - 1
-            : ctx.dimCount - 1;
-        if (index === dimIndex) {
-          if (isSubtotal) td.rowSpan = ctx.rowspans?.[rowIndex] ?? 1;
-        } else if (index > dimIndex) {
-          finish(false);
-          return;
-        } else {
-          return;
-        }
-      }
-      if (rowColorStyles) {
-        td.style.backgroundColor = rowColorStyles.backgroundColor;
-        td.style.color = rowColorStyles.color;
-      }
-      // A column highlight is a vertical band: it wins over row colours.
-      if (col.highlight) td.style.backgroundColor = col.highlight;
-      if (col.viz_include_subtotals === false && isSubtotal && col.viz) td.classList.add("et-no-viz");
-
-      // Collapsible chevron in the subtotal's own dimension column.
-      const dimIndex = (row.__level ?? 0) - 1;
-      if (isSubtotal && index === dimIndex && !ctx.section) {
-        const chev = h("button", {
-          class: `et-chevron${isCollapsed ? "" : " et-chevron-open"}`,
-          type: "button", "aria-label": `Toggle group ${row[col.name] ?? ""}`,
-          "aria-expanded": String(!isCollapsed),
-          onclick: (event) => {
-            event.stopPropagation();
-            this._toggleGroup(row.__group_key);
-            const replacement = [...this.scroller.querySelectorAll("td[data-group-key]")]
-              .find((cell) => cell.dataset.groupKey === row.__group_key);
-            replacement?.querySelector("button.et-chevron")?.focus({ preventScroll: true });
-          },
-        }, "▶");
-        td.append(chev);
-        td.dataset.groupKey = row.__group_key;
-        td.addEventListener("click", (e) => {
-          e.stopPropagation();
-          this._toggleGroup(row.__group_key);
-        });
-      }
-
-      if (hidden[col.name]) {
-        finish(false);
-        return;
-      }
-
-      // Data-driven column merge / template (e.g. "10–20", "5 ± 0.2").
-      if (col.template) {
-        const merged = String(col.template).replace(/\{(\w+)\}/g, (_, field) => {
-          const fieldValue = row[field];
-          if (fieldValue === null || fieldValue === undefined) return "";
-          const fieldFormat = (col.template_fmt || {})[field];
-          return formatValue(fieldValue, fieldFormat, {
-            type: col.type,
-            fallback: optString(fieldValue),
-          });
-        });
-        td.append(h("span", { class: "et-cell-value" }, merged));
-        finish();
-        return;
-      }
-
-      let value = row[col.name];
-      const substituted = this._matchSubstitution(col, row, value);
-      if (substituted != null) {
-        td.append(h("span", { class: "et-cell-value et-substituted" }, substituted));
-        finish();
-        return;
-      }
-      // Optional cutoffs: values outside the range are treated as blank.
-      if (
-        value !== null &&
-        value !== undefined &&
-        (typeof value === "number" ||
-          (typeof value === "string" && value.trim() !== "" && !isNaN(Number(value))))
-      ) {
-        const numeric = Number(value);
-        if (col.blank_below != null && numeric < col.blank_below) value = null;
-        if (col.blank_above != null && numeric > col.blank_above) value = null;
-      }
-      if (value === null || value === undefined) {
-        // A missing delta reads as the same neutral dash as a value inside
-        // `neutral_range`; other columns use the generic null text.
-        if (col.viz === "delta") {
-          td.append(this._renderDelta(col, value));
-        } else {
-          const nullText = col.null_text ?? opts.null_text ?? "–";
-          td.append(h("span", { class: "et-null" }, String(nullText)));
-        }
-        finish();
-        return;
-      }
-
-      const baseFormat =
-        col.fmt_column && row[col.fmt_column] != null ? String(row[col.fmt_column]) : col.fmt;
-      const alignDecimals =
-        (col.align_decimals ?? opts.align_decimals) && ctx.decimals.has(col.name);
-      const alignedBase = alignDecimals
-        ? withDecimals(baseFormat || "num", ctx.decimals.get(col.name))
-        : baseFormat;
-      const formatCode =
-        matched.fmt != null
-          ? matched.fmt
-          : isTotal && col.total_fmt
-            ? col.total_fmt
-            : isSubtotal && col.subtotal_fmt
-              ? col.subtotal_fmt
-              : alignedBase;
-      const formatted = formatValue(value, formatCode, {
-        type: col.type,
-        range: ctx.formatRanges.get(col.name),
-        fallback: optString(value),
-      });
-
-      // Conditional color background.
-      let vizStyles = null;
-      if (col.viz === "color" && !(isTotal) && !(isSubtotal && col.viz_include_subtotals === false)) {
-        const range = ctx.ranges.get(col.name);
-        // `conditional_colors` needs no numeric range (the hex column may be
-        // the only colour source, e.g. a text status column).
-        if (range || (col.color_options || {}).conditional_colors) {
-          vizStyles = calculateColorStyles(col, row, range || { min: 0, max: 0 }, ctx.colorScales.get(col.name));
-        }
-      }
-
-      let content;
-      if (col.viz === "bar" && !(isSubtotal && col.viz_include_subtotals === false) && row.render_type !== "row_total") {
-        content = this._renderBar(col, value, formatted, ctx.ranges.get(col.name));
-      } else if (col.viz === "delta") {
-        content = this._renderDelta(col, value);
-      } else if (col.viz === "sparkline") {
-        content = this._renderSparkline(col, value);
-      } else if (col.html) {
-        content = h("span", { html: String(value) });
-      } else if (col.markdown) {
-        content = h("span", { class: "et-cell-value" });
-        content.append(inlineMarkdown(String(value)));
-      } else if (col.logo && row[col.logo]) {
-        const domain = String(row[col.logo]);
-        const logoOptions = col.logo_options || {};
-        content = h("span", { class: "et-cell-media" }, [
-          h("img", {
-            class: "et-cell-logo",
-            src: `https://img.logo.dev/${encodeURIComponent(domain)}`,
-            alt: domain,
-            loading: "lazy",
-            style: logoOptions.height ? { height: `${logoOptions.height}px` } : {},
-          }),
-          h("span", { class: "et-cell-media-label" }, formatted),
-        ]);
-      } else if (col.image && row[col.image]) {
-        const imageOptions = col.image_options || {};
-        content = h("span", { class: "et-cell-media" }, [
-          h("img", {
-            class: "et-cell-image",
-            src: String(row[col.image]),
-            alt: String(imageOptions.alt || ""),
-            style: {
-              ...(imageOptions.height ? { height: `${imageOptions.height}px` } : {}),
-              ...(imageOptions.width ? { width: `${imageOptions.width}px` } : {}),
-            },
-          }),
-          h("span", { class: "et-cell-media-label" }, formatted),
-        ]);
-      } else if (col.viz === "chip") {
-        const chipRange = ctx.ranges.get(col.name);
-        const chipStyles =
-          chipRange || (col.color_options || {}).conditional_colors
-            ? calculateColorStyles(col, row, chipRange || { min: 0, max: 0 }, ctx.colorScales.get(col.name))
-            : null;
-        const chip = h("span", { class: "et-chip" }, formatted);
-        // An optional minimum width; the chip still grows for wider content.
-        const minWidth = (col.chip_options || {}).min_width;
-        if (minWidth != null) {
-          chip.style.minWidth = typeof minWidth === "number" ? `${minWidth}px` : String(minWidth);
-        }
-        if (chipStyles) {
-          chip.style.backgroundColor = chipStyles.backgroundColor;
-          chip.style.color = contrastTextColor(chipStyles.backgroundColor);
-        }
-        content = chip;
-      } else {
-        content = h("span", { class: "et-cell-value" }, formatted);
-      }
-
-      if (col.red_negatives && !isNaN(Number(value)) && Number(value) < 0) {
-        content.classList?.add("et-negative");
-      }
-
-      const link = col.link ? row[col.link] : null;
-      if (link && row.render_type !== "row_total") {
-        td.append(h("a", {
-          class: "et-cell-link", href: String(link),
-          target: col.link_new_tab ? "_blank" : null,
-          rel: col.link_new_tab ? "noopener noreferrer" : null,
-        }, col.link_label ? col.link_label : content));
-      } else {
-        td.append(content);
-      }
-
-      if (vizStyles) {
-        td.style.backgroundColor = vizStyles.backgroundColor;
-        td.style.color = vizStyles.color;
-        td.classList.add("et-color-cell");
-      }
-
-      finish();
+    columns.forEach((col, columnIndex) => {
+      const cell = renderCell({row, col, index: columnIndex, ctx, rowIndex, options: opts,
+        toggleGroup: (key, focus) => this._toggleGroup(key, focus), isCollapsed, rowColorStyles});
+      if (cell) tr.append(cell);
     });
 
     if (opts.link) {
@@ -1310,238 +725,15 @@ export class EvidentialTableRenderer {
   }
 
   /** Apply effects shared by ordinary, null, substituted and template cells. */
-  _decorateCell(td, col, row, ctx, rowIndex, style, includeFootnote) {
-    const footnoteColumn = col.footnote || this.options.footnote_column;
-    if (includeFootnote && footnoteColumn && row[footnoteColumn]) {
-      const noteText = String(row[footnoteColumn]).trim();
-      if (noteText) {
-        let note = ctx.footnotes.find((item) => item.text === noteText);
-        if (!note) {
-          note = { text: noteText, index: ctx.footnotes.length + 1, rows: new Set() };
-          ctx.footnotes.push(note);
-        }
-        note.rows.add((ctx.rowNumberBase || 0) + rowIndex + 1);
-        td.append(
-          h("sup", { class: "et-footnote-mark", title: noteText }, this._footnoteMark(note.index)),
-        );
-      }
-    }
-    if (style) {
-      for (const [property, propertyValue] of Object.entries(style)) {
-        td.style.setProperty(property, propertyValue);
-      }
-    }
-  }
-
-  _renderBar(col, value, formatted, range) {
-    const opts = col.bar_options || {};
-    const num = Number(value);
-    const min = opts.fit_to_data ? (range?.min ?? 0) : Math.min(0, range?.min ?? 0);
-    const max = opts.fit_to_data ? (range?.max ?? 0) : Math.max(0, range?.max ?? 0);
-    const span = max - min || 1;
-    const pct = Math.max(0, Math.min(100, ((num - min) / span) * 100));
-    const negative = num < 0;
-    const color = negative
-      ? (opts.bar_color_negative || opts.bar_color || "var(--et-negative, #dc2626)")
-      : (opts.bar_color || "var(--et-accent, #2563eb)");
-    const bar = h("div", { class: "et-bar", style: { width: `${pct}%`, backgroundColor: color } });
-    const wrap = h("div", { class: `et-bar-wrap${negative ? " et-bar-negative" : ""}` }, bar);
-    const label = h("span", { class: `et-bar-label${opts.hide_labels ? " et-hidden" : ""}` }, formatted);
-    const cell = h("div", {
-      class: "et-bar-cell",
-      style: opts.background_color ? { backgroundColor: opts.background_color } : {},
-    }, [wrap, label]);
-    return cell;
-  }
-
   /** Neutral band from `neutral_range`.
    * Accepts a `"lo:hi"` string (e.g. `"-0.1:0.1"`), a `[lo, hi]` pair, a single
    * ±value, or `neutral_min` / `neutral_max`. Defaults to "only exactly 0". */
-  _neutralBounds(opts) {
-    const range = opts.neutral_range;
-    if (typeof range === "string") {
-      const match = range.match(/^\s*(-?\d+(?:\.\d+)?)\s*(?::|\.\.)\s*(-?\d+(?:\.\d+)?)\s*$/);
-      if (match) return [Number(match[1]), Number(match[2])];
-    }
-    if (Array.isArray(range) && range.length === 2) return [Number(range[0]), Number(range[1])];
-    if (typeof range === "number" && isFinite(range)) return [-Math.abs(range), Math.abs(range)];
-    return [opts.neutral_min ?? 0, opts.neutral_max ?? 0];
-  }
-
-  _renderDelta(col, value) {
-    const opts = col.delta_options || {};
-    const isMissing = value === null || value === undefined;
-    const num = isMissing ? 0 : Number(value);
-    const [lo, hi] = this._neutralBounds(opts);
-    const isNeutral =
-      isMissing || ((lo == null || num >= lo) && (hi == null || num <= hi));
-    const positive = num > 0;
-    const good = isNeutral ? false : opts.down_is_good ? !positive : positive;
-    const cls = isNeutral ? "et-delta-neutral" : good ? "et-delta-good" : "et-delta-bad";
-    // The indicator is a dash for a neutral value, otherwise an up/down arrow.
-    const indicator =
-      opts.show_symbol === false ? "" : isNeutral ? "–" : positive ? "▲" : num < 0 ? "▼" : "–";
-    // A `pct`-formatted delta holds a fraction, so always show it as a
-    // percentage — even above 100% (e.g. a 307% change) — rather than falling
-    // back to a bare number.
-    const pct =
-      col.fmt && col.fmt.startsWith("pct")
-        ? formatValue(Math.abs(num), col.fmt, {
-            type: "number",
-            fallback: String(Math.abs(num)),
-          })
-        : Math.abs(num).toLocaleString(undefined, { maximumFractionDigits: 1 });
-    const valueText = opts.show_value === false || isMissing ? "" : pct;
-    const valueNode = valueText ? h("span", { class: "et-delta-value" }, valueText) : null;
-    const indicatorNode = indicator
-      ? h("span", { class: "et-delta-indicator" }, indicator)
-      : null;
-    // The indicator follows the value by default (e.g. "12.0% ▲").
-    const ordered =
-      opts.symbol_position === "left" ? [indicatorNode, valueNode] : [valueNode, indicatorNode];
-    const content = [];
-    for (const node of ordered) {
-      if (!node) continue;
-      if (content.length) content.push(" ");
-      content.push(node);
-    }
-    const classes = ["et-delta", cls, opts.chip ? "et-delta-chip" : ""].filter(Boolean).join(" ");
-    return h("span", { class: classes }, content.length ? content : "–");
-  }
-
-  _renderSparkline(col, value) {
-    const opts = col.sparkline_options || {};
-    const points = this._sparklinePoints(value, opts);
-    if (!points.length) return h("span", { class: "et-null" }, "–");
-
-    const width = opts.width || 64;
-    const height = opts.height || 18;
-    const pad = 1.5;
-    const ys = points.map((point) => point[1]);
-    let min = Math.min(...ys);
-    let max = Math.max(...ys);
-    if (!opts.fit_to_data) {
-      min = Math.min(0, min);
-      max = Math.max(0, max);
-    }
-    const span = max - min || 1;
-    const step = points.length > 1 ? (width - pad * 2) / (points.length - 1) : 0;
-    const baseline = pad + (height - pad * 2) * (1 - (Math.max(0, min) - min) / span);
-    const scaled = points.map(([x, y], index) => ({
-      x: points.length > 1 ? pad + index * step : width / 2,
-      y: pad + (height - pad * 2) * (1 - (y - min) / span),
-      raw: [x, y],
-    }));
-
-    const color = opts.color || "var(--et-accent, #2563eb)";
-    const svgNS = "http://www.w3.org/2000/svg";
-    const svg = document.createElementNS(svgNS, "svg");
-    svg.setAttribute("class", "et-sparkline");
-    svg.setAttribute("width", String(width));
-    svg.setAttribute("height", String(height));
-    svg.setAttribute("viewBox", `0 0 ${width} ${height}`);
-
-    const tooltip = ([x, y]) => {
-      const title = document.createElementNS(svgNS, "title");
-      const yText = formatValue(y, opts.y_fmt, { type: "number", fallback: String(y) });
-      title.textContent = x === undefined || x === null || x === "" ? yText : `${x}: ${yText}`;
-      return title;
-    };
-
-    // Zero baseline when the scale crosses zero (matching Evidence's defaults).
-    if (!opts.fit_to_data && min < 0 && max > 0) {
-      const zero = document.createElementNS(svgNS, "line");
-      zero.setAttribute("x1", "0");
-      zero.setAttribute("x2", String(width));
-      zero.setAttribute("y1", String(baseline));
-      zero.setAttribute("y2", String(baseline));
-      zero.setAttribute("stroke", "color-mix(in srgb, CanvasText 20%, transparent)");
-      zero.setAttribute("stroke-width", "1");
-      svg.append(zero);
-    }
-
-    const type = opts.type || "line";
-    if (type === "bar") {
-      const slot = width / scaled.length;
-      const barWidth = Math.max(1, slot * 0.7);
-      scaled.forEach((point) => {
-        const top = Math.min(point.y, baseline);
-        const rect = document.createElementNS(svgNS, "rect");
-        rect.setAttribute("x", String(Math.max(0, point.x - barWidth / 2)));
-        rect.setAttribute("y", String(top));
-        rect.setAttribute("width", String(barWidth));
-        rect.setAttribute("height", String(Math.max(1, Math.abs(baseline - point.y))));
-        rect.setAttribute("rx", "0.5");
-        rect.setAttribute("fill", color);
-        rect.append(tooltip(point.raw));
-        svg.append(rect);
-      });
-    } else {
-      const linePoints = scaled.map((point) => `${point.x},${point.y}`).join(" ");
-      if (type === "area") {
-        const area = document.createElementNS(svgNS, "polygon");
-        area.setAttribute(
-          "points",
-          `${linePoints} ${scaled[scaled.length - 1].x},${baseline} ${scaled[0].x},${baseline}`,
-        );
-        area.setAttribute("fill", color);
-        area.setAttribute("opacity", "0.18");
-        svg.append(area);
-      }
-      const poly = document.createElementNS(svgNS, "polyline");
-      poly.setAttribute("points", linePoints);
-      poly.setAttribute("fill", "none");
-      poly.setAttribute("stroke", color);
-      poly.setAttribute("stroke-width", "1.25");
-      poly.setAttribute("stroke-linejoin", "round");
-      poly.setAttribute("stroke-linecap", "round");
-      svg.append(poly);
-      scaled.forEach((point) => {
-        const dot = document.createElementNS(svgNS, "circle");
-        dot.setAttribute("cx", String(point.x));
-        dot.setAttribute("cy", String(point.y));
-        dot.setAttribute("r", "2.5");
-        dot.setAttribute("fill", "transparent");
-        dot.append(tooltip(point.raw));
-        svg.append(dot);
-      });
-    }
-    return svg;
-  }
-
   /** Normalise a cell value into ``[x, y]`` sparkline points.
    *
    * Accepts an array of numbers, an array of ``[x, y]`` pairs, or an array of
    * objects (e.g. DuckDB ``ARRAY_AGG({'date': date, 'sales': sales})``). For
    * objects, ``sparkline_options.x`` / ``.y`` name the fields; otherwise the
    * first numeric field is used for y and the first non-numeric field for x. */
-  _sparklinePoints(value, opts) {
-    if (!Array.isArray(value)) return [];
-    const xKey = opts.x;
-    const yKey = opts.y;
-    const points = [];
-    value.forEach((item, index) => {
-      if (item === null || item === undefined) return;
-      let x = index;
-      let y;
-      if (Array.isArray(item)) {
-        x = item[0];
-        y = Number(item[1]);
-      } else if (typeof item === "object") {
-        const keys = Object.keys(item);
-        const yField = yKey && yKey in item ? yKey : keys.find((key) => _isNumeric(item[key]));
-        const xField =
-          xKey && xKey in item ? xKey : keys.find((key) => key !== yField && !_isNumeric(item[key]));
-        x = xField ? item[xField] : index;
-        y = Number(yField ? item[yField] : NaN);
-      } else {
-        y = Number(item);
-      }
-      if (y !== null && !isNaN(y)) points.push([x, y]);
-    });
-    return points;
-  }
-
   /** Render the footer notes collected while building rows, plus any static
    * `footnotes`, with the row numbers each note appears on. */
   _renderFootnotes(footnotes, staticFootnotes) {
@@ -1592,10 +784,7 @@ export class EvidentialTableRenderer {
           this._startHold(direction);
         });
         button.addEventListener("click", () => {
-          if (this._holdFired) {
-            this._holdFired = false;
-            return;
-          }
+          if (this._holdController.consumeClick()) return;
           this._gotoPage(this._state.page + (direction === "next" ? 1 : -1));
         });
         return button;
@@ -1645,33 +834,11 @@ export class EvidentialTableRenderer {
   // Press-and-hold pagination: after HOLD_DELAY, advance one page every
   // HOLD_START_INTERVAL ms, easing linearly to HOLD_END_INTERVAL ms.
   _startHold(direction) {
-    this._stopHold();
-    this._holdFired = false;
-    this._hold = { direction, start: performance.now(), timer: null };
-    window.addEventListener("pointerup", this._onPointerUp);
-    window.addEventListener("pointercancel", this._onPointerUp);
-    window.addEventListener("blur", this._onPointerUp);
-    this._hold.timer = setTimeout(() => this._holdStep(), HOLD_DELAY);
+    return this._holdController.start(direction);
   }
 
   _stopHold() {
-    if (this._hold?.timer) clearTimeout(this._hold.timer);
-    this._hold = null;
-    window.removeEventListener("pointerup", this._onPointerUp);
-    window.removeEventListener("pointercancel", this._onPointerUp);
-    window.removeEventListener("blur", this._onPointerUp);
-  }
-
-  _holdStep() {
-    if (!this._hold) return;
-    this._holdFired = true;
-    const advanced = this._advance(this._hold.direction);
-    if (!advanced) {
-      this._stopHold();
-      return;
-    }
-    const interval = holdInterval(performance.now() - this._hold.start);
-    this._hold.timer = setTimeout(() => this._holdStep(), interval);
+    return this._holdController.stop();
   }
 
   _advance(direction) {
@@ -1683,44 +850,15 @@ export class EvidentialTableRenderer {
 
   // ----------------------------------------------------------- fullscreen ---
   _toggleExpanded() {
-    if (this._expanded) { this._closeExpanded(); return; }
-    this._expanded = true;
-    this.expandBtn.textContent = "×";
-    this.expandBtn.title = "Close expanded table";
-    this.expandBtn.setAttribute("aria-expanded", "true");
-    this.dialog.append(this.root);
-    this.dialog.showModal();
-    this.root.classList.add("et-expanded");
-    // Drop the inline max-height immediately so the first fit measurement sees
-    // the real available height instead of the capped inline one.
-    this.scroller.style.maxHeight = "none";
-    this._resetBaselineHeight();
-    requestAnimationFrame(() => {
-      this._applyFrozenOffsets();
-      this._fitFullscreen();
-    });
+    return this._viewport.toggle();
   }
 
   _closeExpanded() {
-    if (this.dialog.open) this.dialog.close();
-    else this._restoreInline();
+    return this._viewport.close();
   }
 
   _restoreInline() {
-    if (!this._expanded) return;
-    this._expanded = false;
-    this._pageSizeOverride = null;
-    this.placeholder.after(this.root);
-    this.root.classList.remove("et-expanded");
-    this.expandBtn.textContent = "⛶";
-    this.expandBtn.title = "Expand table";
-    this.expandBtn.setAttribute("aria-expanded", "false");
-    this.expandBtn.focus({ preventScroll: true });
-    // Restore the notebook's configured page size and drop the fullscreen
-    // height baseline so the inline table shrinks back to its natural size.
-    this._resetBaselineHeight();
-    this.render();
-    requestAnimationFrame(() => this._applyFrozenOffsets());
+    return this._viewport.restore();
   }
 
   _resetBaselineHeight() {
@@ -1731,59 +869,12 @@ export class EvidentialTableRenderer {
 
   // Size the fullscreen page so the rows fill the available viewport height.
   _fitFullscreen() {
-    if (!this._expanded || this._fitting) return;
-    this._fitting = true;
-    try {
-      for (let attempt = 0; attempt < 3; attempt++) {
-        const row = this.scroller.querySelector("tbody tr");
-        const rowHeight = row ? row.getBoundingClientRect().height : ROW_HEIGHT;
-        const head = this.scroller.querySelector("thead");
-        const headerHeight = head ? head.getBoundingClientRect().height : 0;
-        const available = this.scroller.clientHeight - headerHeight;
-        if (available <= 0 || rowHeight <= 0) break;
-        // Leave a hair of slack so we never introduce a scrollbar.
-        const fit = Math.max(1, Math.floor((available - 2) / rowHeight));
-        if (fit === this._pageSizeOverride) break;
-        this._pageSizeOverride = fit;
-        this.render();
-      }
-    } finally {
-      this._fitting = false;
-    }
+    return this._viewport.fit();
   }
 
   // --------------------------------------------------------- frozen cols ---
   _applyFrozenOffsets() {
-    const n = this.options.freeze_columns || 0;
-    const table = this.scroller.querySelector("table");
-    if (!table || n <= 0) return;
-    const headerCells = table.querySelectorAll("thead tr:last-child th");
-    const offsets = [];
-    let cumulative = 0;
-    for (let i = 0; i < n && i < headerCells.length; i++) {
-      offsets.push(cumulative);
-      cumulative += headerCells[i].getBoundingClientRect().width;
-    }
-    const rows = table.querySelectorAll("tbody tr");
-    rows.forEach((tr) => {
-      const cells = tr.children;
-      for (let i = 0; i < n && i < cells.length; i++) {
-        const cell = cells[i];
-        cell.style.position = "sticky";
-        cell.style.left = `${offsets[i]}px`;
-        cell.style.zIndex = String(10 + (n - i));
-        cell.classList.add("et-frozen");
-        if (i === n - 1) cell.classList.add("et-frozen-last");
-      }
-    });
-    headerCells.forEach((th, i) => {
-      if (i < n) {
-        th.style.position = "sticky";
-        th.style.left = `${offsets[i] ?? 0}px`;
-        th.style.zIndex = String(30 + (n - i));
-        th.classList.add("et-frozen");
-      }
-    });
+    return this._viewport.applyFrozenOffsets();
   }
 
   // ------------------------------------------------------------- download ---
@@ -1810,128 +901,17 @@ export class EvidentialTableRenderer {
   }
 }
 
-function optString(value) {
-  if (typeof value === "object") return JSON.stringify(value);
-  return String(value);
-}
-
 /** Minimal inline markdown: **bold**, *italic* and `code` (no raw HTML). */
-function inlineMarkdown(text) {
-  const fragment = document.createDocumentFragment();
-  const source = String(text ?? "");
-  const pattern = /\*\*([^*]+)\*\*|__([^_]+)__|\*([^*]+)\*|_([^_]+)_|`([^`]+)`/g;
-  let last = 0;
-  for (const match of source.matchAll(pattern)) {
-    if (match.index > last) fragment.append(document.createTextNode(source.slice(last, match.index)));
-    const [full, bold, bold2, italic, italic2, code] = match;
-    const value = bold ?? bold2 ?? italic ?? italic2 ?? code ?? full;
-    if (code != null) fragment.append(h("code", {}, value));
-    else if (bold != null || bold2 != null) fragment.append(h("strong", {}, value));
-    else fragment.append(h("em", {}, value));
-    last = match.index + full.length;
-  }
-  if (last < source.length) fragment.append(document.createTextNode(source.slice(last)));
-  return fragment;
-}
 
 /** Map a figure style to a `font-variant-numeric` value (ALA). */
-function figureVariant(style) {
-  switch (style) {
-    case "oldstyle":
-    case "oldstyle-tabular":
-      return "oldstyle-nums tabular-nums";
-    case "proportional":
-    case "lining-proportional":
-      return "lining-nums proportional-nums";
-    case "oldstyle-proportional":
-      return "oldstyle-nums proportional-nums";
-    case "lining":
-    case "tabular":
-    case "lining-tabular":
-      return "lining-nums tabular-nums";
-    case "default":
-    case "auto":
-    case "none":
-      // Use the font's own default figures (e.g. Hoefler Text's oldstyle).
-      return "normal";
-    default:
-      return null;
-  }
-}
-
-function withFigure(baseStyle, col, opts) {
-  const style = { ...baseStyle };
-  const variant = figureVariant(col.figure_style ?? opts.figure_style);
-  if (variant) style.fontVariantNumeric = variant;
-  if (col.font) style.fontFamily = col.font;
-  return style;
-}
-
-function groupPath(group) {
-  if (!group) return [];
-  return Array.isArray(group) ? group.map(String) : [String(group)];
-}
 
 /** Stable Map/Set key for a group, which may be a string or a path array. */
-function groupKey(group) {
-  return Array.isArray(group) ? group.join("\u0000") : String(group);
-}
-
-function decimalPlaces(value) {
-  if (value === null || value === undefined || typeof value === "boolean") return null;
-  const text = String(value);
-  if (text.trim() === "" || isNaN(Number(text))) return null;
-  const dot = text.indexOf(".");
-  return dot === -1 ? 0 : text.length - dot - 1;
-}
 
 /** Force a base format (num/usd/pct/…) to a fixed number of decimals. */
-function withDecimals(format, decimals) {
-  const code = String(format || "num");
-  const base = code.replace(/\d+$/, "");
-  const bases = ["num", "usd", "eur", "gbp", "aud", "cad", "cny", "jpy", "inr", "krw", "ngn", "sek", "pct"];
-  if (!bases.includes(base)) return code;
-  const max = base === "pct" ? 3 : 4;
-  return base + Math.min(decimals, max);
-}
 
 /** Build one row of header cells per group level, nesting sub-groups. */
-function buildHeaderLevels(paths, depth) {
-  const levels = Array.from({ length: depth }, () => []);
-  function recurse(start, end, level) {
-    if (level >= depth) return;
-    let i = start;
-    while (i < end) {
-      const label = paths[i][level] ?? "";
-      let j = i + 1;
-      while (j < end && (paths[j][level] ?? "") === label) j++;
-      levels[level].push({ label, span: j - i, start: i });
-      recurse(i, j, level + 1);
-      i = j;
-    }
-  }
-  recurse(0, paths.length, 0);
-  return levels;
-}
 
 /** Compress a sorted list of row numbers into ranges, e.g. [1,2,3,5] -> "1–3, 5". */
-function formatRowRanges(rows) {
-  if (!rows.length) return "";
-  const ranges = [];
-  let start = rows[0];
-  let prev = rows[0];
-  for (let index = 1; index <= rows.length; index++) {
-    const value = rows[index];
-    if (value === prev + 1) {
-      prev = value;
-      continue;
-    }
-    ranges.push(start === prev ? String(start) : `${start}–${prev}`);
-    start = value;
-    prev = value;
-  }
-  return ranges.join(", ");
-}
 
 export function render({ model, el }) {
   el.classList.add("evidential-widget");

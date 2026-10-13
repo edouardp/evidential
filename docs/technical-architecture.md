@@ -452,6 +452,11 @@ flowchart TD
 
 ### 6.2 Visualisations
 
+`table.js` orchestrates the widget. Pure row processing lives in `rows.js`,
+cell formatting/decorating in `cells.js`, and the visualizations below in
+`visualizations.js`. Loading, hold-repeat, and viewport controllers own their
+timers and observers. See [ADR-037](adr/037-renderer-module-boundaries.md).
+
 - **Bar** (`_renderBar`). The bar is a positioned div behind a right-aligned
   label. The cell pulls into the cell padding with negative margins and the
   value is pushed back out by the same padding, so the bar can fill the row
@@ -712,6 +717,10 @@ validates its projections. See [marimo-studio.md](marimo-studio.md) and
 | `duck.py` | DuckDB connections, S3, S3 Tables |
 | `_compat.py` | soft Arrow/pandas detection |
 | `table.js` | renderer, pipeline, interaction, fullscreen, CSV |
+| `rows.js` | pure searching, sorting, grouping, pagination, statistics |
+| `cells.js`, `visualizations.js` | cell content, decoration, bars, deltas, sparklines |
+| `interactions.js`, `loading.js`, `viewport.js` | event binding and asynchronous lifecycles |
+| `dom.js` | DOM construction and shared presentation utilities |
 | `format.js` | `formatValue` on `ssf` |
 | `color.js` | colour scales on `chroma-js` |
 | `table.css` | styles, including the bar geometry |

@@ -55,6 +55,7 @@ dated, immutable record of the decisions behind them.
 | [034](034-uv-build-backend.md) | `uv_build` as the Build Backend | Accepted |
 | [035](035-correct-pivot-aggregations.md) | Aggregate Pivot Totals from Original Records | Accepted |
 | [036](036-persistent-column-configuration.md) | Preserve Explicit Column Configuration Across Refreshes | Accepted |
+| [037](037-renderer-module-boundaries.md) | Separate Renderer Processing, Cells, and Lifecycles | Accepted |
 
 ## Creating New ADRs
 

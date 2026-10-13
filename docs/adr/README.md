@@ -72,6 +72,7 @@ dated, immutable record of the decisions behind them.
 | [051](051-at-column-reference.md) | The `@column` Reference Convention | Accepted |
 | [052](052-centered-bar.md) | The Centred (Diverging) Bar | Accepted |
 | [053](053-named-color-scales.md) | Named Colour Scales and matplotlib Colour Names | Accepted |
+| [054](054-column-font-styling.md) | Column Font Styling and an Empty Title | Accepted |
 
 ## Creating New ADRs
 

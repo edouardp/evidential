@@ -19,8 +19,9 @@ be built, reused and composed:
 
 - labels and formatting: ``.title()``, ``.fmt()``/``.format()``, ``.align()``,
   ``.align_decimals()``, ``.figure_style()``, ``.font()``, ``.font_color()``,
+  ``.bold()``, ``.italic()``, ``.font_weight()``, ``.font_style()``,
   ``.wrap()``, ``.null_text()``, ``.blank()``/``.blank_below()``/``.blank_above()``,
-  ``.red_negatives()``, ``.rotate_title()``
+  ``.neg()``/``.red_negatives()``, ``.rotate_title()``
 - placement and metadata: ``.group()``, ``.subcolumn()``, ``.repeat_values()``,
   ``.hide()``, ``.info()``, ``.footnote()``, ``.sort_by()``, ``.highlight()``
 - cell content: ``.markdown()``, ``.html()``, ``.link()``, ``.image()``,

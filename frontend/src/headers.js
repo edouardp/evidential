@@ -109,7 +109,7 @@ export function decorateSubcolumn(cell, col, index, ctx) {
   cell.classList.toggle("et-subcolumn-left", join.left);
   cell.classList.toggle("et-subcolumn-right", join.right);
   // Keep individual member names available to assistive technology.
-  cell.setAttribute("aria-label", `${join.label}: ${col.title || formatTitle(col.name)}: ${cell.textContent}`);
+  cell.setAttribute("aria-label", `${join.label}: ${col.title ?? formatTitle(col.name)}: ${cell.textContent}`);
 }
 
 function headerTitle(title) {
@@ -190,7 +190,7 @@ export function renderHeader({columns, rowNumbers, options: opts, sort, onSort})
         ? opts.stub_head
         : opts.format_titles === false
           ? col.name
-          : col.title || formatTitle(col.name);
+          : col.title ?? formatTitle(col.name);
     if (leaf.label) title = leaf.label;
     if (opts.all_caps) title = String(title).toUpperCase();
     // A `\n` in the title forces a line break; whether other lines wrap at

@@ -220,6 +220,13 @@ def test_at_column_reference_works_in_a_dict_config() -> None:
     assert col.number("x", fmt="@")["fmt"] == "@"
 
 
+def test_bold_and_italic_options() -> None:
+    assert col.text("item").bold()["font_weight"] == "600"
+    assert col.text("note").italic()["font_style"] == "italic"
+    assert col.text("x").font_weight("700")["font_weight"] == "700"
+    assert "font_weight" not in col.text("item").bold(False)
+
+
 def test_named_colour_scales_are_validated() -> None:
     for scale in ("green", "viridis", "coolwarm", "RdBu"):
         EvidentialTable([{"x": 1}], columns=[col.number("x").color(scale=scale)])

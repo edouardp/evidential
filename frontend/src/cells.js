@@ -46,6 +46,8 @@ export function matchingRules(col, row, options) {
 /** Apply effects shared by ordinary, null, substituted and template cells. */
 export function decorateCell(td, col, row, ctx, rowIndex, style, includeFootnote, options) {
   if (col.font_color) td.style.color = col.font_color;
+  if (col.font_weight) td.style.fontWeight = col.font_weight;
+  if (col.font_style) td.style.fontStyle = col.font_style;
   const footnoteColumn = col.footnote || options.footnote_column;
   if (includeFootnote && footnoteColumn && row[footnoteColumn]) {
     const noteText = String(row[footnoteColumn]).trim();

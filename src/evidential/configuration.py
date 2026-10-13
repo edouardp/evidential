@@ -275,6 +275,8 @@ class ColumnOptions(TypedDict, total=False):
     figure_style: FigureStyle | None
     font: str | None
     font_color: str | None
+    font_weight: str | None
+    font_style: str | None
     rotate_title: Rotation | None
     align_decimals: bool | None
     template: str | None

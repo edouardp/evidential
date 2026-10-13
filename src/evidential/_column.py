@@ -241,6 +241,42 @@ class Column(Mapping[str, Any]):
         """
         return self._with(font_color=color)
 
+    def bold(self, value: bool = True) -> Column:
+        """Render the column's cells in bold.
+
+        Example::
+
+            col.text("item").bold()
+        """
+        return self._with(font_weight="600" if value else None)
+
+    def italic(self, value: bool = True) -> Column:
+        """Render the column's cells in italics.
+
+        Example::
+
+            col.text("note").italic()
+        """
+        return self._with(font_style="italic" if value else None)
+
+    def font_weight(self, value: str) -> Column:
+        """Set the CSS ``font-weight`` (e.g. ``"600"``, ``"bold"``).
+
+        Example::
+
+            col.text("total").font_weight("700")
+        """
+        return self._with(font_weight=value)
+
+    def font_style(self, value: str) -> Column:
+        """Set the CSS ``font-style`` (e.g. ``"italic"``, ``"oblique"``).
+
+        Example::
+
+            col.text("note").font_style("oblique")
+        """
+        return self._with(font_style=value)
+
     def wrap(self, value: bool = True) -> Column:
         """Allow (or forbid) the cell text to wrap onto several lines.
 

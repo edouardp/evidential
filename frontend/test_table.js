@@ -1267,6 +1267,20 @@ test("align_decimals pads numeric columns to a common precision", () => {
   renderer.destroy();
 });
 
+test("title='' gives an empty header; bold/italic style the column", () => {
+  const columns = [
+    { name: "line_item", type: "string", title: "", font_weight: "600", font_style: "italic" },
+  ];
+  const renderer = new EvidentialTableRenderer(makeModel([{ line_item: "Widget" }], columns, {}, el), el);
+  const th = el.querySelector("thead th");
+  // An empty title must NOT fall back to the formatted column name.
+  assert.ok(!th.textContent.includes("Line Item"), th.textContent);
+  const td = el.querySelector("tbody td");
+  assert.equal(td.style.fontWeight, "600");
+  assert.equal(td.style.fontStyle, "italic");
+  renderer.destroy();
+});
+
 test("neg colours, recolours and brackets negatives", () => {
   const columns = [
     {

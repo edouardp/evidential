@@ -1290,6 +1290,30 @@ test("neg colours, recolours and brackets negatives", () => {
   renderer.destroy();
 });
 
+test("bar pad insets the bar but not the centre line", () => {
+  const columns = [
+    {
+      name: "gdp",
+      type: "number",
+      fmt: "num1",
+      viz: "bar",
+      align: "right",
+      bar_options: { center: true, pad: 4, bar_color: "#0ea5e9" },
+    },
+  ];
+  const rows = [{ gdp: 10 }, { gdp: -5 }];
+  const renderer = new EvidentialTableRenderer(makeModel(rows, columns, {}, el), el);
+  const cell = el.querySelector("tbody .et-bar-cell");
+  const bar = cell.querySelector(".et-bar");
+  assert.equal(bar.style.top, "4px");
+  assert.equal(bar.style.bottom, "4px");
+  // The centre line keeps its full height (CSS), never the inline pad.
+  const axis = cell.querySelector(".et-bar-axis");
+  assert.equal(axis.style.top, "");
+  assert.equal(axis.style.bottom, "");
+  renderer.destroy();
+});
+
 test("centered bar grows left/right from a centre line, label opposite", () => {
   const columns = [
     {

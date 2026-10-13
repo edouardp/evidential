@@ -141,6 +141,7 @@ class BarOptions(TypedDict, total=False):
     hide_labels: bool | None
     fit_to_data: bool | None
     center: bool | None
+    pad: float | str | None
 
 
 class DeltaOptions(TypedDict, total=False):

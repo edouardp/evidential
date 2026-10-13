@@ -504,6 +504,7 @@ class Column(Mapping[str, Any]):
         hide_labels: bool | None = None,
         background: str | None = None,
         center: bool | None = None,
+        pad: float | str | None = None,
     ) -> Column:
         """Show each value as an inline horizontal bar with its label.
 
@@ -515,11 +516,14 @@ class Column(Mapping[str, Any]):
         :param center: draw a zero-centred "diverging" bar — the bar grows left
             (negative) or right (positive) from a centre line by its magnitude, and
             the value sits on the opposite side (the Economist's league-table bar).
+        :param pad: inset the bar from the top and bottom of the row (a number of
+            pixels or a CSS length), so it does not fill the cell height. The
+            centre line is **not** padded — it stays continuous down the column.
 
         Example::
 
             col.number("sales").fmt("usd0").bar(color="#93c5fd", fit_to_data=True)
-            col.percent("gdp", decimals=1).bar(center=True)
+            col.percent("gdp", decimals=1).bar(center=True, pad=4)
         """
         return self._with(
             viz="bar",
@@ -531,6 +535,7 @@ class Column(Mapping[str, Any]):
                 hide_labels=hide_labels,
                 background_color=background,
                 center=center,
+                pad=pad,
             ),
         )
 

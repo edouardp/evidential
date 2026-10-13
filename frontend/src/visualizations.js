@@ -16,6 +16,11 @@ export function renderBar(col, value, formatted, range) {
     formatted,
   );
   const background = opts.background_color ? { backgroundColor: opts.background_color } : {};
+  // `pad` insets the bar from the top and bottom (a px number or a CSS length);
+  // the centre line keeps its full height.
+  const pad =
+    opts.pad == null ? null : typeof opts.pad === "number" ? `${opts.pad}px` : String(opts.pad);
+  const barPad = pad == null ? {} : { top: pad, bottom: pad };
 
   if (opts.center) {
     // A zero-centred "diverging" bar: the bar grows left (negative) or right
@@ -25,7 +30,7 @@ export function renderBar(col, value, formatted, range) {
     const width = Math.max(0, Math.min(100, (Math.abs(num) / maxAbs) * 100)) / 2;
     const bar = h("div", {
       class: `et-bar et-bar-${negative ? "left" : "right"}`,
-      style: { width: `${width}%`, backgroundColor: color },
+      style: { width: `${width}%`, backgroundColor: color, ...barPad },
     });
     const axis = h("div", { class: "et-bar-axis" });
     const wrap = h("div", { class: "et-bar-wrap" }, [axis, bar]);
@@ -35,7 +40,10 @@ export function renderBar(col, value, formatted, range) {
 
   const span = max - min || 1;
   const pct = Math.max(0, Math.min(100, ((num - min) / span) * 100));
-  const bar = h("div", { class: "et-bar", style: { width: `${pct}%`, backgroundColor: color } });
+  const bar = h("div", {
+    class: "et-bar",
+    style: { width: `${pct}%`, backgroundColor: color, ...barPad },
+  });
   const wrap = h("div", { class: `et-bar-wrap${negative ? " et-bar-negative" : ""}` }, bar);
   const cell = h("div", { class: "et-bar-cell", style: background }, [wrap, label]);
   return cell;

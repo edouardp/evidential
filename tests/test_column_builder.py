@@ -220,6 +220,11 @@ def test_at_column_reference_works_in_a_dict_config() -> None:
     assert col.number("x", fmt="@")["fmt"] == "@"
 
 
+def test_bar_pad_option() -> None:
+    assert col.number("x").bar(center=True, pad=4)["bar_options"]["pad"] == 4
+    assert col.number("x").bar(pad="0.25rem")["bar_options"]["pad"] == "0.25rem"
+
+
 def test_neg_marks_and_brackets_negatives() -> None:
     assert col.currency("profit").neg()["red_negatives"] is True
     spec = col.currency("profit").neg(color="#b91c1c", bracket=True)

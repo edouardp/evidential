@@ -373,12 +373,12 @@
   margin: -0.25rem -0.75rem -0.25rem 0;
   padding: 0.25rem 0.75rem 0.25rem 0;
 }
-.et-bar-wrap { position: absolute; inset: 2px 4px 2px 0; }
+.et-bar-wrap { position: absolute; inset: 0 4px 0 0; }
 .et-bar-negative { left: 4px; right: 0; }
 .et-bar {
   position: absolute;
-  top: 0;
-  bottom: 0;
+  top: 2px;
+  bottom: 2px;
   left: 0;
   min-width: 1px;
   /* rectangular (no rounded corners) */
@@ -408,6 +408,7 @@
 /* Full height: the line and bars run edge-to-edge so the centre line joins the
    neighbouring rows into one rule down the column. */
 .et-bar-center .et-bar-wrap { inset: 0; }
+.et-bar-center .et-bar { top: 0; bottom: 0; }
 .et-bar-center .et-bar-axis {
   position: absolute;
   top: 0;

@@ -36,7 +36,9 @@ The renderer (`renderBar`), when `center` is set:
   (`.et-bar-label-left` / `.et-bar-label-right`).
 
 Colour follows the existing rule (`bar_color`, `bar_color_negative`), and
-`fit_to_data` still controls the range.
+`fit_to_data` still controls the range. `pad` (a px number or a CSS length)
+insets the **bar** from the top and bottom of the row; the centre line is never
+padded, so it stays full height and continuous.
 
 ### Consequences
 

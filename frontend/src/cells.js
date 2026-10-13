@@ -1,4 +1,5 @@
-import { h, optString, inlineMarkdown, withFigure } from "./dom.js";
+export { alignStyle } from "./dom.js";
+import { alignStyle, h, optString, inlineMarkdown, withFigure } from "./dom.js";
 import { formatValue } from "./format.js";
 import { withDecimals, indentForCell } from "./rows.js";
 import { calculateColorStyles, contrastTextColor } from "./color.js";
@@ -51,6 +52,7 @@ export function footnoteMark(index, options) {
 }
 
 export function decorateCell(td, col, row, ctx, rowIndex, style, includeFootnote, options) {
+  if (col.font_color) td.style.color = col.font_color;
   const footnoteColumn = col.footnote || options.footnote_column;
   if (includeFootnote && footnoteColumn && row[footnoteColumn]) {
     const noteText = String(row[footnoteColumn]).trim();
@@ -242,12 +244,6 @@ export function renderCell({row, col, index, ctx, rowIndex, options: opts, toggl
   }
 
   return finish();
-}
-
-export function alignStyle(col) {
-  const fallback = col.type === "number" ? "right" : "left";
-  const align = col.align || (col.viz === "chip" ? "center" : fallback);
-  return { textAlign: align };
 }
 
 function renderContent(col, value, formatted, ctx, row) {

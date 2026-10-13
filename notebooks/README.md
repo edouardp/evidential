@@ -35,6 +35,7 @@ and without network access.
 | [`27_chips.py`](27_chips.py) | `viz="chip"`: values in a rounded, centred chip, coloured by a scale or conditional colours. |
 | [`28_column_highlights.py`](28_column_highlights.py) | Highlight an entire column or column group with a background colour. |
 | [`29_row_selection.py`](29_row_selection.py) | Click a country row to drive a second table: the year-by-year drill-down re-queries on `table.widget.selected`. |
+| [`30_subcolumns.py`](30_subcolumns.py) | Shared-header sub-columns: economic value/period pairs and a three-part right-aligned value, left-aligned text, centered chip, plus a close recreation of the supplied Economist economic data table. |
 
 `sample_data/needful_things/orders.parquet` is Evidence's demo dataset, copied
 from the published docs site.

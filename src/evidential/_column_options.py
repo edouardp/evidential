@@ -35,6 +35,7 @@ _COLUMN_ALIASES = {
     "sortColumn": "sort_by",
     "highlightColor": "highlight",
     "highlight_color": "highlight",
+    "color": "font_color",
 }
 
 

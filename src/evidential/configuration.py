@@ -198,6 +198,7 @@ class ColumnOptions(TypedDict, total=False):
     image: str | None
     logo: str | None
     column_group: str | Sequence[str] | None
+    subcolumn_group: str | None
     info: str | None
     repeat_values: bool | None
     color_options: ColorOptions | None
@@ -218,6 +219,7 @@ class ColumnOptions(TypedDict, total=False):
     footnote: str | None
     figure_style: FigureStyle | None
     font: str | None
+    font_color: str | None
     rotate_title: Rotation | None
     align_decimals: bool | None
     template: str | None

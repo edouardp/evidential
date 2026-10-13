@@ -105,3 +105,28 @@ def test_make_column_normalizes_aliases_before_validation() -> None:
     assert column["red_negatives"] is True
     assert "contentType" not in column
     assert make_column("value", contentType=None).get("viz") is None
+
+
+def test_subcolumn_groups_keep_independent_configuration_across_refreshes() -> None:
+    table = EvidentialTable(
+        [{"value": 2.9, "period": "Q3", "status": "Stable"}],
+        column_config={
+            "value": {"subcolumn_group": "Latest", "align": "right", "fmt": "num1"},
+            "period": {"subcolumn_group": "Latest", "align": "left", "color": "#808080"},
+            "status": {"subcolumn_group": "Latest", "align": "center", "viz": "chip"},
+        },
+        column_groups={"GDP": ["value", "period", "status"]},
+    )
+    table.set_data([{"value": 12, "period": "Nov", "status": "Rising"}])
+    assert [col["subcolumn_group"] for col in table.columns] == ["Latest"] * 3
+    assert [col["align"] for col in table.columns] == ["right", "left", "center"]
+    assert [col["column_group"] for col in table.columns] == ["GDP"] * 3
+    assert table.columns[0]["fmt"] == "num1"
+    assert table.columns[1]["font_color"] == "#808080"
+    assert "color" not in table.columns[1]
+    assert table.columns[2]["viz"] == "chip"
+    table.set_column("period", subcolumn_group=None)
+    assert table.columns[1].get("subcolumn_group") is None
+    assert make_column("value", subcolumn_group="Latest")["subcolumn_group"] == "Latest"
+    with pytest.raises(TypeError, match="subcolumn_group"):
+        make_column("value", subcolumn_group=["Latest"])

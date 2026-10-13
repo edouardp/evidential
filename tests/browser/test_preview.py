@@ -309,3 +309,136 @@ def test_display_features(page, live_server):
         .first.evaluate("el => getComputedStyle(el).backgroundColor")
     )
     assert background == "rgb(254, 249, 195)"
+
+
+def render_subcolumns(page, live_server):
+    open_preview(page, live_server)
+    page.evaluate("""async () => {
+        const {default: widget} = await import('/src/evidential/static/table.js');
+        const el = document.createElement('div');
+        el.id = 'subcolumns';
+        el.className = 'evidential-widget';
+        document.body.append(el);
+        const data = {
+            rows: [
+                {country: 'A', value: 2, period: 'Q3', status: 'Steady'},
+                {country: 'B', value: 12.34, period: 'November', status: 'Expanding'},
+            ],
+            columns: [
+                {name: 'country'},
+                {name: 'value', type: 'number', fmt: 'num1', align: 'right', subcolumn_group: 'Latest', column_group: ['Economy', 'GDP']},
+                {name: 'period', align: 'left', subcolumn_group: 'Latest', column_group: ['Economy', 'GDP']},
+                {name: 'status', viz: 'chip', align: 'center', subcolumn_group: 'Latest', column_group: ['Economy', 'GDP']},
+            ],
+            options: {stretch: false, freeze_columns: 4, row_shading: true},
+        };
+        widget.render({el, model: {get: key => data[key], on: () => {}, off: () => {}}});
+        el.scrollIntoView();
+    }""")
+    page.wait_for_function("document.querySelector('#subcolumns .et-th-subcolumns').classList.contains('et-frozen')")
+
+
+def test_subcolumns_alignment_shared_header_and_keyboard_sort(page, live_server):
+    render_subcolumns(page, live_server)
+    header = page.locator("#subcolumns .et-th-subcolumns")
+    assert header.get_attribute("colspan") == "3"
+    assert header.inner_text() == "Latest"
+    cells = page.locator("#subcolumns tbody tr").first.locator("td")
+    assert [cells.nth(i).evaluate("el => getComputedStyle(el).textAlign") for i in (1, 2, 3)] == [
+        "right",
+        "left",
+        "center",
+    ]
+    assert cells.nth(1).inner_text() == "2.0"
+    assert cells.nth(3).locator(".et-chip").count() == 1
+    measurements = page.locator("#subcolumns tbody tr").evaluate_all("""rows => rows.map(row => {
+        const value = row.children[1];
+        const text = value.querySelector('.et-cell-value') || value;
+        const walker = document.createTreeWalker(text, NodeFilter.SHOW_TEXT);
+        let node;
+        while ((node = walker.nextNode())) {
+            const dot = node.textContent.indexOf('.');
+            if (dot < 0) continue;
+            const range = document.createRange();
+            range.setStart(node, dot);
+            range.setEnd(node, dot + 1);
+            return {decimal: range.getBoundingClientRect().x,
+                gap: parseFloat(getComputedStyle(value).paddingRight) + parseFloat(getComputedStyle(row.children[2]).paddingLeft)};
+        }
+    })""")
+    assert abs(measurements[0]["decimal"] - measurements[1]["decimal"]) < 0.5
+    assert measurements[0]["gap"] < 6
+    header.focus()
+    page.keyboard.press("Enter")
+    assert cell_text(page, "#subcolumns", 0, 0) == "B"
+    assert header.evaluate("el => el === document.activeElement")
+
+
+def test_subcolumns_frozen_edges_and_sticky_header_levels(page, live_server):
+    render_subcolumns(page, live_server)
+    geometry = page.locator("#subcolumns .et-table").evaluate("""table => {
+        const cells = [...table.querySelector('tbody tr').children];
+        const shared = table.querySelector('.et-th-subcolumns');
+        const rows = [...table.querySelectorAll('thead tr')];
+        return {
+            lefts: cells.map(el => parseFloat(el.style.left)),
+            widths: cells.map(el => el.getBoundingClientRect().width),
+            sharedLeft: parseFloat(shared.style.left),
+            tops: rows.map(row => parseFloat(row.children[0].style.top)),
+            heights: rows.map(row => row.getBoundingClientRect().height),
+        };
+    }""")
+    assert geometry["sharedLeft"] == pytest.approx(geometry["widths"][0], abs=0.5)
+    assert geometry["lefts"][3] == pytest.approx(sum(geometry["widths"][:3]), abs=0.5)
+    assert geometry["tops"][1] == pytest.approx(geometry["heights"][0], abs=0.5)
+    assert geometry["tops"][2] == pytest.approx(sum(geometry["heights"][:2]), abs=0.5)
+
+
+def test_economist_notebook_recreation_renders_transcribed_data(page, live_server, tmp_path):
+    import runpy
+    from pathlib import Path
+
+    notebook = Path(__file__).resolve().parents[2] / "notebooks" / "30_subcolumns.py"
+    _, definitions = runpy.run_path(str(notebook))["app"].run()
+    table = definitions["economist"].widget
+    open_preview(page, live_server)
+    page.evaluate(
+        """async ({rows, columns, options, css}) => {
+        const {default: widget} = await import('/src/evidential/static/table.js');
+        document.body.innerHTML = css + '<div class="economist-recreation"><div id="economist" class="evidential-widget"></div></div>';
+        const el = document.querySelector('#economist');
+        const data = {rows, columns, options};
+        widget.render({el, model: {get: key => data[key], on: () => {}, off: () => {}}});
+    }""",
+        {"rows": table.rows, "columns": table.columns, "options": table.options, "css": definitions["economist_css"]},
+    )
+    assert page.locator("#economist tbody tr").count() == 43
+    assert page.locator("#economist .et-th-subcolumns").count() == 3
+    assert cell_text(page, "#economist", 0, 1) == "2.9"
+    assert cell_text(page, "#economist", 0, 2) == "Q3"
+    assert (
+        page.locator("#economist tbody tr").first.locator("td").nth(2).evaluate("el => getComputedStyle(el).color")
+        == "rgb(128, 128, 128)"
+    )
+    assert cell_text(page, "#economist", 0, 3) == "4.9"
+    assert cell_text(page, "#economist", 41, 2) == "2022"
+    assert cell_text(page, "#economist", 33, 5) == "161"
+    assert cell_text(page, "#economist", 5, 1) == "nil"
+    assert page.locator("#economist .et-th-group").nth(1).locator("br").count() == 1
+    assert (
+        page.locator("#economist tbody tr")
+        .nth(9)
+        .locator("td")
+        .nth(1)
+        .evaluate("el => getComputedStyle(el).backgroundColor")
+        == "rgb(255, 193, 174)"
+    )
+    assert (
+        page.locator("#economist tbody tr")
+        .first.locator("td")
+        .first.evaluate("el => getComputedStyle(el).backgroundColor")
+        == "rgb(213, 231, 239)"
+    )
+    screenshot = tmp_path / "economist-subcolumns.png"
+    page.locator(".economist-recreation").screenshot(path=str(screenshot))
+    print(f"Economist demo screenshot: {screenshot}")

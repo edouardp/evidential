@@ -1,3 +1,4 @@
+import { renderHeader, headerLayout, decorateSubcolumn } from "./headers.js";
 import { RowPipeline } from "./derived.js";
 // Evidence-style data table renderer for the anywidget frontend.
 //
@@ -11,8 +12,7 @@ import { LoadingController } from "./loading.js";
 import { TableViewport } from "./viewport.js";
 import { h, optString, inlineMarkdown, withFigure, formatRowRanges } from "./dom.js";
 import { hiddenColumns, orderedColumns, visibleRows, searchRows, sortRows, paginateRows,
-  columnStats, computeRowspans, shaded, groupPath,
-  buildHeaderLevels } from "./rows.js";
+  columnStats, computeRowspans, shaded } from "./rows.js";
 import { renderCell, alignStyle, footnoteMark } from "./cells.js";
 import { formatValue, formatTitle } from "./format.js";
 import {
@@ -250,7 +250,7 @@ export class EvidentialTableRenderer {
       search: this._state.search, hidden: this._hiddenColumns(), sort: this._state.sort,
     });
     const { columns, hasGroups, dimCount, ranges, formatRanges, decimals, colorScales, stats } = processed;
-    const headerRowCount = columns.some((column) => column.column_group) ? 2 : 1;
+    const subcolumns = headerLayout(columns).joins;
     const visibility = this._pipeline.visible(processed, this._groupVersion, (key) => this._isCollapsed(key));
     const { rows, pageCount, page, total } = this._paginate(visibility.rows, visibility.hasGroups);
     this._pageCount = pageCount;
@@ -304,7 +304,7 @@ export class EvidentialTableRenderer {
           formatRanges,
           colorScales,
           hasGroups,
-          headerRowCount,
+          subcolumns,
           rowNumbers: !!opts.row_numbers,
           rowNumberBase: page * (Number(this._effectivePageSize()) || 0),
           section,
@@ -457,12 +457,13 @@ export class EvidentialTableRenderer {
     const tr = h("tr", { class: "et-row et-row-placeholder" });
     let first = null;
     if (ctx.rowNumbers) {
-      first = h("td", { class: "et-td et-row-num" });
+      first = h("td", { class: "et-td et-row-num", "data-column-index": 0 });
       tr.append(first);
     }
-    for (const col of columns) {
+    for (const [index, col] of columns.entries()) {
       const td = h("td", { class: "et-td", style: withFigure(this._alignStyle(col), col, opts) });
       if (!first) first = td;
+      decorateSubcolumn(td, col, index, ctx);
       tr.append(td);
     }
     if (opts.link) tr.append(h("td", { class: "et-td et-td-chevron" }));
@@ -481,8 +482,8 @@ export class EvidentialTableRenderer {
   _renderStatsRow(columns, ctx) {
     const opts = this.options;
     const row = h("tr", { class: "et-row et-stats-row" });
-    if (ctx.rowNumbers) row.append(h("td", { class: "et-td et-row-num" }, ""));
-    for (const col of columns) {
+    if (ctx.rowNumbers) row.append(h("td", { class: "et-td et-row-num", "data-column-index": 0 }, ""));
+    for (const [index, col] of columns.entries()) {
       const stat = ctx.stats.get(col.name) || { min: null, max: null, avg: null, nulls: 0, distinct: 0 };
       const block = h("div", { class: "et-stats" });
       block.append(
@@ -499,9 +500,9 @@ export class EvidentialTableRenderer {
         block.append(this._statsLine("distinct", formatValue(stat.distinct, "num0")));
       }
       block.append(this._statsLine("null", formatValue(stat.nulls, "num0")));
-      row.append(
-        h("td", { class: `et-td et-stats-cell${opts.stub === col.name ? " et-stub" : ""}` }, block),
-      );
+      const cell = h("td", { class: `et-td et-stats-cell${opts.stub === col.name ? " et-stub" : ""}` }, block);
+      decorateSubcolumn(cell, col, index, ctx);
+      row.append(cell);
     }
     return row;
   }
@@ -519,106 +520,13 @@ export class EvidentialTableRenderer {
   }
 
   _renderHeader(columns, ctx) {
-    const opts = this.options;
-    const thead = h("thead");
-    const paths = columns.map((column) => groupPath(column.column_group));
-    const depth = paths.reduce((max, path) => Math.max(max, path.length), 0);
-    if (depth > 0) {
-      const levels = buildHeaderLevels(paths, depth);
-      levels.forEach((cells, level) => {
-        const groupRow = h("tr", { class: "et-header-groups" });
-        if (ctx.rowNumbers && level === 0) {
-          groupRow.append(h("th", { class: "et-th et-th-group et-row-num", rowspan: depth }, ""));
-        }
-        for (const cell of cells) {
-          const th = h(
-            "th",
-            {
-              class: `et-th et-th-group${cell.label ? "" : " et-th-group-blank"}`,
-              colspan: cell.span,
-              "data-group": cell.label,
-              title: cell.label || null,
-            },
-            cell.label,
-          );
-          // Highlight a spanner only when every column it spans shares the same
-          // highlight — a whole-group band, not a single-column one.
-          const spanned = columns.slice(cell.start, cell.start + cell.span);
-          if (spanned.length && spanned.every((c) => c.highlight && c.highlight === spanned[0].highlight)) {
-            th.style.backgroundColor = spanned[0].highlight;
-          }
-          groupRow.append(th);
-        }
-        thead.append(groupRow);
-      });
-    }
-
-    const row = h("tr");
-    if (ctx.rowNumbers) {
-      row.append(h("th", { class: "et-th et-row-num", "aria-label": "Row number" }, "#"));
-    }
-    for (const col of columns) {
-      const sorted = this._state.sort?.column === col.name;
-      const dir = sorted ? this._state.sort.direction : null;
-      const isStub = opts.stub === col.name;
-      const rotation = col.rotate_title ?? (isStub ? null : opts.rotate_titles);
-      let thClass = `et-th${sorted ? " et-th-sorted" : ""}${isStub ? " et-stub-head" : ""}`;
-      if (rotation === "vertical") thClass += " et-th-vertical";
-      else if (typeof rotation === "number") thClass += " et-th-oblique";
-      const infoText = col.info ? String(col.info) : null;
-      const th = h("th", {
-        class: thClass,
-        style: withFigure(this._alignStyle(col), col, opts),
-        "aria-sort": sorted ? (dir === "asc" ? "ascending" : "descending") : "none",
-        // The description tooltip belongs to the whole header cell.
-        title: infoText,
-      });
-      if (typeof rotation === "number") {
-        th.style.setProperty("--et-th-angle", `${rotation}deg`);
-      }
-      if (col.highlight) th.style.backgroundColor = col.highlight;
-      const inner = h("span", { class: "et-th-inner" });
-      let title =
-        isStub && opts.stub_head
-          ? opts.stub_head
-          : opts.format_titles === false
-            ? col.name
-            : col.title || formatTitle(col.name);
-      if (opts.all_caps) title = String(title).toUpperCase();
-      // A `\n` in the title forces a line break; whether other lines wrap at
-      // spaces is up to `wrap_titles` (see CSS).
-      const titleEl = h("span", { class: "et-th-title" });
-      String(title)
-        .split("\n")
-        .forEach((line, index) => {
-          if (index > 0) titleEl.append(h("br"));
-          titleEl.append(document.createTextNode(line));
-        });
-      inner.append(titleEl);
-      if (infoText) {
-        inner.append(
-          h("span", { class: "et-th-info", role: "img", "aria-label": infoText }, "ⓘ"),
-        );
-      }
-      if (sorted) inner.append(h("span", { class: "et-sort-arrow" }, dir === "asc" ? "▲" : "▼"));
-      th.append(inner);
-      if (opts.sortable !== false) {
-        th.tabIndex = 0;
-        th.addEventListener("click", () => this._sortColumn(col.name));
-        th.addEventListener("keydown", (event) => {
-          if (event.key !== "Enter" && event.key !== " ") return;
-          event.preventDefault();
-          this._sortColumn(col.name);
-          const replacement = [...this.scroller.querySelectorAll("thead tr:last-child th")]
-            .find((cell) => cell.dataset.column === col.name);
-          replacement?.focus({ preventScroll: true });
-        });
-        th.dataset.column = col.name;
-      }
-      row.append(th);
-    }
-    thead.append(row);
-    return thead;
+    return renderHeader({columns, rowNumbers: ctx.rowNumbers, options: this.options,
+      sort: this._state.sort, onSort: (name) => {
+        this._sortColumn(name);
+        const replacement = [...this.scroller.querySelectorAll("thead [data-column]")]
+          .find((cell) => cell.dataset.column === name);
+        replacement?.focus({preventScroll: true});
+      }});
   }
 
   _alignStyle(col) {
@@ -695,7 +603,7 @@ export class EvidentialTableRenderer {
     if (ctx.rowNumbers) {
       const numberCell = h(
         "td",
-        { class: "et-td et-row-num" },
+        { class: "et-td et-row-num", "data-column-index": 0 },
         String((ctx.rowNumberBase || 0) + index + 1),
       );
       if (rowColorStyles) {
@@ -709,7 +617,10 @@ export class EvidentialTableRenderer {
     columns.forEach((col, columnIndex) => {
       const cell = renderCell({row, col, index: columnIndex, ctx, rowIndex, options: opts,
         toggleGroup: (key, focus) => this._toggleGroup(key, focus), isCollapsed, rowColorStyles});
-      if (cell) tr.append(cell);
+      if (cell) {
+        decorateSubcolumn(cell, col, columnIndex, ctx);
+        tr.append(cell);
+      }
     });
 
     if (opts.link) {

@@ -1,3 +1,4 @@
+export { groupPath, groupKey, buildHeaderLevels, orderedColumns } from "./headers.js";
 // Pure row and column processing; input records are never mutated.
 export function compareValues(a, b, type) {
   if (a === null || a === undefined) return b === null || b === undefined ? 0 : 1;
@@ -14,15 +15,6 @@ export function compareValues(a, b, type) {
   if (a < b) return -1;
   if (a > b) return 1;
   return 0;
-}
-
-export function groupPath(group) {
-  if (!group) return [];
-  return Array.isArray(group) ? group.map(String) : [String(group)];
-}
-
-export function groupKey(group) {
-  return Array.isArray(group) ? group.join("\u0000") : String(group);
 }
 
 export function decimalPlaces(value) {
@@ -42,54 +34,10 @@ export function withDecimals(format, decimals) {
   return base + Math.min(decimals, max);
 }
 
-export function buildHeaderLevels(paths, depth) {
-  const levels = Array.from({ length: depth }, () => []);
-  function recurse(start, end, level) {
-    if (level >= depth) return;
-    let i = start;
-    while (i < end) {
-      const label = paths[i][level] ?? "";
-      let j = i + 1;
-      while (j < end && (paths[j][level] ?? "") === label) j++;
-      levels[level].push({ label, span: j - i, start: i });
-      recurse(i, j, level + 1);
-      i = j;
-    }
-  }
-  recurse(0, paths.length, 0);
-  return levels;
-}
-
 export function hiddenColumns(columns, hiddenState) {
   const set = new Set(hiddenState);
   for (const col of columns) if (col.hide) set.add(col.name);
   return set;
-}
-
-export function orderedColumns(columns, options) {
-  if (options.order_columns_by_group === false) return columns;
-  const grouped = new Map();
-  for (const col of columns) {
-    if (!col.column_group) continue;
-    const key = groupKey(col.column_group);
-    if (!grouped.has(key)) grouped.set(key, []);
-    grouped.get(key).push(col);
-  }
-  if (!grouped.size) return columns;
-  const emitted = new Set();
-  const ordered = [];
-  for (const col of columns) {
-    const group = col.column_group;
-    if (!group) {
-      ordered.push(col);
-      continue;
-    }
-    const key = groupKey(group);
-    if (emitted.has(key)) continue;
-    emitted.add(key);
-    ordered.push(...grouped.get(key));
-  }
-  return ordered;
 }
 
 export function visibleRows(rows, isCollapsed) {

@@ -1355,3 +1355,83 @@ test("theme.background drives the opaque expanded surface", () => {
   assert.equal(root.style.getPropertyValue("--et-surface"), "#123456");
   renderer.destroy();
 });
+
+test("three sub-columns share a sortable header and retain independent cell rendering", () => {
+  const columns = [
+    {name: "country", type: "string"},
+    {name: "value", type: "number", fmt: "num1", align: "right", subcolumn_group: "Latest"},
+    {name: "period", align: "left", font_color: "#808080", subcolumn_group: "Latest"},
+    {name: "status", viz: "chip", align: "center", subcolumn_group: "Latest"},
+  ];
+  const rows = [
+    {country: "A", value: 2, period: "Q3", status: "Stable"},
+    {country: "B", value: 12.34, period: "Nov", status: "Rising"},
+  ];
+  const renderer = new EvidentialTableRenderer(makeModel(rows, columns, {row_numbers: true}, el), el);
+  const header = el.querySelector(".et-th-subcolumns");
+  assert.equal(header.textContent, "Latest");
+  assert.equal(header.colSpan, 3);
+  assert.equal(header.getAttribute("scope"), "colgroup");
+  assert.equal(el.querySelectorAll("thead th").length, 3);
+  const cells = [...el.querySelector("tbody tr").children];
+  assert.deepEqual(cells.slice(2).map((cell) => cell.style.textAlign), ["right", "left", "center"]);
+  assert.equal(cells[2].textContent, "2.0");
+  assert.equal(cells[3].textContent, "Q3");
+  assert.equal(cells[3].style.color, "rgb(128, 128, 128)");
+  assert.ok(cells[4].querySelector(".et-chip"));
+  assert.ok(cells[2].classList.contains("et-subcolumn-right"));
+  assert.ok(!cells[2].classList.contains("et-subcolumn-left"));
+  assert.ok(cells[3].classList.contains("et-subcolumn-left"));
+  assert.ok(!cells[4].classList.contains("et-subcolumn-right"));
+  assert.equal(cells[4].dataset.columnIndex, "4");
+  assert.match(cells[2].getAttribute("aria-label"), /Latest: Value: 2.0/);
+  header.dispatchEvent(new window.KeyboardEvent("keydown", {key: "Enter", bubbles: true}));
+  assert.equal(el.querySelector("tbody tr td:nth-child(2)").textContent, "B");
+  assert.equal(el.querySelector(".et-th-subcolumns").getAttribute("aria-sort"), "descending");
+  assert.equal(document.activeElement, el.querySelector(".et-th-subcolumns"));
+  renderer._state.hidden.add("period");
+  renderer.render();
+  assert.equal(el.querySelector(".et-th-subcolumns").colSpan, 2);
+  renderer.destroy();
+});
+
+test("sub-column joins also apply to empty placeholders and summary statistics", () => {
+  const columns = [
+    {name: "value", type: "number", subcolumn_group: "Latest"},
+    {name: "period", subcolumn_group: "Latest"},
+  ];
+  const model = makeModel([], columns, {empty_rows: 2, row_numbers: true, column_stats: true}, el);
+  const renderer = new EvidentialTableRenderer(model, el);
+  assert.equal(el.querySelectorAll(".et-row-placeholder .et-subcolumn-left").length, 2);
+  model.set("rows", [{value: null, period: "Q3"}]);
+  renderer.render();
+  assert.ok(el.querySelector(".et-stats-cell.et-subcolumn-right"));
+  assert.equal(el.querySelector(".et-null").closest("td").dataset.columnIndex, "1");
+  renderer.destroy();
+});
+
+test("multiline parent headers render explicit breaks above shared sub-columns", () => {
+  const columns = [
+    {name: "value", column_group: "GDP\n% change on year ago:", subcolumn_group: "Latest"},
+    {name: "period", column_group: "GDP\n% change on year ago:", subcolumn_group: "Latest"},
+  ];
+  const renderer = new EvidentialTableRenderer(makeModel([{value: 2.9, period: "Q3"}], columns, {}, el), el);
+  const parent = el.querySelector(".et-th-group");
+  assert.equal(parent.querySelectorAll("br").length, 1);
+  assert.equal(parent.querySelectorAll(".et-th-line").length, 2);
+  assert.equal(el.querySelector(".et-th-subcolumns").colSpan, 2);
+  renderer.destroy();
+});
+
+test("font_color decorates nulls, templates and chips while location rules win", () => {
+  const columns = [
+    {name: "missing", font_color: "gray"},
+    {name: "merged", template: "{value}", font_color: "gray"},
+    {name: "status", viz: "chip", font_color: "gray"},
+  ];
+  const renderer = new EvidentialTableRenderer(makeModel([{value: "Q3", status: "Stable"}], columns, {
+    rules: [{columns: ["merged"], style: {color: "red"}}],
+  }, el), el);
+  assert.deepEqual([...el.querySelectorAll("tbody td")].map((cell) => cell.style.color), ["gray", "red", "gray"]);
+  renderer.destroy();
+});

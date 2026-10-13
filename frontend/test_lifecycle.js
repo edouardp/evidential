@@ -47,3 +47,29 @@ test("viewport disposal cancels pending layout work", (t) => {
   assert.equal(calls, 0);
   assert.equal(viewport.frames.size, 0);
 });
+
+test("frozen offsets use physical columns and preserve nested header heights", () => {
+  const scroller = dom.window.document.createElement("div");
+  scroller.innerHTML = `<table><thead>
+    <tr><th data-column-start="0" colspan="4">Economy</th></tr>
+    <tr><th data-column-start="0">Country</th><th data-column-start="1" colspan="3">Latest</th></tr>
+    </thead><tbody><tr>${[0,1,2,3].map((i) => `<td data-column-index="${i}">${i}</td>`).join("")}</tr></tbody></table>`;
+  scroller.querySelector("table").getBoundingClientRect = () => ({left: 10});
+  const rows = scroller.querySelectorAll("thead tr");
+  rows[0].getBoundingClientRect = () => ({height: 25});
+  rows[1].getBoundingClientRect = () => ({height: 30});
+  for (const [index, cell] of [...scroller.querySelectorAll("td")].entries()) {
+    cell.getBoundingClientRect = () => ({left: [10, 110, 150, 180][index]});
+  }
+  const options = {freeze_columns: 3};
+  const viewport = new TableViewport({scroller, getOptions: () => options});
+  viewport.applyFrozenOffsets();
+  assert.deepEqual([...scroller.querySelectorAll("td")].map((cell) => cell.style.left), ["0px", "100px", "140px", ""]);
+  assert.equal(rows[1].children[0].style.top, "25px");
+  assert.ok(!rows[1].children[1].classList.contains("et-frozen"));
+  options.freeze_columns = 4;
+  viewport.applyFrozenOffsets();
+  assert.equal(rows[1].children[1].style.left, "100px");
+  assert.ok(rows[0].children[0].classList.contains("et-frozen"));
+  viewport.destroy();
+});

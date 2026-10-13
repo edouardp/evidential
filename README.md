@@ -532,6 +532,7 @@ types for editor assistance. See [ADR-038](docs/adr/038-typed-configuration-vali
 | `blank` / `blank_if` | Python callable `value -> bool`; `True` blanks the cell. |
 | `footnote`, `footnote_column` | Column of footnote text; cells show a superscript and the footer lists notes with their rows. |
 | `align` | `left`, `right`, `center` (defaults by type). |
+| `font_color` (`color`) | Data-cell text color; location style rules take precedence. |
 | `font` | Font family for this column (e.g. `"'Hoefler Text', serif"`). |
 | `figure_style` | `lining-tabular` (default), `oldstyle`, `proportional`, … |
 | `wrap`, `hide`, `red_negatives` | Layout / value tweaks. |
@@ -548,6 +549,36 @@ types for editor assistance. See [ADR-038](docs/adr/038-typed-configuration-vali
 | `footnote` | Name of a column whose value is this cell's footnote text. |
 | `info` (`comment`, `description`) | Header description, shown as a native tooltip on the whole header cell (marked **ⓘ**). |
 | `column_group`, `repeat_values`, `viz_include_subtotals` | Additional metadata. |
+| `subcolumn_group` | Shared leaf header for two or more columns; narrow internal spacing, independent alignment and formatting. Scoped to the full `column_group` path. |
+
+### Sub-columns
+
+Give two or more members the same `subcolumn_group` to display them under one
+header. Each member remains a separate data column. For aligned decimal points,
+use a fixed precision such as `num1` on the right-aligned numeric member:
+
+```python
+table = EvidentialTable(
+    [{"value": 2.9, "period": "Q3", "status": "Steady"}],
+    column_config={
+        "value": {"subcolumn_group": "Latest", "fmt": "num1", "align": "right"},
+        "period": {"subcolumn_group": "Latest", "align": "left", "font_color": "#808080"},
+        "status": {"subcolumn_group": "Latest", "viz": "chip", "align": "center"},
+    },
+    stretch=False,
+)
+```
+
+Members cluster at their first occurrence within the same parent header path.
+With `order_columns_by_group=False`, only adjacent members share a header.
+The shared header sorts by its first visible member (or that member's `sort_by`).
+Hiding a member updates the header span and spacing. CSV exports keep individual
+columns. `freeze_columns` counts physical columns; a shared header sticks only
+when its entire span is frozen.
+
+See [the demo notebook](notebooks/30_subcolumns.py) for an economic table and a
+three-member value/text/chip example and an Economist-style recreation, and
+[ADR-040](docs/adr/040-shared-header-subcolumns.md) for the design.
 
 ### Table options
 

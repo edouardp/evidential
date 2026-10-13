@@ -218,6 +218,8 @@ export function formatValue(value, formatCode, opts = {}) {
         processed = toDate(processed) || processed;
       }
     }
+    // Numeric columns can also contain textual missing-value labels.
+    if (typeof processed === "number" && !Number.isFinite(processed)) return fallbackValue;
 
     let actual = code;
     if ((processed === 0 || processed === "0") && code.length === 3 && BASE_AUTO_FORMATS.includes(code)) {

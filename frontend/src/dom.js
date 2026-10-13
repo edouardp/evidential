@@ -90,3 +90,10 @@ export function formatRowRanges(rows) {
   }
   return ranges.join(", ");
 }
+
+export function alignStyle(col) {
+  const fallback = col.type === "number" ? "right" : "left";
+  const align = col.align || (col.viz === "chip" ? "center" : fallback);
+  return { textAlign: align };
+}
+

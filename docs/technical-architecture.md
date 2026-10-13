@@ -63,6 +63,7 @@ src/evidential/        Python package (the anywidget)
 frontend/src/               frontend sources
   index.js                  re-exports table.js
   table.js                  renderer + render() entry
+  headers.js                column ordering, shared headers and member layout
   format.js                 formatValue on top of ssf
   color.js                  colour scales on top of chroma-js
   table.css                 styles
@@ -722,6 +723,7 @@ validates its projections. See [marimo-studio.md](marimo-studio.md) and
 | `_compat.py` | soft Arrow/pandas detection |
 | `table.js` | renderer, pipeline, interaction, fullscreen, CSV |
 | `rows.js` | pure searching, sorting, grouping, pagination, statistics |
+| `headers.js` | column ordering, nested spanners, shared sub-column headers and member decoration |
 | `derived.js` | cached dataset projections and independently keyed group visibility |
 | `cells.js`, `visualizations.js` | cell content, decoration, bars, deltas, sparklines |
 | `interactions.js`, `loading.js`, `viewport.js` | event binding and asynchronous lifecycles |

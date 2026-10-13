@@ -294,6 +294,9 @@
   background: var(--et-bg);
 }
 .et-td:first-child { padding-left: 0.25rem; }
+/* Shared-header sub-columns retain separate widths and alignment. */
+.et-td.et-subcolumn-left { padding-left: 0.15rem; }
+.et-td.et-subcolumn-right { padding-right: 0.15rem; }
 .et-root.et-no-row-lines .et-td { border-bottom: none; }
 .et-row-shaded .et-td { background: var(--et-shading); }
 .et-row:hover .et-td { background: var(--et-hover); }

@@ -46,3 +46,9 @@ test("titles", () => {
   assert.equal(formatTitle("total_revenue"), "Total Revenue");
   assert.equal(formatTitle("sum(trip_distance)"), "Sum(Trip Distance)");
 });
+
+test("numeric columns preserve textual missing-value labels instead of displaying NaN", () => {
+  assert.equal(formatValue("nil", "num1", {type: "number"}), "nil");
+  assert.equal(formatValue("na", "num1", {type: "number", fallback: "Unavailable"}), "Unavailable");
+  assert.equal(formatValue("2.9", "num1", {type: "number"}), "2.9");
+});

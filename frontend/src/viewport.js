@@ -119,33 +119,46 @@ export class TableViewport {
     if (this.destroyed) return;
     const n = this.getOptions().freeze_columns || 0;
     const table = this.scroller.querySelector("table");
-    if (!table || n <= 0) return;
-    const headerCells = table.querySelectorAll("thead tr:last-child th");
-    const offsets = [];
-    let cumulative = 0;
-    for (let i = 0; i < n && i < headerCells.length; i++) {
-      offsets.push(cumulative);
-      cumulative += headerCells[i].getBoundingClientRect().width;
+    if (!table) return;
+    // Each header level sticks below the previous one, even without freezing.
+    let top = 0;
+    for (const row of table.querySelectorAll("thead tr")) {
+      for (const cell of row.children) cell.style.top = `${top}px`;
+      top += row.getBoundingClientRect().height;
     }
-    const rows = table.querySelectorAll("tbody tr");
-    rows.forEach((tr) => {
-      const cells = tr.children;
-      for (let i = 0; i < n && i < cells.length; i++) {
-        const cell = cells[i];
-        cell.style.position = "sticky";
-        cell.style.left = `${offsets[i]}px`;
-        cell.style.zIndex = String(10 + (n - i));
-        cell.classList.add("et-frozen");
-        if (i === n - 1) cell.classList.add("et-frozen-last");
+    if (n <= 0) return;
+    // Measure physical column edges, never infer them from spanning headers.
+    // Reading before writing avoids measuring already-sticky cells on resize.
+    const bodyCells = [...table.querySelectorAll("tbody [data-column-index]")];
+    const headerCells = [...table.querySelectorAll("thead [data-column-start]")];
+    for (const cell of [...bodyCells, ...headerCells]) {
+      cell.style.left = "";
+      cell.classList.remove("et-frozen", "et-frozen-last");
+      if (cell.tagName === "TD") cell.style.position = "";
+    }
+    const offsets = new Map();
+    const tableLeft = table.getBoundingClientRect().left;
+    for (const cell of bodyCells) {
+      const index = Number(cell.dataset.columnIndex);
+      if (index < n && !offsets.has(index)) {
+        offsets.set(index, cell.getBoundingClientRect().left - tableLeft);
       }
-    });
-    headerCells.forEach((th, i) => {
-      if (i < n) {
-        th.style.position = "sticky";
-        th.style.left = `${offsets[i] ?? 0}px`;
-        th.style.zIndex = String(30 + (n - i));
-        th.classList.add("et-frozen");
+    }
+    const freeze = (cell, index, base) => {
+      if (index >= n || !offsets.has(index)) return;
+      cell.style.position = "sticky";
+      cell.style.left = `${offsets.get(index)}px`;
+      cell.style.zIndex = String(base + n - index);
+      cell.classList.add("et-frozen");
+      if (index + cell.colSpan === n) cell.classList.add("et-frozen-last");
+    };
+    for (const cell of bodyCells) freeze(cell, Number(cell.dataset.columnIndex), 10);
+    for (const cell of headerCells) {
+      const start = Number(cell.dataset.columnStart);
+      // A header crossing the frozen boundary continues to scroll as a whole.
+      if (start + cell.colSpan <= n) {
+        freeze(cell, start, 30);
       }
-    });
+    }
   }
 }

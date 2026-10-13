@@ -81,6 +81,8 @@ def _(EvidentialTable, col, leagues, mo, settings):
                 row_lines=False,
                 border=False,
                 stretch=False,
+                # a small table reads better a step above the dense baseline
+                font_size="+1",
             ),
             columns=[
                 col.markdown("country"),
@@ -162,6 +164,9 @@ def _(mo):
     - It composes with the usual helpers, e.g.
       `col.currency("change").bar(center=True).neg(bracket=True)` or a
       `@column` colour reference.
+    - `font_size` raises or lowers the whole table from the shared baseline: a
+      CSS length (`"14px"`) sets it absolutely, a step (`"+1"`, `"-1"`) adds
+      that many 1px steps. This table uses `font_size="+1"`.
     """)
     return
 

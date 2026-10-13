@@ -20,7 +20,7 @@ if (!dom.window.HTMLDialogElement.prototype.showModal) {
   dom.window.HTMLDialogElement.prototype.close = function () { this.open = false; this.dispatchEvent(new dom.window.Event("close")); };
 }
 
-const { EvidentialTableRenderer, render } = await import("./src/table.js");
+const { EvidentialTableRenderer, render, fontSizeValue } = await import("./src/table.js");
 
 test("numeric color and chip scales use inferred ranges", () => {
   for (const viz of ["color", "chip"]) {
@@ -1265,6 +1265,16 @@ test("align_decimals pads numeric columns to a common precision", () => {
   const cells = [...el.querySelectorAll("tbody .et-cell-value")].map((cell) => cell.textContent);
   assert.deepEqual(cells, ["1.50", "12.25", "3.00"]);
   renderer.destroy();
+});
+
+test("font_size: absolute lengths and relative steps", () => {
+  assert.equal(fontSizeValue("14px"), "14px");
+  assert.equal(fontSizeValue("1rem"), "1rem");
+  // A relative step adds N * 0.0625rem (1px) to the baseline.
+  assert.equal(fontSizeValue("+2"), "calc(var(--et-font-size-base, 0.75rem) + 0.125rem)");
+  assert.equal(fontSizeValue("-1"), "calc(var(--et-font-size-base, 0.75rem) + -0.0625rem)");
+  assert.equal(fontSizeValue(2), "calc(var(--et-font-size-base, 0.75rem) + 0.125rem)");
+  assert.equal(fontSizeValue(null), null);
 });
 
 test("title='' gives an empty header; bold/italic style the column", () => {

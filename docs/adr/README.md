@@ -73,6 +73,7 @@ dated, immutable record of the decisions behind them.
 | [052](052-centered-bar.md) | The Centred (Diverging) Bar | Accepted |
 | [053](053-named-color-scales.md) | Named Colour Scales and matplotlib Colour Names | Accepted |
 | [054](054-column-font-styling.md) | Column Font Styling and an Empty Title | Accepted |
+| [055](055-table-font-size.md) | Table-level `font_size` (Absolute or Relative) | Accepted |
 
 ## Creating New ADRs
 

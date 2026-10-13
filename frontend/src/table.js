@@ -16,6 +16,23 @@ import { hiddenColumns, visibleRows, searchRows, sortRows, paginateRows,
   computeRowspans, shaded } from "./rows.js";
 import { renderCell } from "./cells.js";
 import { formatTitle } from "./format.js";
+
+/** Map a `font_size` to a CSS value.
+ *
+ * An absolute CSS length ("14px", "1rem") is used as-is. A relative step — a
+ * number or a "+2" / "-1" string — is added to `--et-font-size-base` by that
+ * many 0.0625rem (1px at the usual 16px root) steps, so a table can sit a little
+ * above or below the shared baseline.
+ */
+export function fontSizeValue(value) {
+  if (value == null || value === "") return null;
+  const text = String(value).trim();
+  if (typeof value === "number" || /^[+-]?\d+(\.\d+)?$/.test(text)) {
+    const steps = Number(text);
+    return `calc(var(--et-font-size-base, 0.75rem) + ${steps * 0.0625}rem)`;
+  }
+  return text;
+}
 import { colorStylesFromHex } from "./color.js";
 
 export class EvidentialTableRenderer {
@@ -134,7 +151,7 @@ export class EvidentialTableRenderer {
       "--et-negative": theme.negative,
       "--et-accent": theme.accent,
       "--et-font": theme.font,
-      "--et-font-size": theme.font_size,
+      "--et-font-size": fontSizeValue(opts.font_size) || theme.font_size,
     };
     for (const [k, v] of Object.entries(vars)) {
       for (const element of [this.root, this.dialog]) {

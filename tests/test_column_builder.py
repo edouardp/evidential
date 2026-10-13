@@ -220,6 +220,11 @@ def test_at_column_reference_works_in_a_dict_config() -> None:
     assert col.number("x", fmt="@")["fmt"] == "@"
 
 
+def test_font_size_option() -> None:
+    assert EvidentialTable([{"x": 1}], font_size="+2").options["font_size"] == "+2"
+    assert EvidentialTable([{"x": 1}], font_size="14px").options["font_size"] == "14px"
+
+
 def test_bold_and_italic_options() -> None:
     assert col.text("item").bold()["font_weight"] == "600"
     assert col.text("note").italic()["font_style"] == "italic"

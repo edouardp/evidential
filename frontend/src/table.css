@@ -21,8 +21,10 @@
   --et-link: #2563eb;
   --et-negative: #dc2626;
   --et-accent: #2563eb;
-  /* Evidence uses Tailwind's text-xs for the table. */
-  --et-font-size: 0.75rem;
+  /* Evidence uses Tailwind's text-xs for the table; `font_size` can raise or
+     lower it (absolutely, or relatively as `+N` / `-N` steps). */
+  --et-font-size-base: 0.75rem;
+  --et-font-size: var(--et-font-size-base);
 }
 
 .et-root {

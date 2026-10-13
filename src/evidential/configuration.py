@@ -72,6 +72,7 @@ class TableOptions(TypedDict, total=False):
     group_gap: bool
     rotate_titles: Rotation | None
     figure_style: FigureStyle | None
+    font_size: float | str | None
     footnote_column: str | None
     footnotes: Sequence[str] | None
     info: str | None
@@ -297,6 +298,7 @@ TABLE_DEFAULTS: TableOptions = {
     "group_gap": False,
     "rotate_titles": None,
     "figure_style": None,
+    "font_size": None,
     "footnote_column": None,
     "footnotes": None,
     "info": None,

@@ -34,6 +34,7 @@ def _():
     from evidential import (
         EvidentialTable,
         LiveEvidentialTable,
+        col,
         comparison_table,
         grouped_table,
         pivot_table,
@@ -43,6 +44,7 @@ def _():
         EvidentialTable,
         LiveEvidentialTable,
         Path,
+        col,
         comparison_table,
         duckdb,
         grouped_table,
@@ -186,7 +188,7 @@ def _(connection, mo):
 
 
 @app.cell
-def _(LiveEvidentialTable, connection):
+def _(LiveEvidentialTable, col, connection):
     ranking = LiveEvidentialTable(
         connection,
         """
@@ -208,12 +210,12 @@ def _(LiveEvidentialTable, connection):
         page_size=15,
         search=True,
         row_shading=True,
-        column_config={
-            "country": {"align": "left"},
-            "region": {"align": "left"},
-            "income_group": {"title": "Income group", "align": "left"},
-            "value": {"fmt": "num", "viz": "bar"},
-        },
+        columns=[
+            col.text("country"),
+            col.text("region"),
+            col.text("income_group", title="Income group"),
+            col.number("value", fmt="num").bar(),
+        ],
     )
     ranking
     return (ranking,)
@@ -254,7 +256,7 @@ def _(connection, mo):
 
 
 @app.cell
-def _(EvidentialTable, connection, mo, trend_country):
+def _(EvidentialTable, col, connection, mo, trend_country):
     trend = mo.ui.anywidget(
         EvidentialTable(
             connection.sql(
@@ -269,10 +271,10 @@ def _(EvidentialTable, connection, mo, trend_country):
             title=f"{trend_country.value} — life expectancy at birth",
             max_height="420px",
             row_lines=False,
-            column_config={
-                "year": {"fmt": "num0", "align": "left"},
-                "value": {"fmt": "num2", "viz": "bar"},
-            },
+            columns=[
+                col.number("year", fmt="yyyy", align="left"),
+                col.number("value", fmt="num2").bar(),
+            ],
         )
     )
     trend
@@ -295,7 +297,7 @@ def _(mo):
 
 
 @app.cell
-def _(EvidentialTable, connection, indicator, mo, region):
+def _(EvidentialTable, col, connection, indicator, mo, region):
     sparklines = mo.ui.anywidget(
         EvidentialTable(
             connection.sql(
@@ -392,42 +394,25 @@ def _(EvidentialTable, connection, indicator, mo, region):
             page_size=12,
             row_shading=True,
             default_sort={"column": "trend", "direction": "desc"},
-            column_config={
-                "country": {"align": "left"},
-                "region": {"align": "left"},
-                "years": {"fmt": "num0", "align": "right"},
-                "latest": {"fmt": "num", "align": "right"},
-                "pct_change": {
-                    "title": "% change (5y vs 10y)",
-                    "fmt": "pct1",
-                    "viz": "delta",
-                    "align": "right",
-                },
-                "kendall_tau": {
-                    "title": "Kendall τ",
-                    "fmt": "num2",
-                    "viz": "color",
-                    "color_scale": ["#dc262633", "#f8fafc33", "#16a34a33"],
-                    "color_options": {"min": -1, "max": 1, "midpoint": 0},
-                    "align": "right",
-                },
-                "avg_last_5": {"title": "Last 5y avg", "fmt": "num2", "align": "right"},
-                "avg_prev_10": {"title": "Prev 10y avg", "fmt": "num2", "align": "right"},
-                "trend": {
-                    "title": "Since 2000",
-                    "viz": "sparkline",
-                    "sort_by": "kendall_tau",
-                    "sparkline_options": {
-                        "x": "year",
-                        "y": "value",
-                        "type": "bar",
-                        "fit_to_data": True,
-                        "width": 130,
-                        "height": 26,
-                    },
-                    "align": "center",
-                },
-            },
+            columns=[
+                col.text("country"),
+                col.text("region"),
+                col.integer("years"),
+                col.number("latest", fmt="num"),
+                col.percent("pct_change", decimals=1, title="% change (5y vs 10y)").delta(),
+                col.number("kendall_tau", fmt="num2", title="Kendall τ").color(
+                    scale=["#dc262633", "#f8fafc33", "#16a34a33"], min=-1, max=1, midpoint=0
+                ),
+                col.number("avg_last_5", fmt="num2", title="Last 5y avg"),
+                col.number("avg_prev_10", fmt="num2", title="Prev 10y avg"),
+                col.sparkline("trend", title="Since 2000", x="year", y="value", type="bar", 
+                    fit_to_data=True,
+                    width=130,
+                    height=26,
+                )
+                .sort_by("kendall_tau")
+                .align("center"),
+            ],
         )
     )
     sparklines
@@ -446,7 +431,7 @@ def _(mo):
 
 
 @app.cell
-def _(connection, mo, pivot_table):
+def _(col, connection, mo, pivot_table):
     wide = mo.ui.anywidget(
         pivot_table(
             connection,
@@ -463,7 +448,7 @@ def _(connection, mo, pivot_table):
             measures=["max(value) AS life_expectancy"],
             show_total_column=False,
             title="Life expectancy at birth, by year",
-            column_config={"country": {"align": "left"}},
+            dimension_config={"country": col.text("country")},
         )
     )
     wide
@@ -482,7 +467,7 @@ def _(mo):
 
 
 @app.cell
-def _(connection, grouped_table, mo):
+def _(col, connection, grouped_table, mo):
     grouped = mo.ui.anywidget(
         grouped_table(
             connection,
@@ -504,12 +489,12 @@ def _(connection, grouped_table, mo):
             title="Average life expectancy by region and income group (2023)",
             max_height="460px",
             dimension_config={
-                "region": {"align": "left"},
-                "income_group": {"title": "Income group", "align": "left"},
+                "region": col.text("region"),
+                "income_group": col.text("income_group", title="Income group"),
             },
             measure_config={
-                "avg_life_expectancy": {"fmt": "num1", "viz": "bar"},
-                "countries": {"fmt": "num0"},
+                "avg_life_expectancy": col.number("avg_life_expectancy", fmt="num1").bar(),
+                "countries": col.integer("countries"),
             },
         )
     )
@@ -530,7 +515,7 @@ def _(mo):
 
 
 @app.cell
-def _(comparison_table, connection, mo):
+def _(col, comparison_table, connection, mo):
     changes = mo.ui.anywidget(
         comparison_table(
             connection,
@@ -547,8 +532,8 @@ def _(comparison_table, connection, mo):
             date_column="date",
             compare_vs="prior year",
             title="Life expectancy by region — latest year vs the year before",
-            dimension_config={"region": {"align": "left"}},
-            measure_config={"avg_life_expectancy": {"fmt": "num2"}},
+            dimension_config={"region": col.text("region")},
+            measure_config={"avg_life_expectancy": col.number("avg_life_expectancy", fmt="num2")},
         )
     )
     changes
@@ -567,7 +552,7 @@ def _(mo):
 
 
 @app.cell
-def _(EvidentialTable, connection, mo):
+def _(EvidentialTable, col, connection, mo):
     countries_table = mo.ui.anywidget(
         EvidentialTable(
             connection.sql(
@@ -581,13 +566,13 @@ def _(EvidentialTable, connection, mo):
             title="Country / entity dimension",
             search=True,
             page_size=12,
-            column_config={
-                "code": {"align": "left"},
-                "name": {"align": "left"},
-                "Region": {"title": "Region", "align": "left"},
-                "income_group": {"align": "left"},
-                "currency": {"align": "left"},
-            },
+            columns=[
+                col.text("code"),
+                col.text("name"),
+                col.text("Region", title="Region"),
+                col.text("income_group"),
+                col.text("currency"),
+            ],
         )
     )
     countries_table
@@ -595,7 +580,7 @@ def _(EvidentialTable, connection, mo):
 
 
 @app.cell
-def _(EvidentialTable, connection, mo):
+def _(EvidentialTable, col, connection, mo):
     indicators_table = mo.ui.anywidget(
         EvidentialTable(
             connection.sql(
@@ -609,12 +594,12 @@ def _(EvidentialTable, connection, mo):
             title="Indicator dimension",
             search=True,
             page_size=12,
-            column_config={
-                "code": {"align": "left"},
-                "name": {"align": "left", "wrap": True},
-                "Topic": {"align": "left"},
-                "unit": {"align": "left"},
-            },
+            columns=[
+                col.text("code"),
+                col.text("name").wrap(),
+                col.text("Topic"),
+                col.text("unit"),
+            ],
         )
     )
     indicators_table
@@ -633,7 +618,7 @@ def _(mo):
 
 
 @app.cell
-def _(EvidentialTable, connection, mo):
+def _(EvidentialTable, col, connection, mo):
     footnotes_table = mo.ui.anywidget(
         EvidentialTable(
             connection.sql(
@@ -647,11 +632,11 @@ def _(EvidentialTable, connection, mo):
             title="Footnotes — under-5 mortality (SH.DYN.MORT)",
             search=True,
             page_size=10,
-            column_config={
-                "country_code": {"title": "Country", "align": "left"},
-                "year": {"fmt": "yyyy", "align": "left"},
-                "description": {"align": "left", "wrap": True},
-            },
+            columns=[
+                col.text("country_code", title="Country"),
+                col.number("year", fmt="yyyy", align="left"),
+                col.text("description").wrap(),
+            ],
         )
     )
     footnotes_table

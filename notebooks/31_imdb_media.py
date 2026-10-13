@@ -33,9 +33,9 @@ def _():
     import duckdb
     import marimo as mo
 
-    from evidential import EvidentialTable, pivot_table
+    from evidential import EvidentialTable, col, pivot_table
 
-    return EvidentialTable, Path, duckdb, mo, os, pivot_table
+    return EvidentialTable, Path, col, duckdb, mo, os, pivot_table
 
 
 @app.cell
@@ -118,7 +118,7 @@ def _(connection, mo, source):
 
 
 @app.cell
-def _(EvidentialTable, connection, mo):
+def _(EvidentialTable, col, connection, mo):
     top_rated = mo.ui.anywidget(
         EvidentialTable(
             connection.sql(r"""
@@ -141,9 +141,9 @@ def _(EvidentialTable, connection, mo):
                     popularity        AS "Buzz.popularity",
                     url               AS imdb
                 FROM parsed
-                WHERE imdb_rating_count >= 50000
+                WHERE imdb_rating_count >= 1000
                 ORDER BY imdb_rating DESC, imdb_rating_count DESC
-                LIMIT 50
+                --LIMIT 5000
             """),
             title="Top rated titles",
             subtitle="50,000+ votes. Click a row to see its cast; the Rating band is a column-group highlight",
@@ -151,32 +151,28 @@ def _(EvidentialTable, connection, mo):
             #column_stats=True,
             search=True,
             page_size=12,
-            row_shading=True,
-            column_groups={
-                "Rating": {"columns": ["Rating.imdb", "Rating.votes"], "highlight": "#eef2ff"},
-            },
-            column_config={
-                "rank": {"title": "#", "fmt": "num0"},
-                "title": {"align": "left", "link": "imdb"},
-                "Type.media": {"title": "Media", "viz": "chip"},
-                "Type.genres": {"title": "Genres", "align": "left"},
-                "Release.year": {"title": "Year", "fmt": "yyyy", "align": "left"},
-                "Rating.imdb": {
-                    "title": "IMDb",
-                    "fmt": "num1",
-                    "viz": "color",
-                    "color_scale": ["#ef4444", "#f59e0b", "#84cc16"],
-                    "color_options": {"min": 0, "max": 10},
-                },
-                "Rating.votes": {
-                    "title": "Votes",
-                    "fmt": "num",
-                    "viz": "bar",
-                    "bar_options": {"fit_to_data": True, "bar_color": "#93c5fd"},
-                },
-                "Buzz.popularity": {"title": "Popularity", "fmt": "num0"},
-                "imdb": {"hide": True},
-            },
+            row_shading=3,
+            columns=[
+                col.integer("rank", title="#"),
+                col.auto("title").link("imdb"),
+                col.chip("Type.media", title="Media"),
+                col.text("Type.genres", title="Genres"),
+                col.number("Release.year", fmt="yyyy", title="Year"),
+                col.group(
+                    "Rating",
+                    [
+                        col.number("Rating.imdb", fmt="num1", title="IMDb").color(
+                            scale=["#ef4444", "#f59e0b", "#84cc16"], min=0, max=10
+                        ),
+                        col.number("Rating.votes", fmt="num", title="Votes").bar(
+                            fit_to_data=True, color="#93c5fd"
+                        ),
+                    ],
+                    highlight="#55006611",
+                ),
+                col.integer("Buzz.popularity", title="Popularity"),
+                col.auto("imdb").hide(),
+            ],
         )
     )
     top_rated
@@ -189,8 +185,8 @@ def _(top_rated):
     return (selected,)
 
 
-@app.cell
-def _(EvidentialTable, connection, mo):
+@app.cell(expand_output=True)
+def _(EvidentialTable, col, connection, mo):
     genres = mo.ui.anywidget(
         EvidentialTable(
             connection.sql("""
@@ -215,27 +211,23 @@ def _(EvidentialTable, connection, mo):
             subtitle="One film appears under each of its genres",
             page_size=20,
             row_shading=True,
-            column_config={
-                "genre": {"align": "left"},
-                "films": {"fmt": "num0", "viz": "bar", "bar_options": {"bar_color": "#93c5fd"}},
-                "Share.films": {"title": "Share", "fmt": "pct1"},
-                "Rating.avg": {
-                    "title": "Avg rating",
-                    "fmt": "num2",
-                    "viz": "color",
-                    "color_scale": ["#ef4444", "#f59e0b", "#84cc16"],
-                    "color_options": {"min": 0, "max": 10},
-                },
-                "Rating.avg votes": {"title": "Avg votes", "fmt": "num0"},
-            },
+            columns=[
+                col.text("genre"),
+                col.integer("films").bar(color="#93c5fd"),
+                col.percent("Share.films", decimals=1, title="Share"),
+                col.number("Rating.avg", fmt="num2", title="Avg rating").color(
+                    scale=["#ef4444", "#f59e0b", "#84cc16"], min=0, max=10
+                ),
+                col.integer("Rating.avg votes", title="Avg votes"),
+            ],
         )
     )
     genres
     return
 
 
-@app.cell
-def _(connection, mo, pivot_table):
+@app.cell(expand_output=True)
+def _(col, connection, mo, pivot_table):
     by_decade = mo.ui.anywidget(
         pivot_table(
             connection,
@@ -252,8 +244,8 @@ def _(connection, mo, pivot_table):
             total_label="All decades",
             title="Titles by decade and media type",
             page_size=12,
-            dimension_config={"decade": {"align": "left", "fmt": "num0"}},
-            measure_config={"films": {"fmt": "num0", "viz": "bar", "bar_options": {"bar_color": "#93c5fd"}}},
+            dimension_config={"decade": col.number("decade", fmt="num", align="left")},
+            measure_config={"films": col.integer("films").bar(color="#93c5fd")},
         )
     )
     by_decade
@@ -276,7 +268,7 @@ def _():
 
 
 @app.cell
-def _(EvidentialTable, cast_sql, connection, mo):
+def _(EvidentialTable, cast_sql, col, connection, mo):
     # Created once (empty): clicking a title updates it in place via set_data, so
     # the table keeps its headers and size and never flickers.
     cast_table = mo.ui.anywidget(
@@ -286,11 +278,11 @@ def _(EvidentialTable, cast_sql, connection, mo):
             empty_message="Click a title above to see its cast",
             page_size=10,
             row_shading=True,
-            column_config={
-                "no": {"title": "#", "fmt": "num0"},
-                "actor": {"align": "left"},
-                "role": {"align": "left"},
-            },
+            columns=[
+                col.integer("no", title="#"),
+                col.text("actor"),
+                col.text("role"),
+            ],
         )
     )
     cast_table

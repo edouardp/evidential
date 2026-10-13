@@ -20,9 +20,9 @@ def _():
 
     import marimo as mo
 
-    from evidential import EvidentialTable, duck, grouped_table
+    from evidential import EvidentialTable, col, duck, grouped_table
 
-    return EvidentialTable, duck, grouped_table, mo, os
+    return EvidentialTable, col, duck, grouped_table, mo, os
 
 
 @app.cell
@@ -104,7 +104,7 @@ def _(connection, mo):
 
 
 @app.cell
-def _(EvidentialTable, mo, monthly):
+def _(EvidentialTable, col, mo, monthly):
     mo.ui.anywidget(
         EvidentialTable(
             monthly,
@@ -113,20 +113,20 @@ def _(EvidentialTable, mo, monthly):
             page_size=15,
             row_shading=True,
             max_height="480px",
-            column_config={
-                "pickup_day": {"title": "Day", "fmt": "date", "align": "left"},
-                "payment": {"align": "left"},
-                "distance": {"fmt": "num0", "viz": "bar"},
-                "revenue": {"fmt": "usd0"},
-                "trips": {"fmt": "num0"},
-            },
+            columns=[
+                col.date("pickup_day", fmt="date", title="Day"),
+                col.text("payment"),
+                col.integer("distance").bar(),
+                col.currency("revenue", decimals=0),
+                col.integer("trips"),
+            ],
         )
     )
     return
 
 
 @app.cell
-def _(connection, grouped_table, mo):
+def _(col, connection, grouped_table, mo):
     mo.stop(connection is None, mo.md(""))
 
     mo.ui.anywidget(
@@ -146,7 +146,7 @@ def _(connection, grouped_table, mo):
                 total_amount
             FROM s3tables.taxi.yellow_trips
             WHERE tpep_pickup_datetime >= TIMESTAMP '2024-01-01'
-              AND tpep_pickup_datetime < TIMESTAMP '2024-04-01'
+              AND tpep_pickup_datetime < TIMESTAMP '2024-02-01'
             """,
             dimensions=["payment", "pickup_month"],
             measures=[
@@ -155,16 +155,16 @@ def _(connection, grouped_table, mo):
                 "round(sum(total_amount), 0) AS revenue",
             ],
             total_label="All payments",
-            subtotal_position="bottom",
+            subtotal_position="top",
             title="Trips by payment type and month",
             collapsible=True,
             collapsed=False,
             max_height="520px",
-            dimension_config={"pickup_month": {"title": "Month", "fmt": "mmm-yy"}},
+            dimension_config={"pickup_month": col.date("pickup_month", fmt="mmm-yy", title="Month")},
             measure_config={
-                "trips": {"fmt": "num0"},
-                "distance": {"fmt": "num0"},
-                "revenue": {"fmt": "usd0", "viz": "bar"},
+                "trips": col.integer("trips"),
+                "distance": col.integer("distance"),
+                "revenue": col.currency("revenue", decimals=0).bar(color="#8888ff66"),
             },
         )
     )

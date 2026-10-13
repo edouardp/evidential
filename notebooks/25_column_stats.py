@@ -8,18 +8,19 @@
 """Optional column statistics under the header.
 
 Set ``column_stats=True`` and a summary block appears under each column header,
-before the data:
+before the data. The first line is the datatype with the ``nulls`` count, the
+second is the raw column name, then the values:
 
 ```text
-[NUMBER]            [STRING]
-min: 12             distinct: 3
-max: 141            null: 0
+NUMBER (nulls = 1)       STRING (nulls = 0)
+"trips"                  "city"
+min: 12                  distinct: 3
+max: 141
 avg: 82
-null: 0
 ```
 
-Numeric columns get min/max/avg plus a null count; every other column gets a
-distinct count plus a null count. The values are formatted with the column's
+Numeric columns get min/max/avg, boolean columns get true/false counts, and every
+other column gets a distinct count. The values are formatted with the column's
 ``fmt`` and computed client-side over the full dataset. The checkbox toggles the
 section on and off with ``update_options``.
 """
@@ -36,9 +37,9 @@ def _():
 
     import marimo as mo
 
-    from evidential import EvidentialTable
+    from evidential import EvidentialTable, col
 
-    return EvidentialTable, dt, mo
+    return EvidentialTable, col, dt, mo
 
 
 @app.cell
@@ -47,13 +48,15 @@ def _(mo):
     # Column statistics
 
     Turn on `column_stats=True` and each column gets a summary block directly
-    under its header, before the data:
+    under its header, before the data. The first line is the datatype with the
+    `nulls` count, the second is the raw column name, then the values:
 
-    - **numeric** columns — `min`, `max`, `avg` and a `null` count;
-    - **everything else** — a `distinct` count and a `null` count.
+    - **numeric** columns — `min`, `max`, `avg`;
+    - **boolean** columns — `true` and `false` counts;
+    - **everything else** — a `distinct` count.
 
-    The block starts with the column's datatype in brackets, and the numbers use
-    the column's `fmt` (`$2k`, `18.0%`, `12`). Toggle it with the checkbox below.
+    The numbers use the column's `fmt` (`$2k`, `18.0%`, `12`). Toggle it with the
+    checkbox below.
     """)
     return
 
@@ -74,18 +77,21 @@ def _(dt):
 
 
 @app.cell
-def _(EvidentialTable, mo, records):
+def _(EvidentialTable, col, mo, records):
     table = mo.ui.anywidget(
         EvidentialTable(
             records,
             title="Trips by city",
             column_stats=True,
             row_shading=True,
-            column_config={
-                "trips": {"fmt": "num0"},
-                "fare": {"fmt": "usd"},
-                "tip_rate": {"fmt": "pct1"},
-            },
+            columns=[
+                col.auto("city"),
+                col.auto("payment"),
+                col.integer("trips"),
+                col.currency("fare"),
+                col.percent("tip_rate", decimals=1),
+                col.auto("pickup"),
+            ],
         )
     )
     table
@@ -105,7 +111,7 @@ def _(show_stats, subcolumn_stats, table):
     # so Marimo does not recreate the table when the checkbox flips. Assigning
     # to `_` avoids rendering the widget returned by `update_options`.
     _ = table.widget.update_options(column_stats=show_stats.value)
-    _ = table.widget.update_options(column_stats=subcolumn_stats)
+    _ = subcolumn_stats.widget.update_options(column_stats=show_stats.value)
     return
 
 
@@ -116,8 +122,9 @@ def _(mo):
 
     - The statistics cover the **full dataset**, not just the current page or the
       sorted order (search and pagination do not change them).
-    - `null` counts missing values; `distinct` counts unique values (arrays and
-      structs are compared by their JSON form).
+    - `nulls` (on the first line, with the datatype) counts missing values;
+      `distinct` counts unique values (arrays and structs are compared by their
+      JSON form).
     - `column_stats` is a table-level option, default `False`.
     """)
     return
@@ -137,8 +144,9 @@ def mixed_statistics_explanation(mo):
     Each shared header gets **one statistics cell**. Its small centered dots
     show which member is active: **●○** or **●○○** initially. Click the dots to
     advance, looping back after the last member. Enter and Space also work.
-    Numeric members show min/max/average; text and chip members show distinct
-    and null counts. All summaries have the same footer space; ordinary
+    Numeric members show min/max/average; boolean members show true/false
+    counts; text and chip members show distinct. All summaries have the same
+    footer space; ordinary
     columns have a blank, inactive footer. Switching members keeps the
     statistics row at the same height.
     """)
@@ -160,28 +168,36 @@ def mixed_statistics_data(records):
 
 
 @app.cell
-def mixed_statistics_table(EvidentialTable, mixed_records, mo):
+def mixed_statistics_table(EvidentialTable, col, mixed_records, mo):
     subcolumn_stats = mo.ui.anywidget(
         EvidentialTable(
             mixed_records,
             title="Mixed columns and sub-columns",
             subtitle="Click the small dots below a summary to inspect its next member",
-            columns=["city", "trips", "trip_unit", "fare", "payment", "status", "tip_rate", "pickup"],
+            columns=[
+                col.text("city"),
+                col.subcolumns(
+                    "Activity",
+                    [
+                        col.integer("trips"),
+                        col.auto("trip_unit").title("Unit").font_color("#808080"),
+                    ],
+                ),
+                col.subcolumns(
+                    "Fare & payment",
+                    [
+                        col.currency("fare", decimals=2),
+                        col.auto("payment").font_color("#808080"),
+                        col.chip("status", conditional_colors="status_color"),
+                    ],
+                ),
+                col.percent("tip_rate", decimals=1, title="Tip rate"),
+                col.date("pickup"),
+            ],
             column_stats=True,
             row_shading=True,
-            page_size=4,
-            column_config={
-                "trips": {"type": "number", "fmt": "num0", "align": "right", "subcolumn_group": "Activity"},
-                "trip_unit": {"title": "Unit", "align": "left", "font_color": "#808080", "subcolumn_group": "Activity"},
-                "fare": {"type": "number", "fmt": "usd2", "align": "right", "subcolumn_group": "Fare & payment"},
-                "payment": {"align": "left", "subcolumn_group": "Fare & payment"},
-                "status": {
-                    "align": "center", "viz": "chip", "subcolumn_group": "Fare & payment",
-                    "color_options": {"conditional_colors": "status_color"},
-                },
-                "tip_rate": {"title": "Tip rate", "type": "number", "fmt": "pct1", "align": "right"},
-                "pickup": {"type": "date", "fmt": "date"},
-            },
+            stretch=False,
+            page_size=8,
         )
     )
     subcolumn_stats

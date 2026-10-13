@@ -32,9 +32,9 @@ def _():
     import duckdb
     import marimo as mo
 
-    from evidential import EvidentialTable
+    from evidential import EvidentialTable, col
 
-    return EvidentialTable, Path, duckdb, mo, os
+    return EvidentialTable, Path, col, duckdb, mo, os
 
 
 @app.cell
@@ -115,23 +115,26 @@ def _(connection):
 
 
 @app.cell
-def _(EvidentialTable, mo, ranking, reference_year):
+def _(EvidentialTable, col, mo, ranking, reference_year):
     grouped = mo.ui.anywidget(
         EvidentialTable(
             ranking,
             title=f"World Bank WDI — reference year {reference_year}",
             subtitle="One SELECT; the header groups come from the dotted column aliases",
-            row_shading=True,
+            row_shading=3,
+            row_lines=False,
             page_size=12,
-            column_config={
-                "GDP Measure.GDP (nominal)": {"fmt": "usd", "align": "right"},
-                "GDP Measure.GDP (PPP)": {"fmt": "usd", "align": "right"},
-                "GDP Measure.GDP per capita": {"fmt": "usd", "align": "right"},
-                "Population.total": {"fmt": '#,##0.0,,"M"', "align": "right"},
-                "Population.urban share": {"fmt": '0.0"%"', "align": "right"},
-                "Labour.unemployment": {"fmt": '0.0"%"', "align": "right"},
-                "Labour.labor force": {"fmt": "num", "align": "right"},
-            },
+            columns=[
+                col.auto("country"),
+                col.auto("region"),
+                col.number("GDP Measure.GDP (nominal)", fmt="usd"),
+                col.number("GDP Measure.GDP (PPP)", fmt="usd"),
+                col.number("GDP Measure.GDP per capita", fmt="usd"),
+                col.number("Population.total", fmt='#,##0.0,,"M"'),
+                col.number("Population.urban share", fmt='0.0"%"'),
+                col.number("Labour.unemployment", fmt='0.0"%"'),
+                col.number("Labour.labor force", fmt="num"),
+            ],
         )
     )
     grouped
@@ -152,7 +155,7 @@ def _(mo):
 
 
 @app.cell
-def _(EvidentialTable, mo, ranking):
+def _(EvidentialTable, col, mo, ranking):
     overridden = mo.ui.anywidget(
         EvidentialTable(
             ranking,
@@ -160,19 +163,22 @@ def _(EvidentialTable, mo, ranking):
             subtitle="Two GDP columns regrouped under Output, one leaf renamed",
             row_shading=True,
             page_size=8,
-            column_groups={
-                "Output": [
-                    "GDP Measure.GDP (nominal)",
-                    "GDP Measure.GDP (PPP)",
-                ],
-            },
-            column_config={
-                "GDP Measure.GDP per capita": {"title": "GDP per person", "fmt": "usd"},
-                "Population.total": {"fmt": '#,##0.0,,"M"'},
-                "Population.urban share": {"fmt": '0.0"%"'},
-                "Labour.unemployment": {"fmt": '0.0"%"'},
-                "Labour.labor force": {"fmt": "num"},
-            },
+            columns=[
+                col.auto("country"),
+                col.auto("region"),
+                col.group(
+                    "Output",
+                    [
+                        col.number("GDP Measure.GDP (nominal)", fmt="usd"),
+                        col.number("GDP Measure.GDP (PPP)", fmt="usd"),
+                    ],
+                ),
+                col.number("GDP Measure.GDP per capita", fmt="usd", title="GDP per person"),
+                col.number("Population.total", fmt='#,##0.0,,"M"'),
+                col.number("Population.urban share", fmt='0.0"%"'),
+                col.number("Labour.unemployment", fmt='0.0"%"'),
+                col.number("Labour.labor force", fmt="num"),
+            ],
         )
     )
     overridden

@@ -130,8 +130,8 @@ export class TableViewport {
     // Measure physical column edges, never infer them from spanning headers.
     // Reading before writing avoids measuring already-sticky cells on resize.
     const bodyCells = [...table.querySelectorAll("tbody [data-column-index]")];
-    const headerCells = [...table.querySelectorAll("thead [data-column-start]")];
-    for (const cell of [...bodyCells, ...headerCells]) {
+    const spanningCells = [...table.querySelectorAll("[data-column-start]")];
+    for (const cell of [...bodyCells, ...spanningCells]) {
       cell.style.left = "";
       cell.classList.remove("et-frozen", "et-frozen-last");
       if (cell.tagName === "TD") cell.style.position = "";
@@ -153,11 +153,11 @@ export class TableViewport {
       if (index + cell.colSpan === n) cell.classList.add("et-frozen-last");
     };
     for (const cell of bodyCells) freeze(cell, Number(cell.dataset.columnIndex), 10);
-    for (const cell of headerCells) {
+    for (const cell of spanningCells) {
       const start = Number(cell.dataset.columnStart);
-      // A header crossing the frozen boundary continues to scroll as a whole.
+      // A spanning header or summary crossing the boundary scrolls as a whole.
       if (start + cell.colSpan <= n) {
-        freeze(cell, start, 30);
+        freeze(cell, start, cell.tagName === "TH" ? 30 : 10);
       }
     }
   }

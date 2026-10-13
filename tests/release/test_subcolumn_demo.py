@@ -21,3 +21,16 @@ def test_subcolumn_demo_runs_with_three_examples() -> None:
     assert economist.rows[33]["cpi_format"] == "num0"
     assert sum(bool(column.get("subcolumn_group")) for column in economist.columns) == 6
     assert any("economist-recreation" in getattr(output, "text", "") for output in outputs)
+
+
+def test_statistics_demo_includes_ordinary_columns_and_two_and_three_member_groups() -> None:
+    notebook = Path(__file__).resolve().parents[2] / "notebooks" / "25_column_stats.py"
+    _, definitions = runpy.run_path(str(notebook))["app"].run()
+    table = definitions["subcolumn_stats"].widget
+    assert table.options["column_stats"] is True
+    assert len(table.columns) == 8
+    assert sum(column.get("subcolumn_group") == "Activity" for column in table.columns) == 2
+    assert sum(column.get("subcolumn_group") == "Fare & payment" for column in table.columns) == 3
+    assert sum(not column.get("subcolumn_group") for column in table.columns) == 3
+    assert table.columns[3]["fmt"] == "usd2"
+    assert table.columns[5]["viz"] == "chip"

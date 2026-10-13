@@ -1,3 +1,4 @@
+import { renderStatsRow } from "./statistics.js";
 import { renderHeader, headerLayout, decorateSubcolumn } from "./headers.js";
 import { RowPipeline } from "./derived.js";
 // Evidence-style data table renderer for the anywidget frontend.
@@ -10,11 +11,11 @@ import { HoldController, bindRowSelection } from "./interactions.js";
 export { holdInterval } from "./interactions.js";
 import { LoadingController } from "./loading.js";
 import { TableViewport } from "./viewport.js";
-import { h, optString, inlineMarkdown, withFigure, formatRowRanges } from "./dom.js";
+import { h, inlineMarkdown, withFigure, formatRowRanges } from "./dom.js";
 import { hiddenColumns, orderedColumns, visibleRows, searchRows, sortRows, paginateRows,
   columnStats, computeRowspans, shaded } from "./rows.js";
 import { renderCell, alignStyle, footnoteMark } from "./cells.js";
-import { formatValue, formatTitle } from "./format.js";
+import { formatTitle } from "./format.js";
 import {
   colorStylesFromHex,
 } from "./color.js";
@@ -31,6 +32,7 @@ export class EvidentialTableRenderer {
       collapsed: new Set(),
       expanded: new Set(),
       hidden: new Set(),
+      statsMembers: new Map(),
     };
     this._pipeline = new RowPipeline();
     this._groupVersion = 0;
@@ -250,7 +252,8 @@ export class EvidentialTableRenderer {
       search: this._state.search, hidden: this._hiddenColumns(), sort: this._state.sort,
     });
     const { columns, hasGroups, dimCount, ranges, formatRanges, decimals, colorScales, stats } = processed;
-    const subcolumns = headerLayout(columns).joins;
+    const layout = headerLayout(columns);
+    const subcolumns = layout.joins;
     const visibility = this._pipeline.visible(processed, this._groupVersion, (key) => this._isCollapsed(key));
     const { rows, pageCount, page, total } = this._paginate(visibility.rows, visibility.hasGroups);
     this._pageCount = pageCount;
@@ -305,6 +308,7 @@ export class EvidentialTableRenderer {
           colorScales,
           hasGroups,
           subcolumns,
+          layout,
           rowNumbers: !!opts.row_numbers,
           rowNumberBase: page * (Number(this._effectivePageSize()) || 0),
           section,
@@ -478,45 +482,11 @@ export class EvidentialTableRenderer {
   _columnStats(columns, rows) {
     return columnStats(columns, rows);
   }
-  /** The row of `[TYPE] min/max/…` (or `distinct`) blocks under the header. */
   _renderStatsRow(columns, ctx) {
-    const opts = this.options;
-    const row = h("tr", { class: "et-row et-stats-row" });
-    if (ctx.rowNumbers) row.append(h("td", { class: "et-td et-row-num", "data-column-index": 0 }, ""));
-    for (const [index, col] of columns.entries()) {
-      const stat = ctx.stats.get(col.name) || { min: null, max: null, avg: null, nulls: 0, distinct: 0 };
-      const block = h("div", { class: "et-stats" });
-      block.append(
-        h("div", { class: "et-stats-type" }, `[${String(col.type || "string").toUpperCase()}]`),
-      );
-      if (col.type === "number") {
-        const range =
-          ctx.formatRanges.get(col.name) ||
-          (stat.min != null ? { min: stat.min, max: stat.max } : undefined);
-        for (const [label, value] of [["min", stat.min], ["max", stat.max], ["avg", stat.avg]]) {
-          block.append(this._statsLine(label, this._formatStat(col, value, range)));
-        }
-      } else {
-        block.append(this._statsLine("distinct", formatValue(stat.distinct, "num0")));
-      }
-      block.append(this._statsLine("null", formatValue(stat.nulls, "num0")));
-      const cell = h("td", { class: `et-td et-stats-cell${opts.stub === col.name ? " et-stub" : ""}` }, block);
-      decorateSubcolumn(cell, col, index, ctx);
-      row.append(cell);
-    }
-    return row;
-  }
-
-  _statsLine(label, value) {
-    return h("div", { class: "et-stats-line" }, [
-      h("span", { class: "et-stats-label" }, `${label}: `),
-      h("span", { class: "et-stats-value" }, value),
-    ]);
-  }
-
-  _formatStat(col, value, range) {
-    if (value === null || value === undefined) return "–";
-    return formatValue(value, col.fmt, { type: "number", range, fallback: optString(value) });
+    return renderStatsRow({columns, layout: ctx.layout, stats: ctx.stats,
+      formatRanges: ctx.formatRanges, options: this.options, rowNumbers: ctx.rowNumbers,
+      selections: this._state.statsMembers,
+      onLayout: () => this._viewport.frame(() => this._applyFrozenOffsets())});
   }
 
   _renderHeader(columns, ctx) {

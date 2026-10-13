@@ -442,3 +442,66 @@ def test_economist_notebook_recreation_renders_transcribed_data(page, live_serve
     screenshot = tmp_path / "economist-subcolumns.png"
     page.locator(".economist-recreation").screenshot(path=str(screenshot))
     print(f"Economist demo screenshot: {screenshot}")
+
+
+def test_statistics_demo_cycles_small_centered_dots_without_moving_rows(page, live_server):
+    import runpy
+    from pathlib import Path
+
+    notebook = Path(__file__).resolve().parents[2] / "notebooks" / "25_column_stats.py"
+    _, definitions = runpy.run_path(str(notebook))["app"].run()
+    table = definitions["subcolumn_stats"].widget
+    open_preview(page, live_server)
+    page.evaluate(
+        """async ({rows, columns, options}) => {
+        const {default: widget} = await import('/src/evidential/static/table.js');
+        const el = document.createElement('div');
+        el.id = 'mixed-stats';
+        el.className = 'evidential-widget';
+        document.body.append(el);
+        const data = {rows, columns, options};
+        widget.render({el, model: {get: key => data[key], on: () => {}, off: () => {}}});
+        el.scrollIntoView();
+    }""",
+        {"rows": table.rows, "columns": table.columns, "options": table.options},
+    )
+    cells = page.locator("#mixed-stats .et-stats-cell")
+    assert cells.count() == 5
+    assert [cells.nth(index).get_attribute("colspan") for index in range(5)] == ["1", "2", "3", "1", "1"]
+    controls = page.locator("#mixed-stats .et-stats-cycle")
+    assert [controls.nth(index).inner_text() for index in range(2)] == ["●○", "●○○"]
+    assert page.locator("#mixed-stats .et-stats-footer").count() == 5
+    for index in (0, 3, 4):
+        assert cells.nth(index).locator(".et-stats-footer").inner_text() == ""
+        assert cells.nth(index).locator("button").count() == 0
+    geometry = controls.first.evaluate("""button => {
+        const control = button.getBoundingClientRect();
+        const footer = button.parentElement.getBoundingClientRect();
+        return {center: control.x + control.width / 2, footerCenter: footer.x + footer.width / 2,
+            fontSize: parseFloat(getComputedStyle(button).fontSize),
+            statsFontSize: parseFloat(getComputedStyle(button.closest('td')).fontSize)};
+    }""")
+    assert geometry["center"] == pytest.approx(geometry["footerCenter"], abs=0.5)
+    assert geometry["fontSize"] < geometry["statsFontSize"]
+    initial_footers = page.locator("#mixed-stats .et-stats-footer").evaluate_all(
+        "elements => elements.map(el => el.getBoundingClientRect().y)"
+    )
+    assert max(initial_footers) - min(initial_footers) < 0.5
+    row = page.locator("#mixed-stats tbody tr").nth(1)
+    initial_y = row.bounding_box()["y"]
+    controls.nth(1).click()
+    assert controls.nth(1).inner_text() == "○●○"
+    assert "distinct: 3" in cells.nth(2).inner_text()
+    assert row.bounding_box()["y"] == pytest.approx(initial_y, abs=0.5)
+    controls.nth(1).press("Enter")
+    assert controls.nth(1).inner_text() == "○○●"
+    assert "distinct: 2" in cells.nth(2).inner_text()
+    assert controls.nth(1).evaluate("el => el === document.activeElement")
+    controls.nth(1).press("Space")
+    assert controls.nth(1).inner_text() == "●○○"
+    assert cells.nth(2).get_attribute("data-stats-column") == "fare"
+    assert row.bounding_box()["y"] == pytest.approx(initial_y, abs=0.5)
+    controls.first.click()
+    page.locator("#mixed-stats .et-page-controls button").nth(1).click()
+    assert controls.first.inner_text() == "○●"
+    assert cells.nth(1).get_attribute("data-stats-column") == "trip_unit"

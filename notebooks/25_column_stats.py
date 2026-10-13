@@ -100,11 +100,12 @@ def _(mo):
 
 
 @app.cell
-def _(show_stats, table):
+def _(show_stats, subcolumn_stats, table):
     # A separate reactive cell keeps the widget alive: only its options change,
     # so Marimo does not recreate the table when the checkbox flips. Assigning
     # to `_` avoids rendering the widget returned by `update_options`.
     _ = table.widget.update_options(column_stats=show_stats.value)
+    _ = table.widget.update_options(column_stats=subcolumn_stats)
     return
 
 
@@ -120,6 +121,71 @@ def _(mo):
     - `column_stats` is a table-level option, default `False`.
     """)
     return
+
+
+@app.cell
+def mixed_statistics_explanation(mo):
+    mo.md("""
+    ## Statistics for sub-columns
+
+    This example mixes ordinary columns with two shared headers:
+
+    - **Activity**: a right-aligned trip count and left-aligned unit text.
+    - **Fare & payment**: a currency amount, payment text and a centered chip.
+    - **City**, **Tip rate** and **Pickup** remain ordinary columns.
+
+    Each shared header gets **one statistics cell**. Its small centered dots
+    show which member is active: **●○** or **●○○** initially. Click the dots to
+    advance, looping back after the last member. Enter and Space also work.
+    Numeric members show min/max/average; text and chip members show distinct
+    and null counts. All summaries have the same footer space; ordinary
+    columns have a blank, inactive footer. Switching members keeps the
+    statistics row at the same height.
+    """)
+    return
+
+
+@app.cell
+def mixed_statistics_data(records):
+    mixed_records = [
+        {
+            **record,
+            "trip_unit": "trips",
+            "status": "Review" if record["payment"] == "Dispute" else "Recorded",
+            "status_color": "#ffe0c2" if record["payment"] == "Dispute" else "#c7e8d2",
+        }
+        for record in records
+    ]
+    return (mixed_records,)
+
+
+@app.cell
+def mixed_statistics_table(EvidentialTable, mixed_records, mo):
+    subcolumn_stats = mo.ui.anywidget(
+        EvidentialTable(
+            mixed_records,
+            title="Mixed columns and sub-columns",
+            subtitle="Click the small dots below a summary to inspect its next member",
+            columns=["city", "trips", "trip_unit", "fare", "payment", "status", "tip_rate", "pickup"],
+            column_stats=True,
+            row_shading=True,
+            page_size=4,
+            column_config={
+                "trips": {"type": "number", "fmt": "num0", "align": "right", "subcolumn_group": "Activity"},
+                "trip_unit": {"title": "Unit", "align": "left", "font_color": "#808080", "subcolumn_group": "Activity"},
+                "fare": {"type": "number", "fmt": "usd2", "align": "right", "subcolumn_group": "Fare & payment"},
+                "payment": {"align": "left", "subcolumn_group": "Fare & payment"},
+                "status": {
+                    "align": "center", "viz": "chip", "subcolumn_group": "Fare & payment",
+                    "color_options": {"conditional_colors": "status_color"},
+                },
+                "tip_rate": {"title": "Tip rate", "type": "number", "fmt": "pct1", "align": "right"},
+                "pickup": {"type": "date", "fmt": "date"},
+            },
+        )
+    )
+    subcolumn_stats
+    return (subcolumn_stats,)
 
 
 if __name__ == "__main__":

@@ -573,7 +573,13 @@ Members cluster at their first occurrence within the same parent header path.
 With `order_columns_by_group=False`, only adjacent members share a header.
 The shared header sorts by its first visible member (or that member's `sort_by`).
 Hiding a member updates the header span and spacing. CSV exports keep individual
-columns. `freeze_columns` counts physical columns; a shared header sticks only
+columns. With `column_stats=True`, each shared header has one summary cell.
+Small centered dots (`●○`, `●○○`) cycle through its visible members on click,
+Enter or Space. Every summary gains footer space when any multi-member group
+is visible; ordinary and singleton columns have blank, inactive footers. See
+[the statistics demo](notebooks/25_column_stats.py).
+
+`freeze_columns` counts physical columns; a shared header sticks only
 when its entire span is frozen.
 
 See [the demo notebook](notebooks/30_subcolumns.py) for an economic table and a

@@ -45,6 +45,21 @@ keyboard focus survives rerendering. Physical body indexes and header spans let
 boundary scrolls as a whole; a fully frozen span sticks. Frozen counts include
 row numbers as before. Sticky header levels use cumulative measured heights.
 
+`statistics.js` renders one summary cell per displayed leaf header, spanning
+its physical members. A small centered dot button cycles through visible
+members and wraps. Each widget stores the selected member by name under the
+run's first physical column. Missing members fall back to the first visible
+member, and obsolete group entries are pruned. Paging, sorting, data refreshes
+and toggling statistics preserve available selections. Cycling updates only
+the cell, retains keyboard focus, and schedules frozen-offset recalculation.
+
+If any visible group has multiple members, every summary gets a fixed footer
+area; ordinary and singleton columns have blank, noninteractive footers. Summary
+content reserves enough height for numeric statistics so cycling to shorter
+text summaries does not move the controls or data rows. Without multi-member
+groups, summaries have no additional footer. Numeric formatting and dataset
+statistics continue to belong to each physical column.
+
 ### Consequences
 
 - Good, because existing column schemas and data traits remain sufficient.

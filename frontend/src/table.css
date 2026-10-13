@@ -535,8 +535,36 @@
 .et-stats {
   display: flex;
   flex-direction: column;
+}
+.et-stats-summary {
+  display: flex;
+  flex-direction: column;
   gap: 0.05rem;
 }
+.et-stats-with-footer .et-stats-summary { min-height: 7em; }
+.et-stats-footer {
+  height: 1.5rem;
+  margin-top: 0.25rem;
+  border-top: 1px solid var(--et-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.et-stats-cycle {
+  border: none;
+  border-radius: 3px;
+  background: transparent;
+  color: var(--et-text);
+  font: inherit;
+  font-size: 0.55rem;
+  line-height: 1;
+  min-height: 1.5rem;
+  letter-spacing: 0.15em;
+  padding: 0.15rem 0.35rem;
+  cursor: pointer;
+}
+.et-stats-cycle:hover { background: var(--et-hover); }
+.et-stats-cycle:focus-visible { outline: 2px solid var(--et-accent); }
 .et-stats-type {
   font-size: 0.68rem;
   font-weight: 600;

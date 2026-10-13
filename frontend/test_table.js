@@ -1405,7 +1405,8 @@ test("sub-column joins also apply to empty placeholders and summary statistics",
   assert.equal(el.querySelectorAll(".et-row-placeholder .et-subcolumn-left").length, 2);
   model.set("rows", [{value: null, period: "Q3"}]);
   renderer.render();
-  assert.ok(el.querySelector(".et-stats-cell.et-subcolumn-right"));
+  assert.equal(el.querySelector(".et-stats-cell").colSpan, 2);
+  assert.equal(el.querySelector(".et-stats-cycle").textContent, "●○");
   assert.equal(el.querySelector(".et-null").closest("td").dataset.columnIndex, "1");
   renderer.destroy();
 });
@@ -1433,5 +1434,85 @@ test("font_color decorates nulls, templates and chips while location rules win",
     rules: [{columns: ["merged"], style: {color: "red"}}],
   }, el), el);
   assert.deepEqual([...el.querySelectorAll("tbody td")].map((cell) => cell.style.color), ["gray", "red", "gray"]);
+  renderer.destroy();
+});
+
+test("statistics cycle independently across shared headers and preserve state on redraw", () => {
+  const columns = [
+    {name: "city", type: "string"},
+    {name: "value", type: "number", fmt: "num1", subcolumn_group: "Latest"},
+    {name: "period", type: "string", subcolumn_group: "Latest"},
+    {name: "status", type: "string", viz: "chip", subcolumn_group: "Latest"},
+    {name: "forecast", type: "number", fmt: "num0"},
+    {name: "rate", type: "number", column_group: "Other", subcolumn_group: "Latest"},
+    {name: "month", type: "string", column_group: "Other", subcolumn_group: "Latest"},
+  ];
+  const rows = [
+    {city: "A", value: 2.9, period: "Q3", status: "Stable", forecast: 4, rate: 1, month: "Nov"},
+    {city: "B", value: 4.1, period: "Q3", status: null, forecast: 6, rate: 2, month: "Dec"},
+  ];
+  const model = makeModel(rows, columns, {column_stats: true, row_numbers: true, page_size: 1, select: "city"}, el);
+  const renderer = new EvidentialTableRenderer(model, el);
+  const cells = [...el.querySelectorAll(".et-stats-cell")];
+  assert.deepEqual(cells.map((cell) => cell.colSpan), [1, 3, 1, 2]);
+  assert.equal(el.querySelectorAll(".et-stats-footer").length, 5); // includes row numbers
+  assert.equal(cells[0].querySelector(".et-stats-footer").textContent, "");
+  assert.equal(cells[0].querySelector("button"), null);
+  const buttons = el.querySelectorAll(".et-stats-cycle");
+  assert.deepEqual([...buttons].map((button) => button.textContent), ["●○○", "●○"]);
+  const renderCount = el.dataset.renderCount;
+  const dataRow = el.querySelector(".et-row-selectable");
+  buttons[0].focus();
+  buttons[0].click();
+  assert.equal(buttons[0].textContent, "○●○");
+  assert.match(buttons[0].getAttribute("aria-label"), /Period, 2 of 3/);
+  assert.match(cells[1].textContent, /distinct: 1/);
+  assert.equal(cells[1].dataset.statsColumn, "period");
+  assert.equal(document.activeElement, buttons[0]);
+  assert.equal(el.dataset.renderCount, renderCount);
+  assert.equal(el.querySelector(".et-row-selectable"), dataRow);
+  buttons[0].click();
+  assert.equal(buttons[0].textContent, "○○●");
+  assert.match(cells[1].textContent, /null: 1/);
+  buttons[1].click();
+  assert.equal(cells[3].dataset.statsColumn, "month");
+  renderer._gotoPage(1);
+  assert.equal(el.querySelectorAll(".et-stats-cycle")[0].textContent, "○○●");
+  assert.equal(el.querySelectorAll(".et-stats-cycle")[1].textContent, "○●");
+  el.querySelector(".et-stats-cycle").click();
+  assert.equal(el.querySelector(".et-stats-cycle").textContent, "●○○");
+  assert.match(el.querySelectorAll(".et-stats-cell")[1].textContent, /avg: 3.5/);
+  renderer._state.search = "A";
+  renderer.render();
+  assert.match(el.querySelectorAll(".et-stats-cell")[1].textContent, /avg: 3.5/);
+  renderer.destroy();
+});
+
+test("statistics hide removed members, reset unavailable selections and omit singleton controls", () => {
+  const columns = [
+    {name: "a", type: "number", subcolumn_group: "Pair"},
+    {name: "b", type: "string", subcolumn_group: "Pair"},
+    {name: "single", subcolumn_group: "Only one"},
+  ];
+  const model = makeModel([{a: 2, b: "Q3", single: "x"}], columns, {column_stats: true}, el);
+  const renderer = new EvidentialTableRenderer(model, el);
+  el.querySelector(".et-stats-cycle").click();
+  assert.equal(renderer._state.statsMembers.get("a"), "b");
+  assert.equal(el.querySelectorAll(".et-stats-footer").length, 2);
+  assert.equal(el.querySelectorAll(".et-stats-cell")[1].querySelector("button"), null);
+  model.data.options = {column_stats: false};
+  renderer.render();
+  model.data.options = {column_stats: true};
+  renderer.render();
+  assert.equal(el.querySelector(".et-stats-cycle").textContent, "○●");
+  renderer._state.hidden.add("b");
+  renderer.render();
+  assert.equal(el.querySelector(".et-stats-cell").dataset.statsColumn, "a");
+  assert.equal(el.querySelectorAll(".et-stats-footer").length, 0);
+  assert.equal(el.querySelector(".et-stats-cycle"), null);
+  renderer._state.hidden.clear();
+  model.data.columns = [{name: "replacement"}];
+  renderer.render();
+  assert.equal(renderer._state.statsMembers.size, 0);
   renderer.destroy();
 });

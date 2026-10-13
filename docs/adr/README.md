@@ -70,6 +70,7 @@ dated, immutable record of the decisions behind them.
 | [049](049-align-decimals-explicit-precision.md) | `align_decimals` Respects an Explicit Precision | Accepted |
 | [050](050-negative-styling.md) | Negative Styling — `.neg(color=, bracket=)` | Accepted |
 | [051](051-at-column-reference.md) | The `@column` Reference Convention | Accepted |
+| [052](052-centered-bar.md) | The Centred (Diverging) Bar | Accepted |
 
 ## Creating New ADRs
 

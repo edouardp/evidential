@@ -390,6 +390,40 @@
 .et-hidden { visibility: hidden; }
 .et-no-viz .et-bar-cell { display: none; }
 
+/* Zero-centred "diverging" bar (`.bar(center=True)`): a centre line, the bar
+   growing left (negative) or right (positive) by magnitude, and the value on
+   the opposite side of the line (the Economist's league-table bar). */
+.et-bar-center .et-bar-wrap { inset: 2px 0; }
+.et-bar-center .et-bar-axis {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 1px;
+  background: color-mix(in srgb, CanvasText 30%, transparent);
+}
+.et-bar-center .et-bar-right { left: 50%; }
+.et-bar-center .et-bar-left { left: auto; right: 50%; }
+.et-bar-center .et-bar-label {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+}
+.et-bar-center .et-bar-label-left {
+  left: 0;
+  right: 50%;
+  justify-content: flex-end;
+  padding-right: 0.4rem;
+}
+.et-bar-center .et-bar-label-right {
+  left: 50%;
+  right: 0;
+  justify-content: flex-start;
+  padding-left: 0.4rem;
+}
+
 /* Rotated headers (ALA): vertical 90° CCW, or oblique at a given angle. */
 .et-th-vertical {
   vertical-align: bottom;

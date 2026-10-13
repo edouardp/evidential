@@ -503,6 +503,7 @@ class Column(Mapping[str, Any]):
         fit_to_data: bool | None = None,
         hide_labels: bool | None = None,
         background: str | None = None,
+        center: bool | None = None,
     ) -> Column:
         """Show each value as an inline horizontal bar with its label.
 
@@ -511,10 +512,14 @@ class Column(Mapping[str, Any]):
         :param fit_to_data: scale bars to the column's range rather than the max.
         :param hide_labels: show only the bar, not the value.
         :param background: track colour behind the bar.
+        :param center: draw a zero-centred "diverging" bar — the bar grows left
+            (negative) or right (positive) from a centre line by its magnitude, and
+            the value sits on the opposite side (the Economist's league-table bar).
 
         Example::
 
             col.number("sales").fmt("usd0").bar(color="#93c5fd", fit_to_data=True)
+            col.percent("gdp", decimals=1).bar(center=True)
         """
         return self._with(
             viz="bar",
@@ -525,6 +530,7 @@ class Column(Mapping[str, Any]):
                 fit_to_data=fit_to_data,
                 hide_labels=hide_labels,
                 background_color=background,
+                center=center,
             ),
         )
 

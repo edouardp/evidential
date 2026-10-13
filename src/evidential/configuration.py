@@ -140,6 +140,7 @@ class BarOptions(TypedDict, total=False):
     background_color: str | None
     hide_labels: bool | None
     fit_to_data: bool | None
+    center: bool | None
 
 
 class DeltaOptions(TypedDict, total=False):

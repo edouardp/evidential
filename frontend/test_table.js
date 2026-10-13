@@ -1290,6 +1290,33 @@ test("neg colours, recolours and brackets negatives", () => {
   renderer.destroy();
 });
 
+test("centered bar grows left/right from a centre line, label opposite", () => {
+  const columns = [
+    {
+      name: "gdp",
+      type: "number",
+      fmt: "num1",
+      viz: "bar",
+      align: "right",
+      bar_options: { center: true, bar_color: "#0ea5e9", bar_color_negative: "#0ea5e9" },
+    },
+  ];
+  const rows = [{ gdp: 10 }, { gdp: -5 }, { gdp: 0 }];
+  const renderer = new EvidentialTableRenderer(makeModel(rows, columns, {}, el), el);
+  const cells = [...el.querySelectorAll("tbody .et-bar-cell")];
+  assert.ok(cells[0].classList.contains("et-bar-center"));
+  assert.ok(cells[0].querySelector(".et-bar-axis"));
+  assert.ok(cells[0].querySelector(".et-bar").classList.contains("et-bar-right"));
+  assert.ok(cells[1].querySelector(".et-bar").classList.contains("et-bar-left"));
+  // The value sits on the opposite side of the centre line.
+  assert.ok(cells[0].querySelector(".et-bar-label").classList.contains("et-bar-label-left"));
+  assert.ok(cells[1].querySelector(".et-bar-label").classList.contains("et-bar-label-right"));
+  // Half the cell per side: 10/10 -> 50%, |−5|/10 -> 25%.
+  assert.equal(cells[0].querySelector(".et-bar").style.width, "50%");
+  assert.equal(cells[1].querySelector(".et-bar").style.width, "25%");
+  renderer.destroy();
+});
+
 test("align_decimals leaves an explicit percent precision alone", () => {
   // Regression: `pct1` was padded to `pct3` from the raw fraction's decimals.
   const columns = [{ name: "share", type: "number", fmt: "pct1", align: "right" }];

@@ -6,19 +6,38 @@ export function renderBar(col, value, formatted, range) {
   const num = Number(value);
   const min = opts.fit_to_data ? (range?.min ?? 0) : Math.min(0, range?.min ?? 0);
   const max = opts.fit_to_data ? (range?.max ?? 0) : Math.max(0, range?.max ?? 0);
-  const span = max - min || 1;
-  const pct = Math.max(0, Math.min(100, ((num - min) / span) * 100));
   const negative = num < 0;
   const color = negative
     ? (opts.bar_color_negative || opts.bar_color || "var(--et-negative, #dc2626)")
     : (opts.bar_color || "var(--et-accent, #2563eb)");
+  const label = h(
+    "span",
+    { class: `et-bar-label${opts.hide_labels ? " et-hidden" : ""}` },
+    formatted,
+  );
+  const background = opts.background_color ? { backgroundColor: opts.background_color } : {};
+
+  if (opts.center) {
+    // A zero-centred "diverging" bar: the bar grows left (negative) or right
+    // (positive) from a centre line by its magnitude, and the value sits on the
+    // opposite side of the line.
+    const maxAbs = Math.max(Math.abs(min), Math.abs(max), 1e-9);
+    const width = Math.max(0, Math.min(100, (Math.abs(num) / maxAbs) * 100)) / 2;
+    const bar = h("div", {
+      class: `et-bar et-bar-${negative ? "left" : "right"}`,
+      style: { width: `${width}%`, backgroundColor: color },
+    });
+    const axis = h("div", { class: "et-bar-axis" });
+    const wrap = h("div", { class: "et-bar-wrap" }, [axis, bar]);
+    label.classList.add(negative ? "et-bar-label-right" : "et-bar-label-left");
+    return h("div", { class: "et-bar-cell et-bar-center", style: background }, [wrap, label]);
+  }
+
+  const span = max - min || 1;
+  const pct = Math.max(0, Math.min(100, ((num - min) / span) * 100));
   const bar = h("div", { class: "et-bar", style: { width: `${pct}%`, backgroundColor: color } });
   const wrap = h("div", { class: `et-bar-wrap${negative ? " et-bar-negative" : ""}` }, bar);
-  const label = h("span", { class: `et-bar-label${opts.hide_labels ? " et-hidden" : ""}` }, formatted);
-  const cell = h("div", {
-    class: "et-bar-cell",
-    style: opts.background_color ? { backgroundColor: opts.background_color } : {},
-  }, [wrap, label]);
+  const cell = h("div", { class: "et-bar-cell", style: background }, [wrap, label]);
   return cell;
 }
 

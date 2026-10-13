@@ -174,6 +174,11 @@ export class EvidentialTableRenderer {
     if (set.has(key)) set.delete(key);
     else set.add(key);
     this._groupVersion++;
+    // Expanding/collapsing is a deliberate change in row count, so drop the
+    // "never shrink below the tallest page" baseline; otherwise collapsing a
+    // group would leave the table at its expanded height (most visible with a
+    // `max_height`).
+    this._resetBaselineHeight();
     this.render();
     if (focus) {
       const cell = [...this.scroller.querySelectorAll("td[data-group-key]")]

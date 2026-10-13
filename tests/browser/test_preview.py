@@ -112,6 +112,19 @@ def test_actions_sit_below_the_table_with_no_pager_or_notes(page, live_server):
     assert actions["y"] >= scroller["y"] + scroller["height"] - 1, "actions overlap the table"
 
 
+def test_collapsing_a_group_lets_the_table_shrink_back(page, live_server):
+    # Regression: the "never shrink" baseline held the expanded height after a
+    # group was collapsed (most visible with a max_height).
+    open_preview(page, live_server, "#grouped")
+    page.wait_for_selector("#grouped .et-row-subtotal")
+    scroller = page.locator("#grouped .et-scroller")
+    expanded = scroller.bounding_box()["height"]
+    page.locator("#grouped button.et-chevron").first.click()
+    page.wait_for_timeout(250)
+    collapsed = scroller.bounding_box()["height"]
+    assert collapsed < expanded, f"table did not shrink back ({expanded} -> {collapsed})"
+
+
 def test_fullscreen_round_trip(page, live_server):
     open_preview(page, live_server, "#pages")
     dialog = page.locator("#paged dialog.et-dialog")

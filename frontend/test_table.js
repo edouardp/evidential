@@ -569,6 +569,29 @@ test("baseline height prevents the table shrinking when rows decrease", () => {
   renderer.destroy();
 });
 
+test("expanding or collapsing a group resets the height baseline", () => {
+  const columns = [
+    { name: "city", type: "string", align: "left" },
+    { name: "trips", type: "number" },
+  ];
+  const rows = [
+    { city: "A", trips: 1, render_type: "row_subtotal", __level: 1, __group_key: '"A"', __ancestors: [] },
+    { city: "x", trips: 1, render_type: "cell_data", __level: 2, __ancestors: ['"A"'], __parent_key: '"A"' },
+  ];
+  const renderer = new EvidentialTableRenderer(
+    makeModel(rows, columns, { collapsible: true, collapsed: false }, el),
+    el,
+  );
+  let height = 300;
+  renderer.scroller.getBoundingClientRect = () => ({ height });
+  renderer.render();
+  assert.equal(renderer.scroller.style.minHeight, "300px");
+  height = 40; // collapsing the group leaves the subtotal row only
+  renderer._toggleGroup('"A"');
+  assert.equal(renderer.scroller.style.minHeight, "40px");
+  renderer.destroy();
+});
+
 test("renders line, area and bar sparklines from point arrays", () => {
   const columns = [
     { name: "category", type: "string" },

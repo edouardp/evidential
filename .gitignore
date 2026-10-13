@@ -19,3 +19,14 @@ frontend/node_modules/
 
 # Local secrets
 .env
+
+# Local environment (direnv)
+.envrc
+
+# Editor / Vim
+*.swp
+*.swo
+*.swn
+.*.sw?
+*.un~
+.vim/

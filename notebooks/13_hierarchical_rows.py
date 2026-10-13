@@ -21,9 +21,9 @@ def _():
     import marimo as mo
     import duckdb
 
-    from evidential import grouped_table
+    from evidential import col, grouped_table
 
-    return Path, duckdb, grouped_table, mo
+    return Path, col, duckdb, grouped_table, mo
 
 
 @app.cell
@@ -58,7 +58,7 @@ def _(mo):
 
 
 @app.cell
-def _(connection, grouped_table, mo):
+def _(col, connection, grouped_table, mo):
     accordion = mo.ui.anywidget(
         grouped_table(
             connection,
@@ -71,8 +71,11 @@ def _(connection, grouped_table, mo):
             collapsed=False,
             title="Sales by category and item (accordion)",
             max_height="460px",
-            dimension_config={"category": {"align": "left"}, "item": {"align": "left"}},
-            measure_config={"sales": {"fmt": "usd0", "viz": "bar"}, "orders": {"fmt": "num0"}},
+            dimension_config={"category": col.text("category"), "item": col.text("item")},
+            measure_config={
+                "sales": col.currency("sales", decimals=0).bar(),
+                "orders": col.integer("orders"),
+            },
         )
     )
     accordion
@@ -91,7 +94,7 @@ def _(mo):
 
 
 @app.cell
-def _(connection, grouped_table, mo):
+def _(col, connection, grouped_table, mo):
     section = mo.ui.anywidget(
         grouped_table(
             connection,
@@ -103,8 +106,11 @@ def _(connection, grouped_table, mo):
             group_type="section",
             title="Sales by category and item (section)",
             max_height="460px",
-            dimension_config={"category": {"align": "left"}, "item": {"align": "left"}},
-            measure_config={"sales": {"fmt": "usd0", "viz": "bar"}, "orders": {"fmt": "num0"}},
+            dimension_config={"category": col.text("category"), "item": col.text("item")},
+            measure_config={
+                "sales": col.currency("sales", decimals=0).bar(),
+                "orders": col.integer("orders"),
+            },
         )
     )
     section
@@ -123,7 +129,7 @@ def _(mo):
 
 
 @app.cell
-def _(connection, grouped_table, mo):
+def _(col, connection, grouped_table, mo):
     collapsed = mo.ui.anywidget(
         grouped_table(
             connection,
@@ -136,7 +142,7 @@ def _(connection, grouped_table, mo):
             groups_open=False,
             title="Sales by channel and category (collapsed)",
             max_height="420px",
-            measure_config={"sales": {"fmt": "usd0"}},
+            measure_config={"sales": col.currency("sales", decimals=0)},
         )
     )
     collapsed

@@ -21,9 +21,9 @@ def _():
     import marimo as mo
     import duckdb
 
-    from evidential import comparison_table
+    from evidential import col, comparison_table
 
-    return Path, comparison_table, duckdb, mo
+    return Path, col, comparison_table, duckdb, mo
 
 
 @app.cell
@@ -53,7 +53,7 @@ def _(mo):
 
 
 @app.cell
-def _(comparison_table, connection, mo):
+def _(col, comparison_table, connection, mo):
     yoy = mo.ui.anywidget(
         comparison_table(
             connection,
@@ -65,10 +65,10 @@ def _(comparison_table, connection, mo):
             title="Sales by category vs prior year",
             page_size=10,
             row_shading=True,
-            dimension_config={"category": {"align": "left"}},
+            dimension_config={"category": col.text("category")},
             measure_config={
-                "sales": {"fmt": "usd0"},
-                "orders": {"fmt": "num0"},
+                "sales": col.currency("sales", decimals=0),
+                "orders": col.integer("orders"),
             },
         )
     )
@@ -87,7 +87,7 @@ def _(mo):
 
 
 @app.cell
-def _(comparison_table, connection, mo):
+def _(col, comparison_table, connection, mo):
     qoq = mo.ui.anywidget(
         comparison_table(
             connection,
@@ -99,7 +99,7 @@ def _(comparison_table, connection, mo):
             title="Sales vs prior quarter",
             page_size=10,
             row_shading=True,
-            measure_config={"sales": {"fmt": "usd0", "viz": "bar"}},
+            measure_config={"sales": col.currency("sales", decimals=0).bar()},
         )
     )
     qoq
@@ -127,7 +127,7 @@ def _(mo):
 
 
 @app.cell
-def _(comparison_table, connection, mo):
+def _(col, comparison_table, connection, mo):
     neutral = mo.ui.anywidget(
         comparison_table(
             connection,
@@ -139,7 +139,7 @@ def _(comparison_table, connection, mo):
             title='neutral_range="-0.25:0.25" — changes within ±25% show a dash',
             page_size=10,
             row_shading=True,
-            measure_config={"sales": {"fmt": "usd0", "neutral_range": "-0.25:0.25"}},
+            measure_config={"sales": col.currency("sales", decimals=0).delta(neutral_range="-0.25:0.25")},
         )
     )
     neutral
@@ -158,7 +158,7 @@ def _(mo):
 
 
 @app.cell
-def _(comparison_table, connection, mo):
+def _(col, comparison_table, connection, mo):
     down_is_good = mo.ui.anywidget(
         comparison_table(
             connection,
@@ -170,7 +170,7 @@ def _(comparison_table, connection, mo):
             title="`small_orders with down_is_good=True — a fall is green`",
             page_size=10,
             row_shading=True,
-            measure_config={"small_orders": {"fmt": "num0", "down_is_good": True}},
+            measure_config={"small_orders": col.integer("small_orders").delta(down_is_good=True)},
         )
     )
     down_is_good

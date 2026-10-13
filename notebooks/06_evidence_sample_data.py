@@ -26,9 +26,9 @@ def _():
     import marimo as mo
     import duckdb
 
-    from evidential import EvidentialTable, grouped_table
+    from evidential import EvidentialTable, col, grouped_table
 
-    return EvidentialTable, Path, duckdb, grouped_table, mo
+    return EvidentialTable, Path, col, duckdb, grouped_table, mo
 
 
 @app.cell
@@ -73,7 +73,7 @@ def _(mo):
 
 
 @app.cell
-def _(EvidentialTable, connection, mo):
+def _(EvidentialTable, col, connection, mo):
     trend = mo.ui.anywidget(
         EvidentialTable(
             connection.sql(
@@ -102,35 +102,13 @@ def _(EvidentialTable, connection, mo):
             title="Monthly trends by category",
             page_size=10,
             row_shading=True,
-            column_config={
-                "category": {"title": "Category", "align": "left"},
-                "total_sales": {"title": "Total sales", "fmt": "usd0"},
-                "orders_trend": {
-                    "title": "Orders",
-                    "viz": "sparkline",
-                    "sparkline_options": {"x": "date", "y": "v", "type": "line"},
-                },
-                "sales_trend": {
-                    "title": "Sales",
-                    "viz": "sparkline",
-                    "sparkline_options": {
-                        "x": "date",
-                        "y": "v",
-                        "type": "area",
-                        "color": "#53768a",
-                    },
-                },
-                "aov_trend": {
-                    "title": "AOV",
-                    "viz": "sparkline",
-                    "sparkline_options": {
-                        "x": "date",
-                        "y": "v",
-                        "type": "bar",
-                        "color": "#97ba99",
-                    },
-                },
-            },
+            columns=[
+                col.text("category", title="Category"),
+                col.currency("total_sales", decimals=0, title="Total sales"),
+                col.sparkline("orders_trend", title="Orders", x="date", y="v", type="line"),
+                col.sparkline("sales_trend", title="Sales", x="date", y="v", type="area", color="#53768a"),
+                col.sparkline("aov_trend", title="AOV", x="date", y="v", type="bar", color="#97ba99"),
+            ],
         )
     )
     trend
@@ -149,7 +127,7 @@ def _(mo):
 
 
 @app.cell
-def _(connection, grouped_table, mo):
+def _(col, connection, grouped_table, mo):
     grouped = mo.ui.anywidget(
         grouped_table(
             connection,
@@ -161,10 +139,10 @@ def _(connection, grouped_table, mo):
             title="Sales by category and item",
             search=True,
             max_height="460px",
-            dimension_config={"category": {"type": "string"}, "item": {"type": "string"}},
+            dimension_config={"category": col.text("category"), "item": col.text("item")},
             measure_config={
-                "sales": {"fmt": "usd0", "viz": "bar", "total_fmt": "usd2"},
-                "orders": {"fmt": "num0"},
+                "sales": col.currency("sales", decimals=0).bar().total_fmt("usd2"),
+                "orders": col.integer("orders"),
             },
         )
     )
@@ -184,7 +162,7 @@ def _(mo):
 
 
 @app.cell
-def _(EvidentialTable, connection, mo):
+def _(EvidentialTable, col, connection, mo):
     orders = mo.ui.anywidget(
         EvidentialTable(
             connection.sql(
@@ -199,14 +177,14 @@ def _(EvidentialTable, connection, mo):
             search=True,
             page_size=12,
             row_shading=True,
-            column_config={
-                "id": {"title": "Order", "fmt": "id", "align": "right"},
-                "order_datetime": {"title": "Ordered", "fmt": "shortdate", "align": "left"},
-                "category": {"title": "Category", "align": "left"},
-                "item": {"title": "Item", "align": "left"},
-                "channel_group": {"title": "Channel", "align": "left"},
-                "sales": {"title": "Sales", "fmt": "usd2", "viz": "bar"},
-            },
+            columns=[
+                col.number("id", fmt="id", title="Order"),
+                col.date("order_datetime", fmt="shortdate", title="Ordered"),
+                col.text("category", title="Category"),
+                col.text("item", title="Item"),
+                col.text("channel_group", title="Channel"),
+                col.currency("sales", decimals=2, title="Sales").bar(),
+            ],
         )
     )
     orders

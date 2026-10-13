@@ -21,9 +21,9 @@ def _():
     import marimo as mo
     import duckdb
 
-    from evidential import LiveEvidentialTable, date_range_sql, query_table
+    from evidential import LiveEvidentialTable, col, date_range_sql, query_table
 
-    return LiveEvidentialTable, Path, date_range_sql, duckdb, mo, query_table
+    return LiveEvidentialTable, Path, col, date_range_sql, duckdb, mo, query_table
 
 
 @app.cell
@@ -52,7 +52,7 @@ def _(mo):
 
 
 @app.cell
-def _(connection, mo, query_table):
+def _(col, connection, mo, query_table):
     recent = mo.ui.anywidget(
         query_table(
             connection,
@@ -64,11 +64,11 @@ def _(connection, mo, query_table):
             title="2019-2021, sales > $10",
             page_size=10,
             row_shading=True,
-            column_config={
-                "category": {"align": "left"},
-                "order_datetime": {"title": "Ordered", "fmt": "shortdate", "align": "left"},
-                "sales": {"fmt": "usd2", "viz": "bar"},
-            },
+            columns=[
+                col.text("category"),
+                col.date("order_datetime", fmt="shortdate", title="Ordered"),
+                col.currency("sales", decimals=2).bar(),
+            ],
         )
     )
     recent
@@ -76,7 +76,7 @@ def _(connection, mo, query_table):
 
 
 @app.cell
-def _(connection, mo, query_table):
+def _(col, connection, mo, query_table):
     everything = mo.ui.anywidget(
         query_table(
             connection,
@@ -85,10 +85,11 @@ def _(connection, mo, query_table):
             title="All rows (page_size='all')",
             page_size="all",
             row_lines=False,
-            column_config={
-                "order_datetime": {"title": "Ordered", "fmt": "shortdate", "align": "left"},
-                "sales": {"fmt": "usd2", "viz": "bar"},
-            },
+            columns=[
+                col.auto("category"),
+                col.date("order_datetime", fmt="shortdate", title="Ordered"),
+                col.currency("sales", decimals=2).bar(),
+            ],
         )
     )
     everything
@@ -117,7 +118,7 @@ def _(mo):
 
 
 @app.cell
-def _(LiveEvidentialTable, connection):
+def _(LiveEvidentialTable, col, connection):
     live = LiveEvidentialTable(
         connection,
         "SELECT * FROM needful_things.orders",
@@ -126,9 +127,9 @@ def _(LiveEvidentialTable, connection):
         page_size=10,
         row_shading=True,
         column_config={
-            "order_datetime": {"title": "Ordered", "fmt": "shortdate", "align": "left"},
-            "category": {"align": "left"},
-            "sales": {"fmt": "usd2", "viz": "bar"},
+            "order_datetime": col.date("order_datetime", fmt="shortdate", title="Ordered"),
+            "category": col.text("category"),
+            "sales": col.currency("sales", decimals=2).bar(),
         },
     )
     live

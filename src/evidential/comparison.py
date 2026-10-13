@@ -125,6 +125,23 @@ def comparison_table(
     for alias, _ in parsed:
         base = dict((measure_config or {}).get(alias, {}))
         base.pop("name", None)
+        # Delta options on a measure (e.g. `col.currency("sales").delta(...)`)
+        # describe the derived change columns, not the measure itself.
+        delta_options = dict(base.pop("delta_options", None) or {})
+        for key in (
+            "down_is_good",
+            "neutral_range",
+            "neutral_min",
+            "neutral_max",
+            "show_symbol",
+            "show_value",
+            "symbol_position",
+            "chip",
+        ):
+            if key in base:
+                delta_options.setdefault(key, base.pop(key))
+        if base.get("viz") == "delta":
+            base.pop("viz", None)
         base.setdefault("type", "number")
         base.setdefault("align", "right")
         columns.append(make_column(alias, **base))
@@ -135,11 +152,15 @@ def comparison_table(
         delta.pop("viz", None)
         delta.pop("bar_options", None)
         delta.pop("color_options", None)
+        if delta_options:
+            delta["delta_options"] = dict(delta_options)
         columns.append(make_column(alias + "_delta", **delta))
 
         pct = {**base, "title": "% change", "fmt": "pct1", "viz": "delta"}
         pct.pop("bar_options", None)
         pct.pop("color_options", None)
+        if delta_options:
+            pct["delta_options"] = dict(delta_options)
         columns.append(make_column(alias + "_pct", **pct))
 
     return EvidentialTable(rows=rows, columns=columns, **table_options)

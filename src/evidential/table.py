@@ -53,12 +53,34 @@ def _coerce_column(column: str | Mapping[str, Any]) -> dict[str, Any]:
     return make_column(str(name), type=type_, **data)
 
 
+def _with_inferred(column: Any, inferred_by_name: Mapping[str, dict[str, Any]]) -> Any:
+    """Resolve a spec that does not say what a column is to its inferred definition.
+
+    `col.auto("x")` (and a bare name) carries no ``type``, so it takes the type,
+    format, alignment and ``info`` inferred from the data, then applies its own
+    options over them.
+    """
+    if isinstance(column, str):
+        return inferred_by_name.get(column, column)
+    if isinstance(column, Mapping) and not column.get("type"):
+        base = inferred_by_name.get(str(column.get("name")))
+        if base is not None:
+            merged = dict(base)
+            # Normalize first: aliases (`redNegatives` → `red_negatives`) must win
+            # over the inferred base's explicit ``False`` defaults.
+            merged.update(_normalize_column_options(dict(column)))
+            return merged
+    return column
+
+
 def _coerce_columns(
     columns: Iterable[Any] | None,
     column_config: Mapping[str, Mapping[str, Any]] | None,
+    inferred: Iterable[Mapping[str, Any]] | None = None,
 ) -> list[dict[str, Any]]:
+    inferred_by_name = {str(column["name"]): dict(column) for column in (inferred or [])}
     columns = list(_flatten_columns(columns)) if columns is not None else []
-    result = [_coerce_column(column) for column in columns]
+    result = [_coerce_column(_with_inferred(column, inferred_by_name)) for column in columns]
     normalized_config = {
         name: _normalize_column_options({"name": name, **config}) for name, config in (column_config or {}).items()
     }
@@ -221,7 +243,7 @@ class EvidentialTable(anywidget.AnyWidget):
         columns = explicit_columns if had_explicit_columns else inferred
         normalized_rows = apply_blank_predicates(normalized_rows, column_config)
         normalized_rows, client_rules = resolve_rules(normalized_rows, self._rules)
-        coerced = _resolve_column_groups(_coerce_columns(columns, column_config), column_groups)
+        coerced = _resolve_column_groups(_coerce_columns(columns, column_config, inferred), column_groups)
         coerced = _center_chips(coerced, column_config, explicit_columns)
 
         merged_options = dict(_OPTION_DEFAULTS)
@@ -274,7 +296,7 @@ class EvidentialTable(anywidget.AnyWidget):
         columns = explicit_columns if explicit_columns is not None else inferred
         new_columns = list(self.columns)
         if columns is not None:
-            new_columns = _resolve_column_groups(_coerce_columns(columns, column_config), column_groups)
+            new_columns = _resolve_column_groups(_coerce_columns(columns, column_config, inferred), column_groups)
             new_columns = _center_chips(new_columns, column_config, explicit_columns)
             link = self.options.get("link")
             if link and explicit_columns is None and not self.options.get("show_link_column"):

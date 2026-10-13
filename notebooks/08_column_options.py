@@ -19,9 +19,9 @@ def _():
     import marimo as mo
     import duckdb
 
-    from evidential import EvidentialTable
+    from evidential import EvidentialTable, col
 
-    return EvidentialTable, duckdb, mo
+    return EvidentialTable, col, duckdb, mo
 
 
 @app.cell
@@ -56,25 +56,23 @@ def _(mo):
 
 
 @app.cell
-def _(EvidentialTable, connection, mo):
+def _(EvidentialTable, col, connection, mo):
     formatting = mo.ui.anywidget(
         EvidentialTable(
             connection.sql("SELECT name, amount, row_fmt, url, markup FROM demo"),
             title="Formatting and content",
             page_size=10,
             row_shading=True,
-            column_config={
+            columns=[
                 # name links to the url column
-                "name": {"align": "left", "link": "url", "link_new_tab": True,
-                         "info": "Click to open the search result"},
+                col.text("name").align("left").link("url", new_tab=True).info("Click to open the search result"),
                 # per-row format pulled from the row_fmt column (fmtColumn)
-                "amount": {"title": "Amount", "fmt_column": "row_fmt", "red_negatives": True,
-                           "align": "right"},
-                "row_fmt": {"title": "Format code", "align": "left"},
-                "url": {"hide": True},
+                col.number("amount", title="Amount").fmt_column("row_fmt").red_negatives(),
+                col.text("row_fmt", title="Format code"),
+                col.auto("url").hide(),
                 # raw HTML cell (contentType=html)
-                "markup": {"title": "HTML", "content_type": "html", "align": "left"},
-            },
+                col.html("markup", title="HTML"),
+            ],
         )
     )
     formatting
@@ -94,44 +92,23 @@ def _(mo):
 
 
 @app.cell
-def _(EvidentialTable, connection, mo):
+def _(EvidentialTable, col, connection, mo):
     visuals = mo.ui.anywidget(
         EvidentialTable(
             connection.sql("SELECT name, amount, change, score, trend FROM demo"),
             title="Column visualisations",
             page_size=10,
             row_shading=True,
-            column_config={
-                "name": {"align": "left"},
-                "amount": {
-                    "title": "Amount (bar)",
-                    "fmt": "num0",
-                    "viz": "bar",
-                    "bar_options": {
-                        "bar_color": "#2563eb",
-                        "bar_color_negative": "#dc2626",
-                        "background_color": "#f1f5f9",
-                    },
-                },
-                "change": {
-                    "title": "Change (delta chip)",
-                    "fmt": "pct1",
-                    "viz": "delta",
-                    "delta_options": {"chip": True, "show_value": True, "down_is_good": False},
-                },
-                "score": {
-                    "title": "Score (colour scale)",
-                    "fmt": "num0",
-                    "viz": "color",
-                    "color_scale": ["#fee2e2", "#fef9c3", "#bbf7d0", "#15803d"],
-                    "color_options": {"min": 0, "max": 100, "midpoint": 50},
-                },
-                "trend": {
-                    "title": "Trend (sparkline)",
-                    "viz": "sparkline",
-                    "sparkline_options": {"type": "area", "color": "#53768a"},
-                },
-            },
+            columns=[
+                col.text("name"),
+                col.number("amount", title="Amount (bar)")
+                .bar(color="#2563eb", negative_color="#dc2626", background="#f1f5f9"),
+                col.percent("change", decimals=1, title="Change (delta chip)")
+                .delta(chip=True, show_value=True, down_is_good=False),
+                col.number("score", title="Score (colour scale)")
+                .color(scale=["#fee2e2", "#fef9c3", "#bbf7d0", "#15803d"], min=0, max=100, midpoint=50),
+                col.sparkline("trend", title="Trend (sparkline)", type="area", color="#53768a"),
+            ],
         )
     )
     visuals

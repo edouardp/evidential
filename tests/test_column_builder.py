@@ -155,3 +155,27 @@ def test_temporal_kinds_and_relative() -> None:
 def test_relative_rejects_an_unknown_unit() -> None:
     with pytest.raises(TypeError, match="relative"):
         EvidentialTable(ROWS, columns=[{"name": "day", "type": "date", "relative": "fortnight"}])
+
+
+def test_auto_keeps_the_inferred_definition() -> None:
+    rows = [{"city": "NYC", "pop": 1234, "year": "2020"}]
+    table = EvidentialTable(rows, columns=["city", col.auto("pop"), col.auto("year")])
+    by_name = {column["name"]: column for column in table.columns}
+    assert by_name["pop"]["type"] == "number"
+    assert by_name["pop"]["fmt"] == "num0"  # the inferred integer format survives
+    assert by_name["city"]["type"] == "string"  # a bare name infers too
+
+    refined = EvidentialTable(rows, columns=[col.auto("pop").bar(color="#111")])
+    assert (refined.columns[0]["type"], refined.columns[0]["viz"]) == ("number", "bar")
+
+    patched = EvidentialTable(rows, column_config={"pop": col.auto("pop").fmt("usd0")})
+    pop = next(column for column in patched.columns if column["name"] == "pop")
+    assert (pop["type"], pop["fmt"]) == ("number", "usd0")
+
+
+def test_auto_alias_wins_over_the_inferred_default() -> None:
+    table = EvidentialTable(
+        [{"x": 1}],
+        columns=[{"name": "x", "redNegatives": True}],
+    )
+    assert table.columns[0]["red_negatives"] is True

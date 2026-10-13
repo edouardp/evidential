@@ -21,6 +21,7 @@ __all__ = [
     "Column",
     "ColumnGroup",
     "array",
+    "auto",
     "bar",
     "boolean",
     "chip",
@@ -153,6 +154,18 @@ class Column(Mapping[str, Any]):
             col.date("due_date", relative="day")
         """
         return self._with(relative=value)
+
+    def fmt_column(self, column: str) -> Column:
+        """Take the format code from another column, per row.
+
+        The named column holds a format code; each cell is formatted with its own
+        row's code (Evidence's ``fmtColumn``).
+
+        Example::
+
+            col.number("amount").fmt_column("row_fmt")
+        """
+        return self._with(fmt_column=column)
 
     def total_fmt(self, code: str) -> Column:
         """Format the total row differently from the cells.
@@ -766,6 +779,31 @@ def _currency_code(code: str, decimals: int | None) -> str:
 def _column(name: str, type_name: str, **spec: Any) -> Column:
     """Build a ``Column`` from ``name``, a type and cleaned options."""
     return Column(name, {"type": type_name, **_clean(**spec)})
+
+
+def auto(name: str, **overrides: Any) -> Column:
+    """Include a column with its **inferred** definition, then refine it.
+
+    Use it to list or reorder columns without restating what they are: the type,
+    format, alignment and ``info`` come from the data (Arrow schema, DuckDB
+    comment, …), exactly as if the column had not been listed, and anything you
+    chain overrides that.
+
+    :param name: the source column name.
+    :param overrides: any column options, applied over the inferred definition.
+
+    Example::
+
+        columns=[
+            col.text("city"),
+            col.auto("gdp").bar(color="#93c5fd"),   # inferred number + a bar
+            col.auto("year").group("Time"),
+        ]
+
+    It is also the right value in ``column_config`` when you want to change one
+    thing about a column: ``column_config={"gdp": col.auto("gdp").fmt("usd0")}``.
+    """
+    return Column(name, _clean(**overrides))
 
 
 def text(name: str, *, title: str | None = None, **extra: Any) -> Column:

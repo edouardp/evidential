@@ -39,6 +39,7 @@ accepted anywhere a column definition is — including
 
 from ._column import (
     array,
+    auto,
     bar,
     boolean,
     chip,
@@ -66,6 +67,7 @@ from ._column import (
 
 __all__ = [
     "array",
+    "auto",
     "bar",
     "boolean",
     "chip",

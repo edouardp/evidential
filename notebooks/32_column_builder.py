@@ -50,8 +50,10 @@ def _(mo):
       it also works as a `column_config` value.
     - **`settings(...)`** collects table-level options into a reusable bundle you
       can splat (`**REPORT`) or pass as `settings=REPORT` (per-table options win).
+    - **`col.subcolumns(...)` / `col.group(...)`** group columns under one shared
+      header (a sub-column or a spanner).
 
-    Both validate their keys, so a typo suggests the right name.
+    All three validate their keys, so a typo suggests the right name.
     """)
     return
 
@@ -152,8 +154,8 @@ def _(EvidentialTable, col, connection, mo, summary_sql):
             columns=[
                 col.text("category"),
                 col.text("item"),
-                col.chip("channel_group", min_width=80),
-                col.currency("sales", code="jpy"),
+                col.chip("channel_group", min_width=100),
+                col.bar("sales").fmt("num"),
                 col.integer("orders"),
                 col.currency("avg_sale", decimals=2),
                 col.percent("share"),
@@ -163,6 +165,53 @@ def _(EvidentialTable, col, connection, mo, summary_sql):
         )
     )
     playground
+    return
+
+
+@app.cell
+def _(mo):
+    mo.md("""
+    ## Grouping columns
+
+    - `col.subcolumns(label, [...])` gives its members one shared leaf header.
+    - `col.group(label, [...])` names a spanner — the builder counterpart of
+      `column_groups={...}`.
+
+    Both set the label on every member, so you cannot forget one or misspell it,
+    and the members are adjacent by construction. A group nests inside another
+    (pass `group=` to `col.subcolumns`, or put a group inside a group); put the
+    result straight into `columns=[...]`.
+    """)
+    return
+
+
+@app.cell
+def _(EvidentialTable, col, connection, mo, settings, summary_sql):
+    grouped = mo.ui.anywidget(
+        EvidentialTable(
+            connection.sql(summary_sql),
+            settings=settings(search=True, page_size=8, row_shading=True),
+            columns=[
+                col.text("category"),
+                col.text("item"),
+                col.subcolumns("Volume",
+                    [
+                        col.currency("sales").bar(color="#93c5fd", fit_to_data=True),
+                        col.integer("orders"),
+                    ],
+                ),
+                col.group("Performance",
+                    [
+                        col.percent("share"),
+                        col.percent("growth").delta(down_is_good=False),
+                        col.currency("avg_sale", decimals=2).title("Avg sale"),
+                    ],
+                    highlight="#f8fafc",
+                ),
+            ],
+        )
+    )
+    grouped
     return
 
 

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 
 import pytest
 
@@ -92,3 +92,48 @@ def test_unknown_options_suggest_a_fix() -> None:
         settings(borderr=False)
     with pytest.raises(ValueError, match="did you mean 'bar_options'"):
         EvidentialTable(ROWS, column_config={"sales": {"barOption": {}}})
+
+
+def test_subcolumns_label_every_member() -> None:
+    group = col.subcolumns("Latest", [col.number("sales").fmt("num1"), col.text("change")])
+    assert isinstance(group, Sequence)
+    assert group.kind == "subcolumns" and group.label == "Latest"
+    assert [column["subcolumn_group"] for column in group] == ["Latest", "Latest"]
+    assert repr(group).startswith("col.subcolumns('Latest', [")
+
+
+def test_group_builder_names_a_spanner() -> None:
+    table = EvidentialTable(
+        ROWS,
+        columns=[
+            col.text("city"),
+            col.group("Economy", [col.number("sales"), col.number("change")], highlight="#eef2ff"),
+        ],
+    )
+    assert [column["name"] for column in table.columns] == ["city", "sales", "change"]
+    by_name = {column["name"]: column for column in table.columns}
+    assert by_name["sales"]["column_group"] == "Economy"
+    assert by_name["sales"]["highlight"] == "#eef2ff"
+
+
+def test_groups_nest_and_accept_names_and_mappings() -> None:
+    group = col.group(
+        "Economy",
+        [col.subcolumns("Latest", [col.number("sales")]), "change", {"name": "cpi", "type": "number"}],
+    )
+    assert [column["name"] for column in group] == ["sales", "change", "cpi"]
+    assert group[0]["subcolumn_group"] == "Latest"
+    assert group[0]["column_group"] == "Economy"
+
+
+def test_group_members_cannot_lose_the_label() -> None:
+    table = EvidentialTable(
+        ROWS,
+        columns=[col.subcolumns("Latest", [col.number("sales"), col.text("change")])],
+    )
+    assert all(column["subcolumn_group"] == "Latest" for column in table.columns)
+
+
+def test_group_rejects_non_columns() -> None:
+    with pytest.raises(TypeError, match="expected a column name"):
+        col.group("G", [42])

@@ -30,7 +30,7 @@ anywhere a column definition is — including
 
 from __future__ import annotations
 
-from collections.abc import Mapping, Sequence
+from collections.abc import Iterable, Mapping, Sequence
 from typing import Any, Literal
 
 from .configuration import ColumnOptions, validate_options
@@ -41,6 +41,7 @@ Rotation = Literal["vertical"] | float
 __all__ = [
     "CURRENCY_CODES",
     "Column",
+    "ColumnGroup",
     "array",
     "bar",
     "boolean",
@@ -50,6 +51,7 @@ __all__ = [
     "date",
     "delta",
     "flag",
+    "group",
     "html",
     "image",
     "integer",
@@ -59,6 +61,7 @@ __all__ = [
     "number",
     "percent",
     "sparkline",
+    "subcolumns",
     "text",
     "url",
 ]
@@ -655,6 +658,77 @@ class Column(Mapping[str, Any]):
         return config
 
 
+class ColumnGroup(Sequence[Column]):
+    """An immutable group of columns that share a header label.
+
+    Returned by :func:`subcolumns` (a shared leaf header) and :func:`group` (a
+    spanner). It is a :class:`~collections.abc.Sequence`, so it can be splatted
+    into ``columns=[...]`` (``*col.subcolumns("Latest", [...])``) and is also
+    accepted directly there, where the table flattens it.
+    """
+
+    __slots__ = ("_kind", "_label", "_members")
+
+    def __init__(self, kind: str, label: str | Sequence[str], members: Sequence[Column]) -> None:
+        self._kind = kind
+        self._label = label
+        self._members = tuple(members)
+
+    @property
+    def kind(self) -> str:
+        """``"subcolumns"`` or ``"group"``."""
+        return self._kind
+
+    @property
+    def label(self) -> str | Sequence[str]:
+        """The shared header label."""
+        return self._label
+
+    @property
+    def members(self) -> tuple[Column, ...]:
+        """The grouped columns."""
+        return self._members
+
+    def __getitem__(self, index: int | slice) -> Any:
+        """Return the member at ``index``."""
+        return self._members[index]
+
+    def __len__(self) -> int:
+        """The number of members."""
+        return len(self._members)
+
+    def __repr__(self) -> str:
+        """A readable ``col.subcolumns('label', [...])`` form."""
+        label = self._label if isinstance(self._label, str) else ".".join(self._label)
+        members = ", ".join(repr(member) for member in self._members)
+        return f"col.{self._kind}({label!r}, [{members}])"
+
+
+def _as_column(item: Any) -> Column:
+    """Coerce a column name, mapping or :class:`Column` to a ``Column``."""
+    if isinstance(item, Column):
+        return item
+    if isinstance(item, str):
+        return Column(item)
+    if isinstance(item, Mapping):
+        name = item.get("name")
+        if not name:
+            raise ValueError("a column mapping needs a 'name'")
+        return Column(str(name), {key: value for key, value in item.items() if key != "name"})
+    raise TypeError(f"expected a column name, mapping or col.* column, got {type(item).__name__}")
+
+
+def _members(items: Iterable[Any]) -> list[Column]:
+    """Return the columns in ``items``, flattening any nested groups."""
+    result: list[Column] = []
+    for item in items:
+        if isinstance(item, ColumnGroup):
+            result.extend(item.members)
+        else:
+            result.append(_as_column(item))
+    return result
+
+
 def _merge_options(key: str, **values: Any) -> dict[str, Any]:
     """Build a nested options dict, dropping ``None`` values."""
     options = _clean(**values)
@@ -1008,3 +1082,69 @@ def delta(
         neutral_range=neutral_range,
         chip=chip,
     )
+
+
+# ------------------------------------------------------------------- groups ---
+def subcolumns(
+    label: str,
+    columns: Iterable[Any],
+    *,
+    group: str | Sequence[str] | None = None,
+    highlight: str | None = None,
+) -> ColumnGroup:
+    """Give a group of columns one shared leaf header.
+
+    Members are labelled with ``label`` and are therefore contiguous by
+    construction — you cannot forget the label on one of them or misspell it.
+
+    :param label: the shared header text.
+    :param columns: the members (``col.*`` columns, names or mappings); may
+        nest another group.
+    :param group: an enclosing spanner header for the members.
+    :param highlight: a background colour for the members.
+
+    Example::
+
+        col.subcolumns("Latest", [
+            col.number("gdp").fmt("num1").red_negatives(),
+            col.text("gdp_period").font_color("#808080"),
+        ])
+
+    The result goes straight into ``columns=[...]``::
+
+        EvidentialTable(rows, columns=[
+            col.text("country"),
+            col.subcolumns("Latest", [col.number("gdp"), col.text("gdp_period")]),
+        ])
+    """
+    members = [
+        column._with(subcolumn_group=label, column_group=group, highlight=highlight) for column in _members(columns)
+    ]
+    return ColumnGroup("subcolumns", label, members)
+
+
+def group(
+    label: str | Sequence[str],
+    columns: Iterable[Any],
+    *,
+    highlight: str | None = None,
+) -> ColumnGroup:
+    """Put a group of columns under a spanner header.
+
+    The builder counterpart of ``column_groups={label: [...]}``: each member gets
+    ``column_group=label``, so the group is named once and is contiguous by
+    construction.
+
+    :param label: the spanner text; a sequence nests (``["Root", "Sub"]``).
+    :param columns: the members (``col.*`` columns, names or mappings).
+    :param highlight: a background colour for the members.
+
+    Example::
+
+        col.group("Economy", [
+            col.number("inflation"),
+            col.number("unemployment"),
+        ], highlight="#eef2ff")
+    """
+    members = [column._with(column_group=label, highlight=highlight) for column in _members(columns)]
+    return ColumnGroup("group", label, members)

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterable, Mapping, Sequence
+from collections.abc import Iterable, Iterator, Mapping, Sequence
 from pathlib import Path
 from typing import Any, Unpack
 
@@ -28,6 +28,19 @@ def section_row(label: str) -> dict[str, Any]:
     return {"render_type": "row_section", "__label": label}
 
 
+def _flatten_columns(columns: Iterable[Any]) -> Iterator[Any]:
+    """Yield columns, flattening the groups built by ``col.subcolumns`` / ``col.group``.
+
+    A ``Column`` is a ``Mapping`` and a column name is a ``str``, so neither is
+    treated as a group; any other sequence is expanded (and may nest).
+    """
+    for item in columns:
+        if isinstance(item, Sequence) and not isinstance(item, (str, bytes, Mapping)):
+            yield from _flatten_columns(item)
+        else:
+            yield item
+
+
 def _coerce_column(column: str | Mapping[str, Any]) -> dict[str, Any]:
     if isinstance(column, str):
         return make_column(column)
@@ -41,10 +54,10 @@ def _coerce_column(column: str | Mapping[str, Any]) -> dict[str, Any]:
 
 
 def _coerce_columns(
-    columns: Iterable[str | Mapping[str, Any]] | None,
+    columns: Iterable[Any] | None,
     column_config: Mapping[str, Mapping[str, Any]] | None,
 ) -> list[dict[str, Any]]:
-    columns = list(columns) if columns is not None else []
+    columns = list(_flatten_columns(columns)) if columns is not None else []
     result = [_coerce_column(column) for column in columns]
     normalized_config = {
         name: _normalize_column_options({"name": name, **config}) for name, config in (column_config or {}).items()
@@ -76,7 +89,7 @@ def _center_chips(
     """
     explicit = {
         str(column.get("name"))
-        for column in explicit_columns or []
+        for column in _flatten_columns(explicit_columns or [])
         if isinstance(column, Mapping) and column.get("align") is not None
     }
     if column_config:

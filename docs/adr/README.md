@@ -62,6 +62,7 @@ dated, immutable record of the decisions behind them.
 | [041](041-adaptive-symbol-footnotes.md) | Adaptive Symbol Footnotes | Accepted |
 | [042](042-column-builder-and-settings.md) | The `col` Column Builder and the `settings` Bundle | Accepted |
 | [043](043-column-kinds.md) | Column Kinds as the Entry Point | Accepted |
+| [044](044-column-group-builders.md) | Column Group Builders | Accepted |
 
 ## Creating New ADRs
 

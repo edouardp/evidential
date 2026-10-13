@@ -36,6 +36,29 @@ def test_factories_give_sensible_types() -> None:
     assert col.delta("x")["type"] == "number"
 
 
+def test_kind_factories_set_a_baseline() -> None:
+    assert dict(col.integer("orders")) == {"name": "orders", "type": "number", "fmt": "num0"}
+    assert col.percent("share")["fmt"] == "pct"
+    assert col.percent("share", decimals=2)["fmt"] == "pct2"
+    assert col.percent("rate", whole=True)["fmt"] == '0.0"%"'
+    assert col.percent("rate", whole=True, decimals=0)["fmt"] == '0"%"'
+    assert col.currency("sales")["fmt"] == "usd"
+    assert col.currency("sales", code="EUR", decimals=2)["fmt"] == "eur2"
+    assert col.flag("country")["fmt"] == "flag"
+    assert col.bar("sales", color="#111")["viz"] == "bar"
+    assert col.color("sales")["viz"] == "color"
+    assert col.url("link")["link"] == "link"
+
+
+def test_kind_factories_validate_and_chain() -> None:
+    with pytest.raises(ValueError, match="unknown currency code"):
+        col.currency("sales", code="xyz")
+    with pytest.raises(ValueError, match="percent decimals"):
+        col.percent("share", decimals=9)
+    chained = col.currency("sales", code="gbp").bar(color="#111")
+    assert (chained["fmt"], chained["viz"]) == ("gbp", "bar")
+
+
 def test_columns_accept_the_builder() -> None:
     table = EvidentialTable(
         ROWS,

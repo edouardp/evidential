@@ -115,21 +115,14 @@ def _(EvidentialTable, col, connection, mo, settings, summary_sql):
                 col.text("category").group("Product").info("The product category"),
                 col.text("item").group("Product"),
                 col.chip("channel_group").group("Channel"),
-                col.number("sales")
-                    .fmt("usd0")
-                    .bar(color="#93c5fd", fit_to_data=True)
-                    .group("Performance"),
-                col.number("orders").fmt("num0").group("Performance"),
-                col.number("avg_sale")
-                    .title("Avg sale")
-                    .fmt("usd2")
-                    .color(scale=["#fee2e2", "#fef9c3", "#bbf7d0"])
-                    .group("Performance"),
-                col.number("share").fmt("pct1").group("Performance"),
-                col.number("growth")
-                    .fmt("pct1")
-                    .delta(down_is_good=False, neutral_range="0.02")
-                    .group("Performance"),
+                col.currency("sales").bar(color="#93c5fd", fit_to_data=True).group("Performance"),
+                col.integer("orders").group("Performance"),
+                col.currency("avg_sale", decimals=2)
+                .title("Avg sale")
+                .color(scale=["#fee2e2", "#fef9c3", "#bbf7d0"])
+                .group("Performance"),
+                col.percent("share").group("Performance"),
+                col.percent("growth").delta(down_is_good=False, neutral_range="0.02").group("Performance"),
                 col.sparkline("trend", type="area", color="#53768a", fit_to_data=True),
             ],
         )
@@ -144,35 +137,33 @@ def _(mo):
     ## A default table to play with
 
     The same data with no table settings and plain `col.*` columns. Open a new
-    cell and try chaining, e.g. `col.number("sales").fmt("usd0").bar(color="#f97316")`,
+    cell and try chaining, e.g. `col.currency("sales").bar(color="#f97316")`,
     add `.group("Performance")`, or swap `.bar(...)` for `.color(...)` /
     `.delta(...)` / `.sparkline(...)`.
     """)
     return
 
 
-app._unparsable_cell(
-    r"""
+@app.cell
+def _(EvidentialTable, col, connection, mo, summary_sql):
     playground = mo.ui.anywidget(
         EvidentialTable(
             connection.sql(summary_sql),
             columns=[
                 col.text("category"),
                 col.text("item"),
-                col.text("channel_group"),
-                col.number("sales"),
-                col.number("orders"),
-                col.number("avg_sale"),
-                col.number("share"),
-                col.number("growth"),
-                col.sparkline("trend", type=""
+                col.chip("channel_group", min_width=80),
+                col.currency("sales", code="jpy"),
+                col.integer("orders"),
+                col.currency("avg_sale", decimals=2),
+                col.percent("share"),
+                col.percent("growth").delta(down_is_good=False),
+                col.sparkline("trend", type="area")
             ],
         )
     )
     playground
-    """,
-    name="_"
-)
+    return
 
 
 @app.cell
@@ -180,15 +171,22 @@ def _(mo):
     mo.md("""
     ### Notes
 
-    - `col.*` factories (`text`, `number`, `date`, `boolean`, `array`,
-      `sparkline`, `chip`, `delta`, `link`, `markdown`, `image`, `logo`) return an
-      immutable `Column`; chain methods like `.fmt()`, `.bar()`, `.color()`,
-      `.delta()`, `.sparkline()`, `.group()`, `.info()` return a new one.
+    - `col.*` names a column's **kind** — the first decision. Kinds: `text`,
+      `number`, `integer`, `percent`, `currency`, `date`, `boolean`, `array`,
+      `flag`, `bar`, `color`, `chip`, `sparkline`, `delta`, `link`/`url`,
+      `image`, `logo`, `markdown`, `html`. Each sets a sensible baseline with no
+      configuration: `col.currency("sales")` auto-scales, `col.percent("share")`
+      picks decimals, and `col.percent("rate", whole=True)` treats the value as
+      an already-percent number.
+    - Chain methods refine any kind: `.fmt()`, `.title()`, `.align()`, `.group()`,
+      `.info()`, `.bar()`, `.color()`, `.delta()`, `.sparkline()`, `.chip()`…
+      Each returns a new column, so specs are reusable.
     - A `Column` is a mapping, so it works in `columns=[...]` *and* as a
       `column_config={...}` value.
     - `settings(...)` is a validated bundle of table options: splat it with
       `**REPORT` or pass `settings=REPORT` (explicit keywords override it).
-    - Both raise with a suggestion on an unknown key (`borderr` → `border`).
+    - Both raise with a suggestion on an unknown key (`borderr` → `border`) and
+      on a bad currency or percent (`code="xyz"`, `decimals=9`).
     """)
     return
 

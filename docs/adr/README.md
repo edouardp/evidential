@@ -61,6 +61,7 @@ dated, immutable record of the decisions behind them.
 | [040](040-shared-header-subcolumns.md) | Shared-Header Sub-columns | Accepted |
 | [041](041-adaptive-symbol-footnotes.md) | Adaptive Symbol Footnotes | Accepted |
 | [042](042-column-builder-and-settings.md) | The `col` Column Builder and the `settings` Bundle | Accepted |
+| [043](043-column-kinds.md) | Column Kinds as the Entry Point | Accepted |
 
 ## Creating New ADRs
 

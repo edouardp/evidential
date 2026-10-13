@@ -394,6 +394,10 @@
    growing left (negative) or right (positive) by magnitude, and the value on
    the opposite side of the line (the Economist's league-table bar). */
 .et-bar-center .et-bar-wrap { inset: 2px 0; }
+/* The value and the bar share the cell 50/50, so give the centred cell room for
+   a wide value on its half and keep the value on one line. */
+.et-bar-center { min-width: 8rem; }
+.et-bar-center .et-bar-label { white-space: nowrap; }
 .et-bar-center .et-bar-axis {
   position: absolute;
   top: 0;

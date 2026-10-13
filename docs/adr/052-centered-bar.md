@@ -42,10 +42,9 @@ Colour follows the existing rule (`bar_color`, `bar_color_negative`), and
 
 - Good, because signed deviation is now a first-class bar mode.
 - Good, because it composes with the existing label, colour and `hide_labels`.
-- Note: the label and the bar each get **half** the cell, so a wide value in a
-  narrow column can overflow its half. A wider `min-width` on the centred cell,
-  or a fixed label column with the centre line inside the bar area, would fix
-  that — left as a follow-up pending a layout preference.
+- Note: the label and the bar each get **half** the cell, so the centred cell
+  has a wider `min-width` (`8rem`) and the label is `nowrap` to keep a wide value
+  on its own half without riding over the bar or the neighbour.
 
 ## More Information
 

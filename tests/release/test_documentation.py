@@ -9,7 +9,7 @@ from pathlib import Path
 import pytest
 
 ROOT = Path(__file__).resolve().parents[2]
-DOCS = ("README.md", "docs/design-and-dx.md", "docs/technical-architecture.md", "docs/marimo-studio.md")
+DOCS = ("README.md", "docs/design-and-dx.md", "docs/technical-architecture.md", "docs/marimo-studio.md", "docs/RELEASE_PROCESS.md")
 
 
 @pytest.mark.parametrize("relative", DOCS)

@@ -380,8 +380,8 @@
 .et-bar-negative { left: 4px; right: 0; }
 .et-bar {
   position: absolute;
-  top: 2px;
-  bottom: 2px;
+  top: var(--et-bar-pad, 2px);
+  bottom: var(--et-bar-pad, 2px);
   left: 0;
   min-width: 1px;
   /* rectangular (no rounded corners) */
@@ -411,7 +411,11 @@
 /* Full height: the line and bars run edge-to-edge so the centre line joins the
    neighbouring rows into one rule down the column. */
 .et-bar-center .et-bar-wrap { inset: 0 var(--et-bar-pad-right) 0 0; }
-.et-bar-center .et-bar { top: 0; bottom: 0; }
+.et-bar-center .et-bar { top: var(--et-bar-pad, 0); bottom: var(--et-bar-pad, 0); }
+/* Under `pad`, the centre line's ends line up with the first/last bar: it is
+   inset only at the top of the first row and the bottom of the last. */
+tbody tr:first-child .et-bar-center .et-bar-axis { top: var(--et-bar-pad, 0); }
+tbody tr:last-child .et-bar-center .et-bar-axis { bottom: var(--et-bar-pad, 0); }
 .et-bar-center .et-bar-axis {
   position: absolute;
   top: 0;

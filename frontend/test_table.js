@@ -1304,7 +1304,7 @@ test("neg colours, recolours and brackets negatives", () => {
   renderer.destroy();
 });
 
-test("bar pad insets the bar but not the centre line", () => {
+test("bar pad sets --et-bar-pad for the bar and the line ends", () => {
   const columns = [
     {
       name: "gdp",
@@ -1318,10 +1318,8 @@ test("bar pad insets the bar but not the centre line", () => {
   const rows = [{ gdp: 10 }, { gdp: -5 }];
   const renderer = new EvidentialTableRenderer(makeModel(rows, columns, {}, el), el);
   const cell = el.querySelector("tbody .et-bar-cell");
-  const bar = cell.querySelector(".et-bar");
-  assert.equal(bar.style.top, "4px");
-  assert.equal(bar.style.bottom, "4px");
-  // The centre line keeps its full height (CSS), never the inline pad.
+  assert.equal(cell.style.getPropertyValue("--et-bar-pad"), "4px");
+  // The axis carries no inline inset; CSS applies it on the first/last rows.
   const axis = cell.querySelector(".et-bar-axis");
   assert.equal(axis.style.top, "");
   assert.equal(axis.style.bottom, "");

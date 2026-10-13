@@ -17,12 +17,12 @@ export function renderBar(col, value, formatted, range) {
     formatted,
   );
   const background = opts.background_color ? { backgroundColor: opts.background_color } : {};
-  // `pad` insets the bar from the top and bottom (a px number or a CSS length);
-  // the centre line keeps its full height.
+  // `pad` insets the bar — and, in centred mode, the centre line's ends on the
+  // first/last row — from the top and bottom (a px number or a CSS length).
   const pad =
     opts.pad == null ? null : typeof opts.pad === "number" ? `${opts.pad}px` : String(opts.pad);
-  const barPad = pad == null ? {} : { top: pad, bottom: pad };
 
+  let cell;
   if (opts.center) {
     // A zero-centred "diverging" bar: the bar grows left (negative) or right
     // (positive) from a centre line by its magnitude, and the value sits on the
@@ -31,22 +31,23 @@ export function renderBar(col, value, formatted, range) {
     const width = Math.max(0, Math.min(100, (Math.abs(num) / maxAbs) * 100)) / 2;
     const bar = h("div", {
       class: `et-bar et-bar-${negative ? "left" : "right"}`,
-      style: { width: `${width}%`, backgroundColor: color, ...barPad },
+      style: { width: `${width}%`, backgroundColor: color },
     });
     const axis = h("div", { class: "et-bar-axis" });
     const wrap = h("div", { class: "et-bar-wrap" }, [axis, bar]);
     label.classList.add(negative ? "et-bar-label-right" : "et-bar-label-left");
-    return h("div", { class: "et-bar-cell et-bar-center", style: background }, [wrap, label]);
+    cell = h("div", { class: "et-bar-cell et-bar-center", style: background }, [wrap, label]);
+  } else {
+    const span = max - min || 1;
+    const pct = Math.max(0, Math.min(100, ((num - min) / span) * 100));
+    const bar = h("div", {
+      class: "et-bar",
+      style: { width: `${pct}%`, backgroundColor: color },
+    });
+    const wrap = h("div", { class: `et-bar-wrap${negative ? " et-bar-negative" : ""}` }, bar);
+    cell = h("div", { class: "et-bar-cell", style: background }, [wrap, label]);
   }
-
-  const span = max - min || 1;
-  const pct = Math.max(0, Math.min(100, ((num - min) / span) * 100));
-  const bar = h("div", {
-    class: "et-bar",
-    style: { width: `${pct}%`, backgroundColor: color, ...barPad },
-  });
-  const wrap = h("div", { class: `et-bar-wrap${negative ? " et-bar-negative" : ""}` }, bar);
-  const cell = h("div", { class: "et-bar-cell", style: background }, [wrap, label]);
+  if (pad) cell.style.setProperty("--et-bar-pad", pad);
   return cell;
 }
 

@@ -37,8 +37,10 @@ The renderer (`renderBar`), when `center` is set:
 
 Colour follows the existing rule (`bar_color`, `bar_color_negative`), and
 `fit_to_data` still controls the range. `pad` (a px number or a CSS length)
-insets the **bar** from the top and bottom of the row; the centre line is never
-padded, so it stays full height and continuous.
+insets the **bar** from the top and bottom of the row; the centre line stays full
+height and continuous between rows, but its two **ends** are inset by the same
+`pad` on the first and last row (a `tbody tr:first-child` / `:last-child` rule),
+so the line lines up with the topmost and bottommost bar.
 
 ### Consequences
 

@@ -221,6 +221,7 @@ class ChipOptions(TypedDict, total=False):
 
 class SymbolOptions(TypedDict, total=False):
     symbol: str | None
+    shape: Literal["square", "rounded", "circle"] | None
     empty: str | None
     max: int | None
     image: str | None

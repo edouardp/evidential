@@ -50,6 +50,7 @@ def _(mo):
     | `image` | an image URL to repeat instead of a glyph |
     | `color` / `empty_color` | the filled / unfilled colour |
     | `size` / `gap` | glyph size and spacing, in `em` |
+    | `shape` | draw a CSS box instead of a glyph: `"square"`, `"rounded"`, `"circle"` |
     | `align` | `"left"`, `"right"` or `"center"` |
     """)
     return
@@ -91,24 +92,17 @@ def _(EvidentialTable, col, mo, repeats, settings):
                 row_lines=False,
                 border=False,
                 stretch=False,
-                width="820px",
+                #width="820px",
             ),
             columns=[
                 col.text("country"),
-                col.group(
-                    "Same rate in consecutive quarters",
-                    [
-                        col.subcolumns(
-                            "Twice",
-                            [
-                                col.integer("twice"),
-                                col.symbols("twice", symbol="■", color="#2EC1D3", align="left"),
-                            ],
-                        ),
-                        col.symbols("thrice", symbol="■", color="#2EC1D3", align="center"),
-                        
-                    ],
-                ),
+                col.group("Same rate in consecutive quarters", [
+                    col.subcolumns("Twice", [
+                        col.integer("twice"),
+                        col.symbols("twice", symbol="■", color="#2EC1D3", align="left"),
+                    ]),
+                    col.symbols("thrice", symbol="■", color="#2EC1D3", align="center"),
+                ]),
                 col.number("avg", fmt="num3", title="Average difference")
                 .bar(color="#8ECAE6", fit_to_data=False)
                 .align("left"),
@@ -164,9 +158,9 @@ def _(EvidentialTable, col, medals, mo, settings):
             ),
             columns=[
                 col.text("country"),
-                col.symbols("gold", symbol="■", color="#f0a500", size=1.5),
-                col.symbols("silver", symbol="■", color="#9e9e9e", size=1.5),
-                col.symbols("bronze", symbol="■", color="#f4a582", size=1.5),
+                col.symbols("gold", symbol="■", color="#f0a500", size=1.5, align="center"),
+                col.symbols("silver", symbol="■", color="#9e9e9e", size=1.5, align="center"),
+                col.symbols("bronze", symbol="■", color="#f4a582", size=1.5, align="center"),
             ],
         )
     )
@@ -220,6 +214,7 @@ def _(EvidentialTable, col, mo, ratings, settings):
             columns=[
                 col.text("place"),
                 col.rating("stars", max=5, title="Of 5"),
+                col.symbols("score", shape="square", title="shape=circle"),
                 col.rating("score", max=10, title="Of 10", color="#eab308"),
                 col.symbols("score", symbol="⭐", title="Emoji"),
                 col.number("score").title("Image").symbols(image=dot, gap=0.1),
@@ -242,6 +237,8 @@ def _(mo):
     - A non-numeric or missing value shows the column's null text.
     - `image` repeats an `<img>` instead of a glyph (a URL or a data-URI), sized
       to `1em`; `symbol` accepts any character, including emoji.
+    - `shape="square"` / `"rounded"` / `"circle"` draws a **CSS box** instead of a
+      glyph, so the mark is pixel-exact and does not depend on the font.
     - Pair a number with its squares by giving both the same column under a
       `col.subcolumns(...)` group, as the "Twice" / "Thrice" columns above do.
     """)

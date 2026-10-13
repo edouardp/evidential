@@ -1336,6 +1336,26 @@ test("bar pad sets --et-bar-pad for the bar and the line ends", () => {
   renderer.destroy();
 });
 
+test("symbols with shape draw a CSS box, not a glyph", () => {
+  const columns = [
+    {
+      name: "n",
+      type: "number",
+      viz: "symbols",
+      align: "left",
+      symbol_options: { shape: "square", color: "#f0a500", size: 0.8 },
+    },
+  ];
+  const renderer = new EvidentialTableRenderer(makeModel([{ n: 3 }], columns, {}, el), el);
+  const boxes = [...el.querySelectorAll("tbody .et-symbol-box")];
+  assert.equal(boxes.length, 3);
+  assert.ok(boxes[0].classList.contains("et-symbol-box-square"));
+  assert.equal(boxes[0].style.width, "0.8em");
+  assert.equal(boxes[0].style.backgroundColor, "rgb(240, 165, 0)");
+  assert.equal(el.querySelectorAll("tbody .et-symbol").length, 0);
+  renderer.destroy();
+});
+
 test("symbols repeat a glyph with empty slots and the right alignment", () => {
   const columns = [
     {

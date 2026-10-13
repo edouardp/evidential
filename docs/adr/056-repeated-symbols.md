@@ -33,6 +33,7 @@ Chosen option: a new visualisation, `viz="symbols"`.
 | option | meaning |
 | --- | --- |
 | `symbol` | the filled glyph (default `"●"`) — `"■"`, `"★"`, `"▲"`, any emoji |
+| `shape` | draw a CSS box instead of a glyph — `"square"`, `"rounded"`, `"circle"` |
 | `empty` | the glyph for the unfilled slots (used with `max`) |
 | `max` | draw this many slots — `value` filled, the rest `empty`; a floor, not a cap |
 | `image` | an image URL/data-URI to repeat instead of a glyph |
@@ -57,6 +58,8 @@ col.symbols("twice", ...)])`.
 - Good, because `max` + `empty` gives ratings (`★★★☆☆`) without a second feature.
 - Good, because `align` makes a run left-, right- or center-aligned like any
   other cell content.
+- Good, because `shape=` draws a **CSS box** (square / rounded / circle), which is
+  pixel-exact and font-independent — a glyph's shape and width vary by font.
 - Note: `max` is a floor — a value above it draws more filled glyphs rather than
   overflowing or truncating; clamp in SQL if a cap is wanted.
 - Note: the value is *rounded* to the nearest integer before repeating, so a

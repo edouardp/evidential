@@ -76,6 +76,18 @@ export function renderSymbols(col, value, formatted) {
       );
       continue;
     }
+    if (opts.shape) {
+      // A CSS-drawn box: pixel-exact and font-independent (unlike a glyph).
+      const box = h("span", {
+        class: `et-symbol-box et-symbol-box-${opts.shape}${on ? "" : " et-symbol-empty"}`,
+      });
+      const side = opts.size != null ? `${opts.size}em` : null;
+      if (side) box.style.width = box.style.height = side;
+      const fill = on ? opts.color : opts.empty_color;
+      if (fill) box.style.backgroundColor = resolveColor(fill);
+      wrap.append(box);
+      continue;
+    }
     const node = h(
       "span",
       { class: `et-symbol${on ? "" : " et-symbol-empty"}` },

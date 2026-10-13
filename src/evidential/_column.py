@@ -756,6 +756,7 @@ class Column(Mapping[str, Any]):
         self,
         *,
         symbol: str | None = None,
+        shape: Literal["square", "rounded", "circle"] | None = None,
         empty: str | None = None,
         max: int | None = None,
         image: str | None = None,
@@ -767,18 +768,21 @@ class Column(Mapping[str, Any]):
         """Render the value as that many repeated symbols — glyphs, emoji or images.
 
         :param symbol: the filled glyph (default ``"●"``).
+        :param shape: draw a CSS box instead of a glyph — ``"square"``,
+            ``"rounded"`` or ``"circle"`` — for a pixel-exact, font-independent mark.
         :param empty: the glyph for the unfilled slots (used with ``max``).
         :param max: draw this many slots — ``value`` filled, the rest ``empty``;
             omit to draw exactly ``value`` repeats.
         :param image: an image URL to repeat instead of a glyph.
         :param color: the filled colour.
         :param empty_color: the unfilled colour.
-        :param size: the glyph size, in ``em``.
+        :param size: the glyph size (or box side), in ``em``.
         :param gap: the space between glyphs, in ``em``.
 
         Example::
 
             col.number("twice").symbols(symbol="■", color="#2EC1D3")
+            col.number("medals").symbols(shape="square", color="#f0a500", size=0.8)
             col.number("rating").symbols(symbol="★", empty="☆", max=5, color="#f59e0b")
         """
         return self._with(
@@ -786,6 +790,7 @@ class Column(Mapping[str, Any]):
             **_merge_options(
                 "symbol_options",
                 symbol=symbol,
+                shape=shape,
                 empty=empty,
                 max=max,
                 image=image,
@@ -1386,7 +1391,8 @@ def delta(
 def symbols(
     name: str,
     *,
-    symbol: str = "●",
+    symbol: str | None = None,
+    shape: Literal["square", "rounded", "circle"] | None = None,
     empty: str | None = None,
     max: int | None = None,
     image: str | None = None,
@@ -1403,13 +1409,15 @@ def symbols(
     :param name: the numeric column holding the count.
     :param symbol: the filled glyph (default ``"●"``). ``"■"`` for squares, ``"★"``
         for stars, or any emoji.
+    :param shape: draw a CSS box instead of a glyph — ``"square"``, ``"rounded"`` or
+        ``"circle"`` — for a pixel-exact mark that does not depend on the font.
     :param empty: the glyph for the unfilled slots, used with ``max`` (e.g. ``"☆"``).
     :param max: draw this many slots — ``value`` filled, the rest ``empty``; omit to
         draw exactly ``value`` repeats.
     :param image: an image URL to repeat instead of a glyph.
     :param color: the filled colour.
     :param empty_color: the unfilled colour.
-    :param size: the glyph size, in ``em``.
+    :param size: the glyph size (or box side), in ``em``.
     :param gap: the space between glyphs, in ``em``.
     :param align: text alignment (``"left"``, ``"right"`` or ``"center"``).
     :param title: header text.
@@ -1417,10 +1425,11 @@ def symbols(
     Example::
 
         col.symbols("twice", symbol="■", color="#2EC1D3")
-        col.symbols("medals", symbol="■", color="#f0a500", align="left")
+        col.symbols("medals", shape="square", color="#f0a500", size=0.8)
     """
     return number(name, align=align, title=title, **extra).symbols(
         symbol=symbol,
+        shape=shape,
         empty=empty,
         max=max,
         image=image,

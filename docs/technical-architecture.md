@@ -705,6 +705,7 @@ validates its projections. See [marimo-studio.md](marimo-studio.md) and
 | File | Responsibility |
 | --- | --- |
 | `table.py` | `EvidentialTable`, option schema, column coercion, groups |
+| `configuration.py` | public configuration types, defaults, recursive validation |
 | `data.py` | normalisation, JSON safety, type inference, blank predicates |
 | `grouped.py` | `grouped_table`, `decorate_grouped_rows`, `simple_table` |
 | `client.py` | `grouped_records` (in-memory grouping) |

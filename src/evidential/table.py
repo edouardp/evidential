@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Iterable, Mapping, Sequence
 from pathlib import Path
-from typing import Any
+from typing import Any, Unpack
 
 import anywidget
 import traitlets
@@ -63,6 +63,17 @@ def _normalize_column_options(data: dict[str, Any]) -> dict[str, Any]:
     for alias, canonical in _COLUMN_ALIASES.items():
         if alias in data:
             data.setdefault(canonical, data.pop(alias))
+    for key in (
+        "color_options",
+        "bar_options",
+        "delta_options",
+        "sparkline_options",
+        "chip_options",
+        "image_options",
+        "logo_options",
+    ):
+        if data.get(key) is not None and not isinstance(data[key], Mapping):
+            raise TypeError(f"column.{key} expects a mapping")
     content_type = str(data.pop("content_type", "")).lower()
     if content_type:
         viz, spark_type = _CONTENT_TYPES.get(content_type, (None, None))
@@ -456,7 +467,7 @@ class EvidentialTable(anywidget.AnyWidget):
             self.options = current
         return self
 
-    def update_options(self, **options: Any) -> EvidentialTable:
+    def update_options(self, **options: Unpack[TableOptions]) -> EvidentialTable:
         """Update one or more table-level display options."""
         validate_options(options, TableOptions, "table")
         current = dict(self.options)

@@ -23,6 +23,7 @@ REQUIRED = (
     f"{PACKAGE}/aggregations.py",
     f"{PACKAGE}/client.py",
     f"{PACKAGE}/comparison.py",
+    f"{PACKAGE}/configuration.py",
     f"{PACKAGE}/data.py",
     f"{PACKAGE}/duck.py",
     f"{PACKAGE}/grouped.py",

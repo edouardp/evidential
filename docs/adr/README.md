@@ -56,6 +56,7 @@ dated, immutable record of the decisions behind them.
 | [035](035-correct-pivot-aggregations.md) | Aggregate Pivot Totals from Original Records | Accepted |
 | [036](036-persistent-column-configuration.md) | Preserve Explicit Column Configuration Across Refreshes | Accepted |
 | [037](037-renderer-module-boundaries.md) | Separate Renderer Processing, Cells, and Lifecycles | Accepted |
+| [038](038-typed-configuration-validation.md) | Typed Configuration with Early Runtime Validation | Accepted |
 
 ## Creating New ADRs
 

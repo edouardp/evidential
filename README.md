@@ -509,6 +509,14 @@ See `notebooks/02_s3_tables.py` for a full example (it gracefully stops if
   `{"columns": [...], "highlight": "#..."}`, to highlight every column in it.
 - `options`: table-level display options (below).
 - Methods: `set_data(...)`, `update_options(...)`, `set_column(name, ...)`.
+
+Table, column, and nested visualization options are validated. Unknown keys
+raise `ValueError` with a property path and a spelling suggestion; invalid
+value types raise `TypeError`. Evidence aliases are normalized first, and valid
+anywidget trait arguments such as `layout` still pass through. Annotate reusable
+configuration dictionaries with the exported `TableOptions` and `ColumnOptions`
+types for editor assistance. See [ADR-038](docs/adr/038-typed-configuration-validation.md).
+
 - Constructors: `from_records`, `from_arrow`, `from_pandas`, `from_duckdb`.
 
 ### Column definition

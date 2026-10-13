@@ -15,6 +15,8 @@ from collections.abc import Iterable, Mapping, Sequence
 from decimal import Decimal
 from typing import Any
 
+from .configuration import ColumnOptions, validate_options
+
 __all__ = [
     "make_column",
     "infer_columns",
@@ -84,6 +86,7 @@ def make_column(name: str, *, type: str = "string", **overrides: Any) -> dict[st
         "highlight": None,
     }
     column.update(overrides)
+    validate_options(column, ColumnOptions, "column")
     return {k: v for k, v in column.items() if v is not None or k in {"name", "type"}}
 
 

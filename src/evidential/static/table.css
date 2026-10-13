@@ -564,6 +564,19 @@
   bottom: 0;
   padding: 0;
 }
+/* Expanded mode: a conventional close icon in the top-right corner; the footer's
+   expand toggle steps aside for it. */
+.et-text-btn.et-close-btn {
+  position: absolute;
+  top: 0.3rem;
+  right: 0.45rem;
+  display: none;
+  /* Beat `.et-text-btn { font: inherit }`, which is later in this file. */
+  font-size: 1.7rem;
+  line-height: 1;
+  color: var(--et-muted);
+}
+.et-root.et-expanded .et-close-btn { display: block; }
 .et-page-controls { display: flex; align-items: center; gap: 0.4rem; }
 /* Bottom-right actions are plain text, revealed while the pointer is over the
    table; they stay visible in the expanded (fullscreen) dialog. */

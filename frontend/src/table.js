@@ -83,6 +83,15 @@ export class EvidentialTableRenderer {
       onclick: () => this._toggleExpanded(),
     });
     this.expandBtn.textContent = "⛶ Expand";
+    // A conventional close icon in the top-right corner, shown only while the
+    // table is expanded (the dialog also closes on Esc and a backdrop click).
+    this.closeBtn = h("button", {
+      class: "et-text-btn et-close-btn", type: "button",
+      title: "Close expanded table", "aria-label": "Close expanded table",
+      onclick: () => this._closeExpanded(),
+    });
+    this.closeBtn.textContent = "✕";
+    this.root.append(this.closeBtn);
     // The comment marks where the widget lives inline so it can be moved back
     // after the fullscreen dialog closes. It must be attached to the DOM
     // before it can anchor anything.

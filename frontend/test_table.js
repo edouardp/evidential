@@ -370,6 +370,23 @@ test("fullscreen moves the widget into the dialog", () => {
   renderer.destroy();
 });
 
+test("expanded mode offers a close icon in the corner", () => {
+  const renderer = new EvidentialTableRenderer(makeModel(ROWS, COLUMNS, {}, el), el);
+  const close = el.querySelector(".et-close-btn");
+  assert.ok(close, "close button exists");
+  assert.equal(close.textContent, "✕");
+  assert.equal(close.getAttribute("aria-label"), "Close expanded table");
+  assert.equal(el.querySelector(".et-root").classList.contains("et-expanded"), false);
+  const expand = el.querySelector(".et-expand-btn");
+  expand.click();
+  assert.ok(el.querySelector(".et-root").classList.contains("et-expanded"));
+  // The footer toggle stays, marked with the × that means "close it".
+  assert.equal(expand.textContent, "× Expand");
+  close.click();
+  assert.equal(renderer._expanded, false);
+  renderer.destroy();
+});
+
 test("leaving fullscreen restores the inline height", () => {
   const renderer = new EvidentialTableRenderer(makeModel(ROWS, COLUMNS, { page_size: 2 }, el), el);
   let natural = 120;

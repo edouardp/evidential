@@ -106,7 +106,7 @@ def test_fullscreen_round_trip(page, live_server):
     assert dialog.evaluate("d => d.open") is True
     assert dialog.locator(".et-root.et-expanded").count() == 1
 
-    dialog.locator(".et-expand-btn").click()
+    dialog.locator(".et-close-btn").click()
     page.wait_for_timeout(300)
     assert dialog.evaluate("d => d.open") is False
     assert page.locator("#paged .et-root .et-table").count() == 1

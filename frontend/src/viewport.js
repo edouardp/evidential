@@ -52,7 +52,7 @@ export class TableViewport {
   toggle() {
     if (this.expanded) { this.close(); return; }
     this.expanded = true;
-    this.button.textContent = "× Collapse";
+    this.button.textContent = "× Expand";
     this.button.title = "Collapse table";
     this.button.setAttribute("aria-label", "Collapse table");
     this.button.setAttribute("aria-expanded", "true");

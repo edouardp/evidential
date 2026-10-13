@@ -449,11 +449,12 @@
 }
 .et-footnote-item { line-height: 1.5; }
 .et-footnote-mark {
-  color: var(--et-accent, #2563eb);
-  font-weight: 600;
+  color: inherit;
+  font-weight: normal;
+  text-decoration: none;
   font-size: 0.7em;
   vertical-align: super;
-  cursor: help;
+  cursor: default;
 }
 .et-footnote-rows { color: var(--et-muted); }
 

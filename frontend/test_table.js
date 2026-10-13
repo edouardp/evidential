@@ -1516,3 +1516,32 @@ test("statistics hide removed members, reset unavailable selections and omit sin
   assert.equal(renderer._state.statsMembers.size, 0);
   renderer.destroy();
 });
+
+test("adaptive footnote marks match cell and footer after collecting all unique notes", () => {
+  const singles = ["*", "†", "‡", "§", "¶", "#", "+", "◆", "◇", "△"];
+  for (const count of [10, 11, 12, 23]) {
+    const expected = count === 10 ? singles : count === 11 ? ["*", "**", ...singles.slice(1)] :
+      count === 12 ? ["*", "**", "†", "††", ...singles.slice(2)] :
+      [...singles.flatMap((symbol) => [symbol, symbol + symbol]), "1", "2", "3"];
+    const rows = Array.from({length: count}, (_, index) => ({value: index, note: `Note ${index}`, url: "/example"}));
+    rows.push({...rows[0]}); // A repeated note must keep its mark without increasing the symbol budget.
+    const renderer = new EvidentialTableRenderer(makeModel(rows, [
+      {name: "value", footnote: "note", link: "url"},
+    ], {page_size: "all", footnotes: ["An unmarked source note"]}, el), el);
+    const marks = [...el.querySelectorAll("tbody .et-footnote-mark")];
+    assert.deepEqual(marks.map((mark) => mark.textContent), [...expected, expected[0]]);
+    assert.deepEqual([...el.querySelectorAll(".et-footnotes .et-footnote-mark")].map((mark) => mark.textContent), expected);
+    assert.ok(marks.every((mark) => mark.tagName === "SUP" && !mark.closest("a")));
+    assert.equal(el.querySelectorAll(".et-footnotes a").length, 0);
+    renderer.destroy();
+  }
+});
+
+test("paging recalculates the symbol budget for the currently displayed notes", () => {
+  const rows = Array.from({length: 13}, (_, index) => ({value: index, note: `Note ${index}`}));
+  const renderer = new EvidentialTableRenderer(makeModel(rows, [{name: "value", footnote: "note"}], {page_size: 11}, el), el);
+  assert.equal(el.querySelectorAll("tbody .et-footnote-mark")[1].textContent, "**");
+  renderer._gotoPage(1);
+  assert.deepEqual([...el.querySelectorAll("tbody .et-footnote-mark")].map((mark) => mark.textContent), ["*", "†"]);
+  renderer.destroy();
+});

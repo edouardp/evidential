@@ -1,3 +1,4 @@
+import { footnoteMark, labelFootnotes } from "./footnotes.js";
 import { renderStatsRow } from "./statistics.js";
 import { renderHeader, headerLayout, decorateSubcolumn } from "./headers.js";
 import { RowPipeline } from "./derived.js";
@@ -14,7 +15,7 @@ import { TableViewport } from "./viewport.js";
 import { h, inlineMarkdown, withFigure, formatRowRanges } from "./dom.js";
 import { hiddenColumns, orderedColumns, visibleRows, searchRows, sortRows, paginateRows,
   columnStats, computeRowspans, shaded } from "./rows.js";
-import { renderCell, alignStyle, footnoteMark } from "./cells.js";
+import { renderCell, alignStyle } from "./cells.js";
 import { formatTitle } from "./format.js";
 import {
   colorStylesFromHex,
@@ -452,6 +453,7 @@ export class EvidentialTableRenderer {
       rows.forEach((row, index) => tbody.append(this._renderRow(row, columns, ctx, index)));
     }
     table.append(tbody);
+    labelFootnotes(table, ctx.footnotes.length, opts);
     return table;
   }
 
@@ -527,8 +529,8 @@ export class EvidentialTableRenderer {
    */
   /** Substitute a displayed value per `sub_*` rules (returns text or null). */
   /** Footnote mark for a 1-based index under the chosen scheme. */
-  _footnoteMark(index) {
-    return footnoteMark(index, this.options);
+  _footnoteMark(index, total) {
+    return footnoteMark(index, this.options, total);
   }
   /** Merge the style/format rules matching a cell (last match wins). */
   /** Whether the nth data row should be shaded, per `row_shading`.
@@ -616,7 +618,7 @@ export class EvidentialTableRenderer {
   _renderFootnotes(footnotes, staticFootnotes) {
     this.footnotesEl.replaceChildren();
     const items = footnotes.map((note) => ({
-      mark: this._footnoteMark(note.index),
+      mark: this._footnoteMark(note.index, footnotes.length),
       text: note.text,
       rows: [...note.rows].sort((a, b) => a - b),
     }));

@@ -724,6 +724,7 @@ validates its projections. See [marimo-studio.md](marimo-studio.md) and
 | `table.js` | renderer, pipeline, interaction, fullscreen, CSV |
 | `rows.js` | pure searching, sorting, grouping, pagination, statistics |
 | `headers.js` | column ordering, nested spanners, shared sub-column headers and member decoration |
+| `footnotes.js` | adaptive symbol selection and final cell mark labeling |
 | `statistics.js` | spanning summary cells, per-widget member selection and accessible cycling controls |
 | `derived.js` | cached dataset projections and independently keyed group visibility |
 | `cells.js`, `visualizations.js` | cell content, decoration, bars, deltas, sparklines |

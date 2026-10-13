@@ -1,3 +1,4 @@
+export { footnoteMark } from "./footnotes.js";
 export { alignStyle } from "./dom.js";
 import { alignStyle, h, optString, inlineMarkdown, withFigure } from "./dom.js";
 import { formatValue } from "./format.js";
@@ -42,15 +43,6 @@ export function matchingRules(col, row, options) {
   return { fmt, style };
 }
 
-export function footnoteMark(index, options) {
-  const scheme = options.footnote_marks || "numbers";
-  if (scheme === "letters") return String.fromCharCode(96 + ((index - 1) % 26) + 1);
-  if (scheme === "symbols") {
-    return ["*", "†", "‡", "§", "¶", "#"][(index - 1) % 6];
-  }
-  return String(index);
-}
-
 export function decorateCell(td, col, row, ctx, rowIndex, style, includeFootnote, options) {
   if (col.font_color) td.style.color = col.font_color;
   const footnoteColumn = col.footnote || options.footnote_column;
@@ -64,7 +56,8 @@ export function decorateCell(td, col, row, ctx, rowIndex, style, includeFootnote
       }
       note.rows.add((ctx.rowNumberBase || 0) + rowIndex + 1);
       td.append(
-        h("sup", { class: "et-footnote-mark", title: noteText }, footnoteMark(note.index, options)),
+        h("sup", { class: "et-footnote-mark", title: noteText,
+          "data-footnote-index": note.index }),
       );
     }
   }

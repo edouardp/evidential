@@ -233,7 +233,7 @@ TABLE_DEFAULTS: TableOptions = {
     "null_text": None,
     "stub": None,
     "stub_head": None,
-    "footnote_marks": None,
+    "footnote_marks": "symbols",
     "all_caps": False,
     "stretch": True,
     "align_decimals": False,

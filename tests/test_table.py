@@ -545,6 +545,7 @@ def test_footnote_options_round_trip() -> None:
     )
     assert table.columns[0]["footnote"] == "note"
     assert table.options["footnotes"] == ["A static note"]
+    assert table.options["footnote_marks"] == "symbols"
 
 
 def test_make_column_defaults() -> None:

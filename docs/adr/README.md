@@ -59,6 +59,7 @@ dated, immutable record of the decisions behind them.
 | [038](038-typed-configuration-validation.md) | Typed Configuration with Early Runtime Validation | Accepted |
 | [039](039-derived-data-cache-and-group-index.md) | Cache Derived Table Data and Index Group Descendants | Accepted |
 | [040](040-shared-header-subcolumns.md) | Shared-Header Sub-columns | Accepted |
+| [041](041-adaptive-symbol-footnotes.md) | Adaptive Symbol Footnotes | Accepted |
 
 ## Creating New ADRs
 

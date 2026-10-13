@@ -505,3 +505,45 @@ def test_statistics_demo_cycles_small_centered_dots_without_moving_rows(page, li
     page.locator("#mixed-stats .et-page-controls button").nth(1).click()
     assert controls.first.inner_text() == "○●"
     assert cells.nth(1).get_attribute("data-stats-column") == "trip_unit"
+
+
+def test_footnote_symbols_are_plain_superscripts_with_matching_footer_marks(page, live_server):
+    open_preview(page, live_server)
+    page.evaluate("""async () => {
+        const {default: widget} = await import('/src/evidential/static/table.js');
+        const el = document.createElement('div');
+        el.id = 'plain-footnotes';
+        el.className = 'evidential-widget';
+        document.body.append(el);
+        const data = {
+            rows: Array.from({length: 23}, (_, index) => ({value: index, note: 'Note ' + index, url: '/example'})),
+            columns: [{name: 'value', type: 'number', footnote: 'note', link: 'url'}],
+            options: {page_size: 'all'},
+        };
+        widget.render({el, model: {get: key => data[key], on: () => {}, off: () => {}}});
+    }""")
+    marks = page.locator("#plain-footnotes tbody .et-footnote-mark")
+    assert [marks.nth(index).inner_text() for index in (0, 1, 2, 3, 19, 20, 22)] == [
+        "*",
+        "**",
+        "†",
+        "††",
+        "△△",
+        "1",
+        "3",
+    ]
+    assert marks.all_inner_texts() == page.locator("#plain-footnotes .et-footnotes .et-footnote-mark").all_inner_texts()
+    style = marks.first.evaluate("""el => {
+        const computed = getComputedStyle(el);
+        return {tag: el.tagName, link: !!el.closest('a'), cursor: computed.cursor,
+            color: computed.color, parentColor: getComputedStyle(el.parentElement).color,
+            underline: computed.textDecorationLine, verticalAlign: computed.verticalAlign,
+            fontSize: parseFloat(computed.fontSize), parentFontSize: parseFloat(getComputedStyle(el.parentElement).fontSize)};
+    }""")
+    assert style["tag"] == "SUP"
+    assert not style["link"]
+    assert style["cursor"] == "default"
+    assert style["color"] == style["parentColor"]
+    assert style["underline"] == "none"
+    assert style["verticalAlign"] == "super"
+    assert style["fontSize"] < style["parentFontSize"]

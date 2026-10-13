@@ -268,7 +268,14 @@ footer with footnotes and source notes. `EvidentialTable` covers:
   `column_config={"Intel": {"footnote": "intel_note"}}`. Cells then show a
   superscript mark and the footer lists each unique note with the rows it
   appears on (`rows 6, 14`, compressed to ranges for hierarchical tables).
-  `footnotes=["..."]` adds static notes.
+  Marks are plain superscripts in the surrounding text color. The default
+  symbol list is `*`, `†`, `‡`, `§`, `¶`, `#`, `+`, `◆`, `◇`, `△`. Once more
+  than ten unique visible notes are needed, doubles are interleaved beside
+  singles: eleven notes use `*`, `**`, `†`, `‡`, …; twelve use `*`, `**`, `†`,
+  `††`, `‡`, … . After all twenty single/double marks, numbering starts at `1`.
+  Set `footnote_marks="numbers"` or `"letters"` to choose those schemes.
+  `footnotes=["..."]` adds unmarked static notes. See
+  [ADR-041](docs/adr/041-adaptive-symbol-footnotes.md).
 - **Caption / source notes** — `caption="Sources: ..."`.
 - **Nested spanners** — `column_group` accepts a list for multi-level headers:
   `{"name": "sales", "column_group": ["2021", "Sales"]}`. A dotted column

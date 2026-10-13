@@ -220,6 +220,13 @@ def test_at_column_reference_works_in_a_dict_config() -> None:
     assert col.number("x", fmt="@")["fmt"] == "@"
 
 
+def test_named_colour_scales_are_validated() -> None:
+    for scale in ("green", "viridis", "coolwarm", "RdBu"):
+        EvidentialTable([{"x": 1}], columns=[col.number("x").color(scale=scale)])
+    with pytest.raises(ValueError, match="Unknown colour scale 'viridis2'"):
+        EvidentialTable([{"x": 1}], columns=[col.number("x").color(scale="viridis2")])
+
+
 def test_bar_pad_option() -> None:
     assert col.number("x").bar(center=True, pad=4)["bar_options"]["pad"] == 4
     assert col.number("x").bar(pad="0.25rem")["bar_options"]["pad"] == "0.25rem"

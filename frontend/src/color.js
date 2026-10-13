@@ -14,9 +14,83 @@ export const COLOR_PRESETS = {
   gray: ["#f8fafc", "#334155"],
 };
 
+// A curated set of matplotlib colormaps, each sampled at 9 stops (chroma
+// interpolates between them, so this is visually the 256-entry LUT). The
+// diverging ones pair with a `midpoint`.
+export const COLORMAPS = {
+  viridis: ["#440154", "#472d7b", "#3b528b", "#2c728e", "#21918c", "#28ae80", "#5ec962", "#addc30", "#fde725"],
+  magma: ["#000004", "#1d1147", "#51127c", "#832681", "#b73779", "#e75263", "#fc8961", "#fec488", "#fcfdbf"],
+  plasma: ["#0d0887", "#4c02a1", "#7e03a8", "#aa2395", "#cc4778", "#e66c5c", "#f89540", "#fdc527", "#f0f921"],
+  inferno: ["#000004", "#210c4a", "#57106e", "#8a226a", "#bc3754", "#e45a31", "#f98e09", "#f9cb35", "#fcffa4"],
+  cividis: ["#00224e", "#1a386f", "#434e6c", "#61656f", "#7d7c78", "#9b9476", "#bcae6c", "#dec958", "#fee838"],
+  blues: ["#f7fbff", "#deebf7", "#c6dbef", "#9dcae1", "#6aaed6", "#4191c6", "#2070b4", "#08509b", "#08306b"],
+  reds: ["#fff5f0", "#fee0d2", "#fcbba1", "#fc9272", "#fb694a", "#ee3a2c", "#ca181d", "#a30f15", "#67000d"],
+  greens: ["#f7fcf5", "#e5f5e0", "#c7e9c0", "#a0d99b", "#73c476", "#40aa5d", "#228a44", "#006c2c", "#00441b"],
+  greys: ["#ffffff", "#f0f0f0", "#d9d9d9", "#bdbdbd", "#959595", "#727272", "#515151", "#242424", "#000000"],
+  oranges: ["#fff5eb", "#fee6ce", "#fdd0a2", "#fdae6a", "#fd8c3b", "#f16813", "#d84801", "#a53603", "#7f2704"],
+  purples: ["#fcfbfd", "#efedf5", "#dadaeb", "#bcbddc", "#9e9ac8", "#807cba", "#6950a3", "#53268f", "#3f007d"],
+  bugn: ["#f7fcfd", "#e5f5f9", "#ccece6", "#98d8c9", "#65c2a3", "#40ad75", "#228a44", "#006c2c", "#00441b"],
+  bupu: ["#f7fcfd", "#e0ecf4", "#bfd3e6", "#9ebcda", "#8c95c6", "#8c6ab1", "#88409c", "#800f7b", "#4d004b"],
+  gnbu: ["#f7fcf0", "#e0f3db", "#ccebc5", "#a7ddb5", "#7accc4", "#4db2d3", "#2a8bbe", "#0867ab", "#084081"],
+  orrd: ["#fff7ec", "#fee8c8", "#fdd49e", "#fdba83", "#fc8c59", "#ef6447", "#d62f1e", "#b20000", "#7f0000"],
+  pubu: ["#fff7fb", "#ece7f2", "#d0d1e6", "#a5bddb", "#73a9cf", "#358fc0", "#056faf", "#04598c", "#023858"],
+  rdpu: ["#fff7f3", "#fde0dd", "#fcc5c0", "#fa9eb5", "#f767a1", "#dc3397", "#ad017e", "#790177", "#49006a"],
+  ylgn: ["#ffffe5", "#f7fcb9", "#d9f0a3", "#acdd8e", "#77c679", "#40aa5c", "#228343", "#006737", "#004529"],
+  ylgnbu: ["#ffffd9", "#edf8b1", "#c6e9b4", "#7ecdbb", "#40b5c4", "#1d90c0", "#225da8", "#243392", "#081d58"],
+  ylorbr: ["#ffffe5", "#fff7bc", "#fee390", "#fec34f", "#fe9829", "#eb6f14", "#cb4b02", "#983404", "#662506"],
+  ylorrd: ["#ffffcc", "#ffeda0", "#fed976", "#feb24c", "#fd8c3c", "#fc4d2a", "#e2191c", "#bb0026", "#800026"],
+  rdbu: ["#67001f", "#bb2a34", "#e58368", "#fbceb7", "#f6f7f7", "#c0dceb", "#68abd0", "#2870b1", "#053061"],
+  rdylbu: ["#a50026", "#de402e", "#f98e52", "#fed485", "#feffc0", "#d1ecf4", "#8ec2dc", "#4f81ba", "#313695"],
+  rdylgn: ["#a50026", "#de402e", "#f98e52", "#fed481", "#feffbe", "#cbe982", "#84ca66", "#2aa054", "#006837"],
+  coolwarm: ["#3b4cc0", "#6282ea", "#8db0fe", "#b9d0f9", "#dddcdc", "#f5c4ac", "#f4987a", "#dd5f4b", "#b40426"],
+  bwr: ["#0000ff", "#4040ff", "#8080ff", "#c0c0ff", "#fffefe", "#ffbebe", "#ff7e7e", "#ff3e3e", "#ff0000"],
+  spectral: ["#9e0142", "#dd4a4c", "#f98e52", "#fed481", "#ffffbe", "#d6ee9b", "#86cfa5", "#3d95b8", "#5e4fa2"],
+  piyg: ["#8e0152", "#cb3289", "#e897c4", "#fad6ea", "#f7f7f6", "#d9f0bc", "#9acd61", "#589b28", "#276419"],
+  prgn: ["#40004b", "#7f3c8d", "#ae8bbd", "#dec9e2", "#f6f7f6", "#cbeac5", "#7ec37f", "#298440", "#00441b"],
+  brbg: ["#543005", "#995d13", "#cfa256", "#f1dfb3", "#f4f5f5", "#b4e2db", "#58b0a7", "#0c7169", "#003c30"],
+};
+
+/** Every named scale: the Evidence presets plus the matplotlib colormaps. */
+export const COLOR_SCALES = { ...COLOR_PRESETS, ...COLORMAPS };
+
+// matplotlib's Tableau palette (`tab:*`), which `C0`..`C9` index, plus its
+// single-letter BASE_COLORS. `resolveColor` turns any of these into hex.
+const TABLEAU = [
+  ["tab:blue", "#1f77b4"],
+  ["tab:orange", "#ff7f0e"],
+  ["tab:green", "#2ca02c"],
+  ["tab:red", "#d62728"],
+  ["tab:purple", "#9467bd"],
+  ["tab:brown", "#8c564b"],
+  ["tab:pink", "#e377c2"],
+  ["tab:gray", "#7f7f7f"],
+  ["tab:olive", "#bcbd22"],
+  ["tab:cyan", "#17becf"],
+];
+export const NAMED_COLORS = {
+  ...Object.fromEntries(TABLEAU),
+  b: "#0000ff",
+  g: "#008000",
+  r: "#ff0000",
+  c: "#00bfbf",
+  m: "#bf00bf",
+  y: "#bfbf00",
+  k: "#000000",
+  w: "#ffffff",
+};
+TABLEAU.forEach(([, hex], index) => {
+  NAMED_COLORS[`c${index}`] = hex;
+});
+
+/** Resolve a matplotlib colour name (`tab:blue`, `C0`, `k`) to hex; anything else is returned as-is. */
+export function resolveColor(value) {
+  if (typeof value !== "string") return value;
+  return NAMED_COLORS[value.toLowerCase()] ?? value;
+}
+
 function resolvePalette(palette) {
-  if (typeof palette === "string") return COLOR_PRESETS[palette.toLowerCase()];
-  return palette;
+  if (typeof palette !== "string") return palette;
+  return COLOR_SCALES[palette.toLowerCase()];
 }
 
 function isValidColor(color) {
@@ -239,6 +313,11 @@ export function calculateFormatRanges(columns, rows) {
 
 export function buildColorVizScale(col, range, defaultColorScale) {
   const opts = col.color_options || {};
+  if (typeof opts.color_scale === "string" && !COLOR_SCALES[opts.color_scale.toLowerCase()]) {
+    throw new Error(
+      `Unknown colour scale '${opts.color_scale}'. Use one of ${Object.keys(COLOR_SCALES).sort().join(", ")}, or a list of colours.`,
+    );
+  }
   return createColorScale([], {
     colorPalette: resolvePalette(opts.color_scale),
     colorStops: opts.color_stops,

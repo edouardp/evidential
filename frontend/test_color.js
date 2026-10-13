@@ -7,7 +7,41 @@ import {
   calculateVizRanges,
   calculateColorStyles,
   buildColorVizScale,
+  COLOR_SCALES,
+  COLORMAPS,
+  resolveColor,
 } from "./src/color.js";
+
+test("named colour scales: presets, matplotlib colormaps and names", () => {
+  assert.deepEqual(COLOR_SCALES.viridis, [
+    "#440154",
+    "#472d7b",
+    "#3b528b",
+    "#2c728e",
+    "#21918c",
+    "#28ae80",
+    "#5ec962",
+    "#addc30",
+    "#fde725",
+  ]);
+  assert.equal(COLOR_SCALES.rdbu.length, 9);
+  assert.ok(Object.keys(COLORMAPS).length >= 30);
+  // Lookup is case-insensitive (`resolvePalette`).
+  const scale = buildColorVizScale({ color_options: { color_scale: "Viridis" } }, { min: 0, max: 100 }, null);
+  assert.equal(scale.colorPalette.length, 9);
+  // matplotlib colour names resolve to hex.
+  assert.equal(resolveColor("tab:blue"), "#1f77b4");
+  assert.equal(resolveColor("C0"), "#1f77b4");
+  assert.equal(resolveColor("k"), "#000000");
+  assert.equal(resolveColor("#abc"), "#abc");
+});
+
+test("an unknown colour scale raises instead of falling back", () => {
+  assert.throws(
+    () => buildColorVizScale({ color_options: { color_scale: "viridis2" } }, { min: 0, max: 1 }, null),
+    /Unknown colour scale/,
+  );
+});
 
 test("linear color scale", () => {
   const scale = createColorScale([0, 100], {

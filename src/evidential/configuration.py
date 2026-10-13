@@ -134,6 +134,54 @@ class ColorOptions(TypedDict, total=False):
     midpoint: float | None
 
 
+#: Named colour scales — the Evidence presets plus the matplotlib colormaps.
+#: Must match ``COLOR_PRESETS`` / ``COLORMAPS`` in ``frontend/src/color.js``
+#: (``tests/release/test_color_scales.py`` keeps them in sync).
+COLOR_SCALES = (
+    # presets
+    "green",
+    "blue",
+    "red",
+    "orange",
+    "purple",
+    "grey",
+    "gray",
+    # matplotlib: perceptually uniform
+    "viridis",
+    "magma",
+    "plasma",
+    "inferno",
+    "cividis",
+    # matplotlib: sequential
+    "blues",
+    "reds",
+    "greens",
+    "greys",
+    "oranges",
+    "purples",
+    "bugn",
+    "bupu",
+    "gnbu",
+    "orrd",
+    "pubu",
+    "rdpu",
+    "ylgn",
+    "ylgnbu",
+    "ylorbr",
+    "ylorrd",
+    # matplotlib: diverging
+    "rdbu",
+    "rdylbu",
+    "rdylgn",
+    "coolwarm",
+    "bwr",
+    "spectral",
+    "piyg",
+    "prgn",
+    "brbg",
+)
+
+
 class BarOptions(TypedDict, total=False):
     bar_color: str | None
     bar_color_negative: str | None

@@ -3,9 +3,10 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
+from difflib import get_close_matches
 from typing import Any
 
-from .configuration import ColumnOptions, validate_options
+from .configuration import COLOR_SCALES, ColumnOptions, validate_options
 
 # Evidence `contentType` → (viz, sparkline type)
 _CONTENT_TYPES: dict[str, tuple[str | None, str | None]] = {
@@ -207,6 +208,12 @@ def _normalize_column_options(data: dict[str, Any]) -> dict[str, Any]:
                 value = options.get(field)
                 if isinstance(value, str) and value.startswith("@"):
                     options[field] = value[1:]
+            # Validate a named colour scale (a list of colours is left to chroma).
+            scale = options.get("color_scale")
+            if isinstance(scale, str) and not scale.startswith("@") and scale.lower() not in COLOR_SCALES:
+                suggestion = get_close_matches(scale.lower(), list(COLOR_SCALES), n=1)
+                hint = f"; did you mean {suggestion[0]!r}?" if suggestion else ""
+                raise ValueError(f"Unknown colour scale {scale!r}{hint}")
             data[key] = options
     validate_options(data, ColumnOptions, "column")
     return data

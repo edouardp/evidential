@@ -1,5 +1,6 @@
 import { h } from "./dom.js";
 import { formatValue } from "./format.js";
+import { resolveColor } from "./color.js";
 
 export function renderBar(col, value, formatted, range) {
   const opts = col.bar_options || {};
@@ -8,8 +9,8 @@ export function renderBar(col, value, formatted, range) {
   const max = opts.fit_to_data ? (range?.max ?? 0) : Math.max(0, range?.max ?? 0);
   const negative = num < 0;
   const color = negative
-    ? (opts.bar_color_negative || opts.bar_color || "var(--et-negative, #dc2626)")
-    : (opts.bar_color || "var(--et-accent, #2563eb)");
+    ? (resolveColor(opts.bar_color_negative) || resolveColor(opts.bar_color) || "var(--et-negative, #dc2626)")
+    : (resolveColor(opts.bar_color) || "var(--et-accent, #2563eb)");
   const label = h(
     "span",
     { class: `et-bar-label${opts.hide_labels ? " et-hidden" : ""}` },

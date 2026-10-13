@@ -401,14 +401,12 @@ def _(EvidentialTable, col, connection, indicator, mo, region):
                 col.number("latest", fmt="num"),
                 col.percent("pct_change", decimals=1, title="% change (5y vs 10y)").delta(),
                 col.number("kendall_tau", fmt="num2", title="Kendall τ").color(
-                    scale=["#dc262633", "#f8fafc33", "#16a34a33"], min=-1, max=1, midpoint=0
+                    scale="rdylgn", min=-1, max=1, midpoint=0
                 ),
                 col.number("avg_last_5", fmt="num2", title="Last 5y avg"),
                 col.number("avg_prev_10", fmt="num2", title="Prev 10y avg"),
                 col.sparkline("trend", title="Since 2000", x="year", y="value", type="bar", 
-                    fit_to_data=True,
-                    width=130,
-                    height=26,
+                    fit_to_data=True, width=130, height=26,
                 )
                 .sort_by("kendall_tau")
                 .align("center"),

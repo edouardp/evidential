@@ -155,20 +155,16 @@ def _(EvidentialTable, col, connection, mo):
             columns=[
                 col.integer("rank", title="#"),
                 col.auto("title").link("imdb"),
-                col.chip("Type.media", title="Media"),
-                col.text("Type.genres", title="Genres"),
-                col.number("Release.year", fmt="yyyy", title="Year"),
-                col.group(
-                    "Rating",
-                    [
-                        col.number("Rating.imdb", fmt="num1", title="IMDb").color(
-                            scale=["#ef4444", "#f59e0b", "#84cc16"], min=0, max=10
+                col.chip("Type.media"),
+                col.text("Type.genres"),
+                col.number("Release.year", fmt="yyyy"),
+                col.group("Rating", [
+                        col.number("Rating.imdb", fmt="num1")
+                            .color(scale="rdylgn", min=0, max=10
                         ),
-                        col.number("Rating.votes", fmt="num", title="Votes").bar(
-                            fit_to_data=True, color="#93c5fd"
-                        ),
+                        col.number("Rating.votes").bar(fit_to_data=True, color="#93c5fd"),
                     ],
-                    highlight="#55006611",
+                    #highlight="#55006611",
                 ),
                 col.integer("Buzz.popularity", title="Popularity"),
                 col.auto("imdb").hide(),
@@ -216,7 +212,7 @@ def _(EvidentialTable, col, connection, mo):
                 col.integer("films").bar(color="#93c5fd"),
                 col.percent("Share.films", decimals=1, title="Share"),
                 col.number("Rating.avg", fmt="num2", title="Avg rating").color(
-                    scale=["#ef4444", "#f59e0b", "#84cc16"], min=0, max=10
+                    scale="rdylgn", min=0, max=10
                 ),
                 col.integer("Rating.avg votes", title="Avg votes"),
             ],

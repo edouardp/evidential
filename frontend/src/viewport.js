@@ -52,8 +52,9 @@ export class TableViewport {
   toggle() {
     if (this.expanded) { this.close(); return; }
     this.expanded = true;
-    this.button.textContent = "×";
-    this.button.title = "Close expanded table";
+    this.button.textContent = "× Collapse";
+    this.button.title = "Collapse table";
+    this.button.setAttribute("aria-label", "Collapse table");
     this.button.setAttribute("aria-expanded", "true");
     this.dialog.append(this.root);
     this.dialog.showModal();
@@ -80,8 +81,9 @@ export class TableViewport {
     this.setPageSizeOverride(null);
     this.placeholder.after(this.root);
     this.root.classList.remove("et-expanded");
-    this.button.textContent = "⛶";
+    this.button.textContent = "⛶ Expand";
     this.button.title = "Expand table";
+    this.button.setAttribute("aria-label", "Expand table");
     this.button.setAttribute("aria-expanded", "false");
     this.button.focus({ preventScroll: true });
     // Restore the notebook's configured page size and drop the fullscreen

@@ -275,8 +275,8 @@ test("download and fullscreen live in the footer's bottom-right actions", () => 
   );
   const actions = el.querySelector(".et-footer .et-table-actions");
   assert.ok(actions, "actions live in the footer");
-  assert.equal(actions.querySelector(".et-download-btn").textContent, "Download");
-  assert.equal(actions.querySelector(".et-expand-btn").textContent, "⛶");
+  assert.equal(actions.querySelector(".et-download-btn").textContent, "⤓ Download");
+  assert.equal(actions.querySelector(".et-expand-btn").textContent, "⛶ Expand");
   // They are gone from the toolbar, which now hides when it holds nothing.
   assert.equal(el.querySelectorAll(".et-toolbar .et-btn, .et-toolbar .et-text-btn").length, 0);
   assert.ok(el.querySelector(".et-toolbar").classList.contains("et-toolbar-empty"));

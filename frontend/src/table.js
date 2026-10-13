@@ -82,7 +82,7 @@ export class EvidentialTableRenderer {
       "aria-label": "Expand table", "aria-expanded": "false",
       onclick: () => this._toggleExpanded(),
     });
-    this.expandBtn.textContent = "⛶";
+    this.expandBtn.textContent = "⛶ Expand";
     // The comment marks where the widget lives inline so it can be moved back
     // after the fullscreen dialog closes. It must be attached to the DOM
     // before it can anchor anything.
@@ -796,9 +796,10 @@ export class EvidentialTableRenderer {
             class: "et-text-btn et-download-btn",
             type: "button",
             title: "Download CSV",
+            "aria-label": "Download CSV",
             onclick: () => this._downloadCsv(),
           },
-          "Download",
+          "⤓ Download",
         ),
       );
     }

@@ -41,8 +41,11 @@ __all__ = [
     "merge",
     "number",
     "percent",
+    "rating",
+    "repeat",
     "sparkline",
     "subcolumns",
+    "symbols",
     "text",
     "time",
     "url",
@@ -749,6 +752,50 @@ class Column(Mapping[str, Any]):
             changes["color_options"] = {**dict(self._spec.get("color_options") or {}), **color}
         return self._with(**changes)
 
+    def symbols(
+        self,
+        *,
+        symbol: str | None = None,
+        empty: str | None = None,
+        max: int | None = None,
+        image: str | None = None,
+        color: str | None = None,
+        empty_color: str | None = None,
+        size: float | None = None,
+        gap: float | None = None,
+    ) -> Column:
+        """Render the value as that many repeated symbols — glyphs, emoji or images.
+
+        :param symbol: the filled glyph (default ``"●"``).
+        :param empty: the glyph for the unfilled slots (used with ``max``).
+        :param max: draw this many slots — ``value`` filled, the rest ``empty``;
+            omit to draw exactly ``value`` repeats.
+        :param image: an image URL to repeat instead of a glyph.
+        :param color: the filled colour.
+        :param empty_color: the unfilled colour.
+        :param size: the glyph size, in ``em``.
+        :param gap: the space between glyphs, in ``em``.
+
+        Example::
+
+            col.number("twice").symbols(symbol="■", color="#2EC1D3")
+            col.number("rating").symbols(symbol="★", empty="☆", max=5, color="#f59e0b")
+        """
+        return self._with(
+            viz="symbols",
+            **_merge_options(
+                "symbol_options",
+                symbol=symbol,
+                empty=empty,
+                max=max,
+                image=image,
+                color=color,
+                empty_color=empty_color,
+                size=size,
+                gap=gap,
+            ),
+        )
+
     # ----------------------------------------------------------- output ---
     def to_config(self) -> dict[str, Any]:
         """Validate and return the plain column definition (the wire format).
@@ -1334,6 +1381,83 @@ def delta(
         neutral_range=neutral_range,
         chip=chip,
     )
+
+
+def symbols(
+    name: str,
+    *,
+    symbol: str = "●",
+    empty: str | None = None,
+    max: int | None = None,
+    image: str | None = None,
+    color: str | None = None,
+    empty_color: str | None = None,
+    size: float | None = None,
+    gap: float | None = None,
+    align: Align | None = None,
+    title: str | None = None,
+    **extra: Any,
+) -> Column:
+    """A number shown as that many repeated symbols — glyphs, emoji or images.
+
+    :param name: the numeric column holding the count.
+    :param symbol: the filled glyph (default ``"●"``). ``"■"`` for squares, ``"★"``
+        for stars, or any emoji.
+    :param empty: the glyph for the unfilled slots, used with ``max`` (e.g. ``"☆"``).
+    :param max: draw this many slots — ``value`` filled, the rest ``empty``; omit to
+        draw exactly ``value`` repeats.
+    :param image: an image URL to repeat instead of a glyph.
+    :param color: the filled colour.
+    :param empty_color: the unfilled colour.
+    :param size: the glyph size, in ``em``.
+    :param gap: the space between glyphs, in ``em``.
+    :param align: text alignment (``"left"``, ``"right"`` or ``"center"``).
+    :param title: header text.
+
+    Example::
+
+        col.symbols("twice", symbol="■", color="#2EC1D3")
+        col.symbols("medals", symbol="■", color="#f0a500", align="left")
+    """
+    return number(name, align=align, title=title, **extra).symbols(
+        symbol=symbol,
+        empty=empty,
+        max=max,
+        image=image,
+        color=color,
+        empty_color=empty_color,
+        size=size,
+        gap=gap,
+    )
+
+
+def repeat(name: str, **options: Any) -> Column:
+    """Alias for :func:`symbols` — repeat the value as symbols.
+
+    Example::
+
+        col.repeat("thrice", symbol="■", color="#2EC1D3")
+    """
+    return symbols(name, **options)
+
+
+def rating(
+    name: str,
+    *,
+    max: int = 5,
+    symbol: str = "★",
+    empty: str = "☆",
+    color: str = "#f59e0b",
+    **options: Any,
+) -> Column:
+    """A star rating: ``max`` slots, with ``value`` of them filled.
+
+    Example::
+
+        col.rating("stars", max=5)
+        col.rating("score", max=10, color="#eab308")
+    """
+    return symbols(name, symbol=symbol, empty=empty, max=max, color=color, **options)
 
 
 # ------------------------------------------------------------------- groups ---

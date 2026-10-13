@@ -74,6 +74,7 @@ dated, immutable record of the decisions behind them.
 | [053](053-named-color-scales.md) | Named Colour Scales and matplotlib Colour Names | Accepted |
 | [054](054-column-font-styling.md) | Column Font Styling and an Empty Title | Accepted |
 | [055](055-table-font-size.md) | Table-level `font_size` (Absolute or Relative) | Accepted |
+| [056](056-repeated-symbols.md) | Repeated Symbols | Accepted |
 
 ## Creating New ADRs
 

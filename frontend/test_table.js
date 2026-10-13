@@ -1336,6 +1336,39 @@ test("bar pad sets --et-bar-pad for the bar and the line ends", () => {
   renderer.destroy();
 });
 
+test("symbols repeat a glyph with empty slots and the right alignment", () => {
+  const columns = [
+    {
+      name: "n",
+      type: "number",
+      viz: "symbols",
+      align: "center",
+      symbol_options: { symbol: "★", empty: "☆", max: 5, color: "#f59e0b" },
+    },
+  ];
+  const rows = [{ n: 3 }, { n: 0 }, { n: 7 }];
+  const renderer = new EvidentialTableRenderer(makeModel(rows, columns, {}, el), el);
+  const cells = [...el.querySelectorAll("tbody .et-symbols")];
+  assert.equal(cells[0].textContent, "★★★☆☆");
+  assert.equal(cells[0].querySelectorAll(".et-symbol").length, 5);
+  assert.equal(cells[1].textContent, "☆☆☆☆☆");
+  // `max` is a floor on the slot count: a larger value simply draws more.
+  assert.equal(cells[2].textContent, "★★★★★★★");
+  assert.equal(cells[0].querySelector(".et-symbol").style.color, "rgb(245, 158, 11)");
+  renderer.destroy();
+});
+
+test("symbols without max repeat the value exactly", () => {
+  const columns = [
+    { name: "n", type: "number", viz: "symbols", symbol_options: { symbol: "■", color: "#2EC1D3" } },
+  ];
+  const renderer = new EvidentialTableRenderer(makeModel([{ n: 3 }], columns, {}, el), el);
+  const cell = el.querySelector("tbody .et-symbols");
+  assert.equal(cell.querySelectorAll(".et-symbol").length, 3);
+  assert.equal(cell.textContent, "■■■");
+  renderer.destroy();
+});
+
 test("centered bar grows left/right from a centre line, label opposite", () => {
   const columns = [
     {

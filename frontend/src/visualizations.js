@@ -51,6 +51,43 @@ export function renderBar(col, value, formatted, range) {
   return cell;
 }
 
+/** A numeric value as that many repeated symbols — glyphs, emoji or images. */
+export function renderSymbols(col, value, formatted) {
+  const opts = col.symbol_options || {};
+  const num = Number(value);
+  if (value === null || value === undefined || value === "" || Number.isNaN(num)) {
+    return h("span", { class: "et-null" }, formatted ?? "–");
+  }
+  const filled = Math.max(0, Math.round(num));
+  const total = opts.max != null ? Math.max(filled, Math.round(Number(opts.max))) : filled;
+  const wrap = h("span", { class: "et-symbols" });
+  if (opts.size != null) wrap.style.fontSize = `${opts.size}em`;
+  if (opts.gap != null) wrap.style.gap = `${opts.gap}em`;
+  for (let i = 0; i < total; i++) {
+    const on = i < filled;
+    if (opts.image) {
+      wrap.append(
+        h("img", {
+          class: `et-symbol-image${on ? "" : " et-symbol-empty"}`,
+          src: String(opts.image),
+          alt: "",
+          loading: "lazy",
+        }),
+      );
+      continue;
+    }
+    const node = h(
+      "span",
+      { class: `et-symbol${on ? "" : " et-symbol-empty"}` },
+      on ? (opts.symbol || "●") : (opts.empty || opts.symbol || "●"),
+    );
+    const colour = on ? opts.color : opts.empty_color;
+    if (colour) node.style.color = resolveColor(colour);
+    wrap.append(node);
+  }
+  return wrap;
+}
+
 /** Resolve a neutral band from a string, pair, symmetric bound or explicit min/max. */
 export function neutralBounds(opts) {
   const range = opts.neutral_range;

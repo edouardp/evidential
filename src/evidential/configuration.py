@@ -219,6 +219,17 @@ class ChipOptions(TypedDict, total=False):
     min_width: Length | None
 
 
+class SymbolOptions(TypedDict, total=False):
+    symbol: str | None
+    empty: str | None
+    max: int | None
+    image: str | None
+    color: str | None
+    empty_color: str | None
+    size: float | None
+    gap: float | None
+
+
 class ImageOptions(TypedDict, total=False):
     height: float | None
     width: float | None
@@ -242,7 +253,7 @@ class ColumnOptions(TypedDict, total=False):
     wrap: bool | None
     wrap_title: bool | None
     hide: bool
-    viz: Literal["bar", "color", "chip", "sparkline", "delta"] | None
+    viz: Literal["bar", "color", "chip", "sparkline", "delta", "symbols"] | None
     red_negatives: bool
     negative_color: str | None
     bracket_negatives: bool | None
@@ -262,6 +273,7 @@ class ColumnOptions(TypedDict, total=False):
     delta_options: DeltaOptions | None
     sparkline_options: SparklineOptions | None
     chip_options: ChipOptions | None
+    symbol_options: SymbolOptions | None
     image_options: ImageOptions | None
     logo_options: LogoOptions | None
     viz_include_subtotals: bool | None

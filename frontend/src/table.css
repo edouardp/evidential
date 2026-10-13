@@ -444,6 +444,19 @@ tbody tr:last-child .et-bar-center .et-bar-axis { bottom: var(--et-bar-pad, 0); 
   padding-left: 0.4rem;
 }
 
+/* --------------------------------------------------------- symbol viz ------ */
+/* A value repeated as glyphs, emoji or images (ratings, medal tables). */
+.et-symbols {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.15em;
+  line-height: 1;
+}
+.et-symbol { font-size: 1em; }
+.et-symbol-empty { opacity: 0.3; }
+.et-symbol-image { height: 1em; width: auto; object-fit: contain; }
+.et-symbol-image.et-symbol-empty { opacity: 0.25; }
+
 /* Rotated headers (ALA): vertical 90° CCW, or oblique at a given angle. */
 .et-th-vertical {
   vertical-align: bottom;

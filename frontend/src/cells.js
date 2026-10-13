@@ -2,7 +2,7 @@ import { alignStyle, h, optString, inlineMarkdown, withFigure } from "./dom.js";
 import { formatValue } from "./format.js";
 import { withDecimals, indentForCell } from "./rows.js";
 import { calculateColorStyles, contrastTextColor } from "./color.js";
-import { renderBar, renderDelta, renderSparkline } from "./visualizations.js";
+import { renderBar, renderDelta, renderSparkline, renderSymbols } from "./visualizations.js";
 
 /** Return the first matching substitution text, or null. */
 export function matchSubstitution(col, row, value, options) {
@@ -259,6 +259,8 @@ function renderContent(col, value, formatted, ctx, row) {
     content = renderDelta(col, value);
   } else if (col.viz === "sparkline") {
     content = renderSparkline(col, value);
+  } else if (col.viz === "symbols") {
+    content = renderSymbols(col, value, formatted);
   } else if (col.html) {
     content = h("span", { html: String(value) });
   } else if (col.markdown) {

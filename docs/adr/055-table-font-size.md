@@ -48,9 +48,11 @@ so a relative value scales with the baseline rather than a hard-coded number.
   out, both relative to one baseline.
 - Good, because an absolute value still works for an exact size.
 - Note: the step is 1px (0.0625rem) — a deliberately small increment; `+4` is
-  the old 0.75rem → 1rem jump. **Everything** scales together — header, body,
-  controls, and the title / subtitle / caption / footer chrome — because each is
-  sized in `em` against `--et-font-size`, not a fixed rem.
+  the old 0.75rem → 1rem jump. The **table** scales — header, body, and the
+  title / subtitle / caption / footer / footnotes chrome, all sized in `em`
+  against `--et-font-size`. The **controls** do not: the Download / Expand
+  buttons, the expand close (✕), the group chevrons and the statistics cycle
+  dots keep a fixed size, because they are interface, not content.
 
 ## More Information
 

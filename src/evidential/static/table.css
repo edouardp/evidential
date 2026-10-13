@@ -164,7 +164,7 @@
   background: transparent;
 }
 .et-page-btn:active { transform: scale(0.94); }
-.et-icon-btn { padding: 0.22rem 0.5rem; font-size: 1.27em; }
+.et-icon-btn { padding: 0.22rem 0.5rem; font-size: 0.95rem; }
 .et-btn:hover, .et-icon-btn:hover { background: var(--et-hover); }
 .et-btn:disabled { opacity: 0.4; cursor: default; }
 
@@ -347,7 +347,7 @@
 .et-cell-image { height: 1.25em; width: auto; border-radius: 3px; }
 .et-cell-logo { height: 1.25em; width: auto; border-radius: 3px; }
 .et-td-chevron { width: 1.5rem; text-align: center; color: var(--et-muted); }
-.et-row-chevron { font-size: 1.47em; }
+.et-row-chevron { font-size: 1.1rem; }
 
 /* ------------------------------------------------------------ chevron --- */
 .et-chevron {
@@ -358,7 +358,7 @@
   font-family: inherit;
   display: inline-block;
   margin-right: 0.35rem;
-  font-size: 0.8em;
+  font-size: 0.6rem;
   color: var(--et-muted);
   transition: transform 0.15s ease;
 }
@@ -612,7 +612,7 @@ tbody tr:last-child .et-bar-center .et-bar-axis { bottom: var(--et-bar-pad, 0); 
   background: transparent;
   color: var(--et-text);
   font: inherit;
-  font-size: 0.73em;
+  font-size: 0.55rem;
   line-height: 1;
   min-height: 1.5rem;
   letter-spacing: 0.15em;
@@ -666,7 +666,7 @@ tbody tr:last-child .et-bar-center .et-bar-axis { bottom: var(--et-bar-pad, 0); 
   right: 0.6rem;
   display: none;
   /* Beat `.et-text-btn { font: inherit }`, which is later in this file. */
-  font-size: 1.73em;
+  font-size: 1.3rem;
   line-height: 1;
   color: var(--et-muted);
   padding: 0.15rem 0.4rem;

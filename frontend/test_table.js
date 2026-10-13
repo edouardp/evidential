@@ -268,6 +268,15 @@ test("pagination reads as one left-aligned text run", () => {
   renderer.destroy();
 });
 
+test("an unpaginated table floats the actions so the footnotes keep their place", () => {
+  const single = new EvidentialTableRenderer(makeModel(ROWS, COLUMNS, { page_size: "all" }, el), el);
+  assert.ok(el.querySelector(".et-root").classList.contains("et-no-pager"));
+  single.destroy();
+  const paged = new EvidentialTableRenderer(makeModel(ROWS, COLUMNS, { page_size: 1 }, el), el);
+  assert.ok(!el.querySelector(".et-root").classList.contains("et-no-pager"));
+  paged.destroy();
+});
+
 test("download and fullscreen live in the footer's bottom-right actions", () => {
   const renderer = new EvidentialTableRenderer(
     makeModel(ROWS, COLUMNS, { download: true, page_size: 2 }, el),

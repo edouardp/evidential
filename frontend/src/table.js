@@ -743,6 +743,10 @@ export class EvidentialTableRenderer {
 
   _renderFooter(page, pageCount, total) {
     this.footer.replaceChildren();
+    // With a single page there is no pager row to hold the actions, so they
+    // float at the bottom-right and the footnotes/caption sit right under the
+    // table (see `.et-no-pager` in the stylesheet).
+    this.root.classList.toggle("et-no-pager", pageCount <= 1);
     if (pageCount > 1) {
       const left = h("div", { class: "et-page-controls" });
       const pageSize = this._effectivePageSize();

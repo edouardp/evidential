@@ -556,6 +556,14 @@
   color: var(--et-muted);
   font-size: 0.78rem;
 }
+/* With no pager the footer has no row of its own, so the actions float at the
+   bottom-right of the table and the footnotes/caption are not pushed down. */
+.et-root.et-no-pager .et-footer {
+  position: absolute;
+  right: 0.15rem;
+  bottom: 0;
+  padding: 0;
+}
 .et-page-controls { display: flex; align-items: center; gap: 0.4rem; }
 /* Bottom-right actions are plain text, revealed while the pointer is over the
    table; they stay visible in the expanded (fullscreen) dialog. */

@@ -285,13 +285,30 @@ class Column(Mapping[str, Any]):
         return self._with(blank=predicate)
 
     def red_negatives(self, value: bool = True) -> Column:
-        """Colour negative values red.
+        """Colour negative values red (Evidence's ``redNegatives``).
+
+        :meth:`neg` is the richer spelling.
 
         Example::
 
             col.number("profit").fmt("usd0").red_negatives()
         """
         return self._with(red_negatives=value)
+
+    def neg(self, color: str | None = None, bracket: bool = False) -> Column:
+        """Style negative values: colour them, and optionally bracket them.
+
+        :param color: the colour for negative values (default the theme's
+            negative colour — red).
+        :param bracket: wrap negatives in parentheses, accounting-style, so
+            ``-$1,234`` becomes ``($1,234)``.
+
+        Example::
+
+            col.currency("profit").neg()
+            col.currency("profit").neg(color="#b91c1c", bracket=True)
+        """
+        return self._with(red_negatives=True, negative_color=color, bracket_negatives=bracket or None)
 
     def rotate_title(self, value: Rotation) -> Column:
         """Rotate the header: ``"vertical"`` or an angle in degrees.

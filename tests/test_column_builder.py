@@ -195,6 +195,14 @@ def test_auto_alias_wins_over_the_inferred_default() -> None:
     assert table.columns[0]["red_negatives"] is True
 
 
+def test_neg_marks_and_brackets_negatives() -> None:
+    assert col.currency("profit").neg()["red_negatives"] is True
+    spec = col.currency("profit").neg(color="#b91c1c", bracket=True)
+    assert spec["negative_color"] == "#b91c1c"
+    assert spec["bracket_negatives"] is True
+    assert "bracket_negatives" not in col.currency("profit").neg()
+
+
 def test_merge_names_a_cols_merge_spec() -> None:
     from evidential import cols_merge_range
 

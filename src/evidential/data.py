@@ -68,6 +68,8 @@ def make_column(name: str, *, type: str = "string", **overrides: Any) -> dict[st
         "hide": False,
         "viz": None,
         "red_negatives": False,
+        "negative_color": None,
+        "bracket_negatives": False,
         "html": False,
         "link": None,
         "link_label": None,

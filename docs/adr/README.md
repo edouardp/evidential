@@ -68,6 +68,7 @@ dated, immutable record of the decisions behind them.
 | [047](047-inference-preserving-column-specs.md) | Inference-Preserving Column Specs | Accepted |
 | [048](048-fluent-derived-columns.md) | Fluent Construction of Derived Columns | Accepted |
 | [049](049-align-decimals-explicit-precision.md) | `align_decimals` Respects an Explicit Precision | Accepted |
+| [050](050-negative-styling.md) | Negative Styling — `.neg(color=, bracket=)` | Accepted |
 
 ## Creating New ADRs
 

@@ -215,10 +215,17 @@ export function renderCell({row, col, index, ctx, rowIndex, options: opts, toggl
     }
   }
 
-  const content = renderContent(col, value, formatted, ctx, row);
+  const negative =
+    (col.red_negatives || col.negative_color) && !isNaN(Number(value)) && Number(value) < 0;
+  // Accounting-style brackets replace the sign: -$1,234 -> ($1,234).
+  const display =
+    negative && col.bracket_negatives ? `(${String(formatted).replace(/^-/, "")})` : formatted;
 
-  if (col.red_negatives && !isNaN(Number(value)) && Number(value) < 0) {
+  const content = renderContent(col, value, display, ctx, row);
+
+  if (negative) {
     content.classList?.add("et-negative");
+    if (col.negative_color) content.style.color = col.negative_color;
   }
 
   const link = col.link ? row[col.link] : null;

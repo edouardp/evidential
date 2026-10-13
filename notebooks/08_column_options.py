@@ -46,7 +46,8 @@ def _(mo):
     mo.md("""
     # Column-level options
 
-    Formatting (`fmt`, `fmtColumn`), alignment, wrapping, `redNegatives`, the
+    Formatting (`fmt`, `fmtColumn`), alignment, wrapping, negative styling
+    (`.neg(...)`), the
     column info icon, per-cell links, HTML content, and the Evidence
     `contentType` shorthands.
 
@@ -67,7 +68,7 @@ def _(EvidentialTable, col, connection, mo):
                 # name links to the url column
                 col.text("name").align("left").link("url", new_tab=True).info("Click to open the search result"),
                 # per-row format pulled from the row_fmt column (fmtColumn)
-                col.number("amount", title="Amount").fmt_column("row_fmt").red_negatives(),
+                col.number("amount", title="Amount").fmt_column("row_fmt").neg(bracket=True),
                 col.text("row_fmt", title="Format code"),
                 col.auto("url").hide(),
                 # raw HTML cell (contentType=html)

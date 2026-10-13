@@ -1267,6 +1267,29 @@ test("align_decimals pads numeric columns to a common precision", () => {
   renderer.destroy();
 });
 
+test("neg colours, recolours and brackets negatives", () => {
+  const columns = [
+    {
+      name: "n",
+      type: "number",
+      fmt: "usd0",
+      red_negatives: true,
+      bracket_negatives: true,
+      negative_color: "#b91c1c",
+      align: "right",
+    },
+  ];
+  const rows = [{ n: -1234 }, { n: 42 }];
+  const renderer = new EvidentialTableRenderer(makeModel(rows, columns, {}, el), el);
+  const cells = [...el.querySelectorAll("tbody .et-cell-value")];
+  assert.equal(cells[0].textContent, "($1,234)");
+  assert.ok(cells[0].classList.contains("et-negative"));
+  assert.equal(cells[0].style.color, "rgb(185, 28, 28)");
+  assert.equal(cells[1].textContent, "$42");
+  assert.ok(!cells[1].classList.contains("et-negative"));
+  renderer.destroy();
+});
+
 test("align_decimals leaves an explicit percent precision alone", () => {
   // Regression: `pct1` was padded to `pct3` from the raw fraction's decimals.
   const columns = [{ name: "share", type: "number", fmt: "pct1", align: "right" }];

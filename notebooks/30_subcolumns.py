@@ -62,31 +62,19 @@ def economic_table(EvidentialTable, col, mo, records):
             subtitle="Value + reporting period under Latest; independent annual forecast",
             columns=[
                 col.text("country", title="Country"),
-                col.group(
-                    "Gross domestic product",
-                    [
-                        col.subcolumns(
-                            "Latest",
-                            [
-                                col.number("gdp", fmt="num1", align="right").red_negatives(),
+                col.group("Gross domestic product", [
+                        col.subcolumns("Latest", [
+                                col.number("gdp", fmt="num1", align="right").neg(),
                                 col.auto("quarter").align("left").font_color("#808080"),
-                            ],
-                        ),
+                        ]),
                         col.number("forecast", fmt="num1", align="right", title="Annual forecast"),
                     ],
                 ),
-                col.group(
-                    "Consumer prices",
-                    [
-                        col.subcolumns(
-                            "Latest",
-                            [
-                                col.number("inflation", fmt="num1", align="right").red_negatives(),
+                col.group("Consumer prices", [
+                        col.subcolumns("Latest", [
+                                col.number("inflation", fmt="num1", align="right").neg(),
                                 col.auto("month").align("left").font_color("#808080"),
-                            ],
-                        ),
-                    ],
-                ),
+                ])]),
                 col.number("unemployment", fmt="num1", align="right", title="Unemployment (%)"),
             ],
             page_size="all",
@@ -127,9 +115,7 @@ def three_part_table(EvidentialTable, col, mo, records):
             title="GDP observations",
             columns=[
                 col.text("country", title="Country"),
-                col.subcolumns(
-                    "Latest observation",
-                    [
+                col.subcolumns("Latest observation", [
                         col.number("gdp", fmt="num1", align="right"),
                         col.auto("quarter").align("left").font_color("#808080"),
                         col.chip("status", align="center", conditional_colors="status_color"),
@@ -232,16 +218,11 @@ def economist_data():
             value = observation[key]
             observation[f"{key}_format"] = "num0" if isinstance(value, float) and value >= 100 else "num1"
         economist_records.append(observation)
-    return economist_keys, economist_records
+    return (economist_records,)
 
 
 @app.cell(expand_output=True)
-def economist_recreation(
-    EvidentialTable,
-    col,
-    economist_records,
-    mo,
-):
+def economist_recreation(EvidentialTable, col, economist_records, mo):
     economist = mo.ui.anywidget(
         EvidentialTable(
             economist_records,

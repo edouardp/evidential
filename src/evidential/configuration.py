@@ -193,6 +193,8 @@ class ColumnOptions(TypedDict, total=False):
     hide: bool
     viz: Literal["bar", "color", "chip", "sparkline", "delta"] | None
     red_negatives: bool
+    negative_color: str | None
+    bracket_negatives: bool | None
     html: bool
     markdown: bool
     link: str | None

@@ -25,6 +25,8 @@ FigureStyle = Literal[
     "auto",
     "none",
 ]
+#: Relative-time rendering for a date/time column: ``True`` (auto unit) or a unit.
+Relative = bool | Literal["second", "minute", "hour", "day", "week", "month", "year"]
 
 
 class DefaultSort(TypedDict, total=False):
@@ -182,6 +184,7 @@ class ColumnOptions(TypedDict, total=False):
     title: str | None
     fmt: str | None
     fmt_column: str | None
+    relative: Relative | None
     total_fmt: str | None
     subtotal_fmt: str | None
     align: Literal["left", "right", "center"] | None

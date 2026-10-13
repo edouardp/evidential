@@ -201,6 +201,7 @@ export function renderCell({row, col, index, ctx, rowIndex, options: opts, toggl
     type: col.type,
     range: ctx.formatRanges.get(col.name),
     fallback: optString(value),
+    relative: col.relative,
   });
 
   // Conditional color background.

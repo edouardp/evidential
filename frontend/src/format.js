@@ -44,6 +44,7 @@ function buildPresets() {
     mult1: '#,##0.0"x"',
     mult2: '#,##0.00"x"',
     date: "yyyy-mm-dd",
+    datetime: "yyyy-mm-dd HH:MM:SS",
     ddd: "ddd",
     dddd: "dddd",
     mmm: "mmm",
@@ -178,6 +179,57 @@ function formatQuarter(value, bare = false) {
   return bare ? `Q${q}` : `${date.getFullYear()}-Q${q}`;
 }
 
+// ---- Relative date/time (e.g. "3 days ago") --------------------------------
+const RELATIVE_UNITS = ["year", "month", "week", "day", "hour", "minute", "second"];
+const RELATIVE_MS = {
+  year: 365.25 * 24 * 60 * 60 * 1000,
+  month: (365.25 / 12) * 24 * 60 * 60 * 1000,
+  week: 7 * 24 * 60 * 60 * 1000,
+  day: 24 * 60 * 60 * 1000,
+  hour: 60 * 60 * 1000,
+  minute: 60 * 1000,
+  second: 1000,
+};
+
+function autoRelativeUnit(absMs) {
+  for (const unit of RELATIVE_UNITS) {
+    if (absMs >= RELATIVE_MS[unit]) return unit;
+  }
+  return "second";
+}
+
+/**
+ * The instant of a date value in ms. ISO strings keep their offset (so a
+ * ``Z``/``+00:00`` value is absolute); anything else falls back to the
+ * date-only normalization used by the absolute formatters.
+ */
+function relativeTimestamp(value) {
+  if (value instanceof Date) return value.getTime();
+  if (typeof value === "number") return value;
+  const text = String(value);
+  const direct = Date.parse(text);
+  return Number.isNaN(direct) ? Date.parse(standardizeDateString(text)) : direct;
+}
+
+/**
+ * Format a date/time relative to a reference instant ("3 days ago", "in 2 hours").
+ *
+ * @param {*} value  an ISO string, `Date`, or millisecond timestamp
+ * @param {boolean|string} relative  `true`/`"auto"`, or a unit such as `"day"`
+ * @param {number} [now]  the reference instant in ms (defaults to `Date.now()`)
+ * @returns {string|null}  the relative text, or `null` if `value` is not a date
+ */
+export function formatRelative(value, relative, now = Date.now()) {
+  const timestamp = relativeTimestamp(value);
+  if (!Number.isFinite(timestamp)) return null;
+  const unit =
+    relative === true || relative === "auto" ? autoRelativeUnit(Math.abs(timestamp - now)) : String(relative);
+  const step = RELATIVE_MS[unit];
+  if (!step) return null;
+  const amount = Math.round((timestamp - now) / step);
+  return new Intl.RelativeTimeFormat(undefined, { numeric: "auto" }).format(amount, unit);
+}
+
 /**
  * Format a single cell value.
  * @param {*} value
@@ -189,6 +241,11 @@ export function formatValue(value, formatCode, opts = {}) {
   const fallbackValue = fallback != null ? fallback : (value == null ? "–" : String(value));
   if (value === null || value === undefined) return fallbackValue;
   if (value === "Total") return "Total";
+
+  if (opts.relative) {
+    const text = formatRelative(value, opts.relative, opts.now);
+    if (text != null) return text;
+  }
 
   let code = formatCode;
   if (!code) {

@@ -137,3 +137,21 @@ def test_group_members_cannot_lose_the_label() -> None:
 def test_group_rejects_non_columns() -> None:
     with pytest.raises(TypeError, match="expected a column name"):
         col.group("G", [42])
+
+
+def test_temporal_kinds_and_relative() -> None:
+    assert col.date("day")["type"] == "date"
+    assert "fmt" not in col.date("day")
+    assert col.time("clock")["fmt"] == "hms"
+    assert col.datetime("stamp")["fmt"] == "datetime"
+    assert col.datetime("stamp", relative=True)["relative"] is True
+    assert col.date("day").relative("day")["relative"] == "day"
+    assert col.datetime("stamp", relative="hour")["relative"] == "hour"
+
+    table = EvidentialTable(ROWS, columns=[col.date("day", relative=True)])
+    assert (table.columns[0]["type"], table.columns[0]["relative"]) == ("date", True)
+
+
+def test_relative_rejects_an_unknown_unit() -> None:
+    with pytest.raises(TypeError, match="relative"):
+        EvidentialTable(ROWS, columns=[{"name": "day", "type": "date", "relative": "fortnight"}])

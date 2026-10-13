@@ -62,6 +62,7 @@ def make_column(name: str, *, type: str = "string", **overrides: Any) -> dict[st
         "title": None,
         "type": type,
         "fmt": None,
+        "relative": None,
         "align": None,
         "wrap": None,
         "hide": False,

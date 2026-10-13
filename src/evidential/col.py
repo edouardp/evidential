@@ -45,6 +45,7 @@ from ._column import (
     color,
     currency,
     date,
+    datetime,
     delta,
     flag,
     group,
@@ -59,6 +60,7 @@ from ._column import (
     sparkline,
     subcolumns,
     text,
+    time,
     url,
 )
 
@@ -70,6 +72,7 @@ __all__ = [
     "color",
     "currency",
     "date",
+    "datetime",
     "delta",
     "flag",
     "group",
@@ -84,5 +87,6 @@ __all__ = [
     "sparkline",
     "subcolumns",
     "text",
+    "time",
     "url",
 ]

@@ -11,7 +11,7 @@ from __future__ import annotations
 from collections.abc import Iterable, Mapping, Sequence
 from typing import Any, Literal
 
-from .configuration import ColumnOptions, validate_options
+from .configuration import ColumnOptions, Relative, validate_options
 
 Align = Literal["left", "right", "center"]
 Rotation = Literal["vertical"] | float
@@ -27,6 +27,7 @@ __all__ = [
     "color",
     "currency",
     "date",
+    "datetime",
     "delta",
     "flag",
     "group",
@@ -41,6 +42,7 @@ __all__ = [
     "sparkline",
     "subcolumns",
     "text",
+    "time",
     "url",
 ]
 
@@ -136,6 +138,21 @@ class Column(Mapping[str, Any]):
 
     #: ``format`` reads better in a chain; ``fmt`` matches the option name.
     format = fmt
+
+    def relative(self, value: Relative = True) -> Column:
+        """Render the value relative to now (e.g. ``"3 days ago"``) instead of as
+        an absolute date, using :js:class:`Intl.RelativeTimeFormat`.
+
+        :param value: ``True`` for an automatically chosen unit, or one of
+            ``"second"``, ``"minute"``, ``"hour"``, ``"day"``, ``"week"``,
+            ``"month"``, ``"year"`` to fix the unit.
+
+        Example::
+
+            col.datetime("updated_at").relative()
+            col.date("due_date", relative="day")
+        """
+        return self._with(relative=value)
 
     def total_fmt(self, code: str) -> Column:
         """Format the total row differently from the cells.
@@ -852,20 +869,81 @@ def currency(
 
 
 def date(
-    name: str, *, fmt: str | None = None, align: Align | None = None, title: str | None = None, **extra: Any
+    name: str,
+    *,
+    fmt: str | None = None,
+    relative: Relative | None = None,
+    align: Align | None = None,
+    title: str | None = None,
+    **extra: Any,
 ) -> Column:
-    """A date column.
+    """A date column (no time of day).
 
     :param name: the source column name.
     :param fmt: a date format code (``"yyyy"``, ``"mmm-yy"``, ``"longdate"``…).
+    :param relative: render relative to now — ``True`` for an automatic unit or a
+        unit such as ``"day"`` (e.g. ``"3 days ago"``).
     :param align: text alignment.
     :param title: header text.
 
     Example::
 
-        col.date("order_datetime", fmt="mmm-yy")
+        col.date("order_date")
+        col.date("due_date", relative="day")
     """
-    return _column(name, "date", fmt=fmt, align=align, title=title, **extra)
+    return _column(name, "date", fmt=fmt, relative=relative, align=align, title=title, **extra)
+
+
+def time(
+    name: str,
+    *,
+    fmt: str | None = None,
+    relative: Relative | None = None,
+    align: Align | None = None,
+    title: str | None = None,
+    **extra: Any,
+) -> Column:
+    """A time-of-day column.
+
+    :param name: the source column name.
+    :param fmt: a time format code (default ``"hms"``); other presets include
+        ``"HH:MM"``-style custom codes.
+    :param relative: render relative to now — ``True`` for an automatic unit or a
+        unit such as ``"hour"`` (e.g. ``"2 hours ago"``).
+    :param align: text alignment.
+    :param title: header text.
+
+    Example::
+
+        col.time("opened_at")
+    """
+    return _column(name, "date", fmt=fmt or "hms", relative=relative, align=align, title=title, **extra)
+
+
+def datetime(
+    name: str,
+    *,
+    fmt: str | None = None,
+    relative: Relative | None = None,
+    align: Align | None = None,
+    title: str | None = None,
+    **extra: Any,
+) -> Column:
+    """A date-and-time column.
+
+    :param name: the source column name.
+    :param fmt: a format code (default ``"datetime"`` → ``yyyy-mm-dd HH:MM:SS``).
+    :param relative: render relative to now — ``True`` for an automatic unit or a
+        unit such as ``"minute"`` (e.g. ``"5 minutes ago"``).
+    :param align: text alignment.
+    :param title: header text.
+
+    Example::
+
+        col.datetime("created_at")
+        col.datetime("updated_at").relative()
+    """
+    return _column(name, "date", fmt=fmt or "datetime", relative=relative, align=align, title=title, **extra)
 
 
 def boolean(name: str, *, title: str | None = None, **extra: Any) -> Column:

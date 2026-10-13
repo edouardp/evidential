@@ -21,9 +21,9 @@ def _():
     import marimo as mo
     import duckdb
 
-    from evidential import pivot_table
+    from evidential import col, pivot_table
 
-    return Path, duckdb, mo, pivot_table
+    return Path, col, duckdb, mo, pivot_table
 
 
 @app.cell
@@ -51,7 +51,7 @@ def _(mo):
 
 
 @app.cell
-def _(connection, mo, pivot_table):
+def _(col, connection, mo, pivot_table):
     sales_by_year = mo.ui.anywidget(
         pivot_table(
             connection,
@@ -62,10 +62,10 @@ def _(connection, mo, pivot_table):
             total_label="Total",
             title="Sales by category, pivoted by year",
             page_size=10,
-            dimension_config={"category": {"align": "left"}},
+            dimension_config={"category": col.text("category")},
             measure_config={
-                "sales": {"fmt": "usd0"},
-                "orders": {"fmt": "num0"},
+                "sales": col.currency("sales", decimals=0),
+                "orders": col.integer("orders"),
             },
         )
     )
@@ -85,7 +85,7 @@ def _(mo):
 
 
 @app.cell
-def _(connection, mo, pivot_table):
+def _(col, connection, mo, pivot_table):
     measures_first = mo.ui.anywidget(
         pivot_table(
             connection,
@@ -96,7 +96,7 @@ def _(connection, mo, pivot_table):
             measures_first=True,
             title="Same pivot, measures first",
             page_size=10,
-            measure_config={"sales": {"fmt": "usd0"}, "orders": {"fmt": "num0"}},
+            measure_config={"sales": col.currency("sales", decimals=0), "orders": col.integer("orders")},
         )
     )
     measures_first
@@ -114,7 +114,7 @@ def _(mo):
 
 
 @app.cell
-def _(connection, mo, pivot_table):
+def _(col, connection, mo, pivot_table):
     by_channel = mo.ui.anywidget(
         pivot_table(
             connection,
@@ -125,15 +125,10 @@ def _(connection, mo, pivot_table):
             subtotal_position="top",
             title="Sales by category and channel group",
             max_height="460px",
-            measure_config={"sales": {"fmt": "usd0", "viz": "bar"}},
+            measure_config={"sales": col.currency("sales", decimals=0).bar()},
         )
     )
     by_channel
-    return
-
-
-@app.cell
-def _():
     return
 
 

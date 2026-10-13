@@ -568,13 +568,20 @@
    expand toggle steps aside for it. */
 .et-text-btn.et-close-btn {
   position: absolute;
-  top: 0.3rem;
-  right: 0.45rem;
+  top: 0.65rem;
+  right: 0.6rem;
   display: none;
   /* Beat `.et-text-btn { font: inherit }`, which is later in this file. */
-  font-size: 1.7rem;
+  font-size: 1.3rem;
   line-height: 1;
   color: var(--et-muted);
+  padding: 0.15rem 0.4rem;
+  border-radius: 0.4rem;
+  background: color-mix(in srgb, var(--et-muted) 16%, transparent);
+}
+.et-text-btn.et-close-btn:hover {
+  background: color-mix(in srgb, var(--et-muted) 26%, transparent);
+  color: var(--et-text);
 }
 .et-root.et-expanded .et-close-btn { display: block; }
 .et-page-controls { display: flex; align-items: center; gap: 0.4rem; }

@@ -21,9 +21,9 @@ def _():
     import marimo as mo
     import duckdb
 
-    from evidential import EvidentialTable
+    from evidential import EvidentialTable, col
 
-    return EvidentialTable, Path, duckdb, mo
+    return EvidentialTable, Path, col, duckdb, mo
 
 
 @app.cell
@@ -50,7 +50,7 @@ def _(mo):
 
 
 @app.cell
-def _(EvidentialTable, connection, mo):
+def _(EvidentialTable, col, connection, mo):
     summary = mo.ui.anywidget(
         EvidentialTable(
             connection.sql(
@@ -78,13 +78,13 @@ def _(EvidentialTable, connection, mo):
             header_color="#1e293b",
             header_font_color="#f8fafc",
             total_row_color="#e2e8f0",
-            column_config={
-                "category": {"align": "left"},
-                "orders": {"title": "Orders", "fmt": "num0"},
-                "sales": {"title": "Sales", "fmt": "usd0", "viz": "bar"},
-                "avg_sale": {"title": "Avg sale", "fmt": "usd2"},
-                "tint": {"hide": True},
-            },
+            columns=[
+                col.auto("category"),
+                col.integer("orders", title="Orders"),
+                col.currency("sales", decimals=0, title="Sales").bar(),
+                col.currency("avg_sale", decimals=2, title="Avg sale"),
+                col.auto("tint").hide(),
+            ],
         )
     )
     summary
@@ -103,7 +103,7 @@ def _(mo):
 
 
 @app.cell
-def _(EvidentialTable, connection, mo):
+def _(EvidentialTable, col, connection, mo):
     links = mo.ui.anywidget(
         EvidentialTable(
             connection.sql(
@@ -124,12 +124,12 @@ def _(EvidentialTable, connection, mo):
             show_link_column=True,
             page_size=8,
             row_lines=False,
-            column_config={
-                "item": {"align": "left"},
-                "category": {"align": "left"},
-                "sales": {"fmt": "usd0", "viz": "bar"},
-                "lookup": {"title": "Search", "content_type": "link", "link_new_tab": True},
-            },
+            columns=[
+                col.auto("item"),
+                col.auto("category"),
+                col.currency("sales", decimals=0).bar(),
+                col.link("lookup", title="Search", new_tab=True),
+            ],
         )
     )
     links
@@ -149,7 +149,7 @@ def _(mo):
 
 
 @app.cell
-def _(EvidentialTable, connection, mo):
+def _(EvidentialTable, col, connection, mo):
     borderless = mo.ui.anywidget(
         EvidentialTable(
             connection.sql(
@@ -164,11 +164,11 @@ def _(EvidentialTable, connection, mo):
             subtitle="border=False",
             border=False,
             row_shading=True,
-            column_config={
-                "category": {"align": "left"},
-                "orders": {"fmt": "num0"},
-                "sales": {"fmt": "usd0", "viz": "bar"},
-            },
+            columns=[
+                col.auto("category"),
+                col.integer("orders"),
+                col.currency("sales", decimals=0).bar(),
+            ],
         )
     )
     borderless

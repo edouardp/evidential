@@ -24,9 +24,9 @@ app = marimo.App(width="full")
 def _():
     import marimo as mo
 
-    from evidential import EvidentialTable
+    from evidential import EvidentialTable, col
 
-    return EvidentialTable, mo
+    return EvidentialTable, col, mo
 
 
 @app.cell
@@ -67,7 +67,7 @@ def _():
 
 
 @app.cell
-def _(EvidentialTable, mo, records):
+def _(EvidentialTable, col, mo, records):
     aqi_chip = mo.ui.anywidget(
         EvidentialTable(
             records,
@@ -75,19 +75,15 @@ def _(EvidentialTable, mo, records):
             subtitle="color_scale from green to red, clamped to 0-250",
             row_shading=True,
             row_lines=False,
-            column_config={
-                "rank": {"title": "#", "align": "left"},
-                "city": {"title": "Major city", "align": "left"},
-                "aqi": {
-                    "title": "AQI (US)",
-                    "viz": "chip",
-                    "fmt": "num0",
-                    "color_scale": ["#16a34a", "#f59e0b", "#dc2626", "#7e22ce"],
-                    "color_options": {"min": 0, "max": 250},
-                },
-                "status": {"hide": True},
-                "status_color": {"hide": True},
-            },
+            columns=[
+                col.text("rank", title="#"),
+                col.text("city", title="Major city"),
+                col.number("aqi", title="AQI (US)").chip(
+                    scale=["#16a34a", "#f59e0b", "#dc2626", "#7e22ce"], min=0, max=250
+                ),
+                col.auto("status").hide(),
+                col.auto("status_color").hide(),
+            ],
         )
     )
     aqi_chip
@@ -107,24 +103,20 @@ def _(mo):
 
 
 @app.cell
-def _(EvidentialTable, mo, records):
+def _(EvidentialTable, col, mo, records):
     status_chip = mo.ui.anywidget(
         EvidentialTable(
             records,
             title="A text chip with conditional colours",
             subtitle="color_options={'conditional_colors': 'status_color'}",
             row_shading=True,
-            column_config={
-                "rank": {"title": "#", "align": "left"},
-                "city": {"title": "Major city", "align": "left"},
-                "status": {
-                    "title": "Status",
-                    "viz": "chip",
-                    "color_options": {"conditional_colors": "status_color"},
-                },
-                "aqi": {"hide": True},
-                "status_color": {"hide": True},
-            },
+            columns=[
+                col.text("rank", title="#"),
+                col.text("city", title="Major city"),
+                col.chip("status", title="Status", conditional_colors="status_color"),
+                col.auto("aqi").hide(),
+                col.auto("status_color").hide(),
+            ],
         )
     )
     status_chip
@@ -132,20 +124,20 @@ def _(EvidentialTable, mo, records):
 
 
 @app.cell
-def _(EvidentialTable, mo, records):
+def _(EvidentialTable, col, mo, records):
     neutral_chip = mo.ui.anywidget(
         EvidentialTable(
             records,
             title="A chip without a colour scale",
             subtitle="No colour options: a neutral fill, centred",
             row_shading=True,
-            column_config={
-                "rank": {"hide": True},
-                "city": {"align": "left"},
-                "status": {"title": "Category", "viz": "chip"},
-                "aqi": {"hide": True},
-                "status_color": {"hide": True},
-            },
+            columns=[
+                col.auto("rank").hide(),
+                col.text("city"),
+                col.chip("status", title="Category"),
+                col.auto("aqi").hide(),
+                col.auto("status_color").hide(),
+            ],
         )
     )
     neutral_chip
@@ -153,32 +145,22 @@ def _(EvidentialTable, mo, records):
 
 
 @app.cell
-def _(EvidentialTable, mo, records):
+def _(EvidentialTable, col, mo, records):
     sized_chip = mo.ui.anywidget(
         EvidentialTable(
             records,
             title="Chips with a minimum width",
             subtitle='`chip_options={"min_width": 72}` — short values are padded, long ones expand',
             row_shading=True,
-            column_config={
-                "rank": {"hide": True},
-                "city": {"align": "left"},
-                "aqi": {
-                    "title": "AQI (US)",
-                    "viz": "chip",
-                    "fmt": "num0",
-                    "chip_options": {"min_width": 72},
-                    "color_scale": ["#16a34a", "#f59e0b", "#dc2626", "#7e22ce"],
-                    "color_options": {"min": 0, "max": 250},
-                },
-                "status": {
-                    "title": "Status",
-                    "viz": "chip",
-                    "chip_min_width": 72,
-                    "color_options": {"conditional_colors": "status_color"},
-                },
-                "status_color": {"hide": True},
-            },
+            columns=[
+                col.auto("rank").hide(),
+                col.text("city"),
+                col.number("aqi", title="AQI (US)").chip(
+                    min_width=72, scale=["#16a34a", "#f59e0b", "#dc2626", "#7e22ce"], min=0, max=250
+                ),
+                col.chip("status", title="Status", min_width=72, conditional_colors="status_color"),
+                col.auto("status_color").hide(),
+            ],
         )
     )
     sized_chip

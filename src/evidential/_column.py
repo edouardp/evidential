@@ -629,23 +629,43 @@ class Column(Mapping[str, Any]):
         min_width: Any = None,
         conditional_colors: str | None = None,
         scale: Any = None,
+        stops: Any = None,
+        scale_column: str | None = None,
+        min: float | None = None,
+        max: float | None = None,
+        midpoint: float | None = None,
     ) -> Column:
         """Render the value in a rounded "chip".
+
+        The fill follows the same rules as :meth:`color`.
 
         :param min_width: minimum chip width (a number of pixels or a CSS length).
         :param conditional_colors: a rule column name supplying per-row colours.
         :param scale: a colour scale for numeric chips.
+        :param stops: explicit colour stops.
+        :param scale_column: take the scale range from another column.
+        :param min: lower bound of the colour scale.
+        :param max: upper bound of the colour scale.
+        :param midpoint: midpoint for a diverging scale.
 
         Example::
 
             col.chip("status", min_width=72)
-            col.number("aqi").chip(scale="redgreen")
+            col.number("aqi").chip(scale="redgreen", min=0, max=250)
         """
         changes: dict[str, Any] = {"viz": "chip"}
         chip = _clean(min_width=min_width)
         if chip:
             changes["chip_options"] = {**dict(self._spec.get("chip_options") or {}), **chip}
-        color = _clean(conditional_colors=conditional_colors, color_scale=scale)
+        color = _clean(
+            conditional_colors=conditional_colors,
+            color_scale=scale,
+            color_stops=stops,
+            scale_column=scale_column,
+            min=min,
+            max=max,
+            midpoint=midpoint,
+        )
         if color:
             changes["color_options"] = {**dict(self._spec.get("color_options") or {}), **color}
         return self._with(**changes)
@@ -1138,7 +1158,15 @@ def sparkline(name: str, *, type: Literal["line", "area", "bar"] = "line", **ext
 
 
 def chip(
-    name: str, *, min_width: Any = None, conditional_colors: str | None = None, scale: Any = None, **extra: Any
+    name: str,
+    *,
+    min_width: Any = None,
+    conditional_colors: str | None = None,
+    scale: Any = None,
+    min: float | None = None,
+    max: float | None = None,
+    midpoint: float | None = None,
+    **extra: Any,
 ) -> Column:
     """A text chip column.
 
@@ -1147,6 +1175,9 @@ def chip(
     :param min_width: minimum chip width (pixels or a CSS length).
     :param conditional_colors: a rule column name supplying per-row colours.
     :param scale: a colour scale.
+    :param min: lower bound of the colour scale.
+    :param max: upper bound of the colour scale.
+    :param midpoint: midpoint for a diverging scale.
 
     Example::
 
@@ -1156,6 +1187,9 @@ def chip(
         min_width=min_width,
         conditional_colors=conditional_colors,
         scale=scale,
+        min=min,
+        max=max,
+        midpoint=midpoint,
     )
 
 

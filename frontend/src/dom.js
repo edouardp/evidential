@@ -96,4 +96,3 @@ export function alignStyle(col) {
   const align = col.align || (col.viz === "chip" ? "center" : fallback);
   return { textAlign: align };
 }
-

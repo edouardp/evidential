@@ -1,7 +1,23 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { sortRows, searchRows, visibleRows, paginateRows, columnStats } from "./src/rows.js";
+import { sortRows, searchRows, visibleRows, paginateRows, columnStats, withDecimals } from "./src/rows.js";
 import { RowPipeline } from "./src/derived.js";
+
+test("withDecimals keeps an explicit precision and pads an auto base", () => {
+  // An explicit precision is already aligned: keep it.
+  assert.equal(withDecimals("pct1", 4), "pct1");
+  assert.equal(withDecimals("num0", 3), "num0");
+  assert.equal(withDecimals("usd2", 1), "usd2");
+  // An auto base is padded to the observed precision.
+  assert.equal(withDecimals("num", 2), "num2");
+  assert.equal(withDecimals("usd", 3), "usd3");
+  // A percent base shows value*100, so two fewer rendered places.
+  assert.equal(withDecimals("pct", 4), "pct2");
+  assert.equal(withDecimals("pct", 1), "pct0");
+  // Unknown codes are left alone.
+  assert.equal(withDecimals("id", 0), "id");
+  assert.equal(withDecimals("num0k", 2), "num0k");
+});
 
 test("row pipeline preserves grouping and never mutates its inputs", () => {
   const rows = Object.freeze([

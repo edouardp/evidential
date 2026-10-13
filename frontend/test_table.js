@@ -1267,6 +1267,19 @@ test("align_decimals pads numeric columns to a common precision", () => {
   renderer.destroy();
 });
 
+test("align_decimals leaves an explicit percent precision alone", () => {
+  // Regression: `pct1` was padded to `pct3` from the raw fraction's decimals.
+  const columns = [{ name: "share", type: "number", fmt: "pct1", align: "right" }];
+  const rows = [{ share: 0.45 }, { share: 0.1115 }, { share: 0.0004 }];
+  const renderer = new EvidentialTableRenderer(
+    makeModel(rows, columns, { align_decimals: true }, el),
+    el,
+  );
+  const cells = [...el.querySelectorAll("tbody .et-cell-value")].map((cell) => cell.textContent);
+  assert.deepEqual(cells, ["45.0%", "11.2%", "0.0%"]);
+  renderer.destroy();
+});
+
 test("stretch=false keeps the table content-sized", () => {
   const renderer = new EvidentialTableRenderer(
     makeModel(ROWS, COLUMNS, { stretch: false }, el),

@@ -24,14 +24,35 @@ export function decimalPlaces(value) {
   return dot === -1 ? 0 : text.length - dot - 1;
 }
 
+/** The base formats a fixed decimal precision can be applied to. */
+const DECIMAL_BASES = [
+  "num",
+  "usd",
+  "eur",
+  "gbp",
+  "aud",
+  "cad",
+  "cny",
+  "jpy",
+  "inr",
+  "krw",
+  "ngn",
+  "sek",
+  "pct",
+];
+
 /** Apply a fixed decimal precision to a supported base format. */
 export function withDecimals(format, decimals) {
   const code = String(format || "num");
-  const base = code.replace(/\d+$/, "");
-  const bases = ["num", "usd", "eur", "gbp", "aud", "cad", "cny", "jpy", "inr", "krw", "ngn", "sek", "pct"];
-  if (!bases.includes(base)) return code;
-  const max = base === "pct" ? 3 : 4;
-  return base + Math.min(decimals, max);
+  // An explicit precision (`num2`, `pct1`, `usd0`, …) is already aligned, so
+  // keep it rather than re-deriving a wider one from the raw values.
+  const explicit = /^([a-z]+)(\d+)$/.exec(code);
+  if (explicit && DECIMAL_BASES.includes(explicit[1])) return code;
+  if (!DECIMAL_BASES.includes(code)) return code;
+  // A percent format renders `value * 100`, so the raw value's decimal places
+  // are two more than the rendered percentage's.
+  const places = code === "pct" ? Math.max(0, decimals - 2) : decimals;
+  return code + Math.min(places, code === "pct" ? 3 : 4);
 }
 
 export function hiddenColumns(columns, hiddenState) {

@@ -238,14 +238,57 @@ def economist_data():
 @app.cell(expand_output=True)
 def economist_recreation(
     EvidentialTable,
-    economist_keys,
+    col,
     economist_records,
     mo,
 ):
     economist = mo.ui.anywidget(
         EvidentialTable(
             economist_records,
-            columns=economist_keys,
+            columns=[
+                col.text("country", title=" "),
+                col.group(
+                    "Gross domestic product\n% change on year ago:",
+                    [
+                        col.subcolumns(
+                            "latest",
+                            [
+                                col.number("gdp", fmt="num1").color(conditional_colors="gdp_color"),
+                                col.auto("gdp_period").fmt("@").font_color("#808080"),
+                            ],
+                        ),
+                        col.number("gdp_quarter", fmt="num1", title="quarter*"),
+                        col.number("gdp_annual", fmt="num1", title="2023†"),
+                    ],
+                ),
+                col.group(
+                    "Consumer prices\n% change on year ago:",
+                    [
+                        col.subcolumns(
+                            "latest",
+                            [
+                                col.number("cpi", fmt_column="cpi_format").color(
+                                    conditional_colors="cpi_color"
+                                ),
+                                col.auto("cpi_period").font_color("#808080"),
+                            ],
+                        ),
+                        col.number("cpi_annual", fmt_column="cpi_annual_format", title="2023†"),
+                    ],
+                ),
+                col.group(
+                    "Unemployment\nrate",
+                    [
+                        col.subcolumns(
+                            "%",
+                            [
+                                col.number("unemployment", fmt="num1"),
+                                col.auto("unemployment_period").fmt("@").font_color("#808080"),
+                            ],
+                        ),
+                    ],
+                ),
+            ],
             title="Economic data",
             subtitle="1 of 2",
             page_size="all",
@@ -260,23 +303,6 @@ def economist_recreation(
                 "header_bg": "#ffffff", "header_text": "#242424",
                 "header_border": "#808080", "shading": "#d5e7ef",
                 "hover": "#d5e7ef", "font_size": "14px",
-            },
-            column_groups={
-                "Gross domestic product\n% change on year ago:": ["gdp", "gdp_period", "gdp_quarter", "gdp_annual"],
-                "Consumer prices\n% change on year ago:": ["cpi", "cpi_period", "cpi_annual"],
-                "Unemployment\nrate": ["unemployment", "unemployment_period"],
-            },
-            column_config={
-                "country": {"title": " "},
-                "gdp": {"type": "number", "fmt": "num1", "subcolumn_group": "latest", "viz": "color", "color_options": {"conditional_colors": "gdp_color"}},
-                "gdp_period": {"subcolumn_group": "latest", "fmt": "@", "align": "left", "font_color": "#808080"},
-                "gdp_quarter": {"title": "quarter*", "type": "number", "fmt": "num1", "align": "right"},
-                "gdp_annual": {"title": "2023†", "type": "number", "fmt": "num1", "align": "right"},
-                "cpi": {"type": "number", "fmt_column": "cpi_format", "subcolumn_group": "latest", "viz": "color", "color_options": {"conditional_colors": "cpi_color"}},
-                "cpi_period": {"subcolumn_group": "latest", "align": "left", "font_color": "#808080"},
-                "cpi_annual": {"title": "2023†", "type": "number", "fmt_column": "cpi_annual_format", "align": "right"},
-                "unemployment": {"type": "number", "fmt": "num1", "subcolumn_group": "%"},
-                "unemployment_period": {"subcolumn_group": "%", "fmt": "@", "align": "left", "font_color": "#808080"},
             },
             caption=(
                 "Source: Haver Analytics. ∗% change on previous quarter, annual rate. "

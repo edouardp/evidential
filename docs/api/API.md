@@ -400,8 +400,12 @@ columns=[
 ![Visualisations](images/visualizations.png)
 
 - **Bar** — `.bar(color=, negative_color=, fit_to_data=, hide_labels=,
-  background=, center=, pad=)`. With `center=True` the bar grows from a centre
-  line (positive right, negative left) — a second geometry of the same cell.
+  background=, center=, pad=, direction=, reference=, reference_color=,
+  reference_label=)`. With `center=True` the bar grows from a centre line
+  (positive right, negative left) — a second geometry of the same cell. With
+  `direction="left"` it fills from the right edge instead, and `reference=N`
+  draws a vertical benchmark rule at a value. `color="@column"` colours each bar
+  from a column (`@` marks the column reference).
 - **Colour** — `.color(scale=, stops=, conditional_colors=, scale_column=, min=,
   max=, midpoint=)`. `scale` takes a preset (`"blues"`, `"viridis"`), any of the
   matplotlib colour maps (`"RdBu"`, `"plasma"`, …), a list of stops, or
@@ -422,8 +426,32 @@ columns=[
 
 Two references are useful throughout: `@column` marks a column name wherever an
 option names a column (`sort_by="@x"`, `scale="@color"`, `footnote="@note"`,
-`link="@url"`, …), and colours accept matplotlib names (`"tab:blue"`, `"C3"`,
-`"k"`).
+`link="@url"`, `color="@bar_colour"`, …), and colours accept matplotlib names
+(`"tab:blue"`, `"C3"`, `"k"`).
+
+### Back-to-back bars
+
+`direction="left"` mirrors the bar, so a leftward column and a rightward one
+either side of a label column make a back-to-back ("tornado") league table.
+`reference=N` draws a benchmark rule on the bar's own scale (mirrored with a
+leftward bar), `reference_label` captions it once on the last row, and
+`color="@column"` keys both panels with one colour column:
+
+```python
+columns=[
+    col.currency("spend", decimals=1).bar(
+        direction="left", reference=4.3, reference_label="OECD median 4.3",
+        color="@color", pad=3,
+    ).align("left"),
+    col.text("country"),
+    col.number("rate", fmt="num2").bar(
+        reference=0.32, reference_label="OECD median 0.32", color="@color", pad=3,
+    ).align("right"),
+    col.auto("color").hide(),
+]
+```
+
+![Back-to-back bars](images/back-to-back.png)
 
 ## Formatting
 

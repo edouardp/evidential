@@ -244,6 +244,34 @@ def test_bar_pad_option() -> None:
     assert col.number("x").bar(pad="0.25rem")["bar_options"]["pad"] == "0.25rem"
 
 
+def test_bar_direction_reference_and_colour_column() -> None:
+    spec = col.currency("spend", decimals=0).bar(
+        direction="left",
+        reference=4.3,
+        reference_color="#0f766e",
+        reference_label="OECD median",
+    )
+    assert spec["bar_options"] == {
+        "direction": "left",
+        "reference": 4.3,
+        "reference_color": "#0f766e",
+        "reference_label": "OECD median",
+    }
+    # `color="@column"` names a per-row colour column, not a literal colour.
+    assert col.number("spend").bar(color="@color")["bar_options"] == {"bar_color_column": "color"}
+
+
+def test_bar_options_in_the_dict_form() -> None:
+    table = EvidentialTable(
+        ROWS,
+        columns=[{"name": "sales", "viz": "bar", "bar_color": "@color", "direction": "left"}],
+    )
+    assert table.columns[0]["bar_options"] == {
+        "bar_color_column": "color",
+        "direction": "left",
+    }
+
+
 def test_neg_marks_and_brackets_negatives() -> None:
     assert col.currency("profit").neg()["red_negatives"] is True
     spec = col.currency("profit").neg(color="#b91c1c", bracket=True)

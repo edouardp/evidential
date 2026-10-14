@@ -2,15 +2,21 @@ import { h } from "./dom.js";
 import { formatValue } from "./format.js";
 import { resolveColor } from "./color.js";
 
-export function renderBar(col, value, formatted, range) {
+export function renderBar(col, value, formatted, range, row) {
   const opts = col.bar_options || {};
   const num = Number(value);
   const min = opts.fit_to_data ? (range?.min ?? 0) : Math.min(0, range?.min ?? 0);
   const max = opts.fit_to_data ? (range?.max ?? 0) : Math.max(0, range?.max ?? 0);
   const negative = num < 0;
+  // A leftward bar fills from the right edge — the mirror of the default, for a
+  // back-to-back ("tornado") league table.
+  const leftward = opts.direction === "left";
+  // A per-row colour column (`bar(color="@column")`) wins over a fixed colour.
+  const rowColor =
+    opts.bar_color_column && row ? resolveColor(row[opts.bar_color_column]) : null;
   const color = negative
-    ? (resolveColor(opts.bar_color_negative) || resolveColor(opts.bar_color) || "var(--et-negative, #dc2626)")
-    : (resolveColor(opts.bar_color) || "var(--et-accent, #2563eb)");
+    ? (rowColor || resolveColor(opts.bar_color_negative) || resolveColor(opts.bar_color) || "var(--et-negative, #dc2626)")
+    : (rowColor || resolveColor(opts.bar_color) || "var(--et-accent, #2563eb)");
   const label = h(
     "span",
     { class: `et-bar-label${opts.hide_labels ? " et-hidden" : ""}` },
@@ -41,14 +47,41 @@ export function renderBar(col, value, formatted, range) {
     const span = max - min || 1;
     const pct = Math.max(0, Math.min(100, ((num - min) / span) * 100));
     const bar = h("div", {
-      class: "et-bar",
+      class: `et-bar${leftward ? " et-bar-fill-left" : ""}`,
       style: { width: `${pct}%`, backgroundColor: color },
     });
-    const wrap = h("div", { class: `et-bar-wrap${negative ? " et-bar-negative" : ""}` }, bar);
+    const marks = referenceMarks(opts, min, span, leftward);
+    const wrap = h("div", { class: `et-bar-wrap${negative ? " et-bar-negative" : ""}` }, [bar, ...marks]);
     cell = h("div", { class: "et-bar-cell", style: background }, [wrap, label]);
   }
   if (pad) cell.style.setProperty("--et-bar-pad", pad);
   return cell;
+}
+
+/** A vertical benchmark rule (and its caption) for a bar column. */
+function referenceMarks(opts, min, span, leftward) {
+  if (opts.reference == null || !isFinite(Number(opts.reference))) return [];
+  const pct = Math.max(0, Math.min(100, ((Number(opts.reference) - min) / span) * 100));
+  // A leftward bar mirrors the scale, so its rule mirrors with it.
+  const left = leftward ? 100 - pct : pct;
+  const color = resolveColor(opts.reference_color) || "var(--et-reference, #0f766e)";
+  const marks = [
+    h("div", { class: "et-bar-reference", style: { left: `${left}%`, backgroundColor: color } }),
+  ];
+  if (opts.reference_label) {
+    // Keep the caption inside the column: centre it on the rule, but anchor it
+    // to the nearer edge when the rule sits near one end.
+    const anchor =
+      left > 60 ? "translateX(-100%)" : left < 40 ? "translateX(0)" : "translateX(-50%)";
+    marks.push(
+      h(
+        "span",
+        { class: "et-bar-reference-label", style: { left: `${left}%`, color, transform: anchor } },
+        String(opts.reference_label),
+      ),
+    );
+  }
+  return marks;
 }
 
 /** A numeric value as that many repeated symbols — glyphs, emoji or images. */

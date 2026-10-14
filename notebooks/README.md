@@ -39,7 +39,7 @@ and without network access.
 | [`31_imdb_media.py`](31_imdb_media.py) | IMDb-Media CSV: top-rated ranking, dotted-name column groups, column stats, a decade pivot and a row-selection cast drill-down. |
 | [`32_column_builder.py`](32_column_builder.py) | The `col.*` column builder and the `settings(...)` bundle: a configured report plus a default table to experiment with. |
 | [`33_relative_time.py`](33_relative_time.py) | Temporal kinds (`col.date` / `col.time` / `col.datetime`) and `relative=` for localised "3 days ago" rendering. |
-| [`34_centered_bars.py`](34_centered_bars.py) | Centred (diverging) `bar(center=True)`: a zero line, the bar left/right by sign, and the value on the opposite side — The Economist's league-table bar. |
+| [`34_centered_bars.py`](34_centered_bars.py) | Centred (diverging) `bar(center=True)`: a zero line, the bar left/right by sign, and the value on the opposite side — The Economist's league-table bar. Also back-to-back bars (`bar(direction="left")`) with a benchmark rule (`reference=`) and per-row colours (`color="@column"`), as a mirrored league table. |
 | [`35_negatives.py`](35_negatives.py) | Negative styling with `.neg()`: red negatives, a custom colour, and accounting-style brackets (`-1,234` → `(1,234)`), alone and with a centred bar. |
 | [`36_repeated_symbols.py`](36_repeated_symbols.py) | `col.symbols` / `col.repeat` / `col.rating`: a number drawn as repeated glyphs, emoji or images — The Economist's squares, a medal table, star ratings. |
 

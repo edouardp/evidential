@@ -254,7 +254,7 @@ function renderContent(col, value, formatted, ctx, row) {
   const isSubtotal = row.render_type === "row_subtotal";
   let content;
   if (col.viz === "bar" && !(isSubtotal && col.viz_include_subtotals === false) && row.render_type !== "row_total") {
-    content = renderBar(col, value, formatted, ctx.ranges.get(col.name));
+    content = renderBar(col, value, formatted, ctx.ranges.get(col.name), row);
   } else if (col.viz === "delta") {
     content = renderDelta(col, value);
   } else if (col.viz === "sparkline") {

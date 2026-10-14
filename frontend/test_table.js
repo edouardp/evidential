@@ -1416,6 +1416,43 @@ test("centered bar grows left/right from a centre line, label opposite", () => {
   renderer.destroy();
 });
 
+test("direction='left' fills from the right, with a reference rule and per-row colour", () => {
+  const columns = [
+    {
+      name: "spend",
+      type: "number",
+      fmt: "num1",
+      viz: "bar",
+      bar_options: {
+        direction: "left",
+        reference: 4,
+        reference_label: "median",
+        bar_color_column: "color",
+      },
+    },
+  ];
+  const rows = [
+    { spend: 20, color: "#d9a01c" },
+    { spend: 4, color: "#3a9b9b" },
+    { spend: 0, color: "#b23a2e" },
+  ];
+  const renderer = new EvidentialTableRenderer(makeModel(rows, columns, {}, el), el);
+  const cells = [...el.querySelectorAll("tbody .et-bar-cell")];
+  const bar = cells[0].querySelector(".et-bar");
+  // The bar fills from the right — the mirror of the default.
+  assert.ok(bar.classList.contains("et-bar-fill-left"));
+  assert.equal(bar.style.width, "100%"); // 20 / 20
+  // Each bar takes its colour from the row's `color` column.
+  assert.notEqual(
+    bar.style.backgroundColor,
+    cells[1].querySelector(".et-bar").style.backgroundColor,
+  );
+  // A benchmark rule at 4/20 of the scale, mirrored with the leftward bar.
+  assert.equal(cells[0].querySelector(".et-bar-reference").style.left, "80%");
+  assert.equal(cells[0].querySelector(".et-bar-reference-label").textContent, "median");
+  renderer.destroy();
+});
+
 test("align_decimals leaves an explicit percent precision alone", () => {
   // Regression: `pct1` was padded to `pct3` from the raw fraction's decimals.
   const columns = [{ name: "share", type: "number", fmt: "pct1", align: "right" }];

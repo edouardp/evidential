@@ -544,10 +544,15 @@ class Column(Mapping[str, Any]):
         background: str | None = None,
         center: bool | None = None,
         pad: float | str | None = None,
+        direction: Literal["left", "right"] | None = None,
+        reference: float | None = None,
+        reference_color: str | None = None,
+        reference_label: str | None = None,
     ) -> Column:
         """Show each value as an inline horizontal bar with its label.
 
-        :param color: bar colour (default a light blue).
+        :param color: bar colour (default a light blue), or ``"@column"`` to take
+            each row's colour from that column (a hex/name per row).
         :param negative_color: bar colour for negative values.
         :param fit_to_data: scale bars to the column's range rather than the max.
         :param hide_labels: show only the bar, not the value.
@@ -558,23 +563,45 @@ class Column(Mapping[str, Any]):
         :param pad: inset the bar from the top and bottom of the row (a number of
             pixels or a CSS length), so it does not fill the cell height. The
             centre line is **not** padded — it stays continuous down the column.
+        :param direction: which way the bar fills. ``"right"`` (the default)
+            fills from the left edge and grows right; ``"left"`` fills from the
+            right edge and grows left — the mirror image, for a back-to-back
+            ("tornado") league table. Pair it with :meth:`align` to put the value
+            at the outer tip.
+        :param reference: draw a vertical rule at this value (on the same scale
+            as the bars) — a benchmark such as a median. ``direction="left"``
+            mirrors the rule with the bars.
+        :param reference_color: the rule colour (default a muted teal).
+        :param reference_label: an optional caption beside the rule, e.g.
+            ``"OECD median"``.
 
         Example::
 
             col.number("sales").fmt("usd0").bar(color="#93c5fd", fit_to_data=True)
             col.percent("gdp", decimals=1).bar(center=True, pad=4)
+            col.currency("spend", decimals=0).bar(
+                direction="left", reference=4.3, reference_label="OECD median"
+            ).align("left")
         """
+        color_column = None
+        if isinstance(color, str) and color.startswith("@"):
+            color_column, color = color[1:], None
         return self._with(
             viz="bar",
             **_merge_options(
                 "bar_options",
                 bar_color=color,
                 bar_color_negative=negative_color,
+                bar_color_column=color_column,
                 fit_to_data=fit_to_data,
                 hide_labels=hide_labels,
                 background_color=background,
                 center=center,
                 pad=pad,
+                direction=direction,
+                reference=reference,
+                reference_color=reference_color,
+                reference_label=reference_label,
             ),
         )
 

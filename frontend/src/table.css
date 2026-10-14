@@ -391,6 +391,29 @@
   opacity: 0.35;
 }
 .et-bar-negative .et-bar { left: auto; right: 0; }
+/* A leftward bar fills from the right edge — the mirror of the default, for a
+   back-to-back ("tornado") league table. */
+.et-bar-fill-left { left: auto; right: 0; }
+/* A vertical benchmark rule at a value (`bar(reference=N)`); it is full height
+   so it reads as one continuous line down the column, like the centre line. */
+.et-bar-reference {
+  position: absolute;
+  top: var(--et-bar-pad, 0);
+  bottom: var(--et-bar-pad, 0);
+  width: 1px;
+}
+.et-bar-reference-label {
+  /* A column-level caption: show it once, on the last row, like the source
+     chart's "OECD median" note under the axis. */
+  display: none;
+  position: absolute;
+  bottom: 0.1rem;
+  padding: 0 0.25rem;
+  font-size: 0.72em;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+tbody tr:last-child .et-bar-reference-label { display: block; }
 .et-bar-label { position: relative; z-index: 1; }
 .et-hidden { visibility: hidden; }
 .et-no-viz .et-bar-cell { display: none; }

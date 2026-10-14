@@ -186,11 +186,16 @@ COLOR_SCALES = (
 class BarOptions(TypedDict, total=False):
     bar_color: str | None
     bar_color_negative: str | None
+    bar_color_column: str | None
     background_color: str | None
     hide_labels: bool | None
     fit_to_data: bool | None
     center: bool | None
     pad: float | str | None
+    direction: Literal["left", "right"] | None
+    reference: float | None
+    reference_color: str | None
+    reference_label: str | None
 
 
 class DeltaOptions(TypedDict, total=False):

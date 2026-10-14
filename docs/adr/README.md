@@ -75,6 +75,7 @@ dated, immutable record of the decisions behind them.
 | [054](054-column-font-styling.md) | Column Font Styling and an Empty Title | Accepted |
 | [055](055-table-font-size.md) | Table-level `font_size` (Absolute or Relative) | Accepted |
 | [056](056-repeated-symbols.md) | Repeated Symbols | Accepted |
+| [057](057-back-to-back-bars.md) | Back-to-Back Bars — Direction and Benchmark Rules | Accepted |
 
 ## Creating New ADRs
 

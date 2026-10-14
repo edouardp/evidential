@@ -123,14 +123,31 @@ def _normalize_column_options(data: dict[str, Any]) -> dict[str, Any]:
         ("negativeBarColor", "bar_color_negative"),
         ("hideLabels", "hide_labels"),
         ("fitToData", "fit_to_data"),
+        ("barDirection", "direction"),
+        ("referenceLine", "reference"),
     ):
         if camel in data:
             bar.setdefault(snake, data.pop(camel))
     # Allow the bar options at the top level too (snake_case), like the colour
     # and delta options, so `bar_color="#..."` is not silently ignored.
-    for key in ("bar_color", "bar_color_negative", "hide_labels", "fit_to_data"):
+    for key in (
+        "bar_color",
+        "bar_color_negative",
+        "hide_labels",
+        "fit_to_data",
+        "direction",
+        "reference",
+        "reference_color",
+        "reference_label",
+    ):
         if key in data:
             bar.setdefault(key, data.pop(key))
+    # The `@column` reference convention: `bar_color="@name"` colours each bar
+    # from that column, so remember the column rather than a literal colour.
+    bar_color = bar.get("bar_color")
+    if isinstance(bar_color, str) and bar_color.startswith("@"):
+        bar["bar_color_column"] = bar_color[1:]
+        del bar["bar_color"]
     if bar:
         data["bar_options"] = bar
 

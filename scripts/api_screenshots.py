@@ -397,6 +397,54 @@ def comparison() -> EvidentialTable:
     )
 
 
+def back_to_back() -> EvidentialTable:
+    rows = [
+        {"country": "Switzerland", "spend": 26.0, "rate": 1.52, "color": "#d9a01c"},
+        {"country": "Canada", "spend": 19.1, "rate": 1.00, "color": "#b23a2e"},
+        {"country": "Australia", "spend": 18.2, "rate": 1.38, "color": "#3a9b9b"},
+        {"country": "United Kingdom", "spend": 13.3, "rate": 1.00, "color": "#d9a01c"},
+        {"country": "France", "spend": 12.5, "rate": 0.98, "color": "#d9a01c"},
+        {"country": "Germany", "spend": 10.0, "rate": 0.55, "color": "#d9a01c"},
+        {"country": "Slovenia", "spend": 9.6, "rate": 0.96, "color": "#3a9b9b"},
+        {"country": "Belgium", "spend": 9.0, "rate": 0.66, "color": "#3a9b9b"},
+        {"country": "Sweden", "spend": 7.4, "rate": 0.79, "color": "#d9a01c"},
+        {"country": "Ireland", "spend": 6.5, "rate": 0.40, "color": "#3a9b9b"},
+    ]
+    return EvidentialTable(
+        rows,
+        settings=settings(
+            title="Back-to-back bars",
+            caption="Illustrative data, in the style of The Economist.",
+            width="820px",
+            row_shading=True,
+            row_lines=False,
+            border=False,
+            stretch=False,
+        ),
+        columns=[
+            col.currency("spend", decimals=1, title="Sales per capita (CAD)")
+            .bar(
+                direction="left",
+                reference=4.3,
+                reference_label="OECD median 4.3",
+                color="@color",
+                pad=3,
+            )
+            .align("left"),
+            col.text("country", title=""),
+            col.number("rate", fmt="num2", title="Foreign-to-Canadian rate")
+            .bar(
+                reference=0.32,
+                reference_label="OECD median 0.32",
+                color="@color",
+                pad=3,
+            )
+            .align("right"),
+            col.auto("color").hide(),
+        ],
+    )
+
+
 def rules() -> EvidentialTable:
     rows = [
         {"category": "Widgets", "sales": 128400.0},
@@ -436,6 +484,7 @@ EXAMPLES: list[tuple[str, Callable[[], EvidentialTable]]] = [
     ("relative-time", relative_time),
     ("symbols", symbols),
     ("visualizations", visualizations),
+    ("back-to-back", back_to_back),
     ("styling", styling),
     ("groups", groups),
     ("subcolumns", subcolumns),

@@ -9,7 +9,10 @@
 
 A zero centre line, the bar growing left (negative) or right (positive) by its
 magnitude, and the value on the opposite side of the line: the shape The
-Economist uses for its league-table-of-nations charts.
+Economist uses for its league-table-of-nations charts. The same module also
+shows the **back-to-back** ("tornado") variant — mirrored bars meeting at a
+shared centre (`direction="left"`), with an optional benchmark rule — and a
+recreation of Pew Research Center's tolerance-vs-intolerance chart.
 """
 
 import marimo
@@ -22,9 +25,9 @@ app = marimo.App(width="full")
 def _():
     import marimo as mo
 
-    from evidential import EvidentialTable, col, settings
+    from evidential import EvidentialTable, cells_body, col, settings, tab_style
 
-    return EvidentialTable, col, mo, settings
+    return EvidentialTable, cells_body, col, mo, settings, tab_style
 
 
 @app.cell
@@ -274,6 +277,105 @@ def _(mo):
       CSS length (`"14px"`) sets it absolutely, a step (`"+1"`, `"-1"`) adds
       that many 1px steps. This table uses `font_size="+1"`.
     """)
+    return
+
+
+@app.cell
+def _(mo):
+    mo.md("""
+    ## Diverging bars: tolerance vs intolerance
+
+    A survey question with two complementary answers — the share who say religion
+    encourages **tolerance** and the share who say it encourages **intolerance** —
+    makes a natural back-to-back table. The orange tolerance bars grow **leftward**
+    from the shared centre (`direction="left"`); the blue intolerance bars grow
+    rightward by default. Each value sits at the **outer** tip, so `align` sends the
+    two sides apart.
+
+    The last row is a bold 22-country median, added with a `tab_style` rule.
+    """)
+    return
+
+
+@app.cell
+def _():
+    # Pew Research Center, "Many Religious 'Nones' Around the World Hold
+    # Spiritual Beliefs" (Spring 2024 Global Attitudes Survey).
+    _survey = [
+        ("Australia", 21, 76),
+        ("Sweden", 20, 73),
+        ("Germany", 23, 73),
+        ("Spain", 22, 71),
+        ("Netherlands", 25, 70),
+        ("Greece", 28, 70),
+        ("UK", 28, 70),
+        ("Canada", 23, 68),
+        ("U.S.", 32, 64),
+        ("Italy", 33, 61),
+        ("Chile", 29, 58),
+        ("France", 37, 57),
+        ("Hungary", 42, 49),
+        ("Mexico", 46, 48),
+        ("Argentina", 37, 46),
+        ("South Korea", 41, 45),
+        ("Brazil", 49, 45),
+        ("Colombia", 50, 44),
+        ("Peru", 53, 39),
+        ("South Africa", 52, 31),
+        ("Singapore", 68, 31),
+        ("Japan", 54, 28),
+        ("22-country\nmedian", 35, 58),
+    ]
+    attitudes = [
+        {"country": c, "tolerance": t / 100, "intolerance": i / 100}
+        for c, t, i in _survey
+    ]
+    return (attitudes,)
+
+
+@app.cell
+def _(EvidentialTable, attitudes, cells_body, col, mo, settings, tab_style):
+    diverging = mo.ui.anywidget(
+        EvidentialTable(
+            attitudes,
+            settings=settings(
+                title="Tolerance vs intolerance",
+                subtitle="% of religiously unaffiliated adults who say religion encourages …",
+                caption=(
+                    "Illustrative data after Pew Research Center, Spring 2024 "
+                    "Global Attitudes Survey."
+                ),
+                row_lines=False,
+                border=False,
+                #stretch=False,
+                #width="720px",
+            ),
+            columns=[
+                col.text("country", title="", align="right"),
+                col.percent("tolerance", decimals=0, title="Tolerance")
+                .bar(direction="left", color="#fea224", pad=3)
+                .align("left"),
+                col.percent("intolerance", decimals=0, title="Intolerance")
+                .bar(color="#1374a8", pad=3)
+                .align("right"),
+            ],
+            rules=[
+                tab_style(
+                    cells_body(
+                        columns=["country", "tolerance", "intolerance"],
+                        rows=lambda r: r["country"].startswith("22-country"),
+                    ),
+                    font_weight="700",
+                ),
+            ],
+        )
+    )
+    diverging
+    return
+
+
+@app.cell
+def _():
     return
 
 

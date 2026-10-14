@@ -25,6 +25,9 @@ notebook can serve a live dashboard, a report and a slide deck.
 
 ## Documentation
 
+- [API reference](docs/api/API.md) — the fluent column builder, header
+  structures, merged values and the full option tables, with annotated
+  screenshots.
 - [Design & DX](docs/design-and-dx.md) — *why* the table works the way it does,
   and what it borrows from Evidence, gt/Great Tables and A List Apart.
 - [Technical architecture](docs/technical-architecture.md) — the wire format,
@@ -607,8 +610,11 @@ three-member value/text/chip example and an Economist-style recreation, and
 
 ## Architecture
 
-Three reference documents go with the code:
+Four reference documents go with the code:
 
+- [**API reference**](docs/api/API.md) — the current API: the fluent `col.*`
+  builder, groups and sub-columns, merged values, visualisations, settings and
+  the full reference tables.
 - [**Design & DX**](docs/design-and-dx.md) — *why* the table works the way it
   does, the DX principles, and what we borrowed from Evidence, gt/Great Tables
   and A List Apart.

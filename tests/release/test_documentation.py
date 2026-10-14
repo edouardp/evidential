@@ -15,6 +15,7 @@ DOCS = (
     "docs/technical-architecture.md",
     "docs/marimo-studio.md",
     "docs/RELEASE_PROCESS.md",
+    "docs/api/API.md",
 )
 
 
@@ -50,3 +51,17 @@ def test_mermaid_blocks_are_present_and_balanced(relative: str) -> None:
     for block in blocks:
         assert block.strip(), f"empty mermaid block in {relative}"
         assert block.count("{") == block.count("}"), relative
+
+
+def test_api_images_match_the_screenshot_script() -> None:
+    """Every committed API image is referenced from API.md, and vice versa."""
+    doc = ROOT / "docs" / "api" / "API.md"
+    referenced = {
+        Path(target).name
+        for target in re.findall(r"!\[[^\]]*\]\(([^)]+)\)", doc.read_text())
+        if target.startswith("images/")
+    }
+    committed = {path.name for path in (ROOT / "docs" / "api" / "images").glob("*.png")}
+    assert referenced == committed, (
+        f"only in API.md: {sorted(referenced - committed)}; only on disk: {sorted(committed - referenced)}"
+    )

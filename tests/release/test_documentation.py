@@ -5,6 +5,7 @@ from __future__ import annotations
 import ast
 import re
 from pathlib import Path
+from xml.etree import ElementTree
 
 import pytest
 
@@ -65,3 +66,15 @@ def test_api_images_match_the_screenshot_script() -> None:
     assert referenced == committed, (
         f"only in API.md: {sorted(referenced - committed)}; only on disk: {sorted(committed - referenced)}"
     )
+
+
+@pytest.mark.parametrize("name", ("line", "area", "bar"))
+def test_sparkline_svgs_are_standalone_graphs(name: str) -> None:
+    """The committed sparkline SVGs are valid, self-contained graphics."""
+    svg = ROOT / "docs" / "img" / "sparklines" / f"{name}.svg"
+    root = ElementTree.parse(svg).getroot()
+    assert root.tag == "{http://www.w3.org/2000/svg}svg", root.tag
+    assert root.get("viewBox"), "a standalone SVG should scale via viewBox"
+    # Just the graph: no tooltips and no transparent hover targets.
+    assert not root.findall(".//{http://www.w3.org/2000/svg}title")
+    assert all(el.get("fill") != "transparent" for el in root.iter())

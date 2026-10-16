@@ -68,7 +68,10 @@ def test_api_images_match_the_screenshot_script() -> None:
     )
 
 
-@pytest.mark.parametrize("name", ("line", "area", "bar"))
+@pytest.mark.parametrize(
+    "name",
+    [f"{style}-{index}" for style in ("line", "area", "bar") for index in range(1, 6)],
+)
 def test_sparkline_svgs_are_standalone_graphs(name: str) -> None:
     """The sparkline SVGs are valid, self-contained, unclipped graphics."""
     svg = ROOT / "docs" / "img" / "sparklines" / f"{name}.svg"

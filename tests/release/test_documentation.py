@@ -70,11 +70,32 @@ def test_api_images_match_the_screenshot_script() -> None:
 
 @pytest.mark.parametrize("name", ("line", "area", "bar"))
 def test_sparkline_svgs_are_standalone_graphs(name: str) -> None:
-    """The committed sparkline SVGs are valid, self-contained graphics."""
+    """The sparkline SVGs are valid, self-contained, unclipped graphics."""
     svg = ROOT / "docs" / "img" / "sparklines" / f"{name}.svg"
+    ns = "{http://www.w3.org/2000/svg}"
     root = ElementTree.parse(svg).getroot()
-    assert root.tag == "{http://www.w3.org/2000/svg}svg", root.tag
-    assert root.get("viewBox"), "a standalone SVG should scale via viewBox"
-    # Just the graph: no tooltips and no transparent hover targets.
-    assert not root.findall(".//{http://www.w3.org/2000/svg}title")
+    assert root.tag == f"{ns}svg", root.tag
+    assert not root.findall(f".//{ns}title"), "just the graph: no tooltips"
     assert all(el.get("fill") != "transparent" for el in root.iter())
+    # The viewBox is tight but contains every painted point, with a clear safety
+    # margin, so a consumer that clips to the box cannot cut the graph.
+    view = [float(value) for value in (root.get("viewBox") or "").replace(",", " ").split()]
+    assert len(view) == 4, root.get("viewBox")
+    x0, y0, width, height = view
+    margin = 1.0
+    xs: list[float] = []
+    ys: list[float] = []
+    for el in root.iter():
+        tag = el.tag.rsplit("}", 1)[-1]
+        if tag in ("polyline", "polygon"):
+            half = float(el.get("stroke-width") or 0) / 2
+            for point in el.get("points", "").split():
+                px, py = (float(value) for value in point.split(","))
+                xs += [px - half, px + half]
+                ys += [py - half, py + half]
+        elif tag == "rect":
+            x, y, w, h = (float(el.get(key)) for key in ("x", "y", "width", "height"))
+            xs += [x, x + w]
+            ys += [y, y + h]
+    assert x0 + margin <= min(xs) and max(xs) <= x0 + width - margin, f"{name} too close to the edge"
+    assert y0 + margin <= min(ys) and max(ys) <= y0 + height - margin, f"{name} too close to the edge"

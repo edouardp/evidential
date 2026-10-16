@@ -184,10 +184,35 @@ def _fetch(table: EvidentialTable) -> list[str]:
         HTML.unlink(missing_ok=True)
 
 
+def _content_bbox(root: ET.Element) -> tuple[float, float, float, float]:
+    """The painted bounds of a sparkline, including the stroke half-width."""
+    x0 = y0 = float("inf")
+    x1 = y1 = float("-inf")
+
+    def add(x: float, y: float) -> None:
+        nonlocal x0, y0, x1, y1
+        x0, y0, x1, y1 = min(x0, x), min(y0, y), max(x1, x), max(y1, y)
+
+    for el in root.iter():
+        tag = el.tag.rsplit("}", 1)[-1]
+        if tag in ("polyline", "polygon"):
+            half = float(el.get("stroke-width") or 0) / 2
+            for point in el.get("points", "").split():
+                px, py = (float(value) for value in point.split(","))
+                add(px - half, py - half)
+                add(px + half, py + half)
+        elif tag == "rect":
+            x, y, width, height = (float(el.get(key)) for key in ("x", "y", "width", "height"))
+            add(x, y)
+            add(x + width, y + height)
+    return x0, y0, x1, y1
+
+
 def _standalone(svg: str, color: str) -> str:
     """Make one renderer SVG a self-contained graph: resolve the CSS, drop the
-    interaction layer (the invisible hover targets and their tooltips) and add a
-    namespace, so the file is just the visible sparkline."""
+    interaction layer (the invisible hover targets and their tooltips), add a
+    namespace, and crop the viewBox to the painted content — so the file is just
+    the visible sparkline, with no dead space and nothing clipped."""
     svg = svg.replace("var(--et-accent, #2563eb)", color)
     svg = svg.replace("color-mix(in srgb, CanvasText 20%, transparent)", "#0f172a33")
     svg = svg.replace("<svg ", '<svg xmlns="http://www.w3.org/2000/svg" ', 1)
@@ -197,6 +222,18 @@ def _standalone(svg: str, color: str) -> str:
             tag = child.tag.rsplit("}", 1)[-1]
             if tag == "title" or (tag == "circle" and child.get("fill") == "transparent"):
                 parent.remove(child)
+    # Keep the renderer's declared width/height and *expand* the viewBox so it
+    # contains the whole graph — the nominal area plus the painted content, and a
+    # safety margin past the anti-aliased stroke. A consumer that clips to the
+    # box, or lays out by width/height, then never cuts the graph.
+    margin = 1.5
+    x0, y0, x1, y1 = _content_bbox(root)
+    ux0, uy0 = min(x0, 0.0), min(y0, 0.0)
+    ux1, uy1 = max(x1, float(WIDTH)), max(y1, float(HEIGHT))
+    box = (ux0 - margin, uy0 - margin, (ux1 - ux0) + margin * 2, (uy1 - uy0) + margin * 2)
+    root.set("viewBox", " ".join(f"{value:g}" for value in box))
+    root.set("width", str(WIDTH))
+    root.set("height", str(HEIGHT))
     ET.register_namespace("", "http://www.w3.org/2000/svg")
     return ET.tostring(root, encoding="unicode") + "\n"
 

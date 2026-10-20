@@ -147,7 +147,7 @@ def _(EvidentialTable, col, mo, sales, section_row):
             columns=[
                 col.text("region"),
                 col.text("country"),
-                col.currency("arr", decimals=1),
+                col.currency("arr", decimals=1, title="ARR"),
             ],
         )
     )

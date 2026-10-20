@@ -362,9 +362,29 @@ top-level `neutral_range`, `down_is_good`) describe those derived columns. Use
 
 ![Ad-hoc query](images/query-table.png)
 
-`grouped_records` does the same grouping client-side, from plain rows. Pass
-`combined=True` to put a group's label and its subtotal in **one section row**
-instead of a separate header and summary. `section_row(label, align="center")`
+`grouped_records` does the same grouping client-side, from plain rows. For
+report-specific synthetic rows — a section divider, a differently-labelled
+summary, or values computed from a group's own rows — use the fluent `rows`
+builder, whose `build()` returns rows for `EvidentialTable(rows=...)`:
+
+```python
+from evidential import rows
+
+built = (
+    rows.of(detail)
+    .group_by("region")
+    .section()
+    .summary(label="Developing average",
+             values={"arr": lambda group: sum(r["arr"] for r in group) / len(group)})
+    .total(label="All regions")
+    .build()
+)
+```
+
+A `values` entry may be a callable, a built-in aggregation name (`"sum"`,
+`"mean"`, …) or a literal; a summary or total without `values` sums the numeric
+columns. Pass `combined=True` to the grouped helpers to put a group's label and
+its subtotal in **one section row** instead of a separate header and summary. `section_row(label, align="center")`
 inserts a full-width divider, centered if you ask; when a section spans a page,
 the later page repeats it as `"<label> (cont.)"`. Rows are separated by the
 `row_lines` rule: `True` (default grey), `False` (none), or a colour name
@@ -693,7 +713,8 @@ Data sources and constructors: `EvidentialTable`, `LiveEvidentialTable`,
 `tab_format`, `text_transform`, `sub_missing`, `sub_zero`, `sub_small_vals`,
 `sub_large_vals`, `sub_values`, `cols_merge`, `cols_merge_range`,
 `cols_merge_uncert`, `cols_merge_n_pct`, `resolve_rules`. Helpers: `settings`,
-`date_range_sql`, `make_column`, `query_values`, `section_row`, `duck`,
+`date_range_sql`, `make_column`, `query_values`, `section_row`, `rows`, `Rows`,
+`duck`,
 `Column`, `ColumnGroup`, `CURRENCY_CODES`, `col`.
 
 ### See also

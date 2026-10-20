@@ -29,7 +29,7 @@ Quick start::
     )
 """
 
-from . import col, duck
+from . import col, duck, rows
 from ._column import CURRENCY_CODES, Column, ColumnGroup
 from .aggregations import BUILTIN_AGGREGATIONS, apply_aggregations, resolve_aggregation
 from .client import grouped_records
@@ -40,6 +40,7 @@ from .grouped import grouped_table, simple_table
 from .live import LiveEvidentialTable, query_values
 from .pivot import pivot_table
 from .query import date_range_sql, query_table
+from .rows import Rows
 from .rules import (
     cells_body,
     cols_merge,
@@ -64,6 +65,8 @@ __all__ = [
     "col",
     "Column",
     "ColumnGroup",
+    "rows",
+    "Rows",
     "CURRENCY_CODES",
     "settings",
     "EvidentialTable",

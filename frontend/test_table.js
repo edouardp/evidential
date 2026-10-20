@@ -2322,3 +2322,16 @@ test("stacked bar size sets the stack height", () => {
   assert.match(stack.style.top, /30%/);
   renderer.destroy();
 });
+
+test("cell_style sets cell chrome and a per-row background", () => {
+  const rows = [{ x: 1, bg: "#fee2e2" }, { x: 2, bg: "#dcfce7" }];
+  const columns = [
+    { name: "x", type: "number", cell_style: { background_column: "bg", color: "#111", border: "1px solid red" } },
+  ];
+  const renderer = new EvidentialTableRenderer(makeModel(rows, columns, { page_size: 10 }, el), el);
+  const cells = [...el.querySelectorAll("tbody td")];
+  assert.notEqual(cells[0].style.backgroundColor, "");
+  assert.notEqual(cells[0].style.backgroundColor, cells[1].style.backgroundColor);
+  assert.equal(cells[0].style.border, "1px solid red");
+  renderer.destroy();
+});

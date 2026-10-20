@@ -340,3 +340,18 @@ def test_icons_maps_categories_to_glyphs() -> None:
     assert col.text("signal").icons({"hold": "●"})["icon_map"] == {"hold": "●"}
     table = EvidentialTable([{"signal": "buy"}], columns=[{"name": "signal", "icon_map": {"buy": "▲"}}])
     assert table.columns[0]["icon_map"] == {"buy": "▲"}
+
+
+def test_cell_style_static_and_per_row_background() -> None:
+    spec = dict(col.text("x").cell_style(background="#eee", color="#111", border="1px solid red", padding="2px"))
+    assert spec["cell_style"] == {
+        "background": "#eee",
+        "color": "#111",
+        "border": "1px solid red",
+        "padding": "2px",
+    }
+    # `@column` becomes a per-row background column.
+    per_row = dict(col.bar("x").cell_style(background="@bg"))
+    assert per_row["cell_style"] == {"background_column": "bg"}
+    table = EvidentialTable([{"x": 1, "bg": "#fee"}], columns=[{"name": "x", "cell_style": {"background": "@bg"}}])
+    assert table.columns[0]["cell_style"] == {"background_column": "bg"}

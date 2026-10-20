@@ -57,6 +57,7 @@ def _normalize_column_options(data: dict[str, Any]) -> dict[str, Any]:
         "sparkline_options",
         "chip_options",
         "boolean_options",
+        "cell_style",
         "image_options",
         "logo_options",
     ):
@@ -240,5 +241,13 @@ def _normalize_column_options(data: dict[str, Any]) -> dict[str, Any]:
                 hint = f"; did you mean {suggestion[0]!r}?" if suggestion else ""
                 raise ValueError(f"Unknown colour scale {scale!r}{hint}")
             data[key] = options
+
+    cell_style = dict(data.get("cell_style") or {})
+    background = cell_style.get("background")
+    if isinstance(background, str) and background.startswith("@"):
+        cell_style["background_column"] = background[1:]
+        cell_style.pop("background", None)
+    if cell_style:
+        data["cell_style"] = cell_style
     validate_options(data, ColumnOptions, "column")
     return data

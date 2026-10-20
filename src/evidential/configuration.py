@@ -237,6 +237,17 @@ class BooleanOptions(TypedDict, total=False):
     false_symbol: str | None
 
 
+class CellStyle(TypedDict, total=False):
+    """Cell chrome, independent of the marks that sit on it (specification §8)."""
+
+    background: str | None
+    #: A per-row background column (the ``@column`` convention).
+    background_column: str | None
+    color: str | None
+    border: str | None
+    padding: str | None
+
+
 class SymbolOptions(TypedDict, total=False):
     symbol: str | None
     shape: Literal["square", "rounded", "circle"] | None
@@ -400,6 +411,7 @@ class ColumnOptions(TypedDict, total=False):
     sparkline_options: SparklineOptions | None
     chip_options: ChipOptions | None
     boolean_options: BooleanOptions | None
+    cell_style: CellStyle | None
     #: A category → glyph/image URL map (see ``col.icons``).
     icon_map: Mapping[str, str] | None
     symbol_options: SymbolOptions | None

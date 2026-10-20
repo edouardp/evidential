@@ -114,6 +114,16 @@ export function renderCell({row, col, index, ctx, rowIndex, options: opts, toggl
   }
   // A column highlight is a vertical band: it wins over row colours.
   if (col.highlight) td.style.backgroundColor = col.highlight;
+  // Cell chrome (`cell_style=`): independent of the marks that sit on it.
+  const cellStyle = col.cell_style || {};
+  if (cellStyle.background_column && row[cellStyle.background_column] != null) {
+    td.style.backgroundColor = String(row[cellStyle.background_column]);
+  } else if (cellStyle.background) {
+    td.style.backgroundColor = cellStyle.background;
+  }
+  if (cellStyle.color) td.style.color = cellStyle.color;
+  if (cellStyle.border) td.style.border = cellStyle.border;
+  if (cellStyle.padding) td.style.padding = cellStyle.padding;
   if (col.viz_include_subtotals === false && isSubtotal && col.viz) td.classList.add("et-no-viz");
 
   // Collapsible chevron in the subtotal's own dimension column.

@@ -445,6 +445,42 @@ class Column(Mapping[str, Any]):
         """
         return self._with(highlight=color)
 
+    def cell_style(
+        self,
+        *,
+        background: str | None = None,
+        color: str | None = None,
+        border: str | None = None,
+        padding: str | None = None,
+    ) -> Column:
+        """Style the cell chrome, independently of any marks on it.
+
+        :param background: a colour, or ``"@column"`` for a per-row colour.
+        :param color: the text colour.
+        :param border: a CSS ``border`` value.
+        :param padding: a CSS ``padding`` value.
+
+        Explicit matching ``rules`` still win for the same property.
+
+        Example::
+
+            col.bar("change").cell_style(background="@change_colour")
+        """
+        if isinstance(background, str) and background.startswith("@"):
+            background, background_column = None, background[1:]
+        else:
+            background_column = None
+        return self._with(
+            cell_style=_clean(
+                background=background,
+                background_column=background_column,
+                color=color,
+                border=border,
+                padding=padding,
+            )
+            or None
+        )
+
     # -- cell content ----------------------------------------------------
     def markdown(self) -> Column:
         """Render the cell text as Markdown.

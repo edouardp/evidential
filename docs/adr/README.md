@@ -81,6 +81,7 @@ dated, immutable record of the decisions behind them.
 | [060](060-synthetic-row-builder.md) | A Synthetic-Row Builder | Accepted |
 | [061](061-array-points-and-cell-presets.md) | Array Points, Cell Presets, and Icon Maps | Accepted |
 | [062](062-column-scale-axes.md) | Column Scale Axes and Gridlines | Accepted |
+| [063](063-cell-style.md) | Cell Style Independent of Marks | Accepted |
 
 ## Creating New ADRs
 

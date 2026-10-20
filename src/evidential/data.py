@@ -84,6 +84,7 @@ def make_column(name: str, *, type: str = "string", **overrides: Any) -> dict[st
         "sparkline_options": None,
         "chip_options": None,
         "boolean_options": None,
+        "cell_style": None,
         "icon_map": None,
         "viz_include_subtotals": None,
         # Sort this column by another column's values (hidden ones included).

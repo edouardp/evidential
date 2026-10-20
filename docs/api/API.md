@@ -527,6 +527,9 @@ columns=[
   `gridlines=True` faint vertical lines through the cells. A log scale needs a
   positive domain, uses a power-of-ten tick ladder, and is what a forest plot
   uses with `.reference_line(1)`.
+- **Cell chrome** — `.cell_style(background=, color=, border=, padding=)` styles
+  the cell independently of the marks; `background="@column"` takes a per-row
+  colour. Matching `rules` still win for the same property.
 - **Sources** — a field name, `"@field"`, or a `lambda row: ...`. A callable is
   evaluated Python-side into a hidden helper column, so the browser (and any
   static export) only ever sees field names.
@@ -692,6 +695,7 @@ other than `auto`, `merge`, `group` and `subcolumns` return a `Column`;
 | `.null_text(str)` / `.blank(pred)` / `.blank_below(v)` / `.blank_above(v)` | suppress values |
 | `.neg(color=, bracket=False)` / `.red_negatives(bool=True)` | negatives |
 | `.highlight(color)` | tint the column |
+| `.cell_style(background=, color=, border=, padding=)` | cell chrome (background may be `"@column"`) |
 | `.group(label)` / `.subcolumn(label)` | header structure (dict spelling) |
 | `.repeat_values(bool=True)` / `.hide(bool=True)` / `.sort_by(column)` | display |
 | `.info(str)` / `.footnote(column)` | tooltip / footnote |

@@ -19,7 +19,7 @@ import { hiddenColumns, visibleRows, searchRows, sortRows, paginateRows,
   computeRowspans, shaded, sectionContinuation } from "./rows.js";
 import { renderCell } from "./cells.js";
 import { formatTitle, formatValue } from "./format.js";
-import { niceTicks, marksDomain, scalePosition } from "./visualizations.js";
+import { axisTicks, marksDomain, scalePosition } from "./visualizations.js";
 
 /** Map a `font_size` to a CSS value.
  *
@@ -523,16 +523,17 @@ export class EvidentialTableRenderer {
       const { lo, hi } = marksDomain(col, ctx.ranges.get(col) || ctx.ranges.get(col.name));
       const pos = scalePosition(lo, hi, scale.transform);
       const axis = h("div", { class: "et-axis" });
-      for (const tick of niceTicks(lo, hi, 4, scale.transform)) {
+      for (const {value: tick, major} of axisTicks(lo, hi, 4, scale.transform)) {
         const raw = pos(tick);
         if (raw == null) continue;
         const pct = Math.max(0, Math.min(100, raw));
-        const label = formatValue(tick, col.fmt || (Number.isInteger(tick) ? "num0" : "num"), {
+        const label = major ? formatValue(tick, col.fmt || (Number.isInteger(tick) ? "num0" : "num"), {
           type: col.type,
           range: ctx.formatRanges.get(col.name),
           fallback: String(tick),
-        });
-        axis.append(h("span", { class: "et-axis-tick", style: { left: `${pct}%` } }, label));
+        }) : "";
+        axis.append(h("span", { class: `et-axis-tick${major ? "" : " et-axis-tick-minor"}`,
+          "aria-hidden": major ? null : "true", style: { left: `${pct}%` } }, label));
       }
       cell.append(axis);
     }

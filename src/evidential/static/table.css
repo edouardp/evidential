@@ -691,7 +691,7 @@ tbody tr:last-child .et-bar-center .et-bar-axis { bottom: var(--et-bar-pad, 0); 
   transform: translateX(-50%);
   font-size: 0.85em;
   line-height: 1;
-  color: var(--et-text);
+  color: #000;
   bottom: 0.25rem;
   white-space: nowrap;
 }
@@ -701,10 +701,14 @@ tbody tr:last-child .et-bar-center .et-bar-axis { bottom: var(--et-bar-pad, 0); 
   left: 50%;
   top: 100%;
   height: 0.25rem;
-  border-left: 1px solid var(--et-border);
+  border-left: 1px solid #000;
 }
 .et-axis-row-bottom .et-axis-tick { top: 0.25rem; bottom: auto; }
 .et-axis-row-bottom .et-axis-tick::after { top: -0.25rem; }
+.et-axis-tick-minor { bottom: 0.125rem; width: 0; height: 0; }
+.et-axis-tick-minor::after { height: 0.125rem; }
+.et-axis-row-bottom .et-axis-tick-minor { top: 0.125rem; bottom: auto; }
+.et-axis-row-bottom .et-axis-tick-minor::after { top: -0.125rem; }
 .et-mark-band {
   position: absolute;
   top: 0;

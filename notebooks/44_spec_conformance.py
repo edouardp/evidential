@@ -248,5 +248,32 @@ def _(EvidentialTable, col, mo):
     return
 
 
+@app.cell
+def _(EvidentialTable, col, mo):
+    log_ticks = mo.ui.anywidget(
+        EvidentialTable(
+            [
+                {"study": "A", "low": 0.2, "estimate": 0.6, "high": 1.4},
+                {"study": "B", "low": 0.7, "estimate": 1.3, "high": 4.0},
+            ],
+            title="Log scales: labeled decades and unlabeled subdivisions",
+            columns=[
+                col.text("study"),
+                col.range("low", "high").point("estimate").scale(domain=(0.1, 10), transform="log", axis=True),
+                col.point("estimate")
+                .title("Axis below")
+                .scale(domain=(0.1, 10), transform="log", axis=True, axis_position="bottom"),
+            ],
+            width=800,
+            search=False,
+            page_size=0,
+            border=False,
+            row_lines=False,
+        )
+    )
+    log_ticks
+    return
+
+
 if __name__ == "__main__":
     app.run()

@@ -592,7 +592,9 @@ columns=[
   the label upward; unscaled labels stay by that line. A bottom axis sits below
   the last horizontal line. Tick marks touch those lines from outside the rows.
   Axes belong to the header/footer, never synthetic body rows. A log scale needs a
-  positive domain, uses a power-of-ten tick ladder, and is what a forest plot
+  positive domain and labels powers of ten plus domain endpoints, with shorter
+  unlabeled ticks at 2–9 within each decade. Their gaps shrink toward the next
+  decade; major and minor tick marks are black. It is what a forest plot
   uses with `.reference_line(1)`.
   Repeated `.scale(...)` calls preserve earlier settings; `domain="auto"`
   explicitly clears fixed bounds. Missing data suppresses only its own mark.

@@ -1,13 +1,25 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { JSDOM } from "jsdom";
-import { renderMarks, marksDomain, renderSparkline } from "./src/visualizations.js";
+import { renderMarks, marksDomain, renderSparkline, axisTicks, niceTicks } from "./src/visualizations.js";
 import { calculateVizRanges } from "./src/color.js";
 import { sortRows, searchRows, paginateRows, sectionContinuation } from "./src/rows.js";
 import { fitMarkLabels } from "./src/mark-labels.js";
 
 global.document = new JSDOM("<!doctype html><html><body></body></html>").window.document;
 global.Node = document.defaultView.Node;
+
+test("log minor ticks cover each decade, respect fractional bounds and preserve endpoint labels", () => {
+  const ticks = axisTicks(0.1, 10, 4, "log");
+  assert.equal(ticks.length, 19);
+  assert.deepEqual(ticks.filter(tick => tick.major).map(tick => tick.value), [0.1, 1, 10]);
+  const partial = axisTicks(2, 8, 4, "log");
+  assert.deepEqual(partial.map(tick => tick.value), [2, 3, 4, 5, 6, 7, 8]);
+  assert.deepEqual(partial.filter(tick => tick.major).map(tick => tick.value), [2, 8]);
+  assert.deepEqual(axisTicks(0, 10, 4, "log"), []);
+  assert.deepEqual(axisTicks(10, 10, 4, "log"), []);
+  assert.deepEqual(axisTicks(0, 100).map(tick => tick.value), niceTicks(0, 100));
+});
 
 test("scalar and array points can hide or independently recolor their outlines", () => {
   for (const kind of ["point", "points"]) {

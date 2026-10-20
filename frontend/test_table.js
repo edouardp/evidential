@@ -2341,6 +2341,21 @@ test("log axis uses a power-of-ten tick ladder", () => {
   renderer.destroy();
 });
 
+test("log axes label decades and use unlabeled minor ticks at 2 through 9", () => {
+  const renderer = new EvidentialTableRenderer(makeModel([{x: 10}], [{name: "x", type: "number",
+    encodings: [{kind: "point", source: "x"}], scale: {domain: [1, 100], axis: true, transform: "log"}}], {}, el), el);
+  const majors = [...el.querySelectorAll(".et-axis-tick:not(.et-axis-tick-minor)")];
+  const minors = [...el.querySelectorAll(".et-axis-tick-minor")];
+  assert.deepEqual(majors.map(tick => tick.textContent), ["1", "10", "100"]);
+  assert.equal(minors.length, 16);
+  assert.ok(minors.every(tick => tick.textContent === "" && tick.getAttribute("aria-hidden") === "true"));
+  for (const [index, tick] of minors.entries()) {
+    const value = (index % 8 + 2) * (index < 8 ? 1 : 10);
+    assert.ok(Math.abs(parseFloat(tick.style.left) - Math.log10(value) * 50) < 1e-8);
+  }
+  renderer.destroy();
+});
+
 test("mark valign places bars at the top or bottom of the cell", () => {
   const rows = [{ a: 3, b: 5 }];
   const columns = [{

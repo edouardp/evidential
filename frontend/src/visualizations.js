@@ -266,6 +266,20 @@ export function niceTicks(lo, hi, count = 4, transform = null) {
   return ticks;
 }
 
+/** Log decades/endpoints are labeled; subdivisions reveal logarithmic spacing. */
+export function axisTicks(lo, hi, count = 4, transform = null) {
+  if (transform !== "log") return niceTicks(lo, hi, count, transform).map(value => ({value, major: true}));
+  if (!(lo > 0) || !Number.isFinite(hi) || hi <= lo) return [];
+  const ticks = new Map([[lo, {value: lo, major: true}], [hi, {value: hi, major: true}]]);
+  for (let exponent = Math.floor(Math.log10(lo)); exponent <= Math.ceil(Math.log10(hi)); exponent++) {
+    for (let multiple = 1; multiple <= 9; multiple++) {
+      const value = Number((multiple * Math.pow(10, exponent)).toPrecision(12));
+      if (value >= lo && value <= hi && !ticks.has(value)) ticks.set(value, {value, major: multiple === 1});
+    }
+  }
+  return [...ticks.values()].sort((a, b) => a.value - b.value);
+}
+
 /** A position function mapping a value in ``lo..hi`` to 0..100 (percent). */
 export function scalePosition(lo, hi, transform) {
   return markScale(lo, hi, transform);

@@ -38,7 +38,7 @@ Chosen option: three more keys on the shared `scale`, exposed through
 col.bar("share").scale(domain=(0, 40), axis=True, gridlines=True, axis_position="bottom")
 ```
 
-- Ticks are computed with a 1/2/2.5/5×10ⁿ "nice" step over the marks' domain
+- Linear ticks use a 1/2/2.5/5×10ⁿ "nice" step over the marks' domain
   (`marksDomain`), so the axis lines up with the bars; the label is formatted
   with the column's own format code.
 - Axes are header/footer metadata, outside the row content area. A top axis is
@@ -69,9 +69,13 @@ col.bar("share").scale(domain=(0, 40), axis=True, gridlines=True, axis_position=
 - Good, because a bar or point can now be read to a value, not just labelled.
 - Good, because the axis shares the marks' domain, including a fixed domain and
   (for linear scales) `include_zero`.
-- Note: ticks use a 1/2/2.5/5×10ⁿ step on a linear scale and a power-of-ten
-  ladder (with 2× and 5× subdivisions) on a log scale, so the axis lines up
-  with the marks in both cases.
+- Log axes label powers of ten and the domain endpoints. Intermediate ticks
+  at 2–9 times each power of ten are shorter and unlabeled, preserving the
+  logarithmic spacing without crowding the labels: positions are logarithms of
+  the tick values, so gaps shrink toward the next decade. Major and minor tick
+  marks are black. Minor ticks touch the same
+  horizontal body boundary as major ticks, above or below the rows. The
+  existing 1/2/5 log reference ladder remains the gridline spacing.
 - Note: neither the axis tiers nor column statistics live in the data body.
   Pagination and fullscreen fitting reserve their header/footer height; frozen
   columns keep scale tracks horizontally aligned as the table scrolls.

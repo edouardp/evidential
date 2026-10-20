@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import os
 from base64 import b64encode
+from math import log10
 from pathlib import Path
 
 import pytest
@@ -244,6 +245,54 @@ def test_point_outlines_can_be_hidden_or_recolored_without_changing_fill(page, l
         assert "rgb(17, 17, 17)" in shadow and "1px" in shadow
     for point in points.all():
         assert point.evaluate("el => getComputedStyle(el).backgroundColor") == "rgb(37, 99, 235)"
+
+
+def test_log_minor_ticks_are_unlabeled_log_spaced_and_touch_the_body_boundary(page, live_server):
+    mount(
+        page,
+        live_server,
+        [
+            (
+                f"Log axis {position}",
+                [{"value": 1}],
+                [col.point("value").scale(domain=(0.1, 10), transform="log", axis=True, axis_position=position)],
+            )
+            for position in ("top", "bottom")
+        ],
+    )
+    for index, position in enumerate(("top", "bottom")):
+        case = page.locator(f"#case-{index}")
+        majors = case.locator(".et-axis-tick:not(.et-axis-tick-minor)")
+        minors = case.locator(".et-axis-tick-minor")
+        assert [float(label) for label in majors.all_text_contents()] == [0.1, 1, 10]
+        assert minors.count() == 16
+        assert all(text == "" for text in minors.all_text_contents())
+        axis = case.locator(".et-axis").bounding_box()
+        ticks = case.locator(".et-axis-tick")
+        values = [multiple * decade for decade in (0.1, 1) for multiple in range(1, 10)] + [10]
+        for tick, value in zip(ticks.all(), values, strict=True):
+            geometry = tick.evaluate("""el => {
+                const rect = el.getBoundingClientRect();
+                const stem = getComputedStyle(el, '::after');
+                return {x: rect.x + rect.width / 2, color: stem.borderLeftColor};
+            }""")
+            # Uniform steps in the original values must bunch up toward each decade's end.
+            expected = axis["x"] + axis["width"] * (log10(value) + 1) / 2
+            assert geometry["x"] == pytest.approx(expected, abs=0.1)
+            assert geometry["color"] == "rgb(0, 0, 0)"
+        xs = minors.evaluate_all("nodes => nodes.slice(0, 3).map(el => el.getBoundingClientRect().x)")
+        assert xs[1] - xs[0] > xs[2] - xs[1] > 0
+        minor = minors.first
+        metrics = minor.evaluate("""el => { const rect = el.getBoundingClientRect();
+            const style = getComputedStyle(el, '::after');
+            return {y: rect.y, top: parseFloat(style.top), height: parseFloat(style.height)}; }""")
+        major_height = majors.first.evaluate("el => parseFloat(getComputedStyle(el, '::after').height)")
+        assert 0 < metrics["height"] < major_height
+        row = case.locator("tbody tr").bounding_box()
+        edge = metrics["y"] + metrics["top"] + (metrics["height"] if position == "top" else 0)
+        boundary = row["y"] if position == "top" else row["y"] + row["height"]
+        assert edge == pytest.approx(boundary, abs=1)
+    capture(page, "log-axis-minor-ticks.png")
 
 
 def test_scale_gallery(page, live_server):

@@ -81,7 +81,11 @@ from .marks import (
     point,
     range,  # noqa: A004 - the public constructor name
     stacked_bar,
+    strip,
 )
+
+#: ``col.shapes`` is the repeated-count encoding; ``symbols`` is the same builder.
+shapes = symbols
 
 __all__ = [
     "array",
@@ -109,8 +113,10 @@ __all__ = [
     "range",
     "rating",
     "repeat",
+    "shapes",
     "sparkline",
     "stacked_bar",
+    "strip",
     "subcolumns",
     "symbols",
     "text",

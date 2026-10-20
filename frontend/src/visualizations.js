@@ -50,6 +50,27 @@ function renderMarkLabel(col, enc, row, geometry) {
   return node;
 }
 
+/** An ordered categorical sequence: one segment per item, coloured by category. */
+function renderStrip(enc, row) {
+  const raw = row[enc.source];
+  const items = Array.isArray(raw) ? raw : [];
+  const colors = enc.colors || {};
+  const wrap = h("div", { class: "et-mark-strip" });
+  for (const item of items) {
+    const category =
+      item && typeof item === "object" ? (item.category ?? item.state ?? item.value) : item;
+    const segment = h("span", {
+      class: `et-strip-seg${enc.segmented === false ? " et-strip-joined" : ""}`,
+      style: { backgroundColor: resolveColor(colors[String(category)]) || "var(--et-accent, #2563eb)" },
+    });
+    if (enc.strip_labels && category != null && String(category) !== "") {
+      segment.append(h("span", { class: "et-strip-label" }, String(category).charAt(0)));
+    }
+    wrap.append(segment);
+  }
+  return wrap;
+}
+
 /** A cumulative stack of segment magnitudes over the column's shared scale. */
 function renderStack(col, encodings, row, lo, hi) {
   const values = encodings.map((enc) => {
@@ -164,6 +185,8 @@ export function renderMarks(col, row, range) {
         }),
       );
       if (enc.label) track.append(renderMarkLabel(col, enc, row, { pointPct: pct }));
+    } else if (enc.kind === "strip") {
+      track.append(renderStrip(enc, row));
     } else if (enc.kind === "range") {
       const low = Number(row[enc.source]);
       const high = Number(row[enc.high]);

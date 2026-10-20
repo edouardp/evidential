@@ -163,3 +163,17 @@ def test_stacked_bar_percent_normalisation_is_explicit() -> None:
     assert spec["scale"] == {"normalize": "percent"}
     with pytest.raises(ValueError, match="normalize"):
         col.stacked_bar("a", "b", normalize="fraction")
+
+
+def test_strip_encoding_maps_categories_to_colours() -> None:
+    spec = dict(col.strip("form", colors={"W": "green", "D": "grey", "L": "red"}, labels=True, segmented=True))
+    assert spec["type"] == "array"
+    encoding = spec["encodings"][0]
+    assert encoding["kind"] == "strip"
+    assert encoding["colors"] == {"W": "green", "D": "grey", "L": "red"}
+    assert encoding["strip_labels"] is True
+    assert encoding["segmented"] is True
+
+
+def test_shapes_is_the_repeated_symbol_encoding() -> None:
+    assert dict(col.shapes("gold", shape="square", color="gold"))["viz"] == "symbols"

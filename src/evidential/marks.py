@@ -32,7 +32,7 @@ from typing import Any, Literal
 
 from ._column import Column, _clean, _field
 
-__all__ = ["MarkColumn", "bar", "point", "range", "stacked_bar", "LABEL_POSITIONS"]
+__all__ = ["MarkColumn", "bar", "point", "range", "stacked_bar", "strip", "LABEL_POSITIONS"]
 
 #: Where a mark-owned label may sit.
 LABEL_POSITIONS = (
@@ -68,6 +68,9 @@ _ENCODING_KEYS = (
     "color_negative",
     "color_negative_column",
     "color_column",
+    "colors",
+    "segmented",
+    "strip_labels",
     "size",
     "side",
     "cap",
@@ -177,6 +180,9 @@ def _canonical_encoding(
         "reference",
         "reference_color",
         "reference_label",
+        "colors",
+        "segmented",
+        "strip_labels",
     ):
         if style.get(key) is not None:
             encoding[key] = style.pop(key)
@@ -534,6 +540,28 @@ def range(  # noqa: A001 - the public constructor name
         low, high = low
     column = _mark_column(low, title=title, fmt=fmt, align=align)
     return column._add("range", low, high=high, **options)
+
+
+def strip(
+    source: str,
+    *,
+    title: str | None = None,
+    colors: Mapping[str, str] | None = None,
+    labels: bool | None = None,
+    segmented: bool | None = None,
+    **options: Any,
+) -> MarkColumn:
+    """An ordered categorical sequence (form/W-D-L, timeline, states).
+
+    ``source`` is a list of categories (or ``{category: ...}`` objects);
+    ``colors`` maps each category to a colour. Unlike ``sparkline`` this encodes
+    N ordered observations, not a numeric series.
+    """
+    column = _mark_column(source, title=title)
+    encoding = _canonical_encoding(
+        "strip", source, colors=dict(colors) if colors else None, segmented=segmented, strip_labels=labels, **options
+    )
+    return column._with(type="array", encodings=[encoding])
 
 
 def stacked_bar(

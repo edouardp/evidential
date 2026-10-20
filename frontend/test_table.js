@@ -1918,3 +1918,21 @@ test("stacked_bar normalize='percent' uses each row's share", () => {
   assert.match(segs[1].style.width, /75%/);
   renderer.destroy();
 });
+
+test("strip renders one coloured segment per ordered category", () => {
+  const rows = [{ form: ["W", "D", "L", "W"] }];
+  const columns = [{
+    name: "form", type: "array",
+    encodings: [{
+      kind: "strip", source: "form",
+      colors: { W: "#16a34a", D: "#9ca3af", L: "#dc2626" },
+      strip_labels: true, segmented: true,
+    }],
+  }];
+  const renderer = new EvidentialTableRenderer(makeModel(rows, columns, { page_size: 10 }, el), el);
+  const segs = [...el.querySelectorAll(".et-strip-seg")];
+  assert.equal(segs.length, 4);
+  assert.notEqual(segs[0].style.backgroundColor, segs[1].style.backgroundColor);
+  assert.equal(el.querySelectorAll(".et-strip-label").length, 4);
+  renderer.destroy();
+});

@@ -259,7 +259,7 @@ class EncodingLabel(TypedDict, total=False):
 class EncodingSpec(TypedDict, total=False):
     """One visual mark bound to a source, sharing its column's scale."""
 
-    kind: Literal["bar", "point", "range", "stacked_bar"]
+    kind: Literal["bar", "point", "range", "stacked_bar", "strip"]
     #: The field a scalar mark reads, or a range's lower endpoint.
     source: str | Callable[[Mapping[str, Any]], Any] | None
     #: A range's upper endpoint.
@@ -276,6 +276,12 @@ class EncodingSpec(TypedDict, total=False):
     side: Literal["left", "right"] | None
     #: Range end treatment.
     cap: Literal["none", "line", "dot"] | None
+    #: ``strip``: an ordered category → colour map (W/D/L).
+    colors: Mapping[str, str] | None
+    #: ``strip``: draw a segment boundary per item rather than one run.
+    segmented: bool | None
+    #: ``strip``: write the category (or its initial) inside each segment.
+    strip_labels: bool | None
     fit_to_data: bool | None
     #: Bar-only legacy extras (mirrored into ``bar_options`` when alone).
     background: str | None

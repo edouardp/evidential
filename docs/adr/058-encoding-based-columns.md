@@ -82,10 +82,13 @@ used, and the browser falls back to the legacy path when `encodings` is absent.
   bar-plus-target, or a point-plus-interval, with a shared scale.
 - Good, because labels are mark-owned and may name any field.
 - Good, because the legacy single-viz path keeps working unchanged.
-- Note: this first phase binds field-name sources (including the `@field`
-  reference convention). Per-row Python callables are resolved later into
-  hidden helper columns (ADR-006); until then callables are not accepted in the
-  new mark sources.
+- Note: sources may be field names, the `@field` reference convention, or
+  `Callable[[Row], T]`. A callable is evaluated Python-side into a generated
+  hidden helper column (ADR-006), so the browser only ever sees field names;
+  exports and untrusted data never execute Python.
+- Note: this phase ships `bar`, `point`, `range`, `stacked_bar` (raw or
+  `normalize="percent"`) and `strip`, plus the `shapes` alias for repeated
+  symbols. `boxplot` and `distribution` remain for a later phase.
 - Note: composition validity (ADR-058 §5.2) is enforced in Python where cheap
   (e.g. a sparkline beside a scalar bar is rejected) and reported with a clear
   message.

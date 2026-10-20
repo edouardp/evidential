@@ -522,6 +522,28 @@ tbody tr:last-child .et-bar-center .et-bar-axis { bottom: var(--et-bar-pad, 0); 
   overflow: hidden;
   text-overflow: clip;
 }
+.et-mark-strip {
+  top: 22%;
+  bottom: 22%;
+  left: 0;
+  right: 0;
+  display: flex;
+  gap: 1px;
+}
+.et-strip-seg {
+  flex: 1 1 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  min-width: 0;
+}
+.et-strip-joined { outline: none; }
+.et-strip-label {
+  font-size: 0.72em;
+  line-height: 1;
+  color: color-mix(in srgb, CanvasText 85%, transparent);
+}
 .et-mark-cap {
   position: absolute;
   top: 50%;

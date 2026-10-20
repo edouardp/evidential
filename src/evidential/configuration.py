@@ -249,7 +249,7 @@ class LogoOptions(TypedDict, total=False):
 class EncodingLabel(TypedDict, total=False):
     """A mark-owned annotation. Exactly one of ``text``/``source``/``value``."""
 
-    source: str | None
+    source: str | Callable[[Mapping[str, Any]], Any] | None
     text: str | None
     value: bool | None
     position: str | None
@@ -261,11 +261,13 @@ class EncodingSpec(TypedDict, total=False):
 
     kind: Literal["bar", "point", "range", "stacked_bar"]
     #: The field a scalar mark reads, or a range's lower endpoint.
-    source: str | None
+    source: str | Callable[[Mapping[str, Any]], Any] | None
     #: A range's upper endpoint.
-    high: str | None
-    color: str | None
-    color_negative: str | None
+    high: str | Callable[[Mapping[str, Any]], Any] | None
+    color: str | Callable[[Mapping[str, Any]], Any] | None
+    color_negative: str | Callable[[Mapping[str, Any]], Any] | None
+    #: A per-row colour column from a callable source.
+    color_negative_column: str | None
     #: A per-row colour column (the ``@column`` convention).
     color_column: str | None
     #: Bar height fraction (0, 1]; a point/range marker size in pixels.
@@ -293,6 +295,8 @@ class ScaleSpec(TypedDict, total=False):
     domain: tuple[float | None, float | None] | None
     include_zero: bool | None
     unit: str | None
+    #: Stack normalisation: raw additive values, or each row's share of its total.
+    normalize: Literal["percent"] | None
 
 
 class ReferenceSpec(TypedDict, total=False):

@@ -265,10 +265,24 @@ export function calculateVizRanges(columns, rows) {
   for (const col of columns) {
     if (col.encodings && col.encodings.length) {
       // A marks column shares one scale across every encoding's sources.
+      const stacked = col.encodings.some((enc) => enc.kind === "stacked_bar");
       let min = Infinity;
       let max = -Infinity;
       for (const row of rows) {
         if (row.render_type === "row_total" || row.render_type === "row_subtotal") continue;
+        if (stacked) {
+          // A stack's scale is its cumulative total, not its individual parts.
+          let total = 0;
+          for (const enc of col.encodings) {
+            const num = Number(row[enc.source]);
+            if (isFinite(num) && num > 0) total += num;
+          }
+          if (total > 0) {
+            min = 0;
+            max = Math.max(max, total);
+          }
+          continue;
+        }
         for (const enc of col.encodings) {
           for (const field of [enc.source, enc.high]) {
             const raw = field == null ? null : row[field];

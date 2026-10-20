@@ -5,7 +5,7 @@ import { resolveColor } from "./color.js";
 /** Resolve a mark's colour: an explicit colour, a per-row column, or a default. */
 function markColor(enc, row, fallback) {
   if (row && Number(row[enc.source]) < 0) {
-    const negative = resolveColor(enc.color_negative);
+    const negative = resolveColor(enc.color_negative) || resolveColor(row[enc.color_negative_column]);
     if (negative) return negative;
   }
   if (enc.color_column && row) {
@@ -50,6 +50,38 @@ function renderMarkLabel(col, enc, row, geometry) {
   return node;
 }
 
+/** A cumulative stack of segment magnitudes over the column's shared scale. */
+function renderStack(col, encodings, row, lo, hi) {
+  const values = encodings.map((enc) => {
+    const num = Number(row[enc.source]);
+    return isFinite(num) && num > 0 ? num : 0;
+  });
+  const total = values.reduce((sum, value) => sum + value, 0);
+  const normalize = (col.scale || {}).normalize === "percent";
+  const spanTotal = normalize ? 1 : (hi - lo) || 1;
+  const stack = h("div", { class: "et-mark et-mark-stack" });
+  let cursor = 0;
+  encodings.forEach((enc, index) => {
+    const magnitude = normalize ? (total ? values[index] / total : 0) : values[index];
+    const width = (magnitude / spanTotal) * 100;
+    const segment = h("div", {
+      class: "et-mark-stack-seg",
+      style: {
+        left: `${(cursor / spanTotal) * 100}%`,
+        width: `${Math.max(0, width)}%`,
+        backgroundColor: markColor(enc, row, "var(--et-accent, #2563eb)"),
+      },
+    });
+    if (enc.label) {
+      const text = markLabelText(col, enc, row);
+      if (text) segment.append(h("span", { class: "et-mark-stack-label" }, text));
+    }
+    cursor += magnitude;
+    stack.append(segment);
+  });
+  return stack;
+}
+
 /**
  * Render a column's ordered encodings over one shared scale. Bars, points and
  * ranges are positioned absolutely in a full-height track; the shared domain
@@ -89,8 +121,11 @@ export function renderMarks(col, row, range) {
   }
 
   const barCount = encodings.filter((enc) => enc.kind === "bar").length;
+  const stack = encodings.filter((enc) => enc.kind === "stacked_bar");
+  if (stack.length) track.append(renderStack(col, stack, row, lo, hi));
   let barIndex = 0;
   for (const enc of encodings) {
+    if (enc.kind === "stacked_bar") continue;
     const value = Number(row[enc.source]);
     if (enc.kind === "bar") {
       const size = enc.size != null ? Number(enc.size) : barCount > 1 ? Math.max(0.25, 0.85 - barIndex * 0.3) : 1;

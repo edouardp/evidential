@@ -12,6 +12,7 @@ import traitlets
 from ._column_options import _normalize_column_options
 from .configuration import TABLE_DEFAULTS, TableOptions, unknown_option, validate_options
 from .data import _merge_column_config, apply_blank_predicates, infer_columns, jsonify, make_column, normalize_data
+from .marks import apply_hidden_columns, resolve_encodings
 from .rules import resolve_rules
 
 __all__ = ["EvidentialTable"]
@@ -245,6 +246,9 @@ class EvidentialTable(anywidget.AnyWidget):
         normalized_rows, client_rules = resolve_rules(normalized_rows, self._rules)
         coerced = _resolve_column_groups(_coerce_columns(columns, column_config, inferred), column_groups)
         coerced = _center_chips(coerced, column_config, explicit_columns)
+        # Callable mark sources cross the JSON boundary as hidden helper columns.
+        coerced, hidden = resolve_encodings(coerced, normalized_rows)
+        apply_hidden_columns(normalized_rows, hidden)
 
         merged_options = dict(_OPTION_DEFAULTS)
         merged_options.update(table_options)
@@ -298,6 +302,8 @@ class EvidentialTable(anywidget.AnyWidget):
         if columns is not None:
             new_columns = _resolve_column_groups(_coerce_columns(columns, column_config, inferred), column_groups)
             new_columns = _center_chips(new_columns, column_config, explicit_columns)
+            new_columns, hidden = resolve_encodings(new_columns, normalized_rows)
+            apply_hidden_columns(normalized_rows, hidden)
             link = self.options.get("link")
             if link and explicit_columns is None and not self.options.get("show_link_column"):
                 for column in new_columns:

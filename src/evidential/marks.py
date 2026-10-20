@@ -26,6 +26,7 @@ phase (see ADR-058).
 
 from __future__ import annotations
 
+import itertools
 from collections.abc import Mapping, Sequence
 from typing import Any, Literal
 
@@ -65,6 +66,7 @@ _ENCODING_KEYS = (
     "high",
     "color",
     "color_negative",
+    "color_negative_column",
     "color_column",
     "size",
     "side",
@@ -80,6 +82,20 @@ _ENCODING_KEYS = (
     "reference_label",
     "label",
 )
+
+#: Names for callable-sourced columns whose field cannot be named in Python.
+_ANONYMOUS = itertools.count()
+
+
+def _has_callable(value: Any) -> bool:
+    """True if a source/style value (or a nested label) is a Python callable."""
+    if callable(value):
+        return True
+    if isinstance(value, Mapping):
+        return any(_has_callable(item) for item in value.values())
+    if isinstance(value, (list, tuple)):
+        return any(_has_callable(item) for item in value)
+    return False
 
 
 def _label_spec(
@@ -136,10 +152,8 @@ def _canonical_encoding(
 ) -> dict[str, Any]:
     """Build one encoding dict, applying the ``@column`` colour convention."""
     field = _field(source)
-    if not isinstance(field, str):
-        raise TypeError(
-            f"{kind} expects a field name, got {source!r}; per-row callables arrive in a later phase (see ADR-058)"
-        )
+    if not isinstance(field, str) and not callable(field):
+        raise TypeError(f"{kind} expects a field name or a callable, got {source!r}")
     encoding: dict[str, Any] = {"kind": kind, "source": field}
     if high is not None:
         encoding["high"] = _field(high)
@@ -218,6 +232,9 @@ class MarkColumn(Column):
             return False
         encoding = encodings[0]
         if encoding.get("kind") != "bar" or encoding.get("source") != self._name:
+            return False
+        # Any callable must be resolved to a hidden column first.
+        if _has_callable(encoding):
             return False
         # Any new-only key makes this a marks column.
         return not any(key in encoding for key in ("size", "side", "cap", "label"))
@@ -407,16 +424,77 @@ def _bar_kwargs(options: Mapping[str, Any]) -> dict[str, Any]:
     return {**options, "label": label}
 
 
-def _mark_column(name: str, **base: Any) -> MarkColumn:
+def _mark_column(name: Any, **base: Any) -> MarkColumn:
     spec = {"type": "number"}
+    if callable(name):
+        # An expression column has no field name; give it a stable hidden id.
+        name = f"__mark_expr_{next(_ANONYMOUS)}"
     for key in ("title", "fmt", "align"):
         if base.get(key) is not None:
             spec[key] = base.pop(key)
     return MarkColumn(_field(name), {**spec, **{k: v for k, v in base.items() if v is not None}})
 
 
+def _resolve_column(
+    column: Mapping[str, Any], rows: Sequence[Mapping[str, Any]], hidden: dict[str, list[Any]]
+) -> dict[str, Any]:
+    """Replace callable sources/styles in one column with hidden-column names."""
+    spec = dict(column)
+    encodings = spec.get("encodings")
+    if not encodings:
+        return spec
+    resolved: list[dict[str, Any]] = []
+    for index, encoding in enumerate(encodings):
+        encoding = dict(encoding)
+        for role in ("source", "high", "color", "color_negative"):
+            value = encoding.get(role)
+            if not callable(value):
+                continue
+            name = f"__mark_{spec['name']}_{index}_{role}"
+            hidden[name] = [value(row) for row in rows]
+            if role == "color":
+                encoding.pop("color", None)
+                encoding["color_column"] = name
+            elif role == "color_negative":
+                encoding.pop("color_negative", None)
+                encoding["color_negative_column"] = name
+            else:
+                encoding[role] = name
+        label = encoding.get("label")
+        if isinstance(label, Mapping) and callable(label.get("source")):
+            name = f"__mark_{spec['name']}_{index}_label"
+            hidden[name] = [label["source"](row) for row in rows]
+            encoding["label"] = {**label, "source": name}
+        resolved.append(encoding)
+    spec["encodings"] = resolved
+    return spec
+
+
+def resolve_encodings(
+    columns: Sequence[Mapping[str, Any]], rows: Sequence[Mapping[str, Any]]
+) -> tuple[list[dict[str, Any]], dict[str, list[Any]]]:
+    """Resolve every callable mark source into a hidden helper column (ADR-006).
+
+    Python callables cannot cross the JSON boundary, so each is evaluated here
+    (Python-side, per row) into a generated hidden column; the encoding then
+    references that column by name. Returns the rewritten columns and the
+    hidden ``{name: values}`` map to merge into the rows.
+    """
+    hidden: dict[str, list[Any]] = {}
+    resolved = [_resolve_column(column, rows, hidden) for column in columns]
+    return resolved, hidden
+
+
+def apply_hidden_columns(rows: list[dict[str, Any]], hidden: Mapping[str, Sequence[Any]]) -> None:
+    """Merge resolved hidden-column values into the rows, in place."""
+    for name, values in hidden.items():
+        for index, row in enumerate(rows):
+            if index < len(values):
+                row[name] = values[index]
+
+
 def bar(
-    source: str, *, title: str | None = None, fmt: str | None = None, align: str | None = None, **options: Any
+    source: Any, *, title: str | None = None, fmt: str | None = None, align: str | None = None, **options: Any
 ) -> MarkColumn:
     """A number shown as an inline bar; ``label=``/``size=``/``side=`` are mark-owned.
 
@@ -430,7 +508,7 @@ def bar(
 
 
 def point(
-    source: str,
+    source: Any,
     *,
     title: str | None = None,
     fmt: str | None = None,
@@ -443,8 +521,8 @@ def point(
 
 
 def range(  # noqa: A001 - the public constructor name
-    low: str,
-    high: str | None = None,
+    low: Any,
+    high: Any | None = None,
     *,
     title: str | None = None,
     fmt: str | None = None,
@@ -459,16 +537,18 @@ def range(  # noqa: A001 - the public constructor name
 
 
 def stacked_bar(
-    *sources: str,
+    *sources: Any,
     title: str | None = None,
     colors: Sequence[Any] | None = None,
     labels: bool | None = None,
+    normalize: str | None = None,
     **options: Any,
 ) -> MarkColumn:
     """A cumulative stack of segment magnitudes (a distinct encoding).
 
     Each ``source`` is a segment magnitude; ``colors`` is positional. Stacking
-    uses the raw additive values and does not normalise automatically.
+    uses the raw additive values and does not normalise automatically; pass
+    ``normalize="percent"`` to divide each row by its total.
     """
     if not sources:
         raise TypeError("stacked_bar needs at least one segment column")
@@ -479,8 +559,13 @@ def stacked_bar(
         style: dict[str, Any] = {}
         if index < len(colour_list) and colour_list[index] is not None:
             style["color"] = colour_list[index]
-        encodings.append(_canonical_encoding("stacked_bar", source, **style))
-    if labels:
-        # Labels are shared by the stack; the renderer reads the first segment.
-        encodings[0]["label"] = {"value": True, "position": options.get("label_position", "inside_end")}
-    return column._with(encodings=encodings)
+        encoding = _canonical_encoding("stacked_bar", source, **style)
+        if labels:
+            encoding["label"] = {"value": True, "position": options.get("label_position", "inside_end")}
+        encodings.append(encoding)
+    column = column._with(encodings=encodings)
+    if normalize is not None:
+        if normalize != "percent":
+            raise ValueError("stacked_bar normalize is 'percent' or None")
+        column = column._with(scale={"normalize": "percent"})
+    return column

@@ -1878,3 +1878,43 @@ test("reference lines render at the shared scale", () => {
   assert.match(el.textContent, /Average/);
   renderer.destroy();
 });
+
+test("stacked_bar renders cumulative segments from the row total", () => {
+  const rows = [
+    { a: 10, b: 20, c: 10 },
+    { a: 5, b: 5, c: 10 },
+  ];
+  const columns = [{
+    name: "a", type: "number",
+    encodings: [
+      { kind: "stacked_bar", source: "a", color: "#111" },
+      { kind: "stacked_bar", source: "b", color: "#222" },
+      { kind: "stacked_bar", source: "c", color: "#333" },
+    ],
+  }];
+  const renderer = new EvidentialTableRenderer(makeModel(rows, columns, { page_size: 10 }, el), el);
+  const segs = [...el.querySelectorAll(".et-mark-stack-seg")];
+  assert.equal(segs.length, 6);
+  // Row 1 total 40: 10/40, 20/40, 10/40.
+  assert.match(segs[0].style.width, /25%/);
+  assert.match(segs[1].style.width, /50%/);
+  assert.match(segs[2].style.width, /25%/);
+  renderer.destroy();
+});
+
+test("stacked_bar normalize='percent' uses each row's share", () => {
+  const rows = [{ a: 1, b: 3 }];
+  const columns = [{
+    name: "a", type: "number",
+    scale: { normalize: "percent" },
+    encodings: [
+      { kind: "stacked_bar", source: "a" },
+      { kind: "stacked_bar", source: "b" },
+    ],
+  }];
+  const renderer = new EvidentialTableRenderer(makeModel(rows, columns, { page_size: 10 }, el), el);
+  const segs = [...el.querySelectorAll(".et-mark-stack-seg")];
+  assert.match(segs[0].style.width, /25%/);
+  assert.match(segs[1].style.width, /75%/);
+  renderer.destroy();
+});

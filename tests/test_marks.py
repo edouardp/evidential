@@ -117,8 +117,8 @@ def test_marks_column_flows_through_the_table() -> None:
 def test_marks_validate_unknown_options() -> None:
     with pytest.raises(TypeError, match="Unknown bar option"):
         col.bar("current", wobble=True)
-    with pytest.raises(TypeError, match="field name"):
-        col.bar(lambda row: row["current"])
+    with pytest.raises(TypeError, match="field name or a callable"):
+        col.bar(42)
 
 
 def test_scale_rejects_a_bad_domain() -> None:
@@ -126,3 +126,40 @@ def test_scale_rejects_a_bad_domain() -> None:
         col.bar("current").scale(domain=(0, 1, 2))
     with pytest.raises(ValueError, match="auto"):
         col.bar("current").scale(domain="everything")
+
+
+def test_callable_source_and_colour_become_hidden_columns() -> None:
+    rows = [{"yes": 3, "maybe": 1, "party": "A"}, {"yes": 1, "maybe": 2, "party": "B"}]
+    table = EvidentialTable(
+        rows,
+        columns=[
+            col.bar(
+                lambda r: r["yes"] + r["maybe"], label="@party", color=lambda r: "#f00" if r["party"] == "A" else "#00f"
+            )
+        ],
+    )
+    column = table.columns[0]
+    encoding = column["encodings"][0]
+    # The callee ran Python-side; the wire format only carries field names.
+    assert not callable(encoding["source"]) and not callable(encoding["color_column"])
+    assert table.rows[0][encoding["source"]] == 4
+    assert table.rows[1][encoding["source"]] == 3
+    assert table.rows[0][encoding["color_column"]] == "#f00"
+    # Hidden helper columns are values in the rows, not displayed columns.
+    assert [c["name"] for c in table.columns] == [column["name"]]
+
+
+def test_callable_point_source_resolves() -> None:
+    table = EvidentialTable(
+        [{"x": 1, "y": 2}],
+        columns=[col.bar("x").point(lambda r: r["x"] + r["y"])],
+    )
+    source = table.columns[0]["encodings"][1]["source"]
+    assert table.rows[0][source] == 3
+
+
+def test_stacked_bar_percent_normalisation_is_explicit() -> None:
+    spec = dict(col.stacked_bar("a", "b", normalize="percent"))
+    assert spec["scale"] == {"normalize": "percent"}
+    with pytest.raises(ValueError, match="normalize"):
+        col.stacked_bar("a", "b", normalize="fraction")

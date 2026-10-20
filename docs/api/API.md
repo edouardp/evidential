@@ -513,10 +513,12 @@ columns=[
   another field, `.label(text=, source=, position=, format=)` is the long form.
   Where a label position is omitted, bars label `outside_end` and points `center`.
 - **Scale** — `.scale(domain=(lo, hi), include_zero=, unit=, transform=`
-  `"linear"|"log")` fixes the shared quantitative axis; `.reference_line(value,
-  label=, color=)` adds a rule and `.reference_band(low, high, label=, color=)`
-  shades a zone (a target or equivalence range). A log scale needs a positive
-  domain and is what a forest plot uses with `.reference_line(1)`.
+  `"linear"|"log", axis=, axis_position="top"|"bottom", gridlines=)` fixes the
+  shared quantitative axis; `.reference_line(value, label=, color=)` adds a rule
+  and `.reference_band(low, high, label=, color=)` shades a zone (a target or
+  equivalence range). `axis=True` draws tick labels for the column, and
+  `gridlines=True` faint vertical lines through the cells. A log scale needs a
+  positive domain and is what a forest plot uses with `.reference_line(1)`.
 - **Sources** — a field name, `"@field"`, or a `lambda row: ...`. A callable is
   evaluated Python-side into a hidden helper column, so the browser (and any
   static export) only ever sees field names.
@@ -692,7 +694,7 @@ other than `auto`, `merge`, `group` and `subcolumns` return a `Column`;
 | `.bar(...)` / `.color(...)` / `.chip(...)` / `.delta(...)` / `.sparkline(...)` / `.symbols(...)` | visualisations |
 | `.bar(source, …)` / `.point(source, …)` / `.range(low, high, …)` | append a mark |
 | `.label(value=True \| "@field", *, source=, text=, position=, format=)` | annotate the last mark |
-| `.scale(domain=(lo, hi), include_zero=, unit=, transform="linear"\|"log")` / `.reference_line(value, label=, color=)` / `.reference_band(low, high, …)` | shared axis / rules |
+| `.scale(domain=(lo, hi), include_zero=, unit=, transform="linear"\|"log", axis=, axis_position=, gridlines=)` / `.reference_line(value, label=, color=)` / `.reference_band(low, high, …)` | shared axis / rules |
 | `.relative(value=True)` / `.fmt_column(column)` | relative time / format source |
 | `.to_config()` | the plain dict |
 

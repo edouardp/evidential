@@ -421,6 +421,9 @@ class MarkColumn(Column):
         include_zero: bool | None = None,
         unit: str | None = None,
         transform: str | None = None,
+        axis: bool | None = None,
+        axis_position: str | None = None,
+        gridlines: bool | None = None,
     ) -> MarkColumn:
         """The quantitative axis shared by the column's encodings."""
         spec: dict[str, Any] = {}
@@ -445,6 +448,14 @@ class MarkColumn(Column):
                 if any(bound <= 0 for bound in bounds):
                     raise ValueError("a log scale needs a positive domain")
             spec["transform"] = transform
+        if axis is not None:
+            spec["axis"] = axis
+        if axis_position is not None:
+            if axis_position not in ("top", "bottom"):
+                raise ValueError("axis_position is 'top' or 'bottom'")
+            spec["axis_position"] = axis_position
+        if gridlines is not None:
+            spec["gridlines"] = gridlines
         return self._with(scale=spec or None)
 
     def reference_line(self, value: float, *, label: str | None = None, color: str | None = None) -> MarkColumn:

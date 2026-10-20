@@ -339,6 +339,11 @@ class ScaleSpec(TypedDict, total=False):
     unit: str | None
     #: The shared axis transform. A log scale rejects nonpositive values.
     transform: Literal["linear", "log"] | None
+    #: Draw a tick axis for the column (above or below the cells).
+    axis: bool | None
+    axis_position: Literal["top", "bottom"] | None
+    #: Draw faint vertical lines through the cells at the ticks.
+    gridlines: bool | None
     #: Stack normalisation: raw additive values, or each row's share of its total.
     normalize: Literal["percent"] | None
 

@@ -235,6 +235,36 @@ function renderDistribution(enc, row, pos, color) {
  * ranges are positioned absolutely in a full-height track; the shared domain
  * comes from the column's own ``scale`` or the data range across every source.
  */
+/**
+ * The shared {lo, hi, span, transform} of a marks column: an explicit
+ * ``scale.domain`` wins, otherwise the data range (zero included for bars).
+ */
+export function marksDomain(col, range) {
+  const scale = col.scale || {};
+  let lo = scale.domain && scale.domain[0] != null ? Number(scale.domain[0]) : (range?.min ?? 0);
+  let hi = scale.domain && scale.domain[1] != null ? Number(scale.domain[1]) : (range?.max ?? 1);
+  const hasBar = (col.encodings || []).some((enc) => enc.kind === "bar" || enc.kind === "stacked_bar");
+  if (scale.include_zero !== false && hasBar && scale.transform !== "log") {
+    lo = Math.min(0, lo);
+    hi = Math.max(0, hi);
+  }
+  return { lo, hi, span: (hi - lo) || 1, transform: scale.transform };
+}
+
+/** Round tick values spanning ``lo..hi`` (for an axis or gridlines). */
+export function niceTicks(lo, hi, count = 4) {
+  if (!isFinite(lo) || !isFinite(hi) || hi <= lo) return [];
+  const step0 = (hi - lo) / Math.max(1, count);
+  const magnitude = Math.pow(10, Math.floor(Math.log10(step0)));
+  const normalized = step0 / magnitude;
+  const step = (normalized >= 5 ? 5 : normalized >= 2 ? 2 : 1) * magnitude;
+  const ticks = [];
+  for (let value = Math.ceil(lo / step) * step; value <= hi + step * 1e-6; value += step) {
+    ticks.push(Number(value.toFixed(10)));
+  }
+  return ticks;
+}
+
 function markScale(lo, hi, transform) {
   if (transform === "log" && lo > 0 && hi > lo) {
     const l0 = Math.log(lo);
@@ -269,6 +299,17 @@ export function renderMarks(col, row, range) {
     return pct == null ? null : Math.max(0, Math.min(100, pct));
   };
   const track = h("div", { class: "et-marks" });
+
+  // Faint vertical lines at round values help read a mark against the scale.
+  if (scale.gridlines) {
+    for (const tick of niceTicks(lo, hi)) {
+      const pct = pos(tick);
+      if (pct == null) continue;
+      track.append(
+        h("div", { class: "et-mark-gridline", style: { left: `${Math.max(0, Math.min(100, pct))}%` } }),
+      );
+    }
+  }
 
   // Column-wide reference rules paint behind the marks.
   for (const ref of col.references || []) {

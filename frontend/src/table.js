@@ -15,7 +15,8 @@ import { h, inlineMarkdown, withFigure, formatRowRanges, alignStyle } from "./do
 import { hiddenColumns, visibleRows, searchRows, sortRows, paginateRows,
   computeRowspans, shaded, sectionContinuation } from "./rows.js";
 import { renderCell } from "./cells.js";
-import { formatTitle } from "./format.js";
+import { formatTitle, formatValue } from "./format.js";
+import { niceTicks, marksDomain } from "./visualizations.js";
 
 /** Map a `font_size` to a CSS value.
  *
@@ -289,6 +290,9 @@ export class EvidentialTableRenderer {
     this.scroller.replaceChildren();
     const footnotes = [];
     const isEmpty = rows.length === 0;
+    const axisColumns = columns.filter((col) => col.encodings && (col.scale || {}).axis);
+    const hasAxis = axisColumns.length > 0 && !isEmpty;
+    const axisPosition = hasAxis ? axisColumns[0].scale.axis_position || "top" : "top";
     // With columns configured, an empty table keeps its headers and shows blank
     // placeholder rows under a translucent message overlay, so it holds its size
     // while a filter or selection is pending. Without columns there is nothing
@@ -320,6 +324,8 @@ export class EvidentialTableRenderer {
           emptyRows: isEmpty ? this._emptyRowCount(opts) : 0,
           emptyMessage: opts.empty_message || "No records",
           continuationLabel,
+          hasAxis,
+          axisPosition,
         }),
       );
     }
@@ -440,6 +446,8 @@ export class EvidentialTableRenderer {
         tbody.append(this._renderPlaceholderRow(columns, ctx));
       }
     } else {
+      const axisFirst = ctx.hasAxis && ctx.axisPosition !== "bottom";
+      if (axisFirst) tbody.append(this._renderAxisRow(columns, ctx));
       if (ctx.stats) tbody.append(this._renderStatsRow(columns, ctx));
       if (ctx.continuationLabel) {
         // A section that spans pages repeats its label at the top of the page.
@@ -451,10 +459,42 @@ export class EvidentialTableRenderer {
         );
       }
       rows.forEach((row, index) => tbody.append(this._renderRow(row, columns, ctx, index)));
+      if (ctx.hasAxis && ctx.axisPosition === "bottom") {
+        tbody.append(this._renderAxisRow(columns, ctx));
+      }
     }
     table.append(tbody);
     labelFootnotes(table, ctx.footnotes.length, opts);
     return table;
+  }
+
+  /** A tick axis for the marks columns that ask for one (`scale(axis=True)`). */
+  _renderAxisRow(columns, ctx) {
+    const opts = this.options;
+    const tr = h("tr", { class: "et-row et-axis-row" });
+    if (ctx.rowNumbers) tr.append(h("td", { class: "et-td et-row-num" }));
+    for (const col of columns) {
+      const scale = col.scale || {};
+      if (!col.encodings || !scale.axis) {
+        tr.append(h("td", { class: "et-td" }));
+        continue;
+      }
+      const { lo, hi } = marksDomain(col, ctx.ranges.get(col.name));
+      const span = (hi - lo) || 1;
+      const axis = h("div", { class: "et-axis" });
+      for (const tick of niceTicks(lo, hi)) {
+        const pct = Math.max(0, Math.min(100, ((tick - lo) / span) * 100));
+        const label = formatValue(tick, col.fmt, {
+          type: col.type,
+          range: ctx.formatRanges.get(col.name),
+          fallback: String(tick),
+        });
+        axis.append(h("span", { class: "et-axis-tick", style: { left: `${pct}%` } }, label));
+      }
+      tr.append(h("td", { class: `et-td et-axis-cell${opts.stub === col.name ? " et-stub" : ""}` }, axis));
+    }
+    if (opts.link) tr.append(h("td", { class: "et-td" }));
+    return tr;
   }
 
   /** A blank row; its cells keep the column alignment and borders. */

@@ -638,6 +638,29 @@ tbody tr:last-child .et-bar-center .et-bar-axis { bottom: var(--et-bar-pad, 0); 
   width: 1px;
   opacity: 0.6;
 }
+.et-mark-gridline {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: color-mix(in srgb, CanvasText 12%, transparent);
+}
+.et-axis-cell { padding-top: 0; padding-bottom: 0.15rem; }
+.et-axis {
+  position: relative;
+  height: 0.9rem;
+  min-width: 60px;
+}
+.et-axis-tick {
+  position: absolute;
+  transform: translateX(-50%);
+  padding-left: 0.15rem;
+  font-size: 0.7em;
+  line-height: 1;
+  color: var(--et-muted);
+  white-space: nowrap;
+  border-left: 1px solid color-mix(in srgb, CanvasText 25%, transparent);
+}
 .et-mark-band {
   position: absolute;
   top: 0;

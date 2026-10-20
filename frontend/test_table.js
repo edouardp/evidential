@@ -2189,3 +2189,18 @@ test("spacer rows render a blank gap", () => {
   assert.equal(spacer.textContent, "");
   renderer.destroy();
 });
+
+test("marks axis renders tick labels and gridlines", () => {
+  const rows = [{ x: 20 }, { x: 80 }];
+  const columns = [{
+    name: "x", type: "number",
+    scale: { domain: [0, 100], axis: true, gridlines: true },
+    encodings: [{ kind: "bar", source: "x" }],
+  }];
+  const renderer = new EvidentialTableRenderer(makeModel(rows, columns, { page_size: 10 }, el), el);
+  const ticks = [...el.querySelectorAll(".et-axis-tick")];
+  assert.ok(ticks.length >= 3);
+  assert.match(el.querySelector(".et-axis-row").textContent, /40/);
+  assert.ok(el.querySelector(".et-mark-gridline"));
+  renderer.destroy();
+});

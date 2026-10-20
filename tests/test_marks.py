@@ -260,3 +260,15 @@ def test_points_draws_an_array_as_a_marker_per_observation() -> None:
     )
     table = EvidentialTable([{"x": 1, "observations": [1, 2, 3]}], columns=[col.bar("x").points("observations")])
     assert [enc["kind"] for enc in table.columns[0]["encodings"]] == ["bar", "points"]
+
+
+def test_scale_axis_gridlines_and_position() -> None:
+    spec = dict(col.bar("x").scale(domain=(0, 100), axis=True, axis_position="bottom", gridlines=True))
+    assert spec["scale"] == {
+        "domain": (0, 100),
+        "axis": True,
+        "axis_position": "bottom",
+        "gridlines": True,
+    }
+    with pytest.raises(ValueError, match="axis_position"):
+        col.bar("x").scale(axis_position="side")

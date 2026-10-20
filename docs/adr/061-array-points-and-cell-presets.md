@@ -38,8 +38,11 @@ Chosen option: extend the existing marks and options rather than add new types.
   scale. It chains after a bar (`col.bar('mean').points('observations')`) or
   stands alone (`col.points(...)`, type `array`).
 - **`col.sparkline(type="points")`** draws only markers; **`markers=True`** adds
-  a dot at every point on a line/area; **`signed=True`** splits an area fill at
-  the zero baseline into the accent colour above and the negative colour below.
+  a dot at every point on a line/area and **`markers="ends"`** only the
+  endpoints; **`marker_color=`** colours them, and a per-point `color` key on the
+  data (computed upstream in SQL/Python) wins per marker; **`signed=True`**
+  splits an area fill at the zero baseline into the accent colour above and the
+  negative colour below.
 - **`col.boolean(..., true_text=, false_text=, true_symbol=, false_symbol=)`**
   writes `✓ Active` / `✗ Inactive`. The symbol is green when true and red when
   false (`--et-positive` / `--et-negative`).

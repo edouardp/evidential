@@ -102,6 +102,71 @@ def _(EvidentialTable, col, mo, trends):
 @app.cell
 def _(mo):
     mo.md("""
+    ## End markers and per-point colours
+
+    `markers="ends"` marks only the first and last point (useful on a line),
+    and `marker_color=` sets the marker colour. If the array elements are
+    objects with a `color` key, each marker takes its own colour — the SQL can
+    compute it alongside `x` and `y`.
+    """)
+    return
+
+
+@app.cell
+def _():
+    marked = [
+        {
+            "metric": "Net",
+            "values": [
+                {"x": 1, "y": 3, "color": "#dc2626"},
+                {"x": 2, "y": 5},
+                {"x": 3, "y": 4, "color": "#dc2626"},
+                {"x": 4, "y": 7},
+                {"x": 5, "y": 9, "color": "#16a34a"},
+            ],
+        },
+        {
+            "metric": "Gross",
+            "values": [
+                {"x": 1, "y": 8, "color": "#16a34a"},
+                {"x": 2, "y": 7},
+                {"x": 3, "y": 6},
+                {"x": 4, "y": 6},
+                {"x": 5, "y": 5, "color": "#dc2626"},
+            ],
+        },
+    ]
+    return (marked,)
+
+
+@app.cell
+def _(EvidentialTable, col, marked, mo):
+    markers = mo.ui.anywidget(
+        EvidentialTable(
+            marked,
+            title="Markers",
+            subtitle="Ends only, and a colour per point",
+            row_lines=False,
+            border=False,
+            stretch=False,
+            columns=[
+                col.text("metric"),
+                col.array("values", title="Ends").sparkline(
+                    type="line", color="#94a3b8", markers="ends", marker_color="#0f172a", height=24
+                ),
+                col.array("values", title="Per-point colour").sparkline(
+                    type="line", color="#cbd5e1", markers=True, x="x", y="y", height=24
+                ),
+            ],
+        )
+    )
+    markers
+    return
+
+
+@app.cell
+def _(mo):
+    mo.md("""
     ## Booleans as a symbol and label
 
     `col.boolean(..., true_symbol="✓", false_symbol="✗", true_text="Active",

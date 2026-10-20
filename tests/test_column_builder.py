@@ -355,3 +355,11 @@ def test_cell_style_static_and_per_row_background() -> None:
     assert per_row["cell_style"] == {"background_column": "bg"}
     table = EvidentialTable([{"x": 1, "bg": "#fee"}], columns=[{"name": "x", "cell_style": {"background": "@bg"}}])
     assert table.columns[0]["cell_style"] == {"background_column": "bg"}
+
+
+def test_sparkline_marker_color_and_end_markers() -> None:
+    spec = dict(col.sparkline("trend", markers="ends", marker_color="#f00"))
+    assert spec["sparkline_options"]["markers"] == "ends"
+    assert spec["sparkline_options"]["marker_color"] == "#f00"
+    chained = col.array("trend").sparkline(markers=True, marker_color="#0f0")
+    assert chained["sparkline_options"]["marker_color"] == "#0f0"

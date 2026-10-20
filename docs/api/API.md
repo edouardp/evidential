@@ -443,9 +443,11 @@ columns=[
   show_symbol=, symbol_position=)`. Green for up, red for down, a grey dash
   inside `neutral_range`.
 - **Sparkline** — `.sparkline(type="line"|"area"|"bar"|"points", x=, y=,
-  color=, fit_to_data=, y_fmt=, width=, height=, markers=, signed=)` over an array
-  column. `type="points"` draws only markers; `markers=True` adds a dot at every
-  point on a line/area; `signed=True` splits an area fill at the zero baseline.
+  color=, fit_to_data=, y_fmt=, width=, height=, markers=, marker_color=, signed=)`
+  over an array column. `type="points"` draws only markers; `markers=True` adds a
+  dot at every point and `markers="ends"` only the endpoints; a per-point
+  `color` key on the data overrides `marker_color`; `signed=True` splits an area
+  fill at the zero baseline.
 - **Symbols** — `.symbols(symbol=, shape=, empty=, max=, image=, color=,
   empty_color=, size=, gap=)`: repeat the value as glyphs, emoji, images, or
   font-independent CSS boxes. `max` is a *floor* (the row is filled to at least
@@ -665,7 +667,7 @@ other than `auto`, `merge`, `group` and `subcolumns` return a `Column`;
 | `col.color(name, *, title=, **options)` | colour scale |
 | `col.chip(name, *, min_width=, conditional_colors=, scale=, min=, max=, midpoint=, **extra)` | pill |
 | `col.delta(name, *, down_is_good=, neutral_range=, chip=)` | change indicator |
-| `col.sparkline(name, *, type="line"\|"area"\|"bar"\|"points", x=, y=, color=, fit_to_data=, y_fmt=, width=, height=, markers=, signed=, title=)` | trend |
+| `col.sparkline(name, *, type="line"\|"area"\|"bar"\|"points", x=, y=, color=, fit_to_data=, y_fmt=, width=, height=, markers=, marker_color=, signed=, title=)` | trend |
 | `col.symbols(name, *, symbol=, shape=, empty=, max=, image=, color=, empty_color=, size=, gap=, align=, title=)` | repeated symbols |
 | `col.rating(name, *, max=5, symbol="★", empty="☆", color="#f59e0b")` | star rating |
 | `col.repeat(name, **options)` | alias for `symbols` |

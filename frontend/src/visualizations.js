@@ -733,10 +733,11 @@ export function renderSparkline(col, value) {
   const span = max - min || 1;
   const step = points.length > 1 ? (width - pad * 2) / (points.length - 1) : 0;
   const baseline = pad + (height - pad * 2) * (1 - (Math.max(0, min) - min) / span);
-  const scaled = points.map(([x, y], index) => ({
+  const scaled = points.map(([x, y, source], index) => ({
     x: points.length > 1 ? pad + index * step : width / 2,
     y: pad + (height - pad * 2) * (1 - (y - min) / span),
     raw: [x, y],
+    source,
   }));
 
   const color = opts.color || "var(--et-accent, #2563eb)";
@@ -768,6 +769,7 @@ export function renderSparkline(col, value) {
 
   const type = opts.type || "line";
   const showMarkers = !!opts.markers || type === "points";
+  const endsOnly = opts.markers === "ends";
   if (type === "bar") {
     const slot = width / scaled.length;
     const barWidth = Math.max(1, slot * 0.7);
@@ -803,12 +805,15 @@ export function renderSparkline(col, value) {
     poly.setAttribute("stroke-linecap", "round");
     svg.append(poly);
   }
-  scaled.forEach((point) => {
+  scaled.forEach((point, index) => {
+    const isEnd = index === 0 || index === scaled.length - 1;
+    const visible = showMarkers && (!endsOnly || isEnd);
+    const perPoint = point.source && typeof point.source === "object" ? point.source.color : null;
     const dot = document.createElementNS(svgNS, "circle");
     dot.setAttribute("cx", String(point.x));
     dot.setAttribute("cy", String(point.y));
-    dot.setAttribute("r", showMarkers ? "2.2" : "2.5");
-    dot.setAttribute("fill", showMarkers ? color : "transparent");
+    dot.setAttribute("r", visible ? "2.2" : "2.5");
+    dot.setAttribute("fill", visible ? (perPoint || opts.marker_color || color) : "transparent");
     dot.append(tooltip(point.raw));
     svg.append(dot);
   });
@@ -851,7 +856,7 @@ export function sparklinePoints(value, opts) {
     } else {
       y = Number(item);
     }
-    if (y !== null && !isNaN(y)) points.push([x, y]);
+    if (y !== null && !isNaN(y)) points.push([x, y, item]);
   });
   return points;
 }

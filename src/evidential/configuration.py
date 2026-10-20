@@ -218,8 +218,10 @@ class SparklineOptions(TypedDict, total=False):
     y_fmt: str | None
     width: float | None
     height: float | None
-    #: Draw a marker at every point (also for line/area).
-    markers: bool | None
+    #: Draw a marker at every point (also for line/area), or just at the ends.
+    markers: bool | Literal["ends"] | None
+    #: A colour for the markers (a per-point ``color`` key on the data wins).
+    marker_color: str | None
     #: Split an area fill at the zero baseline into positive/negative colours.
     signed: bool | None
 

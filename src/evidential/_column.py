@@ -745,7 +745,8 @@ class Column(Mapping[str, Any]):
         y_fmt: str | None = None,
         width: float | None = None,
         height: float | None = None,
-        markers: bool | None = None,
+        markers: bool | str | None = None,
+        marker_color: str | None = None,
         signed: bool | None = None,
     ) -> Column:
         """Draw the cell's array value as a small line/area/bar chart.
@@ -758,7 +759,8 @@ class Column(Mapping[str, Any]):
         :param y_fmt: format code for the tooltip y value.
         :param width: chart width (the viewBox, in pixels).
         :param height: chart height (the viewBox, in pixels).
-        :param markers: draw a marker at every point (line/area too).
+        :param markers: draw a marker at every point, or ``"ends"`` for the endpoints.
+        :param marker_color: marker colour; a per-point ``color`` key wins.
         :param signed: split an area fill at the zero baseline into up/down colours.
 
         Example::
@@ -778,6 +780,7 @@ class Column(Mapping[str, Any]):
                 width=width,
                 height=height,
                 markers=markers,
+                marker_color=marker_color,
                 signed=signed,
             ),
         )
@@ -1433,7 +1436,8 @@ def sparkline(
     y_fmt: str | None = None,
     width: float | None = None,
     height: float | None = None,
-    markers: bool | None = None,
+    markers: bool | str | None = None,
+    marker_color: str | None = None,
     signed: bool | None = None,
     title: str | None = None,
     **extra: Any,
@@ -1469,6 +1473,7 @@ def sparkline(
         width=width,
         height=height,
         markers=markers,
+        marker_color=marker_color,
         signed=signed,
     )
 

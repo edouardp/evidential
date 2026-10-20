@@ -2335,3 +2335,31 @@ test("cell_style sets cell chrome and a per-row background", () => {
   assert.equal(cells[0].style.border, "1px solid red");
   renderer.destroy();
 });
+
+test("sparkline markers='ends' draws only the endpoints", () => {
+  const rows = [{ trend: [1, 2, 3] }];
+  const columns = [{
+    name: "trend", type: "array", viz: "sparkline",
+    sparkline_options: { type: "line", markers: "ends", marker_color: "#f00" },
+  }];
+  const renderer = new EvidentialTableRenderer(makeModel(rows, columns, { page_size: 10 }, el), el);
+  const dots = [...el.querySelectorAll(".et-sparkline circle")];
+  assert.notEqual(dots[0].getAttribute("fill"), "transparent");
+  assert.equal(dots[1].getAttribute("fill"), "transparent");
+  assert.notEqual(dots[2].getAttribute("fill"), "transparent");
+  assert.equal(dots[0].getAttribute("fill"), "#f00");
+  renderer.destroy();
+});
+
+test("sparkline per-point colour overrides marker_color", () => {
+  const rows = [{ trend: [{ x: 0, y: 1, color: "#00f" }, { x: 1, y: 2 }] }];
+  const columns = [{
+    name: "trend", type: "array", viz: "sparkline",
+    sparkline_options: { type: "line", markers: true, marker_color: "#0f0" },
+  }];
+  const renderer = new EvidentialTableRenderer(makeModel(rows, columns, { page_size: 10 }, el), el);
+  const dots = [...el.querySelectorAll(".et-sparkline circle")];
+  assert.equal(dots[0].getAttribute("fill"), "#00f");
+  assert.equal(dots[1].getAttribute("fill"), "#0f0");
+  renderer.destroy();
+});

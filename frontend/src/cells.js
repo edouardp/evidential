@@ -76,6 +76,10 @@ export function renderCell({row, col, index, ctx, rowIndex, options: opts, toggl
   const isSubtotal = row.render_type === "row_subtotal";
   const hidden = row.__hide_cell || {};
   const tdStyle = withFigure(alignStyle(col), col, opts);
+  if (opts.section_indent && ctx.insetGroups?.has(row.__parent_key) && !isSubtotal && !isTotal &&
+      (isStub(opts, col) || (!opts.stub && index === 0))) {
+    tdStyle.paddingLeft = `calc(0.25rem + ${Math.max(0, Number(opts.section_indent))}rem)`;
+  }
   // In accordion mode, indent dimension cells so children read as nested.
   const indent = ctx.accordion ? indentForCell(row, index, ctx) : 0;
   if (indent > 0) {
@@ -182,7 +186,7 @@ export function renderCell({row, col, index, ctx, rowIndex, options: opts, toggl
     if (col.blank_below != null && numeric < col.blank_below) value = null;
     if (col.blank_above != null && numeric > col.blank_above) value = null;
   }
-  if (value === null || value === undefined) {
+  if ((value === null || value === undefined) && !col.encodings?.length) {
     // A missing delta reads as the same neutral dash as a value inside
     // `neutral_range`; other columns use the generic null text.
     if (col.viz === "delta") {
@@ -219,11 +223,11 @@ export function renderCell({row, col, index, ctx, rowIndex, options: opts, toggl
   // Conditional color background.
   let vizStyles = null;
   if (col.viz === "color" && !(isTotal) && !(isSubtotal && col.viz_include_subtotals === false)) {
-    const range = ctx.ranges.get(col.name);
+    const range = ctx.ranges.get(col) || ctx.ranges.get(col.name);
     // `conditional_colors` needs no numeric range (the hex column may be
     // the only colour source, e.g. a text status column).
     if (range || (col.color_options || {}).conditional_colors) {
-      vizStyles = calculateColorStyles(col, row, range || { min: 0, max: 0 }, ctx.colorScales.get(col.name));
+      vizStyles = calculateColorStyles(col, row, range || { min: 0, max: 0 }, (ctx.colorScales.get(col) || ctx.colorScales.get(col.name)));
     }
   }
 
@@ -264,9 +268,9 @@ function renderContent(col, value, formatted, ctx, row) {
   const isSubtotal = row.render_type === "row_subtotal";
   let content;
   if (col.encodings && col.encodings.length && row.render_type !== "row_total") {
-    content = renderMarks(col, row, ctx.ranges.get(col.name));
+    content = renderMarks(col, row, ctx.ranges.get(col) || ctx.ranges.get(col.name));
   } else if (col.viz === "bar" && !(isSubtotal && col.viz_include_subtotals === false) && row.render_type !== "row_total") {
-    content = renderBar(col, value, formatted, ctx.ranges.get(col.name), row);
+    content = renderBar(col, value, formatted, ctx.ranges.get(col) || ctx.ranges.get(col.name), row);
   } else if (col.viz === "delta") {
     content = renderDelta(col, value);
   } else if (col.viz === "sparkline") {
@@ -324,10 +328,10 @@ function renderContent(col, value, formatted, ctx, row) {
       symbol ? [h("span", { class: "et-boolean-symbol" }, symbol), ` ${text}`] : text,
     );
   } else if (col.viz === "chip") {
-    const chipRange = ctx.ranges.get(col.name);
+    const chipRange = ctx.ranges.get(col) || ctx.ranges.get(col.name);
     const chipStyles =
       chipRange || (col.color_options || {}).conditional_colors
-        ? calculateColorStyles(col, row, chipRange || { min: 0, max: 0 }, ctx.colorScales.get(col.name))
+        ? calculateColorStyles(col, row, chipRange || { min: 0, max: 0 }, (ctx.colorScales.get(col) || ctx.colorScales.get(col.name)))
         : null;
     const chip = h("span", { class: "et-chip" }, formatted);
     // An optional minimum width; the chip still grows for wider content.

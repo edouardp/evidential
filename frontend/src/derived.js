@@ -34,7 +34,9 @@ export class RowPipeline {
     const colorScales = new Map();
     for (const column of columns) {
       if ((column.viz === "color" || column.viz === "chip") && ranges.has(column.name)) {
-        colorScales.set(column.name, buildColorVizScale(column, ranges.get(column.name), options.color_scale));
+        const scale = buildColorVizScale(column, ranges.get(column) || ranges.get(column.name), options.color_scale);
+        colorScales.set(column, scale);
+        colorScales.set(column.name, scale);
       }
     }
     const result = {

@@ -1,6 +1,8 @@
 import { h } from "./dom.js";
 import { formatValue } from "./format.js";
 import { resolveColor } from "./color.js";
+import { numeric, observationValue } from "./mark-data.js";
+import { markLabelText, renderMarkLabel, autoLabelColor } from "./mark-labels.js";
 
 /** Inline top/bottom/transform for a mark's `valign` (default centred). */
 function verticalStyle(valign, point = false) {
@@ -22,48 +24,6 @@ function markColor(enc, row, fallback) {
     if (resolved) return resolved;
   }
   return resolveColor(enc.color) || fallback;
-}
-
-/** The label text for a mark: a literal, another field, or the mark's value. */
-function markLabelText(col, enc, row) {
-  const spec = enc.label || {};
-  let text;
-  if (spec.text != null) {
-    text = String(spec.text);
-  } else {
-    const raw = spec.source != null ? row[spec.source] : row[enc.source];
-    text =
-      raw === null || raw === undefined
-        ? ""
-        : formatValue(raw, spec.format || col.fmt, { type: col.type, fallback: String(raw) });
-  }
-  if (text === "") return "";
-  return `${spec.prefix ?? ""}${text}${spec.suffix ?? ""}`;
-}
-
-/** A mark-owned label, positioned relative to its bar or point. */
-function renderMarkLabel(col, enc, row, geometry) {
-  const spec = enc.label || {};
-  const text = markLabelText(col, enc, row);
-  if (!text) return h("span", { class: "et-mark-label et-mark-label-empty" });
-  const position = spec.position || (enc.kind === "bar" ? "outside_end" : "center");
-  const node = h("span", { class: `et-mark-label et-mark-label-${position}` }, text);
-  if (geometry.leftPct != null) {
-    const inside = ["inside_start", "inside_end", "center"].includes(position);
-    if (inside) {
-      node.style.left = `${geometry.leftPct}%`;
-      node.style.width = `${Math.max(0, geometry.widthPct)}%`;
-      node.classList.add("et-mark-label-inside");
-      if (position === "inside_start") node.classList.add("et-mark-label-start");
-      if (spec.align === "begin") node.classList.add("et-mark-label-align-begin");
-      if (spec.align === "end") node.classList.add("et-mark-label-align-end");
-    } else {
-      node.style.left = `${geometry.leftPct + geometry.widthPct}%`;
-    }
-  } else if (geometry.pointPct != null) {
-    node.style.left = `${geometry.pointPct}%`;
-  }
-  return node;
 }
 
 /** An ordered categorical sequence: equal-width or positioned segments. */
@@ -106,7 +66,7 @@ function renderStrip(enc, row, lo, span) {
     const category = named(item);
     const segment = h("span", {
       class: `et-strip-seg${enc.segmented === false ? " et-strip-joined" : ""}`,
-      style: { backgroundColor: colourOf(category) },
+      style: { backgroundColor: category == null ? "transparent" : colourOf(category) },
     });
     if (enc.strip_labels && category != null && String(category) !== "") {
       segment.append(h("span", { class: "et-strip-label" }, String(category).charAt(0)));
@@ -130,7 +90,14 @@ function stackSegment(enc, row, col, leftPct, widthPct, text = "") {
     const align = (enc.label || {}).align;
     if (align === "begin") segment.style.justifyContent = "flex-start";
     else if (align === "end") segment.style.justifyContent = "flex-end";
-    segment.append(h("span", { class: "et-mark-stack-label" }, text));
+    const spec = enc.label || {};
+    segment.title = text;
+    const label = h("span", { class: "et-mark-stack-label", "data-mark-label": "",
+      "data-overflow": spec.overflow || "hide", "data-min-width": spec.min_width || 0,
+      style: spec.color ? {color: resolveColor(spec.color)} : {},
+    }, h("span", {class: "et-mark-label-text"}, text));
+    if (!spec.color) autoLabelColor(label, markColor(enc, row, "var(--et-accent, #2563eb)"));
+    segment.append(label);
   }
   return segment;
 }
@@ -156,7 +123,7 @@ function stackContainer(encodings) {
 }
 
 /** A diverging stack: categories either side of a split neutral segment. */
-function renderDivergingStack(col, encodings, row, normalize) {
+function renderDivergingStack(col, encodings, row, normalize, lo, hi) {
   const values = encodings.map((enc) => {
     const num = Number(row[enc.source]);
     return isFinite(num) && num > 0 ? num : 0;
@@ -164,11 +131,7 @@ function renderDivergingStack(col, encodings, row, normalize) {
   const total = values.reduce((sum, value) => sum + value, 0);
   const scaled = normalize ? values.map((value) => (total ? (value / total) * 100 : 0)) : values;
   const pivot = encodings.findIndex((enc) => enc.source === encodings[0].diverge_at);
-  let leftTotal = scaled[pivot] / 2;
-  let rightTotal = scaled[pivot] / 2;
-  for (let index = 0; index < pivot; index += 1) leftTotal += scaled[index];
-  for (let index = pivot + 1; index < scaled.length; index += 1) rightTotal += scaled[index];
-  const maxArm = Math.max(leftTotal, rightTotal, 1e-9);
+  const maxArm = Math.max(Math.abs(lo), Math.abs(hi), 1e-9);
   const at = (value) => (value / maxArm) * 50;
   const stack = stackContainer(encodings);
   const pv = scaled[pivot];
@@ -195,7 +158,7 @@ function renderDivergingStack(col, encodings, row, normalize) {
 function renderStack(col, encodings, row, lo, hi) {
   const normalize = (col.scale || {}).normalize === "percent";
   if (encodings[0].diverge_at) {
-    return renderDivergingStack(col, encodings, row, normalize);
+    return renderDivergingStack(col, encodings, row, normalize, lo, hi);
   }
   const values = encodings.map((enc) => {
     const num = Number(row[enc.source]);
@@ -204,13 +167,13 @@ function renderStack(col, encodings, row, lo, hi) {
   const total = values.reduce((sum, value) => sum + value, 0);
   const stack = stackContainer(encodings);
   // Percent stacks always span 0..100; raw stacks share the column's domain.
-  const spanTotal = normalize ? 100 : (hi - lo) || 1;
+  const spanTotal = (hi - lo) || 1;
   let cursor = 0;
   encodings.forEach((enc, index) => {
     const magnitude = normalize ? (total ? (values[index] / total) * 100 : 0) : values[index];
     const width = (magnitude / spanTotal) * 100;
     stack.append(
-      stackSegment(enc, row, col, (cursor / spanTotal) * 100, width, stackLabelText(col, enc, row, values[index], total, normalize)),
+      stackSegment(enc, row, col, ((cursor - lo) / spanTotal) * 100, width, stackLabelText(col, enc, row, values[index], total, normalize)),
     );
     cursor += magnitude;
   });
@@ -220,9 +183,9 @@ function renderStack(col, encodings, row, lo, hi) {
 /** A precomputed five-number summary with optional outliers. */
 function renderBox(col, enc, row, pos) {
   const parts = enc.parts || {};
-  const value = (name) => Number(row[parts[name]]);
+  const value = (name) => numeric(row[parts[name]]);
   const [minimum, q1, median, q3, maximum] = ["minimum", "q1", "median", "q3", "maximum"].map(value);
-  if ([minimum, q1, median, q3, maximum].some((number) => !isFinite(number))) {
+  if ([minimum, q1, median, q3, maximum].some((number) => number == null)) {
     return h("span", { class: "et-null" }, "–");
   }
   const color = markColor(enc, row, "var(--et-accent, #2563eb)");
@@ -234,8 +197,8 @@ function renderBox(col, enc, row, pos) {
   box.append(h("div", { class: "et-box-median", style: { left: `${pos(median)}%`, backgroundColor: color } }));
   const outliers = enc.outliers && Array.isArray(row[enc.outliers]) ? row[enc.outliers] : [];
   for (const outlier of outliers) {
-    const number = Number(outlier);
-    if (!isFinite(number)) continue;
+    const number = numeric(outlier);
+    if (number == null) continue;
     box.append(h("div", { class: "et-box-outlier", style: { left: `${pos(number)}%`, backgroundColor: color } }));
   }
   return box;
@@ -295,8 +258,14 @@ export function marksDomain(col, range) {
   let hi = scale.domain && scale.domain[1] != null ? Number(scale.domain[1]) : (range?.max ?? 1);
   const hasBar = (col.encodings || []).some((enc) => enc.kind === "bar" || enc.kind === "stacked_bar");
   if (scale.include_zero !== false && hasBar && scale.transform !== "log") {
-    lo = Math.min(0, lo);
-    hi = Math.max(0, hi);
+    if (scale.domain?.[0] == null) lo = Math.min(0, lo);
+    if (scale.domain?.[1] == null) hi = Math.max(0, hi);
+  }
+  // Two-sided layouts accept a 0..magnitude domain or an explicit symmetric
+  // signed domain. Their axes, references and overlay points use signed x.
+  if ((col.encodings || []).some(enc => enc.side || enc.diverge_at) && (!scale.domain || lo >= 0)) {
+    hi = Math.max(Math.abs(lo), Math.abs(hi));
+    lo = -hi;
   }
   return { lo, hi, span: (hi - lo) || 1, transform: scale.transform };
 }
@@ -318,7 +287,7 @@ export function niceTicks(lo, hi, count = 4, transform = null) {
   const step0 = (hi - lo) / Math.max(1, count);
   const magnitude = Math.pow(10, Math.floor(Math.log10(step0)));
   const normalized = step0 / magnitude;
-  const step = (normalized >= 5 ? 5 : normalized >= 2 ? 2 : 1) * magnitude;
+  const step = (normalized >= 5 ? 5 : normalized >= 2.5 ? 2.5 : normalized >= 2 ? 2 : 1) * magnitude;
   const ticks = [];
   for (let value = Math.ceil(lo / step) * step; value <= hi + step * 1e-6; value += step) {
     ticks.push(Number(value.toFixed(10)));
@@ -336,35 +305,35 @@ function markScale(lo, hi, transform) {
     const l0 = Math.log(lo);
     const lspan = (Math.log(hi) - l0) || 1;
     return (value) => {
-      const num = Number(value);
-      if (!isFinite(num) || num <= 0) return null;
+      const num = numeric(value);
+      if (num == null || num <= 0) return null;
       return ((Math.log(num) - l0) / lspan) * 100;
     };
   }
   const span = (hi - lo) || 1;
   return (value) => {
-    const num = Number(value);
-    return isFinite(num) ? ((num - lo) / span) * 100 : null;
+    const num = numeric(value);
+    return num != null ? ((num - lo) / span) * 100 : null;
   };
 }
 
 export function renderMarks(col, row, range) {
   const encodings = col.encodings || [];
   const scale = col.scale || {};
-  let lo = scale.domain && scale.domain[0] != null ? Number(scale.domain[0]) : (range?.min ?? 0);
-  let hi = scale.domain && scale.domain[1] != null ? Number(scale.domain[1]) : (range?.max ?? 1);
-  const hasBar = encodings.some((enc) => enc.kind === "bar" || enc.kind === "stacked_bar");
-  if (scale.include_zero !== false && hasBar && scale.transform !== "log") {
-    lo = Math.min(0, lo);
-    hi = Math.max(0, hi);
-  }
-  const span = (hi - lo) || 1;
+  const {lo, hi, span} = marksDomain(col, range);
   const pos = markScale(lo, hi, scale.transform);
   const clampPos = (value) => {
     const pct = pos(value);
     return pct == null ? null : Math.max(0, Math.min(100, pct));
   };
   const track = h("div", { class: "et-marks" });
+  const description = encodings.map(enc => [enc.source, enc.high, ...Object.values(enc.parts || {})]
+    .filter(field => field && row[field] != null).map(field => `${field}: ${JSON.stringify(row[field])}`).join(", "))
+    .filter(Boolean).join("; ");
+  track.title = description;
+  track.setAttribute("role", "img");
+  track.setAttribute("aria-label", description || "No observations");
+  if (encodings.some(enc => ["above", "below"].includes(enc.label?.position))) track.classList.add("et-marks-tall");
 
   // Faint vertical lines at round values help read a mark against the scale.
   if (scale.gridlines) {
@@ -382,12 +351,13 @@ export function renderMarks(col, row, range) {
     if (ref.value == null || !isFinite(Number(ref.value))) continue;
     const raw = pos(Number(ref.value));
     if (raw == null) continue;
-    const pct = Math.max(0, Math.min(100, raw));
+    const pct = raw;
     if (ref.high != null && isFinite(Number(ref.high))) {
       const rawHigh = pos(Number(ref.high));
       if (rawHigh == null) continue;
       const left = Math.max(0, Math.min(100, Math.min(pct, rawHigh)));
       const right = Math.max(0, Math.min(100, Math.max(pct, rawHigh)));
+      if (right <= left) continue;
       track.append(
         h("div", {
           class: "et-mark-band",
@@ -405,6 +375,7 @@ export function renderMarks(col, row, range) {
       }
       continue;
     }
+    if (pct < 0 || pct > 100) continue;
     track.append(
       h("div", {
         class: "et-mark-reference",
@@ -423,18 +394,23 @@ export function renderMarks(col, row, range) {
 
   const barCount = encodings.filter((enc) => enc.kind === "bar").length;
   const stack = encodings.filter((enc) => enc.kind === "stacked_bar");
-  if (stack.length) track.append(renderStack(col, stack, row, lo, hi));
-  for (const box of encodings.filter((enc) => enc.kind === "boxplot")) {
-    track.append(renderBox(col, box, row, clampPos));
-  }
-  for (const dist of encodings.filter((enc) => enc.kind === "distribution")) {
-    const node = renderDistribution(dist, row, clampPos, markColor(dist, row, "var(--et-accent, #2563eb)"));
-    if (node) track.append(node);
-  }
   let barIndex = 0;
   for (const enc of encodings) {
-    if (enc.kind === "stacked_bar" || enc.kind === "boxplot" || enc.kind === "distribution") continue;
-    const value = Number(row[enc.source]);
+    if (enc.kind === "stacked_bar") {
+      if (enc === stack[0]) track.append(renderStack(col, stack, row, lo, hi));
+      continue;
+    }
+    if (enc.kind === "boxplot") {
+      track.append(renderBox(col, enc, row, clampPos));
+      continue;
+    }
+    if (enc.kind === "distribution") {
+      const node = renderDistribution(enc, row, clampPos, markColor(enc, row, "var(--et-accent, #2563eb)"));
+      if (node) track.append(node);
+      continue;
+    }
+    const value = numeric(row[enc.source]);
+    if (["bar", "point", "range"].includes(enc.kind) && value == null) continue;
     if (enc.kind === "bar") {
       const size = enc.size != null ? Number(enc.size) : barCount > 1 ? Math.max(0.25, 0.85 - barIndex * 0.3) : 1;
       barIndex += 1;
@@ -447,8 +423,8 @@ export function renderMarks(col, row, range) {
         widthPct = width;
         leftPct = enc.side === "left" ? 50 - width : 50;
       } else {
-        const origin = pos(0);
-        const end = pos(value);
+        const origin = clampPos(0);
+        const end = clampPos(value);
         leftPct = origin != null ? origin : 0;
         widthPct = end != null ? end - leftPct : 0;
         if (widthPct < 0) {
@@ -468,14 +444,14 @@ export function renderMarks(col, row, range) {
           },
         }),
       );
-      if (enc.label) track.append(renderMarkLabel(col, enc, row, { leftPct, widthPct }));
+      if (enc.label) track.append(renderMarkLabel(col, enc, row, { leftPct, widthPct, color, negative: value < 0 || enc.side === "left" }));
     } else if (enc.kind === "points") {
       const values = Array.isArray(row[enc.source]) ? row[enc.source] : [];
       const size = enc.size != null ? Number(enc.size) : 6;
       const color = markColor(enc, row, "var(--et-accent, #2563eb)");
       for (const item of values) {
-        const raw = item && typeof item === "object" ? (item.value ?? item.x ?? item.y) : item;
-        const pct = clampPos(Number(raw));
+        const raw = observationValue(item);
+        const pct = clampPos(raw);
         if (pct == null) continue;
         track.append(
           h("div", {
@@ -498,13 +474,14 @@ export function renderMarks(col, row, range) {
     } else if (enc.kind === "strip") {
       track.append(renderStrip(enc, row, lo, span));
     } else if (enc.kind === "range") {
-      const low = Number(row[enc.source]);
-      const high = Number(row[enc.high]);
+      const low = value;
+      const high = numeric(row[enc.high]);
+      if (high == null) continue;
       let start = pos(low);
       let end = pos(high);
       const offScale = (value) => value == null || value < 0 || value > 100;
-      const arrowStart = enc.cap === "arrow" && offScale(start);
-      const arrowEnd = enc.cap === "arrow" && offScale(end);
+      const arrowStart = (enc.overflow === "arrow" || enc.cap === "arrow") && offScale(start);
+      const arrowEnd = (enc.overflow === "arrow" || enc.cap === "arrow") && offScale(end);
       if (arrowStart) start = start != null && start > 100 ? 100 : 0;
       if (arrowEnd) end = end != null && end < 0 ? 0 : 100;
       if (start == null || end == null) continue;
@@ -516,19 +493,20 @@ export function renderMarks(col, row, range) {
       const color = markColor(enc, row, "var(--et-accent, #2563eb)");
       if (enc.fill) {
         // A translucent band, e.g. a forecast or uncertainty range.
-        track.append(
-          h("div", {
+        const band = h("div", {
             class: "et-mark et-mark-range-fill",
             style: {
-              ...verticalStyle(enc.valign),
               top: "15%",
               bottom: "15%",
+              transform: "none",
               left: `${left}%`,
               width: `${Math.max(0, right - left)}%`,
               backgroundColor: color,
             },
-          }),
-        );
+          });
+        if (arrowStart) band.append(h("span", { class: "et-mark-cap et-mark-arrow et-mark-arrow-start", style: { borderRightColor: color } }));
+        if (arrowEnd) band.append(h("span", { class: "et-mark-cap et-mark-arrow et-mark-arrow-end", style: { borderLeftColor: color } }));
+        track.append(band);
         if (enc.label) track.append(renderMarkLabel(col, enc, row, { pointPct: left }));
         continue;
       }
@@ -537,11 +515,12 @@ export function renderMarks(col, row, range) {
         style: { ...verticalStyle(enc.valign), left: `${left}%`, width: `${Math.max(0, right - left)}%`, height: `${size}px`, backgroundColor: color },
       });
       if (enc.cap === "line" || enc.cap === "dot") {
-        line.append(h("span", { class: "et-mark-cap et-mark-cap-start", style: { backgroundColor: color } }));
-        line.append(h("span", { class: "et-mark-cap et-mark-cap-end", style: { backgroundColor: color } }));
+        const capClass = `et-mark-cap${enc.cap === "dot" ? " et-mark-cap-dot" : ""}`;
+        if (!arrowStart) line.append(h("span", { class: `${capClass} et-mark-cap-start`, style: { backgroundColor: color } }));
+        if (!arrowEnd) line.append(h("span", { class: `${capClass} et-mark-cap-end`, style: { backgroundColor: color } }));
       }
-      if (arrowStart) line.append(h("span", { class: "et-mark-cap et-mark-arrow et-mark-arrow-start", style: { borderColor: color } }));
-      if (arrowEnd) line.append(h("span", { class: "et-mark-cap et-mark-arrow et-mark-arrow-end", style: { borderColor: color } }));
+      if (arrowStart) line.append(h("span", { class: "et-mark-cap et-mark-arrow et-mark-arrow-start", style: { borderRightColor: color } }));
+      if (arrowEnd) line.append(h("span", { class: "et-mark-cap et-mark-arrow et-mark-arrow-end", style: { borderLeftColor: color } }));
       track.append(line);
       if (enc.label) track.append(renderMarkLabel(col, enc, row, { pointPct: left }));
     }
@@ -733,154 +712,4 @@ export function renderDelta(col, value) {
   return h("span", { class: classes }, content.length ? content : "–");
 }
 
-export function renderSparkline(col, value) {
-  const opts = col.sparkline_options || {};
-  const points = sparklinePoints(value, opts);
-  if (!points.length) return h("span", { class: "et-null" }, "–");
-
-  const width = opts.width || 64;
-  const height = opts.height || 18;
-  const pad = 1.5;
-  const ys = points.map((point) => point[1]);
-  let min = Math.min(...ys);
-  let max = Math.max(...ys);
-  if (!opts.fit_to_data) {
-    min = Math.min(0, min);
-    max = Math.max(0, max);
-  }
-  const span = max - min || 1;
-  const step = points.length > 1 ? (width - pad * 2) / (points.length - 1) : 0;
-  const baseline = pad + (height - pad * 2) * (1 - (Math.max(0, min) - min) / span);
-  const scaled = points.map(([x, y, source], index) => ({
-    x: points.length > 1 ? pad + index * step : width / 2,
-    y: pad + (height - pad * 2) * (1 - (y - min) / span),
-    raw: [x, y],
-    source,
-  }));
-
-  const color = opts.color || "var(--et-accent, #2563eb)";
-  const svgNS = "http://www.w3.org/2000/svg";
-  const svg = document.createElementNS(svgNS, "svg");
-  svg.setAttribute("class", "et-sparkline");
-  svg.setAttribute("width", String(width));
-  svg.setAttribute("height", String(height));
-  svg.setAttribute("viewBox", `0 0 ${width} ${height}`);
-
-  const tooltip = ([x, y]) => {
-    const title = document.createElementNS(svgNS, "title");
-    const yText = formatValue(y, opts.y_fmt, { type: "number", fallback: String(y) });
-    title.textContent = x === undefined || x === null || x === "" ? yText : `${x}: ${yText}`;
-    return title;
-  };
-
-  // Zero baseline when the scale crosses zero (matching Evidence's defaults).
-  if (!opts.fit_to_data && min < 0 && max > 0) {
-    const zero = document.createElementNS(svgNS, "line");
-    zero.setAttribute("x1", "0");
-    zero.setAttribute("x2", String(width));
-    zero.setAttribute("y1", String(baseline));
-    zero.setAttribute("y2", String(baseline));
-    zero.setAttribute("stroke", "color-mix(in srgb, CanvasText 20%, transparent)");
-    zero.setAttribute("stroke-width", "1");
-    svg.append(zero);
-  }
-
-  const type = opts.type || "line";
-  const showMarkers = !!opts.markers || type === "points";
-  const endsOnly = opts.markers === "ends";
-  if (type === "bar") {
-    const slot = width / scaled.length;
-    const barWidth = Math.max(1, slot * 0.7);
-    scaled.forEach((point) => {
-      const top = Math.min(point.y, baseline);
-      const rect = document.createElementNS(svgNS, "rect");
-      rect.setAttribute("x", String(Math.max(0, point.x - barWidth / 2)));
-      rect.setAttribute("y", String(top));
-      rect.setAttribute("width", String(barWidth));
-      rect.setAttribute("height", String(Math.max(1, Math.abs(baseline - point.y))));
-      rect.setAttribute("rx", "0.5");
-      rect.setAttribute("fill", color);
-      rect.append(tooltip(point.raw));
-      svg.append(rect);
-    });
-  } else if (type !== "points") {
-    const linePoints = scaled.map((point) => `${point.x},${point.y}`).join(" ");
-    if (type === "area") {
-      if (opts.signed) {
-        // Split the fill at the zero baseline: up and down get their own colour.
-        addArea(svgNS, svg, scaled, baseline, (point) => Math.min(point.y, baseline), color);
-        addArea(svgNS, svg, scaled, baseline, (point) => Math.max(point.y, baseline), "var(--et-negative, #dc2626)");
-      } else {
-        addArea(svgNS, svg, scaled, baseline, (point) => point.y, color);
-      }
-    }
-    const poly = document.createElementNS(svgNS, "polyline");
-    poly.setAttribute("points", linePoints);
-    poly.setAttribute("fill", "none");
-    poly.setAttribute("stroke", color);
-    poly.setAttribute("stroke-width", "1.25");
-    poly.setAttribute("stroke-linejoin", "round");
-    poly.setAttribute("stroke-linecap", "round");
-    svg.append(poly);
-  }
-  scaled.forEach((point, index) => {
-    const isEnd = index === 0 || index === scaled.length - 1;
-    const visible = showMarkers && (!endsOnly || isEnd);
-    const perPoint = point.source && typeof point.source === "object" ? point.source.color : null;
-    const dot = document.createElementNS(svgNS, "circle");
-    dot.setAttribute("cx", String(point.x));
-    dot.setAttribute("cy", String(point.y));
-    dot.setAttribute("r", visible ? "2.2" : "2.5");
-    dot.setAttribute("fill", visible ? (perPoint || opts.marker_color || color) : "transparent");
-    dot.append(tooltip(point.raw));
-    svg.append(dot);
-  });
-  return svg;
-}
-
-/** Add an area polygon under a sparkline, following a per-point baseline clip. */
-function addArea(svgNS, svg, scaled, baseline, clip, fill) {
-  const area = document.createElementNS(svgNS, "polygon");
-  const points = scaled.map((point) => `${point.x},${clip(point)}`).join(" ");
-  area.setAttribute(
-    "points",
-    `${points} ${scaled[scaled.length - 1].x},${baseline} ${scaled[0].x},${baseline}`,
-  );
-  area.setAttribute("fill", fill);
-  area.setAttribute("opacity", "0.22");
-  svg.append(area);
-}
-
-/** Normalize numbers, [x, y] pairs or objects into sparkline points. */
-export function sparklinePoints(value, opts) {
-  if (!Array.isArray(value)) return [];
-  const xKey = opts.x;
-  const yKey = opts.y;
-  const points = [];
-  value.forEach((item, index) => {
-    if (item === null || item === undefined) return;
-    let x = index;
-    let y;
-    if (Array.isArray(item)) {
-      x = item[0];
-      y = Number(item[1]);
-    } else if (typeof item === "object") {
-      const keys = Object.keys(item);
-      const yField = yKey && yKey in item ? yKey : keys.find((key) => _isNumeric(item[key]));
-      const xField =
-        xKey && xKey in item ? xKey : keys.find((key) => key !== yField && !_isNumeric(item[key]));
-      x = xField ? item[xField] : index;
-      y = Number(yField ? item[yField] : NaN);
-    } else {
-      y = Number(item);
-    }
-    if (y !== null && !isNaN(y)) points.push([x, y, item]);
-  });
-  return points;
-}
-
-function _isNumeric(value) {
-  if (typeof value === "number") return Number.isFinite(value);
-  if (typeof value === "string") return value.trim() !== "" && !isNaN(Number(value));
-  return false;
-}
+export { renderSparkline, sparklinePoints } from "./sparkline.js";

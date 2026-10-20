@@ -38,20 +38,24 @@ Chosen option: three more keys on the shared `scale`, exposed through
 col.bar("share").scale(domain=(0, 40), axis=True, gridlines=True, axis_position="bottom")
 ```
 
-- Ticks are computed with a 1/2/5×10ⁿ "nice" step over the marks' domain
+- Ticks are computed with a 1/2/2.5/5×10ⁿ "nice" step over the marks' domain
   (`marksDomain`), so the axis lines up with the bars; the label is formatted
   with the column's own format code.
 - The axis is a body row rendered before the data rows (or after, for
   `"bottom"`), spanning each axis column; gridlines are drawn inside the marks
   cell behind the marks.
 - `axis` and `gridlines` are independent: either may be used alone.
+- Axis positions are independent per column; top and bottom scales can coexist.
+  Axis and mark tracks share the same padded horizontal area, leaving room for
+  endpoint tick text. Gridlines and reference rules join across adjacent data
+  rows. Integer ticks have no inferred decimal suffix unless explicitly formatted.
 
 ### Consequences
 
 - Good, because a bar or point can now be read to a value, not just labelled.
 - Good, because the axis shares the marks' domain, including a fixed domain and
   (for linear scales) `include_zero`.
-- Note: ticks use a 1/2/5×10ⁿ step on a linear scale and a power-of-ten
+- Note: ticks use a 1/2/2.5/5×10ⁿ step on a linear scale and a power-of-ten
   ladder (with 2× and 5× subdivisions) on a log scale, so the axis lines up
   with the marks in both cases.
 - Note: the axis row is presentational and does not take part in row numbering

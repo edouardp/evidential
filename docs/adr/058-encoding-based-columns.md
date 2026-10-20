@@ -78,6 +78,38 @@ used, and the browser falls back to the legacy path when `encodings` is absent.
 
 ## Consequences
 
+Conformance review (2026-10-20): missing inputs suppress only their own mark,
+including when the presentation slot's primary field is null. Domain inference
+uses every encoding (cumulative stack totals, individual overlay coordinates,
+array observations and interval endpoints) through `mark-data.js`. Synthetic
+rows are excluded from automatic marks domains; set an explicit domain when a
+summary must fit. Fixed scalar-domain bounds take precedence over automatic
+zero inclusion. Diverging stacks use a shared magnitude across rows.
+Two-sided magnitude layouts accept `(0, magnitude)` or a symmetric signed
+domain `(-magnitude, magnitude)`; the former displays as the latter. Axes,
+overlay points and references use those same signed coordinates. Asymmetric
+signed domains are rejected for these layouts.
+Range/colour caches use the presentation column's identity as well as the
+legacy field-name lookup, so two columns bound to the same field can use
+different encodings without replacing each other's scales.
+
+Fluent `.scale(...)` and `.label(...)` calls refine existing settings. A new
+label binding replaces its prior binding while preserving positioning/style.
+Labels support `overflow="hide"|"show"`, `min_width` in pixels and `color`;
+the default hides a label completely if it cannot fit. The original values
+remain in the track's accessible text and tooltip. Ranges support
+`overflow="arrow"` independently of `cap="line"|"dot"|"none"`; the earlier
+`cap="arrow"` spelling remains compatible. Paint order follows declaration
+order, including boxes and distributions.
+Text inside bars and stack segments automatically uses white on dark fills
+and dark text on light fills, including CSS theme colors. Explicit label
+`color` takes precedence. `mark-labels.js` owns label rendering and fitting;
+`sparkline.js` owns ordered series geometry and gap handling.
+
+Python validation rejects negative stack/two-sided magnitudes, nonpositive
+log-scale observations, mismatched stack colour lists, change-point strips
+without a terminal bound and incompatible scalar/series coordinates.
+
 - Good, because one cell can now carry an overlaid league-table pair, a
   bar-plus-target, or a point-plus-interval, with a shared scale.
 - Good, because labels are mark-owned and may name any field.

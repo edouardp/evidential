@@ -86,7 +86,7 @@
 }
 .et-spinner {
   width: 1rem;
-  height: 1rem;
+  height: 1.2em;
   border-radius: 50%;
   border: 2px solid color-mix(in srgb, CanvasText 25%, transparent);
   border-top-color: var(--et-accent);
@@ -300,6 +300,9 @@
 .et-td.et-subcolumn-left { padding-left: 0.15rem; }
 .et-td.et-subcolumn-right { padding-right: 0.15rem; }
 .et-root.et-no-row-lines .et-td { border-bottom: none; }
+/* Outer rules remain visible even when detail row separators are disabled. */
+.et-table tbody > tr:first-child > .et-td { border-top: 1px solid var(--et-border); }
+.et-table tbody > tr:last-child > .et-td { border-bottom: 1px solid var(--et-border); }
 .et-row-shaded .et-td { background: var(--et-shading); }
 .et-row:hover .et-td { background: var(--et-hover); }
 .et-row-total .et-td {
@@ -476,7 +479,7 @@ tbody tr:last-child .et-bar-center .et-bar-axis { bottom: var(--et-bar-pad, 0); 
   display: block;
   min-width: 60px;
   height: 1.5em;
-  margin: -0.25rem calc(-1 * var(--et-mark-pad-right)) -0.25rem 0;
+  margin: -0.25rem 0;
 }
 .et-mark { position: absolute; }
 .et-mark-bar {
@@ -490,7 +493,6 @@ tbody tr:last-child .et-bar-center .et-bar-axis { bottom: var(--et-bar-pad, 0); 
   transform: translate(-50%, -50%);
   border-radius: 50%;
   box-shadow: 0 0 0 1px color-mix(in srgb, Canvas 60%, transparent);
-  z-index: 2;
 }
 .et-mark-range {
   top: 50%;
@@ -620,6 +622,7 @@ tbody tr:last-child .et-bar-center .et-bar-axis { bottom: var(--et-bar-pad, 0); 
   transform: translate(-50%, -50%);
 }
 .et-mark-cap-end { right: 0; transform: translate(50%, -50%); }
+.et-mark-cap-dot { width: 0.6em; height: 0.6em; border-radius: 50%; }
 .et-mark-arrow {
   width: 0;
   height: 0;
@@ -638,34 +641,42 @@ tbody tr:last-child .et-bar-center .et-bar-axis { bottom: var(--et-bar-pad, 0); 
 }
 .et-mark-reference {
   position: absolute;
-  top: 0;
-  bottom: 0;
+  top: -0.25rem;
+  bottom: -0.25rem;
   width: 1px;
   opacity: 0.6;
 }
 .et-mark-gridline {
   position: absolute;
-  top: 0;
-  bottom: 0;
+  top: -0.25rem;
+  bottom: -0.25rem;
   width: 1px;
   background: color-mix(in srgb, CanvasText 12%, transparent);
 }
 .et-axis-cell { padding-top: 0; padding-bottom: 0.15rem; }
 .et-axis {
   position: relative;
-  height: 0.9rem;
+  height: 1rem;
   min-width: 60px;
 }
 .et-axis-tick {
   position: absolute;
   transform: translateX(-50%);
-  padding-left: 0.15rem;
-  font-size: 0.7em;
+  font-size: 0.85em;
   line-height: 1;
   color: var(--et-muted);
   white-space: nowrap;
-  border-left: 1px solid color-mix(in srgb, CanvasText 25%, transparent);
 }
+.et-axis-tick::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 100%;
+  height: 0.25rem;
+  border-left: 1px solid var(--et-muted);
+}
+.et-axis-row-bottom .et-axis-tick { top: 0.25rem; }
+.et-axis-row-bottom .et-axis-tick::after { top: -0.25rem; }
 .et-mark-band {
   position: absolute;
   top: 0;
@@ -688,7 +699,6 @@ tbody tr:last-child .et-bar-center .et-bar-axis { bottom: var(--et-bar-pad, 0); 
   font-size: 0.85em;
   line-height: 1.2;
   white-space: nowrap;
-  z-index: 3;
 }
 .et-mark-label-outside_end { transform: translate(0.15rem, -50%); }
 .et-mark-label-center { transform: translate(-50%, -50%); }
@@ -696,7 +706,15 @@ tbody tr:last-child .et-bar-center .et-bar-axis { bottom: var(--et-bar-pad, 0); 
   display: flex;
   align-items: center;
   justify-content: flex-end;
+  transform: translateY(-50%);
+  box-sizing: border-box;
 }
+.et-mark-label-text { flex: 0 0 auto; }
+.et-mark-label-negative { transform: translate(calc(-100% - 0.15rem), -50%); }
+.et-mark-label-inside.et-mark-label-align-center { justify-content: center; }
+.et-marks-tall { height: 2.8em; }
+.et-mark-label-above { top: 0; transform: translateX(-50%); }
+.et-mark-label-below { top: auto; bottom: 0; transform: translateX(-50%); }
 .et-mark-label-inside.et-mark-label-start { justify-content: flex-start; }
 .et-mark-label-inside.et-mark-label-align-begin { justify-content: flex-start; }
 .et-mark-label-inside.et-mark-label-align-end { justify-content: flex-end; }

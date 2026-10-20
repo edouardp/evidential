@@ -98,3 +98,27 @@ def test_rows_validation() -> None:
         rows.of(DETAIL).group_by("region").summary(position="middle")
     with pytest.raises(ValueError, match="section align"):
         rows.of(DETAIL).group_by("region").section(align="justify")
+
+
+def test_builder_rows_carry_stable_group_identity_without_changing_details() -> None:
+    builder = rows.of(DETAIL).group_by("region").section().summary().total()
+    built = builder.build()
+    assert built == builder.build()
+    section = built[0]
+    member = built[1]
+    summary = built[2]
+    assert section["__group_key"] == member["__parent_key"] == summary["__group_key"]
+    assert member["__ancestors"] == [section["__group_key"]]
+    assert "__parent_key" not in DETAIL[0]
+    assert all(row["__row_builder"] for row in built)
+
+
+def test_centered_sections_cannot_discard_summary_values() -> None:
+    with pytest.raises(ValueError, match="centered.*values"):
+        rows.of(DETAIL).group_by("region").section(align="center", values={"arr": "sum"})
+
+
+def test_ungrouped_total_keeps_its_label_and_excludes_metadata_from_sums() -> None:
+    built = rows.of([{"country": "A", "arr": 10, "__row_id": 5}]).total("Everything").build()
+    assert built[-1]["__label"] == "Everything"
+    assert "__row_id" not in built[-1]

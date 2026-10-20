@@ -29,6 +29,7 @@ values. Synthetic rows never change the detail records.
 
 from __future__ import annotations
 
+import json
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 from typing import Any
@@ -47,7 +48,12 @@ def _numeric_columns(members: Sequence[Mapping[str, Any]]) -> list[str]:
     names: list[str] = []
     for row in members:
         for key, value in row.items():
-            if key not in names and isinstance(value, (int, float)) and not isinstance(value, bool):
+            if (
+                not key.startswith("__")
+                and key not in names
+                and isinstance(value, (int, float))
+                and not isinstance(value, bool)
+            ):
                 names.append(key)
     return names
 
@@ -136,6 +142,8 @@ class Rows:
         """Insert a section row before each group; without a label it names the group."""
         if align not in ("left", "center"):
             raise ValueError("section align is 'left' or 'center'")
+        if align == "center" and values:
+            raise ValueError("a centered section cannot have summary values")
         return self._replace(section=_Annotation(label, values, align))
 
     def summary(
@@ -163,7 +171,7 @@ class Rows:
     def build(self) -> list[dict[str, Any]]:
         """Return the detail and synthetic rows, ready for ``EvidentialTable``."""
         if not self._dims:
-            rows = [dict(row) for row in self._detail]
+            rows = [{**row, "__row_builder": True} for row in self._detail]
             if self._total is not None:
                 rows.append(self._total_row(self._total, self._detail))
             return rows
@@ -177,13 +185,18 @@ class Rows:
             while index < len(detail) and detail[index].get(self._dims[0]) == group_value:
                 members.append(detail[index])
                 index += 1
+            group_key = "rows:" + json.dumps(group_value, sort_keys=True)
+            metadata = {"__group_key": group_key, "__row_builder": True}
             if self._section is not None:
-                rows.append(self._section_row(self._section, members))
+                rows.append({**self._section_row(self._section, members), **metadata})
             if self._summary is not None and self._summary.position == "top":
-                rows.append(self._summary_row(self._summary, members))
-            rows.extend(dict(member) for member in members)
+                rows.append({**self._summary_row(self._summary, members), **metadata})
+            rows.extend(
+                {**member, "__parent_key": group_key, "__ancestors": [group_key], "__row_builder": True}
+                for member in members
+            )
             if self._summary is not None and self._summary.position == "bottom":
-                rows.append(self._summary_row(self._summary, members))
+                rows.append({**self._summary_row(self._summary, members), **metadata})
         if self._total is not None:
             rows.append(self._total_row(self._total, detail))
         return rows
@@ -204,12 +217,13 @@ class Rows:
         return Rows(**values)
 
     def _section_row(self, annotation: _Annotation, members: Sequence[Mapping[str, Any]]) -> dict[str, Any]:
-        # A section row is a label; only explicit values are carried (and the
-        # full-width section cell ignores them anyway).
+        # Explicit values make this a combined section and summary row.
         row = _resolve_values(annotation.values or {}, members)
         row["render_type"] = "row_section"
         row["__label"] = _resolve_label(annotation.label, members, self._dims)
         row["__align"] = annotation.position
+        if annotation.values:
+            row["__combined"] = True
         return row
 
     def _summary_row(self, annotation: _Annotation, members: Sequence[Mapping[str, Any]]) -> dict[str, Any]:
@@ -217,6 +231,8 @@ class Rows:
         row["render_type"] = "row_subtotal"
         # Level 0 keeps the row flat: no accordion indent and no chevron.
         row["__level"] = 0
+        row["__row_builder"] = True
+        row["__label"] = _resolve_label(annotation.label, members, self._dims)
         row[self._dims[0]] = _resolve_label(annotation.label, members, self._dims)
         return row
 
@@ -224,6 +240,8 @@ class Rows:
         row = _resolve_values(annotation.values, members)
         row["render_type"] = "row_total"
         row["__level"] = 0
+        row["__row_builder"] = True
+        row["__label"] = _resolve_label(annotation.label, members, self._dims)
         if self._dims:
             row[self._dims[0]] = _resolve_label(annotation.label, members, self._dims)
         return row

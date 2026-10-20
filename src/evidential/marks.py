@@ -27,6 +27,7 @@ phase (see ADR-058).
 from __future__ import annotations
 
 import itertools
+import math
 from collections.abc import Mapping, Sequence
 from typing import Any, Literal
 
@@ -94,6 +95,7 @@ _ENCODING_KEYS = (
     "side",
     "valign",
     "cap",
+    "overflow",
     "fill",
     "fit_to_data",
     "background",
@@ -134,6 +136,9 @@ def _label_spec(
     suffix: str | None = None,
     align: str | None = None,
     share: bool | None = None,
+    overflow: str | None = None,
+    min_width: float | None = None,
+    color: str | None = None,
 ) -> dict[str, Any] | None:
     """Canonicalise a mark-owned label declaration.
 
@@ -176,6 +181,16 @@ def _label_spec(
             spec[key] = item
     if share:
         spec["share"] = True
+    if overflow is not None:
+        if overflow not in ("hide", "show"):
+            raise ValueError("label overflow is 'hide' or 'show'")
+        spec["overflow"] = overflow
+    if min_width is not None:
+        if not math.isfinite(min_width) or min_width < 0:
+            raise ValueError("label min_width must be finite and nonnegative")
+        spec["min_width"] = min_width
+    if color is not None:
+        spec["color"] = color
     return spec or None
 
 
@@ -208,6 +223,7 @@ def _canonical_encoding(
         "side",
         "valign",
         "cap",
+        "overflow",
         "fill",
         "fit_to_data",
         "background",
@@ -237,10 +253,24 @@ def _canonical_encoding(
         raise TypeError(f"Unknown {kind} option(s): {', '.join(sorted(leftover))}")
     if encoding.get("side") is not None and encoding["side"] not in ("left", "right"):
         raise ValueError(f"side must be 'left' or 'right', got {encoding['side']!r}")
+    if encoding.get("overflow") not in (None, "clip", "arrow"):
+        raise ValueError("range overflow is 'clip' or 'arrow'")
     label_spec = _label_spec(label, position=label_position, **(label_options or {}))
     if label_spec:
         encoding["label"] = label_spec
     return {key: encoding[key] for key in _ENCODING_KEYS if key in encoding}
+
+
+def _merge_label(previous: Mapping[str, Any] | None, update: Mapping[str, Any] | None) -> dict[str, Any] | None:
+    """Refine label style, replacing its binding only when a new one is given."""
+    if update is None:
+        return None
+    merged = dict(previous or {})
+    if any(key in update for key in ("source", "text", "value")):
+        for key in ("source", "text", "value"):
+            merged.pop(key, None)
+    merged.update(update)
+    return merged
 
 
 def _legacy_bar_options(encoding: Mapping[str, Any]) -> dict[str, Any]:
@@ -282,6 +312,8 @@ class MarkColumn(Column):
             return False
         if self._spec.get("scale") or self._spec.get("references"):
             return False
+        if self._spec.get("viz") == "sparkline":
+            return False
         encoding = encodings[0]
         if encoding.get("kind") != "bar" or encoding.get("source") != self._name:
             return False
@@ -289,7 +321,7 @@ class MarkColumn(Column):
         if _has_callable(encoding):
             return False
         # Any new-only key makes this a marks column.
-        return not any(key in encoding for key in ("size", "side", "cap", "label"))
+        return not any(key in encoding for key in ("size", "side", "cap", "label", "valign"))
 
     def _serialized(self) -> dict[str, Any]:
         spec = dict(self._spec)
@@ -392,12 +424,16 @@ class MarkColumn(Column):
             if not encodings:
                 return self._with(**{key: value for key, value in options.items() if value is not None})
             enc = dict(encodings[-1])
+            if color is not None:
+                enc.pop("color_column", None)
             for key, value in options.items():
-                if value is not None and key != "label_position":
+                if value is not None and key not in ("label", "label_position"):
                     enc[key] = value
-            if label_position is not None:
-                enc["label"] = _label_spec(label, position=label_position)
-            encodings[-1] = enc
+            if label is not None or label_position is not None:
+                enc["label"] = _merge_label(enc.get("label"), _label_spec(label, position=label_position))
+            kind = enc.pop("kind")
+            bound_source = enc.pop("source")
+            encodings[-1] = _canonical_encoding(kind, bound_source, **enc)
             return self._with(encodings=encodings)
         return self._add("bar", source, **_bar_kwargs(options))
 
@@ -428,6 +464,9 @@ class MarkColumn(Column):
         prefix: str | None = None,
         suffix: str | None = None,
         align: str | None = None,
+        overflow: str | None = None,
+        min_width: float | None = None,
+        color: str | None = None,
     ) -> MarkColumn:
         """Annotate the most recently declared encoding."""
         encodings = self._encodings()
@@ -442,8 +481,11 @@ class MarkColumn(Column):
             prefix=prefix,
             suffix=suffix,
             align=align,
+            overflow=overflow,
+            min_width=min_width,
+            color=color,
         )
-        encodings[-1] = {**encodings[-1], "label": spec}
+        encodings[-1] = {**encodings[-1], "label": _merge_label(encodings[-1].get("label"), spec)}
         return self._with(encodings=encodings)
 
     # ------------------------------------------------- column-wide options ---
@@ -459,15 +501,20 @@ class MarkColumn(Column):
         gridlines: bool | None = None,
     ) -> MarkColumn:
         """The quantitative axis shared by the column's encodings."""
-        spec: dict[str, Any] = {}
+        spec: dict[str, Any] = dict(self._spec.get("scale") or {})
         if domain is not None:
             if isinstance(domain, str):
                 if domain != "auto":
                     raise ValueError("scale domain is 'auto' or a (lo, hi) pair")
+                spec.pop("domain", None)
             else:
                 domain = tuple(domain)
                 if len(domain) != 2:
                     raise ValueError("scale domain expects a (lo, hi) pair")
+                if any(bound is not None and not math.isfinite(bound) for bound in domain):
+                    raise ValueError("scale domain bounds must be finite")
+                if domain[0] is not None and domain[1] is not None and domain[0] >= domain[1]:
+                    raise ValueError("scale domain bounds must be increasing")
                 spec["domain"] = domain
         if include_zero is not None:
             spec["include_zero"] = include_zero
@@ -476,11 +523,11 @@ class MarkColumn(Column):
         if transform is not None:
             if transform not in ("linear", "log"):
                 raise ValueError("scale transform is 'linear' or 'log'")
-            if transform == "log" and domain is not None and not isinstance(domain, str):
-                bounds = [bound for bound in spec.get("domain", ()) if bound is not None]
-                if any(bound <= 0 for bound in bounds):
-                    raise ValueError("a log scale needs a positive domain")
             spec["transform"] = transform
+        if spec.get("transform") == "log":
+            bounds = [bound for bound in spec.get("domain", ()) if bound is not None]
+            if any(bound <= 0 for bound in bounds):
+                raise ValueError("a log scale needs a positive domain")
         if axis is not None:
             spec["axis"] = axis
         if axis_position is not None:
@@ -591,7 +638,61 @@ def resolve_encodings(
     """
     hidden: dict[str, list[Any]] = {}
     resolved = [_resolve_column(column, rows, hidden) for column in columns]
+    for column in resolved:
+        _validate_encoding_data(column, rows, hidden)
     return resolved, hidden
+
+
+def _validate_encoding_data(
+    column: Mapping[str, Any], rows: Sequence[Mapping[str, Any]], hidden: Mapping[str, Sequence[Any]]
+) -> None:
+    """Validate coordinate compatibility and magnitude constraints before JSON."""
+    encodings = column.get("encodings") or []
+    if not encodings:
+        return
+    kinds = {encoding["kind"] for encoding in encodings}
+    if column.get("viz") == "sparkline":
+        raise ValueError("sparkline cannot share coordinates with scalar marks")
+    if "strip" in kinds and len(kinds) > 1:
+        raise ValueError("strip cannot share coordinates with scalar marks")
+    scale = column.get("scale") or {}
+    domain = scale.get("domain")
+    if domain and any(encoding.get("side") or encoding.get("diverge_at") for encoding in encodings):
+        low, high = domain
+        if low is not None and high is not None and low != 0 and low != -high:
+            raise ValueError("a two-sided scale domain must be (0, magnitude) or (-magnitude, magnitude)")
+    for index, row in enumerate(rows):
+        if row.get("render_type") not in (None, "cell_data"):
+            continue
+        for encoding in encodings:
+            source = encoding["source"]
+            value = hidden[source][index] if source in hidden else row.get(source)
+            kind = encoding["kind"]
+            if kind == "strip" and isinstance(value, list) and value:
+                last = value[-1]
+                if isinstance(last, Mapping) and last.get("position") is not None and last.get("end") is None:
+                    domain = scale.get("domain") or (None, None)
+                    if domain[1] is None:
+                        raise ValueError(
+                            "a change-point strip needs an explicit terminal bound: scale(domain=(lo, hi))"
+                        )
+            if value is None:
+                continue
+            if kind == "stacked_bar" or encoding.get("side"):
+                if float(value) < 0:
+                    raise ValueError(f"{kind} source {source!r} requires nonnegative magnitudes")
+            if scale.get("transform") != "log":
+                continue
+            fields = [source, encoding.get("high"), *(encoding.get("parts") or {}).values()]
+            values = [hidden[field][index] if field in hidden else row.get(field) for field in fields if field]
+            if kind == "points":
+                values = [
+                    item.get("value", item.get("x", item.get("y"))) if isinstance(item, Mapping) else item
+                    for item in value
+                ]
+            for observed in values:
+                if observed is not None and float(observed) <= 0:
+                    raise ValueError(f"a log scale needs positive values in {source!r}")
 
 
 def apply_hidden_columns(rows: list[dict[str, Any]], hidden: Mapping[str, Sequence[Any]]) -> None:
@@ -715,6 +816,8 @@ def stacked_bar(
     column = _mark_column(sources[0], title=title)
     encodings: list[dict[str, Any]] = []
     colour_list = list(colors or [])
+    if colors is not None and len(colour_list) != len(sources):
+        raise ValueError("stacked_bar colors must have one entry per segment")
     for index, source in enumerate(sources):
         style: dict[str, Any] = {}
         if index < len(colour_list) and colour_list[index] is not None:

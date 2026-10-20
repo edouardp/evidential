@@ -46,8 +46,15 @@ Chosen option: extend the existing row model rather than add a parallel one.
   option.
 - A section that spans a page break is re-introduced at the top of the later
   page as `"<label> (cont.)"` (`et-row-continuation`). Plain section rows no
-  longer suppress pagination; accordion groups and subtotal/total rows still
-  keep to one page so a group is never split.
+  longer suppress pagination. Builder sections, summaries and totals paginate
+  in their declared order; hierarchical accordion subtotals still stay on one
+  page. A continuation is not inserted before a grand total.
+- `section_indent` insets detail stub cells beneath left-aligned builder
+  sections by that many rem, independently of font weight or shading. Explicit
+  `stub` columns are inset, or the first column when no stub is configured.
+  Centered sections do not inset their detail rows.
+- The first and last body rows retain horizontal boundary rules even when
+  `row_lines=False`; the rules apply to each displayed page.
 
 ### Consequences
 

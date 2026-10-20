@@ -1,5 +1,6 @@
 // Color scale utilities, ported from Evidence's color-scale-utils.
 import chroma from "chroma-js";
+import { encodingRange } from "./mark-data.js";
 
 export const FALLBACK_COLOR_SCALE = ["#dbeafe", "#1e40af"];
 
@@ -259,147 +260,18 @@ export function contrastTextColor(colorValue) {
   }
 }
 
-/**
- * Split a diverging stack into its left and right arms. Categories before the
- * ``diverge_at`` segment grow left; those after grow right; the pivot segment
- * is halved across the origin.
- */
-export function divergingTotals(encodings, row) {
-  const pivot = encodings.findIndex((enc) => enc.source === encodings[0].diverge_at);
-  let left = 0;
-  let right = 0;
-  encodings.forEach((enc, index) => {
-    const num = Number(row[enc.source]);
-    const value = isFinite(num) && num > 0 ? num : 0;
-    if (index < pivot) left += value;
-    else if (index > pivot) right += value;
-    else {
-      left += value / 2;
-      right += value / 2;
-    }
-  });
-  return { left, right };
-}
-
 /** Compute per-column visualization ranges (bar / color / chip) over data rows. */
 export function calculateVizRanges(columns, rows) {
   const ranges = new Map();
   for (const col of columns) {
     if (col.encodings && col.encodings.length) {
-      // A marks column shares one scale across every encoding's sources.
-      const stacked = col.encodings.some((enc) => enc.kind === "stacked_bar");
-      const diverging = stacked && col.encodings.some((enc) => enc.diverge_at);
-      const strip = col.encodings.some((enc) => enc.kind === "strip");
-      const distribution = col.encodings.some((enc) => enc.kind === "distribution");
-      const scatter = col.encodings.some((enc) => enc.kind === "points");
-      let min = Infinity;
-      let max = -Infinity;
-      for (const row of rows) {
-        if (row.render_type === "row_total" || row.render_type === "row_subtotal") continue;
-        if (scatter) {
-          // An array-of-points column shares an axis across its observations.
-          for (const enc of col.encodings) {
-            const raw = row[enc.source];
-            if (!Array.isArray(raw)) continue;
-            for (const item of raw) {
-              const value = item && typeof item === "object" ? (item.value ?? item.x ?? item.y) : item;
-              const num = Number(value);
-              if (isFinite(num)) {
-                min = Math.min(min, num);
-                max = Math.max(max, num);
-              }
-            }
-          }
-          continue;
-        }
-        if (distribution) {
-          // A density band shares an ordered x axis across rows.
-          for (const enc of col.encodings) {
-            const raw = row[enc.source];
-            if (!Array.isArray(raw)) continue;
-            for (const item of raw) {
-              const num = Number(item && item[enc.x]);
-              if (item && item[enc.x] != null && isFinite(num)) {
-                min = Math.min(min, num);
-                max = Math.max(max, num);
-              }
-            }
-          }
-          continue;
-        }
-        if (strip) {
-          // A positioned strip shares a time/value axis across all rows.
-          for (const enc of col.encodings) {
-            const raw = row[enc.source];
-            if (!Array.isArray(raw)) continue;
-            for (const item of raw) {
-              if (!item || typeof item !== "object") continue;
-              for (const key of ["start", "position", "end", "finish"]) {
-                const num = Number(item[key]);
-                if (isFinite(num)) {
-                  min = Math.min(min, num);
-                  max = Math.max(max, num);
-                }
-              }
-            }
-          }
-          continue;
-        }
-        if (diverging) {
-          // A diverging stack is read against the larger of its two arms.
-          const normalize = (col.scale || {}).normalize === "percent";
-          const arms = divergingTotals(col.encodings, row);
-          const span = Math.max(Math.abs(arms.left), Math.abs(arms.right));
-          if (normalize) {
-            min = 0;
-            max = 100;
-          } else if (span > 0) {
-            min = 0;
-            max = Math.max(max, span);
-          }
-          continue;
-        }
-        if (stacked) {
-          // A percent stack always spans 0..100; a raw stack its cumulative total.
-          if ((col.scale || {}).normalize === "percent") {
-            min = 0;
-            max = 100;
-            continue;
-          }
-          let total = 0;
-          for (const enc of col.encodings) {
-            const num = Number(row[enc.source]);
-            if (isFinite(num) && num > 0) total += num;
-          }
-          if (total > 0) {
-            min = 0;
-            max = Math.max(max, total);
-          }
-          continue;
-        }
-        for (const enc of col.encodings) {
-          const fields = [enc.source, enc.high];
-          if (enc.parts) fields.push(...Object.values(enc.parts));
-          for (const field of fields) {
-            const raw = field == null ? null : row[field];
-            const num = Number(raw);
-            if (raw !== null && raw !== undefined && isFinite(num)) {
-              min = Math.min(min, num);
-              max = Math.max(max, num);
-            }
-          }
-          if (enc.outliers && Array.isArray(row[enc.outliers])) {
-            for (const outlier of row[enc.outliers]) {
-              const num = Number(outlier);
-              if (isFinite(num)) {
-                min = Math.min(min, num);
-                max = Math.max(max, num);
-              }
-            }
-          }
-        }
+      const range = encodingRange(col, rows);
+      if (range) {
+        // A presentation slot can reuse a field shown in another column.
+        // Keep its own domain even when the field-name lookup is shared.
+        ranges.set(col, range);
+        ranges.set(col.name, range);
       }
-      if (min !== Infinity && max !== -Infinity) ranges.set(col.name, { min, max });
       continue;
     }
     if (col.viz !== "bar" && col.viz !== "color" && col.viz !== "chip") continue;
@@ -424,7 +296,9 @@ export function calculateVizRanges(columns, rows) {
     if (min !== Infinity && max !== -Infinity) {
       if (opts.min != null && isFinite(opts.min)) min = opts.min;
       if (opts.max != null && isFinite(opts.max)) max = opts.max;
-      ranges.set(col.name, { min, max });
+      const range = { min, max };
+      ranges.set(col, range);
+      ranges.set(col.name, range);
     }
   }
   return ranges;

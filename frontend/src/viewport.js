@@ -1,4 +1,5 @@
 // Fullscreen sizing and frozen-column lifecycle, supplied through explicit ports.
+import { fitMarkLabels } from "./mark-labels.js";
 const ROW_HEIGHT = 28;
 
 export class TableViewport {
@@ -28,6 +29,7 @@ export class TableViewport {
     this.frames = new Set();
     this.observer = new ResizeObserver(() => {
       this.applyFrozenOffsets();
+      fitMarkLabels(this.root);
       if (this.expanded) this.fit();
     });
     this.observer.observe(scroller);

@@ -96,7 +96,9 @@ export function searchRows(rows, columns, search, hidden) {
   }
   return rows.filter((row) => {
     if (row.render_type === "row_total") return true;
-    if (row.render_type === "row_subtotal") return keepGroups.has(row.__group_key);
+    if (row.render_type === "row_subtotal" || row.render_type === "row_section") {
+      return keepGroups.has(row.__group_key) || matches(row);
+    }
     return matches(row);
   });
 }
@@ -146,7 +148,7 @@ export function paginateRows(rows, pageSize, pageIndex, options,
   // Synthetic *section* rows (`.row_section`) may paginate; accordion groups
   // and subtotal/total rows stay on one page so a group is never split.
   const grouping = rows.some(
-    (row) => row.render_type === "row_subtotal" || row.render_type === "row_total",
+    (row) => !row.__row_builder && (row.render_type === "row_subtotal" || row.render_type === "row_total"),
   );
   void hasGroups;
   if (!pageSize || pageSize === "all" || pageSize <= 0 || grouping || opts.collapsible) {
@@ -259,9 +261,11 @@ export function shaded(index, options) {
 export function sectionContinuation(allRows, start, pageRows) {
   if (!start || !pageRows || !pageRows.length) return null;
   if (pageRows[0].render_type === "row_section") return null;
+  if (pageRows[0].render_type === "row_total") return null;
   for (let index = start - 1; index >= 0; index -= 1) {
     const row = allRows[index];
     if (row.render_type === "row_section") {
+      if (pageRows[0].__parent_key && pageRows[0].__parent_key !== row.__group_key) return null;
       const label = row.__label;
       return label == null || label === "" ? null : `${label} (cont.)`;
     }

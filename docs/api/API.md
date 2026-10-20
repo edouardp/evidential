@@ -519,9 +519,17 @@ columns=[
   a list of `{position, category}` structs fills each state to the next.
 - **Labels** — `label=True` labels the mark's own value, `label="@field"` labels
   another field, `label={source=, text=, prefix=, suffix=, format=, position=,
-  align=}` is the mapping form, and `.label(...)` the long form. `align`
+  align=, overflow=, min_width=, color=}` is the mapping form, and `.label(...)`
+  the long form. Repeated `.label(...)` calls refine the latest mark's label,
+  retaining its source unless a new source/text/value is supplied. `align`
   (`"begin"|"center"|"end"`) places text inside a bar or stack segment. Where a
   label position is omitted, bars label `outside_end` and points `center`.
+  Labels that do not fit hide completely by default, with the original values
+  retained in the mark tooltip and accessible text; `overflow="show"` opts out.
+  `min_width` is a pixel threshold. `.range(..., cap="line", overflow="arrow")`
+  keeps endpoint caps and independently indicates out-of-domain intervals.
+  Text inside bars and stack segments defaults to white on dark fills and dark
+  text on light fills. An explicit label `color` overrides this choice.
 - **Scale** — `.scale(domain=(lo, hi), include_zero=, unit=, transform=`
   `"linear"|"log", axis=, axis_position="top"|"bottom", gridlines=)` fixes the
   shared quantitative axis; `.reference_line(value, label=, color=)` adds a rule
@@ -530,6 +538,13 @@ columns=[
   `gridlines=True` faint vertical lines through the cells. A log scale needs a
   positive domain, uses a power-of-ten tick ladder, and is what a forest plot
   uses with `.reference_line(1)`.
+  Repeated `.scale(...)` calls preserve earlier settings; `domain="auto"`
+  explicitly clears fixed bounds. Missing data suppresses only its own mark.
+  Automatic marks domains exclude synthetic rows and include all detail-row
+  sources, interval endpoints and cumulative stack totals.
+  For two-sided bars/Likert stacks, `(0, magnitude)` denotes the extent of
+  each arm and displays a signed `-magnitude…+magnitude` axis. An explicit
+  symmetric signed domain is also accepted; asymmetric signed bounds are rejected.
 - **Cell chrome** — `.cell_style(background=, color=, border=, padding=)` styles
   the cell independently of the marks; `background="@column"` takes a per-row
   colour. Matching `rules` still win for the same property.
@@ -539,6 +554,16 @@ columns=[
 
 A single plain bar still serialises to the classic `viz="bar"` shape, so
 `col.bar("revenue")` keeps working exactly as before.
+
+Builder `.section(values=...)` rows display their summary values beside the
+section label. `section_indent=1` insets detail stubs below left-aligned sections
+by one rem. Builder summaries paginate; later pages repeat the section label.
+Prepare filtered input before `rows.of(...).build()` to recalculate aggregates:
+browser search preserves precomputed summary values, including Python callables.
+
+`col.html(...)` and `.html()` explicitly opt into **trusted, unsanitized HTML**.
+Only use them with content you control or have sanitized upstream. Ordinary text
+columns escape source strings and never interpret them as HTML.
 
 ### Back-to-back bars
 

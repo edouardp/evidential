@@ -8,6 +8,7 @@ import pytest
 
 from evidential import EvidentialTable, col
 from evidential.marks import MarkColumn
+from evidential.marks import strip as strip_column
 
 ROWS = [
     {"city": "NYC", "current": 8, "previous": 5, "candidate": "Alpha", "target": 6, "low": 2, "high": 9},
@@ -75,6 +76,123 @@ def test_scale_and_references_are_column_level() -> None:
     spec = dict(col.bar("current").scale(domain=(0, 100), include_zero=True, unit="%").reference_line(55, label="avg"))
     assert spec["scale"] == {"domain": (0, 100), "include_zero": True, "unit": "%"}
     assert spec["references"] == [{"value": 55, "label": "avg"}]
+
+
+def test_refining_a_label_retains_its_source_and_can_replace_it() -> None:
+    base = col.bar("current", label="@candidate")
+    positioned = base.label(position="inside_end").label(prefix="→ ")
+    assert positioned["encodings"][0]["label"] == {"source": "candidate", "position": "inside_end", "prefix": "→ "}
+    assert positioned.label(text="New")["encodings"][0]["label"] == {
+        "text": "New",
+        "position": "inside_end",
+        "prefix": "→ ",
+    }
+    assert base["encodings"][0]["label"] == {"source": "candidate"}
+    assert col.bar("current").bar(label="@candidate")["encodings"][0]["label"] == {"source": "candidate"}
+
+
+def test_scale_refinement_preserves_domain_and_normalization() -> None:
+    base = col.bar("current").scale(domain=(10, 20))
+    assert base.scale(axis=True)["scale"] == {"domain": (10, 20), "axis": True}
+    assert base.scale(domain="auto", axis=True)["scale"] == {"axis": True}
+    assert col.stacked_bar("a", "b", normalize="percent").scale(axis=True)["scale"] == {
+        "normalize": "percent",
+        "axis": True,
+    }
+
+
+def test_valign_is_not_lost_to_legacy_serialization() -> None:
+    assert col.bar("current", valign="top")["encodings"][0]["valign"] == "top"
+
+
+@pytest.mark.parametrize("domain", [(20, 10), (10, 10), (0, float("inf"))])
+def test_scale_requires_finite_increasing_bounds(domain) -> None:
+    with pytest.raises(ValueError, match="finite|increasing"):
+        col.point("x").scale(domain=domain)
+
+
+def test_log_domain_validation_survives_fluent_refinement() -> None:
+    with pytest.raises(ValueError, match="positive domain"):
+        col.point("x").scale(domain=(0, 10)).scale(transform="log")
+    with pytest.raises(ValueError, match="positive domain"):
+        col.point("x").scale(transform="log").scale(domain=(-1, 10))
+
+
+def test_label_fit_and_color_options_are_typed_and_preserved() -> None:
+    column = col.bar("current").label(value=True, overflow="show", min_width=12, color="red")
+    table = EvidentialTable(ROWS, columns=[column])
+    assert table.columns[0]["encodings"][0]["label"] == {
+        "value": True,
+        "overflow": "show",
+        "min_width": 12,
+        "color": "red",
+    }
+    with pytest.raises(ValueError, match="overflow"):
+        column.label(overflow="clip")
+    with pytest.raises(ValueError, match="min_width"):
+        column.label(min_width=-1)
+
+
+def test_bar_refinement_normalizes_color_bindings() -> None:
+    base = col.bar("current", color="red", size=0.5)
+    assert base.bar(color="@paint")["encodings"][0]["color_column"] == "paint"
+    fixed = base.bar(color="@paint").bar(color="blue")["encodings"][0]
+    assert fixed["color"] == "blue" and "color_column" not in fixed
+
+
+@pytest.mark.parametrize(
+    "column,data",
+    [
+        (col.stacked_bar("a", "b"), [{"a": -1, "b": 2}]),
+        (col.bar("a", side="left"), [{"a": -1}]),
+        (col.point("a").scale(transform="log"), [{"a": 0}]),
+        (col.range("a", "b").scale(transform="log"), [{"a": -1, "b": 5}]),
+    ],
+)
+def test_invalid_mark_magnitudes_are_rejected(column, data) -> None:
+    with pytest.raises(ValueError, match="nonnegative|positive"):
+        EvidentialTable(data, columns=[column])
+
+
+def test_change_point_strip_requires_a_terminal_bound() -> None:
+    data = [{"states": [{"position": 0, "category": "on"}, {"position": 4, "category": "off"}]}]
+    with pytest.raises(ValueError, match="terminal bound"):
+        EvidentialTable(data, columns=[strip_column("states")])
+    table = EvidentialTable(data, columns=[strip_column("states").scale(domain=(0, 10))])
+    assert table.columns[0]["scale"]["domain"] == (0, 10)
+
+
+def test_range_overflow_is_independent_of_its_cap_style() -> None:
+    table = EvidentialTable(ROWS, columns=[col.range("low", "high", cap="line", overflow="arrow")])
+    assert table.columns[0]["encodings"][0]["overflow"] == "arrow"
+
+
+def test_two_sided_layout_rejects_an_asymmetric_signed_domain() -> None:
+    with pytest.raises(ValueError, match="two-sided scale domain"):
+        EvidentialTable([{"a": 10}], columns=[col.bar("a", side="left").scale(domain=(-10, 30))])
+
+
+def test_incompatible_coordinates_fail_clearly() -> None:
+    with pytest.raises(ValueError, match="strip.*share"):
+        EvidentialTable([{"states": ["W"], "a": 1}], columns=[strip_column("states").point("a")])
+    with pytest.raises(ValueError, match="sparkline.*share"):
+        EvidentialTable(ROWS, columns=[col.bar("current").sparkline()])
+
+
+def test_stack_colors_are_positional_and_length_checked() -> None:
+    with pytest.raises(ValueError, match="colors.*segment"):
+        col.stacked_bar("a", "b", colors=["red"])
+
+
+def test_duckdb_structured_sparkline_preserves_order_and_missing_observations() -> None:
+    import duckdb
+
+    relation = duckdb.sql("""
+        SELECT list({'x': x, 'y': y} ORDER BY x) AS trend
+        FROM (VALUES (10, 4), (0, 2), (1, NULL)) AS data(x, y)
+    """)
+    table = EvidentialTable(relation, columns=[col.sparkline("trend", x="x", y="y")])
+    assert table.rows[0]["trend"] == [{"x": 0, "y": 2}, {"x": 1, "y": None}, {"x": 10, "y": 4}]
 
 
 def test_stacked_bar_is_a_distinct_encoding_with_positional_colours() -> None:

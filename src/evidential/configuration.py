@@ -65,6 +65,8 @@ class TableOptions(TypedDict, total=False):
     null_text: str | None
     stub: str | Sequence[str] | None
     stub_head: str | None
+    #: Inset detail stubs beneath left-aligned builder sections, in rem.
+    section_indent: float | None
     footnote_marks: Literal["numbers", "letters", "symbols"] | None
     all_caps: bool
     stretch: bool
@@ -286,6 +288,9 @@ class EncodingLabel(TypedDict, total=False):
     share: bool | None
     #: Text alignment within the mark/segment (stacked bars use ``"begin"``).
     align: Literal["begin", "center", "end"] | None
+    overflow: Literal["hide", "show"] | None
+    min_width: float | None
+    color: str | None
 
 
 class BoxParts(TypedDict, total=False):
@@ -318,6 +323,7 @@ class EncodingSpec(TypedDict, total=False):
     side: Literal["left", "right"] | None
     #: ``range``: end treatment, or ``"arrow"`` when an endpoint is off-scale.
     cap: Literal["none", "line", "dot", "arrow"] | None
+    overflow: Literal["clip", "arrow"] | None
     #: ``range``: draw the interval as a translucent band rather than a line.
     fill: bool | None
     #: Vertical placement of the mark within the cell.
@@ -451,6 +457,7 @@ TABLE_DEFAULTS: TableOptions = {
     "null_text": None,
     "stub": None,
     "stub_head": None,
+    "section_indent": None,
     "footnote_marks": "symbols",
     "all_caps": False,
     "stretch": True,

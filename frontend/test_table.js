@@ -2200,7 +2200,7 @@ test("marks axis renders tick labels and gridlines", () => {
   const renderer = new EvidentialTableRenderer(makeModel(rows, columns, { page_size: 10 }, el), el);
   const ticks = [...el.querySelectorAll(".et-axis-tick")];
   assert.ok(ticks.length >= 3);
-  assert.match(el.querySelector(".et-axis-row").textContent, /40/);
+  assert.match(el.querySelector(".et-axis-row").textContent, /25/);
   assert.ok(el.querySelector(".et-mark-gridline"));
   renderer.destroy();
 });

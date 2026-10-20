@@ -5,6 +5,7 @@
 // conditional visualizations, collapsible groups, frozen columns, pagination,
 // CSV export, and a fullscreen dialog.
 import { footnoteMark, labelFootnotes } from "./footnotes.js";
+import { fitMarkLabels } from "./mark-labels.js";
 import { renderStatsRow } from "./statistics.js";
 import { renderHeader, headerLayout, decorateSubcolumn, orderedColumns } from "./headers.js";
 import { RowPipeline } from "./derived.js";
@@ -291,8 +292,8 @@ export class EvidentialTableRenderer {
     const footnotes = [];
     const isEmpty = rows.length === 0;
     const axisColumns = columns.filter((col) => col.encodings && (col.scale || {}).axis);
-    const hasAxis = axisColumns.length > 0 && !isEmpty;
-    const axisPosition = hasAxis ? axisColumns[0].scale.axis_position || "top" : "top";
+    const hasTopAxis = !isEmpty && axisColumns.some(col => col.scale.axis_position !== "bottom");
+    const hasBottomAxis = !isEmpty && axisColumns.some(col => col.scale.axis_position === "bottom");
     // With columns configured, an empty table keeps its headers and shows blank
     // placeholder rows under a translucent message overlay, so it holds its size
     // while a filter or selection is pending. Without columns there is nothing
@@ -324,8 +325,10 @@ export class EvidentialTableRenderer {
           emptyRows: isEmpty ? this._emptyRowCount(opts) : 0,
           emptyMessage: opts.empty_message || "No records",
           continuationLabel,
-          hasAxis,
-          axisPosition,
+          insetGroups: new Set(visibility.rows.filter(row => row.render_type === "row_section" && row.__align !== "center")
+            .map(row => row.__group_key)),
+          hasTopAxis,
+          hasBottomAxis,
         }),
       );
     }
@@ -335,7 +338,10 @@ export class EvidentialTableRenderer {
     this.caption.replaceChildren();
     if (opts.caption) this.caption.append(inlineMarkdown(opts.caption));
     this._updateBaselineHeight();
-    this._viewport.frame(() => this._viewport.applyFrozenOffsets());
+    this._viewport.frame(() => {
+      this._viewport.applyFrozenOffsets();
+      fitMarkLabels(this.root);
+    });
 
     this.el.dataset.rowCount = String(total);
     this.el.dataset.renderCount = String((Number(this.el.dataset.renderCount) || 0) + 1);
@@ -446,8 +452,7 @@ export class EvidentialTableRenderer {
         tbody.append(this._renderPlaceholderRow(columns, ctx));
       }
     } else {
-      const axisFirst = ctx.hasAxis && ctx.axisPosition !== "bottom";
-      if (axisFirst) tbody.append(this._renderAxisRow(columns, ctx));
+      if (ctx.hasTopAxis) tbody.append(this._renderAxisRow(columns, ctx, "top"));
       if (ctx.stats) tbody.append(this._renderStatsRow(columns, ctx));
       if (ctx.continuationLabel) {
         // A section that spans pages repeats its label at the top of the page.
@@ -459,8 +464,8 @@ export class EvidentialTableRenderer {
         );
       }
       rows.forEach((row, index) => tbody.append(this._renderRow(row, columns, ctx, index)));
-      if (ctx.hasAxis && ctx.axisPosition === "bottom") {
-        tbody.append(this._renderAxisRow(columns, ctx));
+      if (ctx.hasBottomAxis) {
+        tbody.append(this._renderAxisRow(columns, ctx, "bottom"));
       }
     }
     table.append(tbody);
@@ -469,31 +474,34 @@ export class EvidentialTableRenderer {
   }
 
   /** A tick axis for the marks columns that ask for one (`scale(axis=True)`). */
-  _renderAxisRow(columns, ctx) {
+  _renderAxisRow(columns, ctx, position) {
     const opts = this.options;
-    const tr = h("tr", { class: "et-row et-axis-row" });
+    const tr = h("tr", { class: `et-row et-axis-row et-axis-row-${position}` });
     if (ctx.rowNumbers) tr.append(h("td", { class: "et-td et-row-num" }));
-    for (const col of columns) {
+    for (const [index, col] of columns.entries()) {
       const scale = col.scale || {};
-      if (!col.encodings || !scale.axis) {
-        tr.append(h("td", { class: "et-td" }));
+      const cell = h("td", { class: `et-td${isStub(opts, col) ? " et-stub" : ""}` });
+      decorateSubcolumn(cell, col, index, ctx);
+      tr.append(cell);
+      if (!col.encodings || !scale.axis || (scale.axis_position || "top") !== position) {
         continue;
       }
-      const { lo, hi } = marksDomain(col, ctx.ranges.get(col.name));
+      cell.classList.add("et-axis-cell");
+      const { lo, hi } = marksDomain(col, ctx.ranges.get(col) || ctx.ranges.get(col.name));
       const pos = scalePosition(lo, hi, scale.transform);
       const axis = h("div", { class: "et-axis" });
       for (const tick of niceTicks(lo, hi, 4, scale.transform)) {
         const raw = pos(tick);
         if (raw == null) continue;
         const pct = Math.max(0, Math.min(100, raw));
-        const label = formatValue(tick, col.fmt, {
+        const label = formatValue(tick, col.fmt || (Number.isInteger(tick) ? "num0" : "num"), {
           type: col.type,
           range: ctx.formatRanges.get(col.name),
           fallback: String(tick),
         });
         axis.append(h("span", { class: "et-axis-tick", style: { left: `${pct}%` } }, label));
       }
-      tr.append(h("td", { class: `et-td et-axis-cell${isStub(opts, col) ? " et-stub" : ""}` }, axis));
+      cell.append(axis);
     }
     if (opts.link) tr.append(h("td", { class: "et-td" }));
     return tr;
@@ -552,6 +560,13 @@ export class EvidentialTableRenderer {
 
   _renderRow(row, columns, ctx, index) {
     const opts = this.options;
+    if (row.render_type === "row_section" && row.__combined) {
+      // Render explicit section values in ordinary cells beside the label.
+      row = {...row, render_type: "row_subtotal", __level: 0,
+        [columns[0]?.name]: row.__label};
+    } else if (["row_total", "row_subtotal"].includes(row.render_type) && row.__label && columns[0] && row[columns[0].name] == null) {
+      row = {...row, [columns[0].name]: row.__label};
+    }
     const renderType = row.render_type || "cell_data";
     if (renderType === "row_section") {
       const colSpan = columns.length + (ctx.rowNumbers ? 1 : 0) + (opts.link ? 1 : 0);
@@ -589,7 +604,7 @@ export class EvidentialTableRenderer {
         row.__combined ? "et-row-combined" : "",
         hasLink ? "et-row-link" : "",
         isSubtotal ? "et-row-collapsible" : "",
-        renderType === "cell_data" && shaded(ctx.shadingCounter.value++, opts) ? "et-row-shaded" : "",
+        (renderType === "cell_data" || row.__combined) && shaded(ctx.shadingCounter.value++, opts) ? "et-row-shaded" : "",
       ].filter(Boolean).join(" "),
     });
     if (hasLink) tr.addEventListener("click", () => { window.location.href = String(row[opts.link]); });

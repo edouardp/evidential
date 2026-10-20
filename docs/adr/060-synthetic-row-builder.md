@@ -58,6 +58,19 @@ rows.of(detail)
   (flat: no accordion indent, no chevron); a section with `render_type=
   "row_section"`; the total with `render_type="row_total"`. So the existing
   renderer styles them without new row kinds.
+- Builder rows carry `__row_builder`, stable `__group_key` / `__parent_key`
+  identities and detail `__ancestors`. Sorting stays within each section;
+  search retains headings and summaries for matching detail rows. This
+  metadata distinguishes flat builder summaries from accordion subtotals, so
+  builder tables can paginate with continuation headings.
+- `.section(values=...)` renders a combined section and summary, with values
+  in their configured columns. Centered sections reject summary values.
+  Summary/total labels also work when the grouping dimension is not displayed.
+  Internal metadata is excluded from default numeric totals.
+- Values are computed when `build()` runs. Filter the input in SQL/Python
+  **before** building to calculate summaries for a filtered result. Browser
+  search changes the visible detail rows and preserves precomputed summaries;
+  it cannot re-execute arbitrary Python summary functions in a static export.
 
 ### Consequences
 

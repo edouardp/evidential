@@ -5,12 +5,363 @@
   "end_year": 2021,
   "records": [
     {
-      "country_code": "DNK",
-      "country": "**Denmark**",
-      "gdp": 4.6044370184453065,
-      "consumption": 3.517536477939176,
-      "prices": 63.09467954252348,
-      "investment": 17.60899492093071,
+      "country_code": "AFG",
+      "country": "**Afghanistan**",
+      "gdp": -22.602349047924353,
+      "consumption": null,
+      "prices": null,
+      "investment": null,
+      "debt": null
+    },
+    {
+      "country_code": "ALB",
+      "country": "**Albania**",
+      "gdp": 5.358589919568746,
+      "consumption": 1.782080153475496,
+      "prices": null,
+      "investment": 18.504063284399507,
+      "debt": 7.111976740442188
+    },
+    {
+      "country_code": "DZA",
+      "country": "**Algeria**",
+      "gdp": -1.389999999994529,
+      "consumption": -6.4458396866640015,
+      "prices": null,
+      "investment": -6.828800000577218,
+      "debt": null
+    },
+    {
+      "country_code": "ASM",
+      "country": "**American Samoa**",
+      "gdp": 3.594771241830075,
+      "consumption": 14.722350275422924,
+      "prices": null,
+      "investment": null,
+      "debt": null
+    },
+    {
+      "country_code": "AND",
+      "country": "**Andorra**",
+      "gdp": -3.8239495075641283,
+      "consumption": null,
+      "prices": null,
+      "investment": null,
+      "debt": 19.918047191056942
+    },
+    {
+      "country_code": "AGO",
+      "country": "**Angola**",
+      "gdp": -4.24041941987614,
+      "consumption": 19.366874541559586,
+      "prices": null,
+      "investment": -29.207242603643756,
+      "debt": null
+    },
+    {
+      "country_code": "ATG",
+      "country": "**Antigua and Barbuda**",
+      "gdp": -12.23803268487872,
+      "consumption": null,
+      "prices": null,
+      "investment": null,
+      "debt": null
+    },
+    {
+      "country_code": "ARG",
+      "country": "**Argentina**",
+      "gdp": -0.4924628355620908,
+      "consumption": -4.576229171114276,
+      "prices": 83.26588832013357,
+      "investment": 16.505984535549167,
+      "debt": null
+    },
+    {
+      "country_code": "ARM",
+      "country": "**Armenia**",
+      "gdp": -1.8175999985510893,
+      "consumption": -11.930054349660645,
+      "prices": null,
+      "investment": 21.74599999226068,
+      "debt": 10.051939081855714
+    },
+    {
+      "country_code": "ABW",
+      "country": "**Aruba**",
+      "gdp": -12.657561942226947,
+      "consumption": null,
+      "prices": null,
+      "investment": null,
+      "debt": null
+    },
+    {
+      "country_code": "AUS",
+      "country": "**Australia**",
+      "gdp": 1.8707366225707345,
+      "consumption": -3.9069988149183277,
+      "prices": 19.068985203625545,
+      "investment": 1.7411845799257586,
+      "debt": 9.852986974403755
+    },
+    {
+      "country_code": "AUT",
+      "country": "**Austria**",
+      "gdp": -1.7062168680297196,
+      "consumption": -3.852617022580862,
+      "prices": 15.495551387989703,
+      "investment": 0.3316160553585634,
+      "debt": null
+    },
+    {
+      "country_code": "AZE",
+      "country": "**Azerbaijan**",
+      "gdp": 1.1816475010536287,
+      "consumption": null,
+      "prices": null,
+      "investment": null,
+      "debt": null
+    },
+    {
+      "country_code": "BHS",
+      "country": "**Bahamas, The**",
+      "gdp": -6.036171401150137,
+      "consumption": -1.0634927945894934,
+      "prices": null,
+      "investment": -13.701329163408927,
+      "debt": 25.847370006199007
+    },
+    {
+      "country_code": "BHR",
+      "country": "**Bahrain**",
+      "gdp": -1.8184687428894342,
+      "consumption": -0.20343690023062466,
+      "prices": 11.367414480446115,
+      "investment": -6.61180231553481,
+      "debt": null
+    },
+    {
+      "country_code": "BGD",
+      "country": "**Bangladesh**",
+      "gdp": 10.625943549682226,
+      "consumption": 9.430456828180777,
+      "prices": 48.9868757904929,
+      "investment": 12.35590261528432,
+      "debt": null
+    },
+    {
+      "country_code": "BRB",
+      "country": "**Barbados**",
+      "gdp": -10.781988751417416,
+      "consumption": null,
+      "prices": null,
+      "investment": null,
+      "debt": null
+    },
+    {
+      "country_code": "BLR",
+      "country": "**Belarus**",
+      "gdp": 1.7497119116759663,
+      "consumption": 4.813938547805363,
+      "prices": null,
+      "investment": -11.865994433660843,
+      "debt": null
+    },
+    {
+      "country_code": "BEL",
+      "country": "**Belgium**",
+      "gdp": 1.1616978452358762,
+      "consumption": -2.8396121618818437,
+      "prices": -4.787582634773912,
+      "investment": -0.9774921366377365,
+      "debt": null
+    },
+    {
+      "country_code": "BLZ",
+      "country": "**Belize**",
+      "gdp": 2.0342652731517807,
+      "consumption": -0.3625395146342414,
+      "prices": null,
+      "investment": 12.750788171383842,
+      "debt": null
+    },
+    {
+      "country_code": "BEN",
+      "country": "**Benin**",
+      "gdp": 11.279642525207878,
+      "consumption": 2.6468124238059776,
+      "prices": null,
+      "investment": 20.30502097578786,
+      "debt": null
+    },
+    {
+      "country_code": "BMU",
+      "country": "**Bermuda**",
+      "gdp": -2.53884321915262,
+      "consumption": -7.143796883132747,
+      "prices": null,
+      "investment": -17.386752950133243,
+      "debt": null
+    },
+    {
+      "country_code": "BTN",
+      "country": "**Bhutan**",
+      "gdp": -6.248822922696895,
+      "consumption": -0.7247758050696995,
+      "prices": null,
+      "investment": -6.273360730154865,
+      "debt": null
+    },
+    {
+      "country_code": "BOL",
+      "country": "**Bolivia, Plurinational State of**",
+      "gdp": -3.966061891054129,
+      "consumption": -6.543442172773251,
+      "prices": null,
+      "investment": -28.423575783896972,
+      "debt": null
+    },
+    {
+      "country_code": "BIH",
+      "country": "**Bosnia and Herzegovina**",
+      "gdp": 4.1536842863588275,
+      "consumption": 4.3680192480433755,
+      "prices": null,
+      "investment": -0.035360243849436035,
+      "debt": 2.9512479512352954
+    },
+    {
+      "country_code": "BWA",
+      "country": "**Botswana**",
+      "gdp": 2.1472325853328034,
+      "consumption": 1.8640785146497363,
+      "prices": -8.97457590677131,
+      "investment": -8.951592458686308,
+      "debt": 3.5067175267172104
+    },
+    {
+      "country_code": "BRA",
+      "country": "**Brazil**",
+      "gdp": 1.329786524679566,
+      "consumption": -2.7238301786088215,
+      "prices": -39.48112637909151,
+      "investment": 10.934675409899919,
+      "debt": -7.553749517740172
+    },
+    {
+      "country_code": "VGB",
+      "country": "**British Virgin Islands**",
+      "gdp": null,
+      "consumption": null,
+      "prices": null,
+      "investment": null,
+      "debt": null
+    },
+    {
+      "country_code": "BRN",
+      "country": "**Brunei Darussalam**",
+      "gdp": -0.4752217123705549,
+      "consumption": 25.714793612303332,
+      "prices": null,
+      "investment": -21.9202920671151,
+      "debt": null
+    },
+    {
+      "country_code": "BGR",
+      "country": "**Bulgaria**",
+      "gdp": 4.4496625823675195,
+      "consumption": 14.892432753289263,
+      "prices": 23.779052978229444,
+      "investment": -2.377423933003553,
+      "debt": null
+    },
+    {
+      "country_code": "BFA",
+      "country": "**Burkina Faso**",
+      "gdp": 9.092895940410827,
+      "consumption": 0.8326069456713103,
+      "prices": null,
+      "investment": 10.54324693558588,
+      "debt": 8.51986018279105
+    },
+    {
+      "country_code": "BDI",
+      "country": "**Burundi**",
+      "gdp": 3.553438420764876,
+      "consumption": -2.273562922914296,
+      "prices": null,
+      "investment": null,
+      "debt": null
+    },
+    {
+      "country_code": "CPV",
+      "country": "**Cabo Verde**",
+      "gdp": -15.23509113632272,
+      "consumption": -5.560368768915513,
+      "prices": null,
+      "investment": null,
+      "debt": null
+    },
+    {
+      "country_code": "KHM",
+      "country": "**Cambodia**",
+      "gdp": -0.5757453122217759,
+      "consumption": -7.06537278905961,
+      "prices": null,
+      "investment": 2.785932952676462,
+      "debt": null
+    },
+    {
+      "country_code": "CMR",
+      "country": "**Cameroon**",
+      "gdp": 3.6074691772865597,
+      "consumption": -0.5002045345989026,
+      "prices": null,
+      "investment": 0.4305902292664143,
+      "debt": null
+    },
+    {
+      "country_code": "CAN",
+      "country": "**Canada**",
+      "gdp": 0.6124931285603097,
+      "consumption": -2.4769092006508675,
+      "prices": 28.182686016272363,
+      "investment": 4.714615005369249,
+      "debt": 15.408159198471239
+    },
+    {
+      "country_code": "CYM",
+      "country": "**Cayman Islands**",
+      "gdp": -0.32666060218828896,
+      "consumption": null,
+      "prices": null,
+      "investment": null,
+      "debt": null
+    },
+    {
+      "country_code": "CAF",
+      "country": "**Central African Republic**",
+      "gdp": 1.8917662730567608,
+      "consumption": -4.772603605723747,
+      "prices": null,
+      "investment": 11.33816024713945,
+      "debt": null
+    },
+    {
+      "country_code": "TCD",
+      "country": "**Chad**",
+      "gdp": -0.10135906130219752,
+      "consumption": -4.3694955681463306,
+      "prices": null,
+      "investment": -9.153106677696032,
+      "debt": null
+    },
+    {
+      "country_code": "CHI",
+      "country": "**Channel Islands**",
+      "gdp": 0.1559668199626607,
+      "consumption": null,
+      "prices": null,
+      "investment": null,
       "debt": null
     },
     {
@@ -23,6 +374,474 @@
       "debt": null
     },
     {
+      "country_code": "CHN",
+      "country": "**China**",
+      "gdp": 11.110392469166829,
+      "consumption": 9.710491147692334,
+      "prices": 1.4696590371214402,
+      "investment": null,
+      "debt": null
+    },
+    {
+      "country_code": "COL",
+      "country": "**Colombia**",
+      "gdp": 2.8391192250778685,
+      "consumption": 6.254029501094971,
+      "prices": -31.146062202597115,
+      "investment": -10.86955390547354,
+      "debt": 7.722083026628383
+    },
+    {
+      "country_code": "COM",
+      "country": "**Comoros**",
+      "gdp": 1.8429013859113885,
+      "consumption": 1.78405169147009,
+      "prices": null,
+      "investment": -6.274206417087413,
+      "debt": null
+    },
+    {
+      "country_code": "COD",
+      "country": "**Congo, Democratic Republic of**",
+      "gdp": 7.254895045005316,
+      "consumption": -3.519657224524786,
+      "prices": null,
+      "investment": 87.82644144597916,
+      "debt": null
+    },
+    {
+      "country_code": "COG",
+      "country": "**Congo, Republic of**",
+      "gdp": -5.316324208987089,
+      "consumption": -2.4574565970722495,
+      "prices": null,
+      "investment": -12.344446422528343,
+      "debt": null
+    },
+    {
+      "country_code": "CRI",
+      "country": "**Costa Rica**",
+      "gdp": 3.736222552059254,
+      "consumption": 0.8852363608500502,
+      "prices": null,
+      "investment": 5.383156221202445,
+      "debt": null
+    },
+    {
+      "country_code": "HRV",
+      "country": "**Croatia**",
+      "gdp": 3.271085936808582,
+      "consumption": 6.92821898458158,
+      "prices": 2.7713972086252703,
+      "investment": -1.720810550016072,
+      "debt": null
+    },
+    {
+      "country_code": "CUB",
+      "country": "**Cuba**",
+      "gdp": -9.832307835529242,
+      "consumption": -10.473059994588175,
+      "prices": null,
+      "investment": -3.7709497206704023,
+      "debt": null
+    },
+    {
+      "country_code": "CUW",
+      "country": "**Cura\u00e7ao**",
+      "gdp": -15.026171557680357,
+      "consumption": null,
+      "prices": null,
+      "investment": null,
+      "debt": null
+    },
+    {
+      "country_code": "CYP",
+      "country": "**Cyprus**",
+      "gdp": 7.809855665530185,
+      "consumption": -4.441237616766214,
+      "prices": 21.637901821666382,
+      "investment": 7.945753587955884,
+      "debt": null
+    },
+    {
+      "country_code": "CZE",
+      "country": "**Czechia**",
+      "gdp": -1.489595803226862,
+      "consumption": -0.9771754231295726,
+      "prices": 37.80949361169343,
+      "investment": 1.6335092333093826,
+      "debt": null
+    },
+    {
+      "country_code": "CIV",
+      "country": "**C\u00f4te d'Ivoire**",
+      "gdp": 7.811684319718415,
+      "consumption": 1.557225312352939,
+      "prices": 22.945736911002392,
+      "investment": 19.218348885602367,
+      "debt": null
+    },
+    {
+      "country_code": "DNK",
+      "country": "**Denmark**",
+      "gdp": 4.6044370184453065,
+      "consumption": 3.517536477939176,
+      "prices": 63.09467954252348,
+      "investment": 17.60899492093071,
+      "debt": null
+    },
+    {
+      "country_code": "DJI",
+      "country": "**Djibouti**",
+      "gdp": 5.66225094759929,
+      "consumption": 17.294167226252743,
+      "prices": null,
+      "investment": 9.508952635662403,
+      "debt": null
+    },
+    {
+      "country_code": "DMA",
+      "country": "**Dominica**",
+      "gdp": -11.171543133907669,
+      "consumption": null,
+      "prices": null,
+      "investment": null,
+      "debt": null
+    },
+    {
+      "country_code": "DOM",
+      "country": "**Dominican Republic**",
+      "gdp": 4.972323741506779,
+      "consumption": 1.4435472419652262,
+      "prices": null,
+      "investment": 14.010734745640363,
+      "debt": null
+    },
+    {
+      "country_code": "ECU",
+      "country": "**Ecuador**",
+      "gdp": -0.6942665436187823,
+      "consumption": -2.587252626793557,
+      "prices": null,
+      "investment": -11.03393390138252,
+      "debt": null
+    },
+    {
+      "country_code": "EGY",
+      "country": "**Egypt, Arab Republic of**",
+      "gdp": 6.9576342084496146,
+      "consumption": 10.523452710433157,
+      "prices": -11.777378301908392,
+      "investment": -22.81611985306713,
+      "debt": null
+    },
+    {
+      "country_code": "SLV",
+      "country": "**El Salvador**",
+      "gdp": 3.072005433971081,
+      "consumption": 0.10862220379606047,
+      "prices": null,
+      "investment": 16.250468594880687,
+      "debt": 12.590013232448591
+    },
+    {
+      "country_code": "GNQ",
+      "country": "**Equatorial Guinea**",
+      "gdp": -3.9720271064503154,
+      "consumption": -10.798695174986705,
+      "prices": null,
+      "investment": -32.346786884824766,
+      "debt": null
+    },
+    {
+      "country_code": "ERI",
+      "country": "**Eritrea**",
+      "gdp": null,
+      "consumption": null,
+      "prices": null,
+      "investment": null,
+      "debt": null
+    },
+    {
+      "country_code": "EST",
+      "country": "**Estonia**",
+      "gdp": 5.1330180683256454,
+      "consumption": 5.955749450291026,
+      "prices": 64.9784453270971,
+      "investment": 21.65751837657033,
+      "debt": null
+    },
+    {
+      "country_code": "SWZ",
+      "country": "**Eswatini**",
+      "gdp": 1.1593384226604941,
+      "consumption": -2.90032466844361,
+      "prices": null,
+      "investment": -6.6476150653839605,
+      "debt": 5.922063462753034
+    },
+    {
+      "country_code": "ETH",
+      "country": "**Ethiopia**",
+      "gdp": 12.042911880893591,
+      "consumption": 11.580097728874383,
+      "prices": null,
+      "investment": -3.5323906464073795,
+      "debt": null
+    },
+    {
+      "country_code": "FRO",
+      "country": "**Faroe Islands**",
+      "gdp": 3.3460891027479844,
+      "consumption": null,
+      "prices": null,
+      "investment": null,
+      "debt": null
+    },
+    {
+      "country_code": "FJI",
+      "country": "**Fiji**",
+      "gdp": -20.782707346433305,
+      "consumption": null,
+      "prices": null,
+      "investment": null,
+      "debt": null
+    },
+    {
+      "country_code": "FIN",
+      "country": "**Finland**",
+      "gdp": 0.11864160546828373,
+      "consumption": -0.6829406199232113,
+      "prices": 31.96657701558625,
+      "investment": 0.6638532577150968,
+      "debt": null
+    },
+    {
+      "country_code": "FRA",
+      "country": "**France**",
+      "gdp": -1.0703984536843514,
+      "consumption": -2.2083782508889316,
+      "prices": 19.65469707552181,
+      "investment": 3.3378252156275323,
+      "debt": null
+    },
+    {
+      "country_code": "PYF",
+      "country": "**French Polynesia**",
+      "gdp": -7.5638156961885255,
+      "consumption": null,
+      "prices": null,
+      "investment": null,
+      "debt": null
+    },
+    {
+      "country_code": "GAB",
+      "country": "**Gabon**",
+      "gdp": -0.39678129639398874,
+      "consumption": -7.834326718894779,
+      "prices": null,
+      "investment": -6.102142385859388,
+      "debt": null
+    },
+    {
+      "country_code": "GMB",
+      "country": "**Gambia, The**",
+      "gdp": 5.878544463278024,
+      "consumption": 1.0169013934283821,
+      "prices": null,
+      "investment": 31.493276567906992,
+      "debt": null
+    },
+    {
+      "country_code": "GEO",
+      "country": "**Georgia**",
+      "gdp": 3.684189357680112,
+      "consumption": 24.029643843566095,
+      "prices": null,
+      "investment": -17.205102112082038,
+      "debt": 10.003440214605142
+    },
+    {
+      "country_code": "DEU",
+      "country": "**Germany**",
+      "gdp": -0.3834723422703856,
+      "consumption": -5.032063805887066,
+      "prices": 19.894694289577863,
+      "investment": -2.202814794536978,
+      "debt": null
+    },
+    {
+      "country_code": "GHA",
+      "country": "**Ghana**",
+      "gdp": 5.616498182370222,
+      "consumption": 4.659475481197006,
+      "prices": 12.597839329844263,
+      "investment": 7.691583526722212,
+      "debt": null
+    },
+    {
+      "country_code": "GIB",
+      "country": "**Gibraltar**",
+      "gdp": null,
+      "consumption": null,
+      "prices": null,
+      "investment": null,
+      "debt": null
+    },
+    {
+      "country_code": "GRC",
+      "country": "**Greece**",
+      "gdp": -1.3376212953822852,
+      "consumption": -0.009557102873825052,
+      "prices": -5.186251778219109,
+      "investment": 23.70065948932687,
+      "debt": null
+    },
+    {
+      "country_code": "GRL",
+      "country": "**Greenland**",
+      "gdp": 1.888982012765128,
+      "consumption": 2.0851202508806566,
+      "prices": null,
+      "investment": 25.292542459924427,
+      "debt": null
+    },
+    {
+      "country_code": "GRD",
+      "country": "**Grenada**",
+      "gdp": -9.70514638251041,
+      "consumption": null,
+      "prices": null,
+      "investment": null,
+      "debt": null
+    },
+    {
+      "country_code": "GUM",
+      "country": "**Guam**",
+      "gdp": -8.677173720559583,
+      "consumption": -1.5494288521896604,
+      "prices": null,
+      "investment": null,
+      "debt": null
+    },
+    {
+      "country_code": "GTM",
+      "country": "**Guatemala**",
+      "gdp": 6.112564072739257,
+      "consumption": 3.781606166027296,
+      "prices": null,
+      "investment": 14.45652256486607,
+      "debt": null
+    },
+    {
+      "country_code": "GIN",
+      "country": "**Guinea**",
+      "gdp": 10.549549697496175,
+      "consumption": -1.0645995685130805,
+      "prices": null,
+      "investment": 3.234138380723328,
+      "debt": null
+    },
+    {
+      "country_code": "GNB",
+      "country": "**Guinea-Bissau**",
+      "gdp": 8.053884895423625,
+      "consumption": -0.1626895814071494,
+      "prices": null,
+      "investment": -7.8843156556067,
+      "debt": null
+    },
+    {
+      "country_code": "GUY",
+      "country": "**Guyana**",
+      "gdp": 72.261666345814,
+      "consumption": null,
+      "prices": null,
+      "investment": null,
+      "debt": null
+    },
+    {
+      "country_code": "HTI",
+      "country": "**Haiti**",
+      "gdp": -5.0443044410748765,
+      "consumption": -5.208707851131733,
+      "prices": null,
+      "investment": -45.29448268595792,
+      "debt": null
+    },
+    {
+      "country_code": "HND",
+      "country": "**Honduras**",
+      "gdp": 2.4737140672762115,
+      "consumption": 4.276363558655771,
+      "prices": null,
+      "investment": 3.677946945016952,
+      "debt": null
+    },
+    {
+      "country_code": "HKG",
+      "country": "**Hong Kong SAR, China**",
+      "gdp": -0.5127953496652959,
+      "consumption": -4.410538983621826,
+      "prices": -2.5509441196143956,
+      "investment": -3.766760848777817,
+      "debt": null
+    },
+    {
+      "country_code": "HUN",
+      "country": "**Hungary**",
+      "gdp": 2.5708079250662763,
+      "consumption": 6.102473809959563,
+      "prices": -3.7161633104529024,
+      "investment": -2.1205219280750587,
+      "debt": 4.148648383171093
+    },
+    {
+      "country_code": "ISL",
+      "country": "**Iceland**",
+      "gdp": -1.8096006914391505,
+      "consumption": 2.1027634502825965,
+      "prices": null,
+      "investment": 6.076470743948126,
+      "debt": 5.3091782475671465
+    },
+    {
+      "country_code": "IND",
+      "country": "**India**",
+      "gdp": 3.3520298056435305,
+      "consumption": 3.8869035658062323,
+      "prices": 50.6287477369215,
+      "investment": 9.181859658221159,
+      "debt": null
+    },
+    {
+      "country_code": "IDN",
+      "country": "**Indonesia**",
+      "gdp": 1.5608902582568085,
+      "consumption": -2.245306135128333,
+      "prices": -11.285299506271373,
+      "investment": -1.3465771639609936,
+      "debt": null
+    },
+    {
+      "country_code": "IRN",
+      "country": "**Iran, Islamic Republic of**",
+      "gdp": 8.756192037700794,
+      "consumption": 4.21328282060538,
+      "prices": null,
+      "investment": 9.30732617395944,
+      "debt": null
+    },
+    {
+      "country_code": "IRQ",
+      "country": "**Iraq**",
+      "gdp": -10.715426770438462,
+      "consumption": -7.299294940281042,
+      "prices": null,
+      "investment": -54.27577287121734,
+      "debt": null
+    },
+    {
       "country_code": "IRL",
       "country": "**Ireland**",
       "gdp": 24.574944372829698,
@@ -32,39 +851,570 @@
       "debt": null
     },
     {
-      "country_code": "USA",
-      "country": "**United States**",
-      "gdp": 3.9425997828594905,
-      "consumption": 5.454721777597893,
-      "prices": 47.524127300527994,
-      "investment": 4.742651044780577,
-      "debt": 18.05044536852148
+      "country_code": "IMN",
+      "country": "**Isle of Man**",
+      "gdp": -5.338123223072344,
+      "consumption": null,
+      "prices": null,
+      "investment": null,
+      "debt": null
     },
     {
-      "country_code": "AUS",
-      "country": "**Australia**",
-      "gdp": 1.8707366225707345,
-      "consumption": -3.9069988149183277,
-      "prices": 19.068985203625545,
-      "investment": 1.7411845799257586,
-      "debt": 9.852986974403755
+      "country_code": "ISR",
+      "country": "**Israel**",
+      "gdp": 7.36504820416235,
+      "consumption": -0.46093435579820374,
+      "prices": 40.65340579459995,
+      "investment": 10.724251564812537,
+      "debt": null
     },
     {
-      "country_code": "CAN",
-      "country": "**Canada**",
-      "gdp": 0.6124931285603097,
-      "consumption": -2.4769092006508675,
-      "prices": 28.182686016272363,
-      "investment": 4.714615005369249,
-      "debt": 15.408159198471239
+      "country_code": "ITA",
+      "country": "**Italy**",
+      "gdp": -0.7291854590515068,
+      "consumption": -4.419686297722103,
+      "prices": 17.954528254091073,
+      "investment": 12.905949577448794,
+      "debt": null
     },
     {
-      "country_code": "FRA",
-      "country": "**France**",
-      "gdp": -1.0703984536843514,
-      "consumption": -2.2083782508889316,
-      "prices": 19.65469707552181,
-      "investment": 3.3378252156275323,
+      "country_code": "JAM",
+      "country": "**Jamaica**",
+      "gdp": -3.073479977989979,
+      "consumption": null,
+      "prices": -30.718217848880126,
+      "investment": null,
+      "debt": null
+    },
+    {
+      "country_code": "JPN",
+      "country": "**Japan**",
+      "gdp": -0.8717485566568262,
+      "consumption": -2.388274414934055,
+      "prices": 21.706782371403378,
+      "investment": -2.445896813848558,
+      "debt": null
+    },
+    {
+      "country_code": "JOR",
+      "country": "**Jordan**",
+      "gdp": 2.5561926520062395,
+      "consumption": null,
+      "prices": -3.1709499306709965,
+      "investment": null,
+      "debt": 17.795601012067962
+    },
+    {
+      "country_code": "KAZ",
+      "country": "**Kazakhstan**",
+      "gdp": 1.6925000012421476,
+      "consumption": -0.4347036684789751,
+      "prices": 71.35687798341188,
+      "investment": 2.3947999992585345,
+      "debt": 3.928993633793759
+    },
+    {
+      "country_code": "KEN",
+      "country": "**Kenya**",
+      "gdp": 7.297018846524828,
+      "consumption": 0.16907495168358988,
+      "prices": -12.230430143145677,
+      "investment": 13.368759478899817,
+      "debt": null
+    },
+    {
+      "country_code": "KIR",
+      "country": "**Kiribati**",
+      "gdp": 7.051282051282071,
+      "consumption": 18.499846536480003,
+      "prices": null,
+      "investment": 28.492933736918836,
+      "debt": null
+    },
+    {
+      "country_code": "KOR",
+      "country": "**Korea**",
+      "gdp": 3.880423683288403,
+      "consumption": -1.0853458960996876,
+      "prices": 34.098760241204594,
+      "investment": 7.220781819591537,
+      "debt": 8.137410040414586
+    },
+    {
+      "country_code": "PRK",
+      "country": "**Korea, Democratic People\u2019s Republic of**",
+      "gdp": null,
+      "consumption": null,
+      "prices": null,
+      "investment": null,
+      "debt": null
+    },
+    {
+      "country_code": "XKX",
+      "country": "**Kosovo**",
+      "gdp": 4.831532966973495,
+      "consumption": 10.151970269898026,
+      "prices": null,
+      "investment": 4.3940668053898735,
+      "debt": null
+    },
+    {
+      "country_code": "KWT",
+      "country": "**Kuwait**",
+      "gdp": -3.2257372018231756,
+      "consumption": -2.750910330157108,
+      "prices": 11.367899343121369,
+      "investment": null,
+      "debt": null
+    },
+    {
+      "country_code": "KGZ",
+      "country": "**Kyrgyz Republic**",
+      "gdp": -2.0356646909735487,
+      "consumption": 7.2143313328403735,
+      "prices": null,
+      "investment": -9.386695978542448,
+      "debt": 5.029831623023185
+    },
+    {
+      "country_code": "LAO",
+      "country": "**Lao PDR**",
+      "gdp": 3.0441012441834614,
+      "consumption": null,
+      "prices": null,
+      "investment": null,
+      "debt": null
+    },
+    {
+      "country_code": "LVA",
+      "country": "**Latvia**",
+      "gdp": 3.232461655360619,
+      "consumption": 4.488328091620297,
+      "prices": null,
+      "investment": 4.156950608940613,
+      "debt": null
+    },
+    {
+      "country_code": "LBN",
+      "country": "**Lebanon**",
+      "gdp": -26.902880273635265,
+      "consumption": -11.065762382851974,
+      "prices": 121.85976273556385,
+      "investment": -84.7893258608378,
+      "debt": null
+    },
+    {
+      "country_code": "LSO",
+      "country": "**Lesotho**",
+      "gdp": -6.0741201174235755,
+      "consumption": -2.419831577848086,
+      "prices": null,
+      "investment": 2.9098628992975106,
+      "debt": null
+    },
+    {
+      "country_code": "LBR",
+      "country": "**Liberia**",
+      "gdp": 1.8554932830392001,
+      "consumption": null,
+      "prices": null,
+      "investment": null,
+      "debt": null
+    },
+    {
+      "country_code": "LBY",
+      "country": "**Libya**",
+      "gdp": -9.49136979263454,
+      "consumption": 4.672464421772027,
+      "prices": null,
+      "investment": 6.289382249718645,
+      "debt": null
+    },
+    {
+      "country_code": "LIE",
+      "country": "**Liechtenstein**",
+      "gdp": null,
+      "consumption": null,
+      "prices": null,
+      "investment": null,
+      "debt": null
+    },
+    {
+      "country_code": "LTU",
+      "country": "**Lithuania**",
+      "gdp": 6.440371557524482,
+      "consumption": 4.723144470675922,
+      "prices": 44.83204138008807,
+      "investment": 14.55838149186821,
+      "debt": null
+    },
+    {
+      "country_code": "LUX",
+      "country": "**Luxembourg**",
+      "gdp": 6.384335859065793,
+      "consumption": -0.3537685365475052,
+      "prices": 29.062713925451433,
+      "investment": 9.861042660084296,
+      "debt": null
+    },
+    {
+      "country_code": "MAC",
+      "country": "**Macao SAR, China**",
+      "gdp": -44.15979850517754,
+      "consumption": -9.326027236228763,
+      "prices": null,
+      "investment": -15.835913081191022,
+      "debt": null
+    },
+    {
+      "country_code": "MDG",
+      "country": "**Madagascar**",
+      "gdp": -2.818938700375362,
+      "consumption": -0.11595069947837322,
+      "prices": null,
+      "investment": -2.8825688474917177,
+      "debt": null
+    },
+    {
+      "country_code": "MWI",
+      "country": "**Malawi**",
+      "gdp": 5.388062993472986,
+      "consumption": null,
+      "prices": null,
+      "investment": null,
+      "debt": null
+    },
+    {
+      "country_code": "MYS",
+      "country": "**Malaysia**",
+      "gdp": -2.3224105786231575,
+      "consumption": -4.627831706404839,
+      "prices": -4.451852528578981,
+      "investment": -15.003940210823963,
+      "debt": 10.845486461322452
+    },
+    {
+      "country_code": "MDV",
+      "country": "**Maldives**",
+      "gdp": -7.744359407442936,
+      "consumption": -13.093402983252144,
+      "prices": null,
+      "investment": -57.27775792204175,
+      "debt": null
+    },
+    {
+      "country_code": "MLI",
+      "country": "**Mali**",
+      "gdp": 1.895579533083569,
+      "consumption": -0.9529141399868601,
+      "prices": null,
+      "investment": 11.013056319508197,
+      "debt": null
+    },
+    {
+      "country_code": "MLT",
+      "country": "**Malta**",
+      "gdp": 9.432118429940605,
+      "consumption": -3.446965763837928,
+      "prices": null,
+      "investment": 18.95983351467678,
+      "debt": null
+    },
+    {
+      "country_code": "MHL",
+      "country": "**Marshall Islands**",
+      "gdp": -0.6733714788732525,
+      "consumption": -0.4385269368499478,
+      "prices": null,
+      "investment": -54.1979512635082,
+      "debt": null
+    },
+    {
+      "country_code": "MRT",
+      "country": "**Mauritania**",
+      "gdp": 0.37937945331243395,
+      "consumption": -1.5728497925875162,
+      "prices": null,
+      "investment": -7.013696323495666,
+      "debt": null
+    },
+    {
+      "country_code": "MUS",
+      "country": "**Mauritius**",
+      "gdp": -11.333268277702324,
+      "consumption": -12.777477358931344,
+      "prices": -17.333933207149133,
+      "investment": -15.3989751914959,
+      "debt": null
+    },
+    {
+      "country_code": "MEX",
+      "country": "**Mexico**",
+      "gdp": -2.810843523683426,
+      "consumption": -3.688666066330193,
+      "prices": 12.472513180528221,
+      "investment": -8.47758786352638,
+      "debt": 3.5335617420244887
+    },
+    {
+      "country_code": "FSM",
+      "country": "**Micronesia, Federated States of**",
+      "gdp": 0.978906249999989,
+      "consumption": null,
+      "prices": null,
+      "investment": null,
+      "debt": null
+    },
+    {
+      "country_code": "MDA",
+      "country": "**Moldova**",
+      "gdp": 4.501177706729265,
+      "consumption": 11.207717619083745,
+      "prices": null,
+      "investment": 7.557951484021319,
+      "debt": 6.667767151901078
+    },
+    {
+      "country_code": "MCO",
+      "country": "**Monaco**",
+      "gdp": 6.049764428739701,
+      "consumption": null,
+      "prices": null,
+      "investment": null,
+      "debt": null
+    },
+    {
+      "country_code": "MNG",
+      "country": "**Mongolia**",
+      "gdp": -2.9955822962199674,
+      "consumption": -7.21010196887093,
+      "prices": null,
+      "investment": -7.146758423942467,
+      "debt": 6.726974606311423
+    },
+    {
+      "country_code": "MNE",
+      "country": "**Montenegro**",
+      "gdp": -3.9023340877756496,
+      "consumption": 0.8432968788846917,
+      "prices": null,
+      "investment": -23.040682411824864,
+      "debt": null
+    },
+    {
+      "country_code": "MAR",
+      "country": "**Morocco**",
+      "gdp": 0.39116738126203643,
+      "consumption": -1.092882704104059,
+      "prices": 8.938322346262616,
+      "investment": -3.210859259096188,
+      "debt": null
+    },
+    {
+      "country_code": "MOZ",
+      "country": "**Mozambique**",
+      "gdp": 1.1289198638791742,
+      "consumption": -0.865821373728104,
+      "prices": null,
+      "investment": null,
+      "debt": 5.278624957434033
+    },
+    {
+      "country_code": "MMR",
+      "country": "**Myanmar**",
+      "gdp": -19.977436562086194,
+      "consumption": null,
+      "prices": null,
+      "investment": null,
+      "debt": null
+    },
+    {
+      "country_code": "NAM",
+      "country": "**Namibia**",
+      "gdp": -4.789533512743027,
+      "consumption": -2.578541546629365,
+      "prices": -20.573434290601146,
+      "investment": -2.8912983201249576,
+      "debt": null
+    },
+    {
+      "country_code": "NRU",
+      "country": "**Naoero**",
+      "gdp": 9.448818897637846,
+      "consumption": null,
+      "prices": null,
+      "investment": null,
+      "debt": null
+    },
+    {
+      "country_code": "NPL",
+      "country": "**Nepal**",
+      "gdp": 2.353883193579809,
+      "consumption": 7.82351753162529,
+      "prices": null,
+      "investment": -0.007872090875171711,
+      "debt": 8.145121294939358
+    },
+    {
+      "country_code": "NLD",
+      "country": "**Netherlands**",
+      "gdp": 2.1660509608726786,
+      "consumption": -3.0013373022851675,
+      "prices": 60.643073845635875,
+      "investment": -0.16618639526914114,
+      "debt": null
+    },
+    {
+      "country_code": "NCL",
+      "country": "**New Caledonia**",
+      "gdp": null,
+      "consumption": null,
+      "prices": null,
+      "investment": null,
+      "debt": null
+    },
+    {
+      "country_code": "NZL",
+      "country": "**New Zealand**",
+      "gdp": 4.047886568042225,
+      "consumption": 3.6451217004432435,
+      "prices": 10.569279635672245,
+      "investment": 7.294186100630551,
+      "debt": 18.59625858636057
+    },
+    {
+      "country_code": "NIC",
+      "country": "**Nicaragua**",
+      "gdp": 7.984030247899687,
+      "consumption": 6.234335568710625,
+      "prices": null,
+      "investment": 47.358438763404884,
+      "debt": null
+    },
+    {
+      "country_code": "NER",
+      "country": "**Niger**",
+      "gdp": 5.619698836378917,
+      "consumption": 1.722847378011294,
+      "prices": null,
+      "investment": 3.479405043435335,
+      "debt": null
+    },
+    {
+      "country_code": "NGA",
+      "country": "**Nigeria**",
+      "gdp": -5.330293031776112,
+      "consumption": null,
+      "prices": 8.704130861815074,
+      "investment": null,
+      "debt": null
+    },
+    {
+      "country_code": "MKD",
+      "country": "**North Macedonia**",
+      "gdp": -0.3892514721826501,
+      "consumption": 6.95125976061608,
+      "prices": null,
+      "investment": 4.180029436827004,
+      "debt": null
+    },
+    {
+      "country_code": "MNP",
+      "country": "**Northern Mariana Islands**",
+      "gdp": -25.534188034188045,
+      "consumption": 6.27058517413146,
+      "prices": null,
+      "investment": null,
+      "debt": null
+    },
+    {
+      "country_code": "NOR",
+      "country": "**Norway**",
+      "gdp": 2.726219770437721,
+      "consumption": 0.34984833120697,
+      "prices": 18.617228757217696,
+      "investment": -2.317788504627427,
+      "debt": null
+    },
+    {
+      "country_code": "OMN",
+      "country": "**Oman**",
+      "gdp": -0.884815835846231,
+      "consumption": 13.667312416570221,
+      "prices": 8.833450306570455,
+      "investment": -14.135738885247273,
+      "debt": null
+    },
+    {
+      "country_code": "PAK",
+      "country": "**Pakistan**",
+      "gdp": 5.156805714613988,
+      "consumption": 2.3701377199020435,
+      "prices": -21.359768042655702,
+      "investment": -3.2555457911819574,
+      "debt": null
+    },
+    {
+      "country_code": "PLW",
+      "country": "**Palau**",
+      "gdp": -17.206286309114237,
+      "consumption": -3.3205727741155044,
+      "prices": null,
+      "investment": -11.708438376413245,
+      "debt": null
+    },
+    {
+      "country_code": "PAN",
+      "country": "**Panama**",
+      "gdp": -4.288721466516243,
+      "consumption": -4.261497731842212,
+      "prices": -19.79137951476736,
+      "investment": -31.49745722794367,
+      "debt": null
+    },
+    {
+      "country_code": "PNG",
+      "country": "**Papua New Guinea**",
+      "gdp": -3.6618713440448425,
+      "consumption": null,
+      "prices": null,
+      "investment": null,
+      "debt": 12.421505336801033
+    },
+    {
+      "country_code": "PRY",
+      "country": "**Paraguay**",
+      "gdp": 3.142082445268124,
+      "consumption": -0.2886136406830109,
+      "prices": null,
+      "investment": 24.508912706749065,
+      "debt": null
+    },
+    {
+      "country_code": "PER",
+      "country": "**Peru**",
+      "gdp": 1.016456124623799,
+      "consumption": -0.6436611959786398,
+      "prices": -28.574704977957744,
+      "investment": 11.446041268376316,
+      "debt": 8.710585344282464
+    },
+    {
+      "country_code": "PHL",
+      "country": "**Philippines**",
+      "gdp": -4.34750675172173,
+      "consumption": -6.0275733372089135,
+      "prices": -6.740072051554091,
+      "investment": -20.159864234843262,
+      "debt": null
+    },
+    {
+      "country_code": "POL",
+      "country": "**Poland**",
+      "gdp": 4.750606265906088,
+      "consumption": 5.4983142921842365,
+      "prices": 6.6277889081721275,
+      "investment": -1.5822397360920948,
       "debt": null
     },
     {
@@ -77,12 +1427,183 @@
       "debt": null
     },
     {
-      "country_code": "DEU",
-      "country": "**Germany**",
-      "gdp": -0.3834723422703856,
-      "consumption": -5.032063805887066,
-      "prices": 19.894694289577863,
-      "investment": -2.202814794536978,
+      "country_code": "PRI",
+      "country": "**Puerto Rico (US)**",
+      "gdp": -3.8117572675198774,
+      "consumption": 17.513505021240693,
+      "prices": null,
+      "investment": -21.501415882394703,
+      "debt": null
+    },
+    {
+      "country_code": "QAT",
+      "country": "**Qatar**",
+      "gdp": -1.9886340342784248,
+      "consumption": null,
+      "prices": 7.698102394394146,
+      "investment": null,
+      "debt": null
+    },
+    {
+      "country_code": "ROU",
+      "country": "**Romania**",
+      "gdp": 1.7882909633827326,
+      "consumption": 4.443770433480254,
+      "prices": 13.537580011143868,
+      "investment": 3.5437258411809003,
+      "debt": null
+    },
+    {
+      "country_code": "RUS",
+      "country": "**Russian Federation**",
+      "gdp": 3.057160853277341,
+      "consumption": 3.7772910256424375,
+      "prices": 0.08457627871560902,
+      "investment": 4.922990081445278,
+      "debt": 3.752702823280025
+    },
+    {
+      "country_code": "RWA",
+      "country": "**Rwanda**",
+      "gdp": 5.400706108933928,
+      "consumption": -6.472891432581262,
+      "prices": null,
+      "investment": 11.102007375094058,
+      "debt": null
+    },
+    {
+      "country_code": "WSM",
+      "country": "**Samoa**",
+      "gdp": -7.99536606895791,
+      "consumption": 12.61385934409731,
+      "prices": null,
+      "investment": -11.73753309512663,
+      "debt": null
+    },
+    {
+      "country_code": "SMR",
+      "country": "**San Marino**",
+      "gdp": 6.325960895647853,
+      "consumption": 3.4934426061272283,
+      "prices": null,
+      "investment": -22.295658274804254,
+      "debt": 40.03478146016552
+    },
+    {
+      "country_code": "SAU",
+      "country": "**Saudi Arabia**",
+      "gdp": 2.466751053126348,
+      "consumption": -1.2563814196629997,
+      "prices": 35.15667900117532,
+      "investment": 0.40315342731995774,
+      "debt": null
+    },
+    {
+      "country_code": "SEN",
+      "country": "**Senegal**",
+      "gdp": 7.973900194498018,
+      "consumption": 0.42159533857177856,
+      "prices": null,
+      "investment": 24.103549738127338,
+      "debt": null
+    },
+    {
+      "country_code": "SRB",
+      "country": "**Serbia**",
+      "gdp": 6.923514568950462,
+      "consumption": 7.215410062426075,
+      "prices": null,
+      "investment": 13.118802580446243,
+      "debt": null
+    },
+    {
+      "country_code": "SYC",
+      "country": "**Seychelles**",
+      "gdp": -11.25241629184921,
+      "consumption": 9.752384262495784,
+      "prices": null,
+      "investment": -34.00788431566952,
+      "debt": null
+    },
+    {
+      "country_code": "SLE",
+      "country": "**Sierra Leone**",
+      "gdp": 4.569595526123549,
+      "consumption": -5.701529235426516,
+      "prices": null,
+      "investment": -12.44331332435501,
+      "debt": null
+    },
+    {
+      "country_code": "SGP",
+      "country": "**Singapore**",
+      "gdp": 6.164063080443349,
+      "consumption": -2.74334067673202,
+      "prices": 15.038235313350912,
+      "investment": 6.749890824253657,
+      "debt": 19.907594780902826
+    },
+    {
+      "country_code": "SXM",
+      "country": "**Sint Maarten (Dutch part)**",
+      "gdp": -9.34878083447932,
+      "consumption": null,
+      "prices": null,
+      "investment": null,
+      "debt": null
+    },
+    {
+      "country_code": "SVK",
+      "country": "**Slovak Republic**",
+      "gdp": 2.9241134574731653,
+      "consumption": 3.624753109982004,
+      "prices": -24.859873613438587,
+      "investment": -5.072508161378453,
+      "debt": null
+    },
+    {
+      "country_code": "SVN",
+      "country": "**Slovenia**",
+      "gdp": 3.988034629931314,
+      "consumption": 3.443009024427912,
+      "prices": 43.827855020328734,
+      "investment": 3.871885271040121,
+      "debt": null
+    },
+    {
+      "country_code": "SLB",
+      "country": "**Solomon Islands**",
+      "gdp": -3.6015261154917044,
+      "consumption": -8.435276832612038,
+      "prices": null,
+      "investment": 11.221010222062766,
+      "debt": null
+    },
+    {
+      "country_code": "SOM",
+      "country": "**Somalia, Fed. Rep.**",
+      "gdp": 0.5873417721518948,
+      "consumption": -5.6394705725197785,
+      "prices": null,
+      "investment": 4.917095483133216,
+      "debt": null
+    },
+    {
+      "country_code": "ZAF",
+      "country": "**South Africa**",
+      "gdp": -1.609995101375028,
+      "consumption": -3.5833534897006802,
+      "prices": -1.9645569987346345,
+      "investment": -15.055312494574169,
+      "debt": 9.493329870034003
+    },
+    {
+      "country_code": "SSD",
+      "country": "**South Sudan**",
+      "gdp": null,
+      "consumption": null,
+      "prices": null,
+      "investment": null,
       "debt": null
     },
     {
@@ -93,6 +1614,348 @@
       "prices": -7.666951617162388,
       "investment": -6.528049448399975,
       "debt": 21.25443792763646
+    },
+    {
+      "country_code": "LKA",
+      "country": "**Sri Lanka**",
+      "gdp": -0.6116139253195318,
+      "consumption": -4.765188357542904,
+      "prices": 25.765725304175557,
+      "investment": -2.2598429386984087,
+      "debt": null
+    },
+    {
+      "country_code": "KNA",
+      "country": "**St. Kitts and Nevis**",
+      "gdp": -14.990533092102487,
+      "consumption": null,
+      "prices": null,
+      "investment": null,
+      "debt": null
+    },
+    {
+      "country_code": "LCA",
+      "country": "**St. Lucia**",
+      "gdp": -14.306465963357716,
+      "consumption": null,
+      "prices": null,
+      "investment": null,
+      "debt": null
+    },
+    {
+      "country_code": "MAF",
+      "country": "**St. Martin (French part)**",
+      "gdp": null,
+      "consumption": null,
+      "prices": null,
+      "investment": null,
+      "debt": null
+    },
+    {
+      "country_code": "VCT",
+      "country": "**St. Vincent and the Grenadines**",
+      "gdp": -2.2648888149273128,
+      "consumption": null,
+      "prices": null,
+      "investment": null,
+      "debt": null
+    },
+    {
+      "country_code": "SDN",
+      "country": "**Sudan**",
+      "gdp": -5.4304977349478145,
+      "consumption": -9.236984329199672,
+      "prices": null,
+      "investment": null,
+      "debt": null
+    },
+    {
+      "country_code": "SUR",
+      "country": "**Suriname**",
+      "gdp": -18.021519994672452,
+      "consumption": null,
+      "prices": null,
+      "investment": null,
+      "debt": null
+    },
+    {
+      "country_code": "SWE",
+      "country": "**Sweden**",
+      "gdp": 3.191009653334853,
+      "consumption": 1.1386151708740133,
+      "prices": 52.37655747709198,
+      "investment": 8.574975005437203,
+      "debt": null
+    },
+    {
+      "country_code": "CHE",
+      "country": "**Switzerland**",
+      "gdp": 3.781680537343113,
+      "consumption": -3.1281539901765076,
+      "prices": 28.62900054527291,
+      "investment": 2.945192454926704,
+      "debt": 0.7689976474634008
+    },
+    {
+      "country_code": "SYR",
+      "country": "**Syrian Arab Republic**",
+      "gdp": 2.761696616394649,
+      "consumption": -31.957999545016026,
+      "prices": null,
+      "investment": 37.51869163506005,
+      "debt": null
+    },
+    {
+      "country_code": "STP",
+      "country": "**S\u00e3o Tom\u00e9 and Principe**",
+      "gdp": 4.5740123366910135,
+      "consumption": -5.0605242277240725,
+      "prices": null,
+      "investment": 20.308282474152108,
+      "debt": null
+    },
+    {
+      "country_code": "TJK",
+      "country": "**Tajikistan**",
+      "gdp": 14.213600750986943,
+      "consumption": 3.313027615816444,
+      "prices": null,
+      "investment": null,
+      "debt": null
+    },
+    {
+      "country_code": "TZA",
+      "country": "**Tanzania**",
+      "gdp": 6.399429346945817,
+      "consumption": -2.7072851506400153,
+      "prices": null,
+      "investment": 10.39108711423491,
+      "debt": null
+    },
+    {
+      "country_code": "THA",
+      "country": "**Thailand**",
+      "gdp": -4.6294462136329155,
+      "consumption": -0.46793481868091513,
+      "prices": -7.4763613405580465,
+      "investment": -1.7848299033890624,
+      "debt": 19.900500775405725
+    },
+    {
+      "country_code": "TLS",
+      "country": "**Timor-Leste**",
+      "gdp": 38.79915212116074,
+      "consumption": -7.539359378007737,
+      "prices": null,
+      "investment": 2.289625840867693,
+      "debt": null
+    },
+    {
+      "country_code": "TGO",
+      "country": "**Togo**",
+      "gdp": 7.405508905889513,
+      "consumption": 4.141603129397842,
+      "prices": null,
+      "investment": 34.928109655342546,
+      "debt": null
+    },
+    {
+      "country_code": "TON",
+      "country": "**Tonga**",
+      "gdp": 0.8543808579128953,
+      "consumption": -12.764116184294483,
+      "prices": null,
+      "investment": 21.229126305503975,
+      "debt": null
+    },
+    {
+      "country_code": "TTO",
+      "country": "**Trinidad and Tobago**",
+      "gdp": -9.44254591715178,
+      "consumption": null,
+      "prices": 13.680011883484756,
+      "investment": null,
+      "debt": null
+    },
+    {
+      "country_code": "TUN",
+      "country": "**Tunisia**",
+      "gdp": -4.6641549998191145,
+      "consumption": -3.4267544218795853,
+      "prices": -11.452606547075895,
+      "investment": -19.363839285714292,
+      "debt": null
+    },
+    {
+      "country_code": "TKM",
+      "country": "**Turkmenistan**",
+      "gdp": 12.382927419005373,
+      "consumption": null,
+      "prices": null,
+      "investment": null,
+      "debt": null
+    },
+    {
+      "country_code": "TCA",
+      "country": "**Turks and Caicos Islands**",
+      "gdp": -14.207514829994095,
+      "consumption": null,
+      "prices": null,
+      "investment": null,
+      "debt": null
+    },
+    {
+      "country_code": "TUV",
+      "country": "**Tuvalu**",
+      "gdp": -3.0303030303030276,
+      "consumption": null,
+      "prices": null,
+      "investment": null,
+      "debt": null
+    },
+    {
+      "country_code": "TUR",
+      "country": "**T\u00fcrkiye**",
+      "gdp": 13.827118332917742,
+      "consumption": 17.58653406018402,
+      "prices": -30.32157566971687,
+      "investment": 14.638437617237532,
+      "debt": 8.177438012285066
+    },
+    {
+      "country_code": "UGA",
+      "country": "**Uganda**",
+      "gdp": 6.5922620856109,
+      "consumption": 1.3120234637167716,
+      "prices": null,
+      "investment": 4.522801148218902,
+      "debt": 12.82571703798645
+    },
+    {
+      "country_code": "UKR",
+      "country": "**Ukraine**",
+      "gdp": -0.4365051506189155,
+      "consumption": 10.30740815933684,
+      "prices": 42.12060839157068,
+      "investment": -14.003818135135294,
+      "debt": null
+    },
+    {
+      "country_code": "ARE",
+      "country": "**United Arab Emirates**",
+      "gdp": -4.536427005163568,
+      "consumption": 0.014658513833665232,
+      "prices": 30.5023900285714,
+      "investment": null,
+      "debt": null
+    },
+    {
+      "country_code": "GBR",
+      "country": "**United Kingdom**",
+      "gdp": -2.3631878398689854,
+      "consumption": -7.047290878687285,
+      "prices": -2.0932708489708185,
+      "investment": -1.5543641184876944,
+      "debt": 24.83227906409749
+    },
+    {
+      "country_code": "USA",
+      "country": "**United States**",
+      "gdp": 3.9425997828594905,
+      "consumption": 5.454721777597893,
+      "prices": 47.524127300527994,
+      "investment": 4.742651044780577,
+      "debt": 18.05044536852148
+    },
+    {
+      "country_code": "URY",
+      "country": "**Uruguay**",
+      "gdp": -1.9430361166124954,
+      "consumption": null,
+      "prices": null,
+      "investment": 16.44366327347331,
+      "debt": 7.981634784058336
+    },
+    {
+      "country_code": "UZB",
+      "country": "**Uzbekistan**",
+      "gdp": 9.959153742675063,
+      "consumption": 4.9453013601180595,
+      "prices": null,
+      "investment": -2.050031608548042,
+      "debt": null
+    },
+    {
+      "country_code": "VUT",
+      "country": "**Vanuatu**",
+      "gdp": -6.822023834471969,
+      "consumption": 21.206853329149,
+      "prices": null,
+      "investment": -18.181457846129454,
+      "debt": null
+    },
+    {
+      "country_code": "VEN",
+      "country": "**Venezuela, Rep\u00fablica Bolivariana de**",
+      "gdp": -29.38596491228069,
+      "consumption": null,
+      "prices": null,
+      "investment": -31.999999999999996,
+      "debt": null
+    },
+    {
+      "country_code": "VNM",
+      "country": "**Viet Nam**",
+      "gdp": 5.492316610126968,
+      "consumption": 0.7328674098003862,
+      "prices": 61.3730409303131,
+      "investment": 7.015280666707002,
+      "debt": null
+    },
+    {
+      "country_code": "VIR",
+      "country": "**Virgin Islands (US)**",
+      "gdp": 1.9934393136512796,
+      "consumption": -2.759999648537803,
+      "prices": null,
+      "investment": null,
+      "debt": null
+    },
+    {
+      "country_code": "PSE",
+      "country": "**West Bank and Gaza**",
+      "gdp": -5.100132667888058,
+      "consumption": -11.017121980367028,
+      "prices": null,
+      "investment": -10.060850889752505,
+      "debt": null
+    },
+    {
+      "country_code": "YEM",
+      "country": "**Yemen, Republic of**",
+      "gdp": null,
+      "consumption": null,
+      "prices": null,
+      "investment": null,
+      "debt": null
+    },
+    {
+      "country_code": "ZMB",
+      "country": "**Zambia**",
+      "gdp": 3.276220969508503,
+      "consumption": null,
+      "prices": 48.57678589335506,
+      "investment": null,
+      "debt": 9.481058786972945
+    },
+    {
+      "country_code": "ZWE",
+      "country": "**Zimbabwe**",
+      "gdp": -0.010874521527626246,
+      "consumption": -8.386851673631757,
+      "prices": null,
+      "investment": -7.792658679671294,
+      "debt": null
     }
   ]
 }

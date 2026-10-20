@@ -24,9 +24,13 @@ def wdi_bundle(tmp_path):
         ("PRT", "Portugal"),
         ("DEU", "Germany"),
         ("ESP", "Spain"),
+        ("NZL", "New Zealand"),
     ]
     pq.write_table(
-        pa.Table.from_pylist([{"Country Code": code, "Short Name": name} for code, name in countries]),
+        pa.Table.from_pylist(
+            [{"Country Code": code, "Short Name": name, "Region": "Test region"} for code, name in countries]
+            + [{"Country Code": "WLD", "Short Name": "World", "Region": None}]
+        ),
         tmp_path / "country.parquet",
     )
     records = [
@@ -52,6 +56,10 @@ def wdi_bundle(tmp_path):
         ("IRL", "NY.GDP.MKTP.KD", 2021, 100),  # A genuine zero change.
         ("USA", "NY.GDP.MKTP.KD", 2019, float("inf")),
         ("USA", "NY.GDP.MKTP.KD", 2021, 100),
+        ("NZL", "NY.GDP.MKTP.KD", 2019, 50),
+        ("NZL", "NY.GDP.MKTP.KD", 2021, 100),
+        ("WLD", "NY.GDP.MKTP.KD", 2019, 500),
+        ("WLD", "NY.GDP.MKTP.KD", 2021, 1000),
     ]
     observations = pa.Table.from_pylist(
         [dict(zip(("country_code", "indicator_code", "year", "value"), record, strict=True)) for record in records],
@@ -85,8 +93,12 @@ def test_wdi_query_preserves_missing_values_and_uses_correct_change_units(wdi_bu
             .to_arrow_table()
             .to_pylist()
         )
-    assert len(rows) == 10
-    denmark, chile, ireland, usa = rows[:4]
+    assert len(rows) == 11
+    assert [row["country"] for row in rows] == sorted(row["country"] for row in rows)
+    by_country = {row["country_code"]: row for row in rows}
+    assert "WLD" not in by_country
+    assert all(by_country["CAN"][field] is None for field in ("gdp", "consumption", "prices", "investment", "debt"))
+    denmark, chile, ireland, usa = (by_country[code] for code in ("DNK", "CHL", "IRL", "USA"))
     assert denmark["country"] == "**Denmark**"
     assert denmark["gdp"] == pytest.approx(gdp)
     assert denmark["prices"] == pytest.approx(equity)
@@ -97,6 +109,7 @@ def test_wdi_query_preserves_missing_values_and_uses_correct_change_units(wdi_bu
     if end_year == 2021:
         assert denmark["consumption"] == pytest.approx(10)
         assert ireland["gdp"] == 0
+        assert by_country["NZL"]["gdp"] == pytest.approx(100)
 
 
 def test_centered_bar_demo_prefers_the_configured_local_wdi_bundle(monkeypatch, wdi_bundle):
@@ -104,9 +117,12 @@ def test_centered_bar_demo_prefers_the_configured_local_wdi_bundle(monkeypatch, 
     _, definitions = runpy.run_path(str(ROOT / "notebooks/34_centered_bars.py"))["app"].run()
     assert definitions["wdi_source"] == f"Queried local WDI bundle: `{wdi_bundle}`"
     table = definitions["league_table"].widget
-    assert table.rows[0]["gdp"] == pytest.approx(21)
-    assert table.rows[0]["debt"] == 15
-    assert table.rows[1]["debt"] is None
+    by_country = {row["country_code"]: row for row in table.rows}
+    assert by_country["DNK"]["gdp"] == pytest.approx(21)
+    assert by_country["DNK"]["debt"] == 15
+    assert by_country["CHL"]["debt"] is None
+    assert by_country["NZL"]["gdp"] == pytest.approx(100)
+    assert len(table.rows) == 11
     assert table.columns[-1]["scale"]["domain"][1] > 0
 
 
@@ -156,10 +172,12 @@ def test_centered_bar_demo_uses_marks_for_every_bar(monkeypatch, tmp_path) -> No
 
     league = definitions["league_table"].widget
     assert "saved WDI query result" in definitions["wdi_source"]
-    assert len(league.rows) == 10
-    assert league.rows[0]["country"] == "**Denmark**"
-    assert league.rows[0]["debt"] is None
-    assert league.rows[0]["consumption"] is not None
+    assert len(league.rows) == 217
+    by_country = {row["country_code"]: row for row in league.rows}
+    assert "NZL" in by_country and "WLD" not in by_country
+    assert by_country["DNK"]["country"] == "**Denmark**"
+    assert by_country["DNK"]["debt"] is None
+    assert by_country["DNK"]["consumption"] is not None
     assert "percentage points" in league.options["subtitle"]
     assert all("income" not in row for row in league.rows)
 

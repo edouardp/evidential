@@ -21,5 +21,7 @@ than general-government debt.
 For 2019–2021, level series use `100 * (value_2021 / value_2019 - 1)`. Equity
 price returns compound the annual changes for 2020 and 2021. Debt uses the
 2021 minus 2019 difference in percentage points of GDP. Missing observations
-remain JSON `null`; no values are imputed. Country order is illustrative and
-does not imply a ranking.
+remain JSON `null`; no values are imputed. All 217 WDI countries and territories
+are included in alphabetical order, including those with no observations.
+Aggregate regions and income groups are excluded using the country dimension's
+`Region` field. The ordering does not imply a ranking.

@@ -146,8 +146,9 @@ def _(base_year, end_year, mo, wdi_source):
 
     Consumption is **not household income**; central-government debt is a
     narrower measure than general-government debt. Missing endpoints or an
-    incomplete sequence of equity returns remain missing. Countries keep the
-    example's original order; the old illustrative ranks have been removed.
+    incomplete sequence of equity returns remain missing. All WDI countries
+    and territories are included, ordered by name; region and income-group
+    aggregates are excluded. Countries with no observations remain in the table.
 
     Without a local bundle, the notebook uses a saved **real WDI query result**
     for 2019–2021. The drug-price and Pew examples below use their own sources.
@@ -173,12 +174,13 @@ def _(
             leagues,
             settings=settings(
                 title="League table of nations",
-                subtitle=f"Selected OECD countries, {base_year}→{end_year}; % change except debt (percentage points)",
+                subtitle=f"WDI countries and territories, {base_year}→{end_year}; % change except debt (percentage points)",
                 caption="Source: World Bank WDI. Missing observations are left blank; debt covers central government only.",
                 row_shading=True,
                 row_lines=False,
                 border=False,
                 stretch=False,
+                search=True,
                 # a small table reads better a step above the dense baseline
                 font_size="+1",
             ),

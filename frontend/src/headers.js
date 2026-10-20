@@ -1,5 +1,5 @@
 // Column ordering and header layout, independent of row processing.
-import { h, withFigure, alignStyle } from "./dom.js";
+import { h, withFigure, alignStyle, isStub } from "./dom.js";
 import { formatTitle } from "./format.js";
 
 export function groupPath(group) {
@@ -163,9 +163,9 @@ export function renderHeader({columns, rowNumbers, options: opts, sort, onSort})
     const col = columns[leaf.start];
     const sorted = sort?.column === col.name;
     const dir = sorted ? sort.direction : null;
-    const isStub = opts.stub === col.name;
-    const rotation = col.rotate_title ?? (isStub ? null : opts.rotate_titles);
-    let thClass = `et-th${sorted ? " et-th-sorted" : ""}${isStub ? " et-stub-head" : ""}`;
+    const isStubColumn = isStub(opts, col);
+    const rotation = col.rotate_title ?? (isStubColumn ? null : opts.rotate_titles);
+    let thClass = `et-th${sorted ? " et-th-sorted" : ""}${isStubColumn ? " et-stub-head" : ""}`;
     if (rotation === "vertical") thClass += " et-th-vertical";
     else if (typeof rotation === "number") thClass += " et-th-oblique";
     const infoText = col.info ? String(col.info) : null;
@@ -186,7 +186,7 @@ export function renderHeader({columns, rowNumbers, options: opts, sort, onSort})
     if (col.highlight && spanned.every((member) => member.highlight === col.highlight)) th.style.backgroundColor = col.highlight;
     const inner = h("span", { class: "et-th-inner" });
     let title =
-      isStub && opts.stub_head
+      isStubColumn && opts.stub_head
         ? opts.stub_head
         : opts.format_titles === false
           ? col.name

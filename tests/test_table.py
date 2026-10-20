@@ -586,3 +586,8 @@ def test_spacer_row() -> None:
     table = EvidentialTable(rows=[{"a": 1}, spacer_row(8), {"a": 2}])
     assert table.rows[1]["render_type"] == "row_spacer"
     assert table.rows[1]["__height"] == 8
+
+
+def test_multiple_stub_columns() -> None:
+    table = EvidentialTable(rows=[{"region": "North", "country": "Canada", "x": 1}], stub=["region", "country"])
+    assert table.options["stub"] == ["region", "country"]

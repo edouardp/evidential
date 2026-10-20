@@ -63,7 +63,7 @@ class TableOptions(TypedDict, total=False):
     subtitle: str | None
     caption: str | None
     null_text: str | None
-    stub: str | None
+    stub: str | Sequence[str] | None
     stub_head: str | None
     footnote_marks: Literal["numbers", "letters", "symbols"] | None
     all_caps: bool

@@ -1,5 +1,5 @@
 // One summary per displayed header; sub-column selection stays local to a widget.
-import {h} from "./dom.js";
+import {h, isStub} from "./dom.js";
 import {formatTitle, formatValue} from "./format.js";
 
 function statsLine(label, value) {
@@ -58,7 +58,7 @@ export function renderStatsRow({columns, layout, stats, formatRanges, options, r
     block.append(content);
     const label = leaf.label || members[0].title || formatTitle(anchor);
     const cell = h("td", {
-      class: `et-td et-stats-cell${options.stub === anchor ? " et-stub" : ""}`,
+      class: `et-td et-stats-cell${isStub(options, { name: anchor }) ? " et-stub" : ""}`,
       colspan: leaf.span,
       // A spanning statistics cell cannot measure an individual column edge.
       "data-column-start": leaf.start + (rowNumbers ? 1 : 0),

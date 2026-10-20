@@ -11,7 +11,7 @@ import { RowPipeline } from "./derived.js";
 import { HoldController, bindRowSelection } from "./interactions.js";
 import { LoadingController } from "./loading.js";
 import { TableViewport } from "./viewport.js";
-import { h, inlineMarkdown, withFigure, formatRowRanges, alignStyle } from "./dom.js";
+import { h, inlineMarkdown, withFigure, formatRowRanges, alignStyle, isStub } from "./dom.js";
 import { hiddenColumns, visibleRows, searchRows, sortRows, paginateRows,
   computeRowspans, shaded, sectionContinuation } from "./rows.js";
 import { renderCell } from "./cells.js";
@@ -270,7 +270,7 @@ export class EvidentialTableRenderer {
     let obliqueAngle = null;
     let longestLabel = 0;
     for (const col of columns) {
-      const rotation = col.rotate_title ?? (opts.stub === col.name ? null : opts.rotate_titles);
+      const rotation = col.rotate_title ?? (isStub(opts, col) ? null : opts.rotate_titles);
       if (typeof rotation !== "number") continue;
       obliqueAngle = rotation;
       const label = opts.format_titles === false ? col.name : col.title || formatTitle(col.name);
@@ -493,7 +493,7 @@ export class EvidentialTableRenderer {
         });
         axis.append(h("span", { class: "et-axis-tick", style: { left: `${pct}%` } }, label));
       }
-      tr.append(h("td", { class: `et-td et-axis-cell${opts.stub === col.name ? " et-stub" : ""}` }, axis));
+      tr.append(h("td", { class: `et-td et-axis-cell${isStub(opts, col) ? " et-stub" : ""}` }, axis));
     }
     if (opts.link) tr.append(h("td", { class: "et-td" }));
     return tr;

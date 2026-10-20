@@ -2363,3 +2363,14 @@ test("sparkline per-point colour overrides marker_color", () => {
   assert.equal(dots[1].getAttribute("fill"), "#0f0");
   renderer.destroy();
 });
+
+test("multiple stub columns are marked as the row-label area", () => {
+  const rows = [{ region: "North", country: "Canada", x: 1 }];
+  const columns = [{ name: "region" }, { name: "country" }, { name: "x", type: "number" }];
+  const renderer = new EvidentialTableRenderer(
+    makeModel(rows, columns, { stub: ["region", "country"] }, el), el,
+  );
+  assert.equal(el.querySelectorAll("td.et-stub").length, 2);
+  assert.equal(el.querySelectorAll("th.et-stub-head").length, 2);
+  renderer.destroy();
+});

@@ -23,6 +23,13 @@ export function optString(value) {
   return String(value);
 }
 
+/** True when a column is a stub (the row-label area); `stub` may be a list. */
+export function isStub(options, col) {
+  const stub = options.stub;
+  if (stub == null || !col) return false;
+  return Array.isArray(stub) ? stub.includes(col.name) : stub === col.name;
+}
+
 /** Minimal inline markdown: bold, italic and code; never raw HTML. */
 export function inlineMarkdown(text) {
   const fragment = document.createDocumentFragment();

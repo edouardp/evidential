@@ -178,7 +178,7 @@ def _(EvidentialTable, col, mo, sales, spacer_row):
             rows=blocks,
             title="Spaced blocks",
             subtitle="spacer_row separates blocks without a label",
-            row_shading=True,
+            row_shading=False,
             border=False,
             columns=[
                 col.text("region"),
@@ -188,6 +188,39 @@ def _(EvidentialTable, col, mo, sales, spacer_row):
         )
     )
     spaced
+    return
+
+
+@app.cell
+def _(mo):
+    mo.md("""
+    ## Multiple stub columns
+
+    The *stub* is the row-label area. `stub=["region", "country"]` marks both
+    columns as the stub, so a hierarchical row label keeps its left alignment and
+    stub styling.
+    """)
+    return
+
+
+@app.cell
+def _(EvidentialTable, col, mo, sales):
+    stubs = mo.ui.anywidget(
+        EvidentialTable(
+            sales,
+            title="Where the revenue comes from",
+            subtitle="Region and country are both stub columns",
+            stub=["region", "country"],
+            stretch=False,
+            columns=[
+                col.text("region", title="Region"),
+                col.text("country", title="Country"),
+                col.currency("arr", decimals=1),
+                col.integer("accounts"),
+            ],
+        )
+    )
+    stubs
     return
 
 

@@ -1,4 +1,4 @@
-import { alignStyle, h, optString, inlineMarkdown, withFigure } from "./dom.js";
+import { alignStyle, h, optString, inlineMarkdown, withFigure, isStub } from "./dom.js";
 import { formatValue } from "./format.js";
 import { withDecimals, indentForCell } from "./rows.js";
 import { calculateColorStyles, contrastTextColor } from "./color.js";
@@ -82,7 +82,7 @@ export function renderCell({row, col, index, ctx, rowIndex, options: opts, toggl
     const base = index === 0 && !ctx.rowNumbers ? "0.25rem" : "0.375rem";
     tdStyle.paddingLeft = `calc(${base} + ${indent}rem)`;
   }
-  const td = h("td", { class: `et-td${opts.stub === col.name ? " et-stub" : ""}`, style: tdStyle });
+  const td = h("td", { class: `et-td${isStub(opts, col) ? " et-stub" : ""}`, style: tdStyle });
   const matched = matchingRules(col, row, opts);
   const finish = (includeFootnote = true) => {
     decorateCell(td, col, row, ctx, rowIndex, matched.style, includeFootnote, opts);

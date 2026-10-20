@@ -289,10 +289,45 @@ export function calculateVizRanges(columns, rows) {
       // A marks column shares one scale across every encoding's sources.
       const stacked = col.encodings.some((enc) => enc.kind === "stacked_bar");
       const diverging = stacked && col.encodings.some((enc) => enc.diverge_at);
+      const strip = col.encodings.some((enc) => enc.kind === "strip");
+      const distribution = col.encodings.some((enc) => enc.kind === "distribution");
       let min = Infinity;
       let max = -Infinity;
       for (const row of rows) {
         if (row.render_type === "row_total" || row.render_type === "row_subtotal") continue;
+        if (distribution) {
+          // A density band shares an ordered x axis across rows.
+          for (const enc of col.encodings) {
+            const raw = row[enc.source];
+            if (!Array.isArray(raw)) continue;
+            for (const item of raw) {
+              const num = Number(item && item[enc.x]);
+              if (item && item[enc.x] != null && isFinite(num)) {
+                min = Math.min(min, num);
+                max = Math.max(max, num);
+              }
+            }
+          }
+          continue;
+        }
+        if (strip) {
+          // A positioned strip shares a time/value axis across all rows.
+          for (const enc of col.encodings) {
+            const raw = row[enc.source];
+            if (!Array.isArray(raw)) continue;
+            for (const item of raw) {
+              if (!item || typeof item !== "object") continue;
+              for (const key of ["start", "position", "end", "finish"]) {
+                const num = Number(item[key]);
+                if (isFinite(num)) {
+                  min = Math.min(min, num);
+                  max = Math.max(max, num);
+                }
+              }
+            }
+          }
+          continue;
+        }
         if (diverging) {
           // A diverging stack is read against the larger of its two arms.
           const arms = divergingTotals(col.encodings, row);

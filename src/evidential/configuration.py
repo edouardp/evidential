@@ -269,7 +269,7 @@ class BoxParts(TypedDict, total=False):
 class EncodingSpec(TypedDict, total=False):
     """One visual mark bound to a source, sharing its column's scale."""
 
-    kind: Literal["bar", "point", "range", "stacked_bar", "strip", "boxplot"]
+    kind: Literal["bar", "point", "range", "stacked_bar", "strip", "boxplot", "distribution"]
     #: The field a scalar mark reads, or a range's lower endpoint.
     source: str | Callable[[Mapping[str, Any]], Any] | None
     #: A range's upper endpoint.
@@ -301,6 +301,10 @@ class EncodingSpec(TypedDict, total=False):
     #: ``stacked_bar``: split the neutral segment around the origin.
     diverge_at: str | None
     neutral: Literal["split"] | None
+    #: ``distribution``: the struct keys for the ordered x and its density.
+    x: str | None
+    y: str | None
+    style: Literal["band"] | None
     fit_to_data: bool | None
     #: Bar-only legacy extras (mirrored into ``bar_options`` when alone).
     background: str | None

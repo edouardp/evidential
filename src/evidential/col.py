@@ -79,6 +79,7 @@ from .marks import (
     MarkColumn,
     bar,
     boxplot,
+    distribution,
     point,
     range,  # noqa: A004 - the public constructor name
     stacked_bar,
@@ -100,6 +101,7 @@ __all__ = [
     "date",
     "datetime",
     "delta",
+    "distribution",
     "flag",
     "group",
     "html",

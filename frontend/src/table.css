@@ -566,6 +566,14 @@ tbody tr:last-child .et-bar-center .et-bar-axis { bottom: var(--et-bar-pad, 0); 
   border-radius: 50%;
   transform: translate(-50%, -50%);
 }
+.et-mark-distribution {
+  top: 15%;
+  bottom: 15%;
+  left: 0;
+  right: 0;
+  width: 100%;
+  height: auto;
+}
 .et-mark-strip {
   top: 22%;
   bottom: 22%;
@@ -583,6 +591,17 @@ tbody tr:last-child .et-bar-center .et-bar-axis { bottom: var(--et-bar-pad, 0); 
   min-width: 0;
 }
 .et-strip-joined { outline: none; }
+.et-mark-strip-positioned { display: block; }
+.et-strip-run {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  outline: 1px solid color-mix(in srgb, Canvas 70%, transparent);
+}
 .et-strip-label {
   font-size: 0.72em;
   line-height: 1;

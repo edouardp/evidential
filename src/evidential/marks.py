@@ -32,7 +32,17 @@ from typing import Any, Literal
 
 from ._column import Column, _clean, _field
 
-__all__ = ["MarkColumn", "bar", "boxplot", "point", "range", "stacked_bar", "strip", "LABEL_POSITIONS"]
+__all__ = [
+    "MarkColumn",
+    "bar",
+    "boxplot",
+    "distribution",
+    "point",
+    "range",
+    "stacked_bar",
+    "strip",
+    "LABEL_POSITIONS",
+]
 
 #: Where a mark-owned label may sit.
 LABEL_POSITIONS = (
@@ -76,6 +86,9 @@ _ENCODING_KEYS = (
     "whisker",
     "diverge_at",
     "neutral",
+    "x",
+    "y",
+    "style",
     "size",
     "side",
     "cap",
@@ -193,6 +206,9 @@ def _canonical_encoding(
         "whisker",
         "diverge_at",
         "neutral",
+        "x",
+        "y",
+        "style",
     ):
         if style.get(key) is not None:
             encoding[key] = style.pop(key)
@@ -678,3 +694,27 @@ def boxplot(
         raise TypeError(f"Unknown boxplot option(s): {', '.join(sorted(options))}")
     column = _mark_column(median, title=title)
     return column._with(encodings=[encoding])
+
+
+def distribution(
+    source: str,
+    *,
+    x: str = "position",
+    y: str = "density",
+    style: str = "band",
+    title: str | None = None,
+    color: str | None = None,
+) -> MarkColumn:
+    """A density band from a precomputed ``LIST<STRUCT<x, y>>``.
+
+    The list holds ordered positions and their densities (not raw samples);
+    ``style="band"`` fills under the curve. Combine with ``.point(...)`` to mark
+    a median or mode on the same axis.
+    """
+    if style != "band":
+        raise ValueError("distribution style is 'band'")
+    encoding: dict[str, Any] = {"kind": "distribution", "source": _field(source), "x": x, "y": y, "style": style}
+    if color is not None:
+        encoding["color"] = color
+    column = _mark_column(source, title=title)
+    return column._with(type="array", encodings=[encoding])

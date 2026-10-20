@@ -215,3 +215,18 @@ def test_diverging_stack_marks_the_pivot() -> None:
     assert first["diverge_at"] == "neutral" and first["neutral"] == "split"
     with pytest.raises(ValueError, match="diverge_at"):
         col.stacked_bar("a", "b", diverge_at="c")
+
+
+def test_distribution_is_a_precomputed_density_band() -> None:
+    spec = dict(col.distribution("density", x="seats", y="share", color="#111"))
+    encoding = spec["encodings"][0]
+    assert spec["type"] == "array"
+    assert (encoding["kind"], encoding["x"], encoding["y"], encoding["style"]) == (
+        "distribution",
+        "seats",
+        "share",
+        "band",
+    )
+    assert encoding["color"] == "#111"
+    with pytest.raises(ValueError, match="style"):
+        col.distribution("d", style="violin")

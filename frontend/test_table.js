@@ -1974,3 +1974,41 @@ test("diverging stacked_bar splits the neutral segment around the origin", () =>
   assert.ok(leftSide.length >= 3);
   renderer.destroy();
 });
+
+test("positioned strip maps runs to a shared x axis", () => {
+  const rows = [
+    { periods: [{ start: 0, end: 3, category: "expansion" }, { start: 3, end: 5, category: "recession" }] },
+    { periods: [{ start: 1, end: 4, category: "expansion" }] },
+  ];
+  const columns = [{
+    name: "periods", type: "array",
+    encodings: [{ kind: "strip", source: "periods", colors: { expansion: "#16a34a", recession: "#dc2626" } }],
+  }];
+  const renderer = new EvidentialTableRenderer(makeModel(rows, columns, { page_size: 10 }, el), el);
+  const runs = [...el.querySelectorAll(".et-strip-run")];
+  assert.equal(runs.length, 3);
+  // Shared domain 0..5: the first run spans 0..3 (60%).
+  assert.match(runs[0].style.width, /60%/);
+  renderer.destroy();
+});
+
+test("distribution draws a density band over the shared axis", () => {
+  const rows = [{
+    density: [
+      { seats: 0, share: 0 },
+      { seats: 5, share: 10 },
+      { seats: 10, share: 4 },
+      { seats: 15, share: 0 },
+    ],
+  }];
+  const columns = [{
+    name: "density", type: "array",
+    encodings: [{ kind: "distribution", source: "density", x: "seats", y: "share", style: "band" }],
+  }];
+  const renderer = new EvidentialTableRenderer(makeModel(rows, columns, { page_size: 10 }, el), el);
+  const svg = el.querySelector(".et-mark-distribution");
+  assert.ok(svg);
+  assert.ok(svg.querySelector("polygon"));
+  assert.ok(svg.querySelector("polyline"));
+  renderer.destroy();
+});

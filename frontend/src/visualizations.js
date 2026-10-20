@@ -50,18 +50,47 @@ function renderMarkLabel(col, enc, row, geometry) {
   return node;
 }
 
-/** An ordered categorical sequence: one segment per item, coloured by category. */
-function renderStrip(enc, row) {
+/** An ordered categorical sequence: equal-width or positioned segments. */
+function renderStrip(enc, row, lo, span) {
   const raw = row[enc.source];
   const items = Array.isArray(raw) ? raw : [];
   const colors = enc.colors || {};
+  const colourOf = (category) => resolveColor(colors[String(category)]) || "var(--et-accent, #2563eb)";
+  const named = (item) => (item && typeof item === "object" ? (item.category ?? item.state ?? item.value) : item);
+  const positioned =
+    span != null && items.some((item) => item && typeof item === "object" && (item.start != null || item.position != null));
+  if (positioned) {
+    const wrap = h("div", { class: "et-mark-strip et-mark-strip-positioned" });
+    const at = (value) => Math.max(0, Math.min(100, ((value - lo) / span) * 100));
+    items.forEach((item, index) => {
+      if (!item || typeof item !== "object") return;
+      const start = Number(item.start ?? item.position);
+      if (!isFinite(start)) return;
+      let end = item.end ?? item.finish;
+      if (end == null) {
+        // A change-point list fills to the next position; the last to the bound.
+        const next = items[index + 1];
+        end = next && typeof next === "object" && next.position != null ? next.position : lo + span;
+      }
+      const left = at(start);
+      const width = Math.max(0, at(Number(end)) - left);
+      const segment = h("div", {
+        class: "et-strip-run",
+        style: { left: `${left}%`, width: `${width}%`, backgroundColor: colourOf(named(item)) },
+      });
+      if (enc.strip_labels && named(item) != null && String(named(item)) !== "") {
+        segment.append(h("span", { class: "et-strip-label" }, String(named(item)).charAt(0)));
+      }
+      wrap.append(segment);
+    });
+    return wrap;
+  }
   const wrap = h("div", { class: "et-mark-strip" });
   for (const item of items) {
-    const category =
-      item && typeof item === "object" ? (item.category ?? item.state ?? item.value) : item;
+    const category = named(item);
     const segment = h("span", {
       class: `et-strip-seg${enc.segmented === false ? " et-strip-joined" : ""}`,
-      style: { backgroundColor: resolveColor(colors[String(category)]) || "var(--et-accent, #2563eb)" },
+      style: { backgroundColor: colourOf(category) },
     });
     if (enc.strip_labels && category != null && String(category) !== "") {
       segment.append(h("span", { class: "et-strip-label" }, String(category).charAt(0)));
@@ -162,6 +191,42 @@ function renderBox(col, enc, row, pos) {
   return box;
 }
 
+/** A density band from a precomputed ordered ``[{x, y}]`` series. */
+function renderDistribution(enc, row, lo, span, color) {
+  const raw = row[enc.source];
+  const items = Array.isArray(raw) ? raw : [];
+  const points = [];
+  for (const item of items) {
+    if (!item) continue;
+    const x = Number(item[enc.x]);
+    const y = Number(item[enc.y]);
+    if (isFinite(x) && isFinite(y) && y >= 0) points.push([x, y]);
+  }
+  if (points.length < 2) return null;
+  const maxY = Math.max(...points.map((point) => point[1])) || 1;
+  const coords = points.map(([x, y]) => [Math.max(0, Math.min(100, ((x - lo) / span) * 100)), 100 - (y / maxY) * 100]);
+  const ns = "http://www.w3.org/2000/svg";
+  const svg = document.createElementNS(ns, "svg");
+  svg.setAttribute("class", "et-mark et-mark-distribution");
+  svg.setAttribute("viewBox", "0 0 100 100");
+  svg.setAttribute("preserveAspectRatio", "none");
+  const polygon = document.createElementNS(ns, "polygon");
+  polygon.setAttribute(
+    "points",
+    `${coords.map((point) => point.join(",")).join(" ")} ${coords[coords.length - 1][0]},100 ${coords[0][0]},100`,
+  );
+  polygon.setAttribute("fill", color);
+  polygon.setAttribute("opacity", "0.35");
+  svg.append(polygon);
+  const line = document.createElementNS(ns, "polyline");
+  line.setAttribute("points", coords.map((point) => point.join(",")).join(" "));
+  line.setAttribute("fill", "none");
+  line.setAttribute("stroke", color);
+  line.setAttribute("stroke-width", "1");
+  svg.append(line);
+  return svg;
+}
+
 /**
  * Render a column's ordered encodings over one shared scale. Bars, points and
  * ranges are positioned absolutely in a full-height track; the shared domain
@@ -206,9 +271,13 @@ export function renderMarks(col, row, range) {
   for (const box of encodings.filter((enc) => enc.kind === "boxplot")) {
     track.append(renderBox(col, box, row, (value) => ((value - lo) / span) * 100));
   }
+  for (const dist of encodings.filter((enc) => enc.kind === "distribution")) {
+    const node = renderDistribution(dist, row, lo, span, markColor(dist, row, "var(--et-accent, #2563eb)"));
+    if (node) track.append(node);
+  }
   let barIndex = 0;
   for (const enc of encodings) {
-    if (enc.kind === "stacked_bar" || enc.kind === "boxplot") continue;
+    if (enc.kind === "stacked_bar" || enc.kind === "boxplot" || enc.kind === "distribution") continue;
     const value = Number(row[enc.source]);
     if (enc.kind === "bar") {
       const size = enc.size != null ? Number(enc.size) : barCount > 1 ? Math.max(0.25, 0.85 - barIndex * 0.3) : 1;
@@ -248,7 +317,7 @@ export function renderMarks(col, row, range) {
       );
       if (enc.label) track.append(renderMarkLabel(col, enc, row, { pointPct: pct }));
     } else if (enc.kind === "strip") {
-      track.append(renderStrip(enc, row));
+      track.append(renderStrip(enc, row, lo, span));
     } else if (enc.kind === "range") {
       const low = Number(row[enc.source]);
       const high = Number(row[enc.high]);

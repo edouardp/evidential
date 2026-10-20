@@ -80,7 +80,7 @@ def _(EvidentialTable, col, mo, polling, settings):
             columns=[
                 col.text("party"),
                 col.bar("previous", color="#e2e8f0", size=0.9, title="Previous")
-                .bar("votes", color="@colour", size=0.42, label=True, label_position="outside_end")
+                .bar("votes", color="@colour", size=0.42, label={"value": True, "suffix": "%"}, label_position="outside_end")
                 .point("target", color="#0f766e", size=7)
                 .scale(domain=(0, 45)),
             ],
@@ -186,6 +186,7 @@ def _(EvidentialTable, col, likert, mo, settings):
                     "strongly_agree",
                     colors=["#b91c1c", "#fca5a5", "#e5e7eb", "#86efac", "#16a34a"],
                     labels=True,
+                    label_align="begin",
                     normalize="percent",
                     diverge_at="neutral",
                     neutral="split",

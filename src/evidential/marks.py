@@ -129,14 +129,21 @@ def _label_spec(
     literal: str | None = None,
     position: str | None = None,
     format: str | None = None,
+    prefix: str | None = None,
+    suffix: str | None = None,
+    align: str | None = None,
 ) -> dict[str, Any] | None:
     """Canonicalise a mark-owned label declaration.
 
     ``label=True`` labels the mark's own value; ``label="@field"`` labels
-    another field; ``label="text"`` (through the constructor) is a literal. The
-    fluent ``.label(...)`` form is unambiguous: ``source=`` vs ``text=``.
+    another field; ``label="text"`` (through the constructor) is a literal. A
+    mapping (``label={"source": "@x", "prefix": "$"}``) is the same as the
+    fluent form. ``.label(...)`` is unambiguous: ``source=`` vs ``text=``.
     """
     spec: dict[str, Any] = {}
+    if isinstance(value, Mapping):
+        spec.update({key: item for key, item in value.items() if item is not None})
+        value = None
     if source is not None:
         spec["source"] = _field(source)
     if text is not None:
@@ -153,13 +160,18 @@ def _label_spec(
         else:
             spec["text"] = value
     elif value is not None:
-        raise TypeError(f"label expects True, False, '@field' or a string, got {value!r}")
+        raise TypeError(f"label expects True, False, '@field', a string or a mapping, got {value!r}")
     if position is not None:
         if position not in LABEL_POSITIONS:
             raise ValueError(f"Unknown label position {position!r}; use one of {', '.join(LABEL_POSITIONS)}")
         spec["position"] = position
-    if format is not None:
-        spec["format"] = format
+    if align is not None:
+        if align not in ("begin", "center", "end"):
+            raise ValueError("label align is 'begin', 'center' or 'end'")
+        spec["align"] = align
+    for key, item in (("format", format), ("prefix", prefix), ("suffix", suffix)):
+        if item is not None:
+            spec[key] = item
     return spec or None
 
 
@@ -408,12 +420,24 @@ class MarkColumn(Column):
         text: str | None = None,
         position: str | None = None,
         format: str | None = None,
+        prefix: str | None = None,
+        suffix: str | None = None,
+        align: str | None = None,
     ) -> MarkColumn:
         """Annotate the most recently declared encoding."""
         encodings = self._encodings()
         if not encodings:
             raise ValueError("label() needs a mark first: declare a bar/point/range, then label it")
-        spec = _label_spec(value, source=source, text=text, position=position, format=format)
+        spec = _label_spec(
+            value,
+            source=source,
+            text=text,
+            position=position,
+            format=format,
+            prefix=prefix,
+            suffix=suffix,
+            align=align,
+        )
         encodings[-1] = {**encodings[-1], "label": spec}
         return self._with(encodings=encodings)
 
@@ -484,15 +508,8 @@ class MarkColumn(Column):
 
 
 def _bar_kwargs(options: Mapping[str, Any]) -> dict[str, Any]:
-    """Accept both ``label='@x'`` and ``label={'source': 'x'}`` in a bar call."""
-    options = dict(options)
-    label = options.pop("label", None)
-    if isinstance(label, Mapping):
-        options["label_options"] = dict(label)
-        label = label.get("value")
-        if label is None and "source" not in options["label_options"]:
-            label = True
-    return {**options, "label": label}
+    """Pass bar options through; ``label`` may be a bool, ``"@field"`` or a mapping."""
+    return dict(options)
 
 
 def _mark_column(name: Any, **base: Any) -> MarkColumn:
@@ -692,7 +709,11 @@ def stacked_bar(
             style["color"] = colour_list[index]
         encoding = _canonical_encoding("stacked_bar", source, **style)
         if labels:
-            encoding["label"] = {"value": True, "position": options.get("label_position", "inside_end")}
+            encoding["label"] = _label_spec(
+                True,
+                position=options.get("label_position", "inside_end"),
+                align=options.get("label_align"),
+            )
         encodings.append(encoding)
     if diverge_at is not None:
         if diverge_at not in [str(source) for source in sources]:

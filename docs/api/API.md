@@ -499,8 +499,9 @@ columns=[
   "bottom"` places the mark vertically (top/bottom with small sizes gives
   side-by-side bars). `cap="arrow"` marks an endpoint that extends beyond the
   displayed scale.
-- **Stacks** — `stacked_bar(*sources, colors=, labels=, normalize="percent",
-  diverge_at=, neutral="split")`. `diverge_at="neutral", neutral="split"`
+- **Stacks** — `stacked_bar(*sources, colors=, labels=, label_align="begin"|
+  "center"|"end", normalize="percent", diverge_at=, neutral="split")`.
+  `diverge_at="neutral", neutral="split"`
   centres the named segment on the origin and grows the categories either side
   left and right (a Likert chart).
 - **Boxplot** — `boxplot(minimum, q1, median, q3, maximum, outliers=, whisker=`
@@ -513,8 +514,10 @@ columns=[
   list of `{start, end, category}` structs is positioned on a shared x axis, and
   a list of `{position, category}` structs fills each state to the next.
 - **Labels** — `label=True` labels the mark's own value, `label="@field"` labels
-  another field, `.label(text=, source=, position=, format=)` is the long form.
-  Where a label position is omitted, bars label `outside_end` and points `center`.
+  another field, `label={source=, text=, prefix=, suffix=, format=, position=,
+  align=}` is the mapping form, and `.label(...)` the long form. `align`
+  (`"begin"|"center"|"end"`) places text inside a bar or stack segment. Where a
+  label position is omitted, bars label `outside_end` and points `center`.
 - **Scale** — `.scale(domain=(lo, hi), include_zero=, unit=, transform=`
   `"linear"|"log", axis=, axis_position="top"|"bottom", gridlines=)` fixes the
   shared quantitative axis; `.reference_line(value, label=, color=)` adds a rule

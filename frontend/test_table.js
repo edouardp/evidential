@@ -2237,3 +2237,29 @@ test("mark valign places bars at the top or bottom of the cell", () => {
   assert.match(bars[1].style.bottom, /^0/);
   renderer.destroy();
 });
+
+test("mark labels apply a prefix and suffix", () => {
+  const rows = [{ x: 12, name: "Alpha" }];
+  const columns = [{
+    name: "x", type: "number",
+    encodings: [{ kind: "bar", source: "x", label: { value: true, prefix: "$", suffix: "m", format: "num0" } }],
+  }];
+  const renderer = new EvidentialTableRenderer(makeModel(rows, columns, { page_size: 10 }, el), el);
+  assert.match(el.querySelector(".et-mark-label").textContent, /\$12m/);
+  renderer.destroy();
+});
+
+test("stacked bar label_align aligns segment text", () => {
+  const rows = [{ a: 1, b: 1 }];
+  const columns = [{
+    name: "a", type: "number",
+    encodings: [
+      { kind: "stacked_bar", source: "a", label: { value: true, align: "begin" } },
+      { kind: "stacked_bar", source: "b" },
+    ],
+  }];
+  const renderer = new EvidentialTableRenderer(makeModel(rows, columns, { page_size: 10 }, el), el);
+  const first = el.querySelector(".et-mark-stack-seg");
+  assert.equal(first.style.justifyContent, "flex-start");
+  renderer.destroy();
+});

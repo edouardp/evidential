@@ -277,3 +277,19 @@ def test_scale_axis_gridlines_and_position() -> None:
 def test_mark_valign_places_marks_vertically() -> None:
     spec = dict(col.bar("x", valign="top").bar("y", valign="bottom").point("z", valign="center"))
     assert [enc["valign"] for enc in spec["encodings"]] == ["top", "bottom", "center"]
+
+
+def test_label_prefix_suffix_and_align() -> None:
+    spec = dict(col.bar("x").label(value=True, prefix="$", suffix="m", align="begin"))
+    assert spec["encodings"][0]["label"] == {"value": True, "prefix": "$", "suffix": "m", "align": "begin"}
+    mapping = dict(col.point("y", label={"source": "name", "prefix": "→ "}))
+    assert mapping["encodings"][0]["label"] == {"source": "name", "prefix": "→ "}
+    with pytest.raises(ValueError, match="label align"):
+        col.bar("x").label(align="middle")
+
+
+def test_stacked_bar_label_align() -> None:
+    spec = dict(col.stacked_bar("a", "b", labels=True, label_align="begin"))
+    assert spec["encodings"][0]["label"]["align"] == "begin"
+    with pytest.raises(ValueError, match="label align"):
+        col.stacked_bar("a", labels=True, label_align="left")

@@ -27,13 +27,18 @@ function markColor(enc, row, fallback) {
 /** The label text for a mark: a literal, another field, or the mark's value. */
 function markLabelText(col, enc, row) {
   const spec = enc.label || {};
-  const raw = spec.source != null ? row[spec.source] : row[enc.source];
-  if (spec.text != null) return String(spec.text);
-  if (raw === null || raw === undefined) return "";
-  return formatValue(raw, spec.format || col.fmt, {
-    type: col.type,
-    fallback: String(raw),
-  });
+  let text;
+  if (spec.text != null) {
+    text = String(spec.text);
+  } else {
+    const raw = spec.source != null ? row[spec.source] : row[enc.source];
+    text =
+      raw === null || raw === undefined
+        ? ""
+        : formatValue(raw, spec.format || col.fmt, { type: col.type, fallback: String(raw) });
+  }
+  if (text === "") return "";
+  return `${spec.prefix ?? ""}${text}${spec.suffix ?? ""}`;
 }
 
 /** A mark-owned label, positioned relative to its bar or point. */
@@ -50,6 +55,8 @@ function renderMarkLabel(col, enc, row, geometry) {
       node.style.width = `${Math.max(0, geometry.widthPct)}%`;
       node.classList.add("et-mark-label-inside");
       if (position === "inside_start") node.classList.add("et-mark-label-start");
+      if (spec.align === "begin") node.classList.add("et-mark-label-align-begin");
+      if (spec.align === "end") node.classList.add("et-mark-label-align-end");
     } else {
       node.style.left = `${geometry.leftPct + geometry.widthPct}%`;
     }
@@ -121,7 +128,12 @@ function stackSegment(enc, row, col, leftPct, widthPct, showLabel = true) {
   });
   if (showLabel && enc.label) {
     const text = markLabelText(col, enc, row);
-    if (text) segment.append(h("span", { class: "et-mark-stack-label" }, text));
+    if (text) {
+      const align = enc.label.align;
+      if (align === "begin") segment.style.justifyContent = "flex-start";
+      else if (align === "end") segment.style.justifyContent = "flex-end";
+      segment.append(h("span", { class: "et-mark-stack-label" }, text));
+    }
   }
   return segment;
 }

@@ -693,6 +693,8 @@ tbody tr:last-child .et-bar-center .et-bar-axis { bottom: var(--et-bar-pad, 0); 
   justify-content: flex-end;
 }
 .et-mark-label-inside.et-mark-label-start { justify-content: flex-start; }
+.et-mark-label-inside.et-mark-label-align-begin { justify-content: flex-start; }
+.et-mark-label-inside.et-mark-label-align-end { justify-content: flex-end; }
 
 /* A boolean cell written as a labelled symbol (`✓ Active`). */
 .et-boolean-symbol { font-weight: 600; }

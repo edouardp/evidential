@@ -267,6 +267,10 @@ class EncodingLabel(TypedDict, total=False):
     value: bool | None
     position: str | None
     format: str | None
+    prefix: str | None
+    suffix: str | None
+    #: Text alignment within the mark/segment (stacked bars use ``"begin"``).
+    align: Literal["begin", "center", "end"] | None
 
 
 class BoxParts(TypedDict, total=False):

@@ -165,7 +165,7 @@ def _():
 
 
 @app.cell
-def _(EvidentialTable, col, form, likert, mo, settings):
+def _(EvidentialTable, col, likert, mo, settings):
     blocks = mo.ui.anywidget(
         EvidentialTable(
             likert,
@@ -187,6 +187,8 @@ def _(EvidentialTable, col, form, likert, mo, settings):
                     colors=["#b91c1c", "#fca5a5", "#e5e7eb", "#86efac", "#16a34a"],
                     labels=True,
                     normalize="percent",
+                    diverge_at="neutral",
+                    neutral="split",
                     title="Response",
                 ),
             ],
@@ -219,6 +221,50 @@ def _(EvidentialTable, col, form, mo, settings):
         )
     )
     strips
+    return
+
+
+@app.cell
+def _(mo):
+    mo.md("""
+    ## A box plot from precomputed statistics
+
+    `col.boxplot(minimum, q1, median, q3, maximum, outliers=)` draws a
+    five-number summary. It never computes the statistics — they arrive from SQL
+    or Python, and `whisker="iqr"` records that the whiskers are 1.5×IQR rather
+    than the data extrema.
+    """)
+    return
+
+
+@app.cell
+def _():
+    spread = [
+        {"group": "Control", "lo": 4, "q1": 8, "med": 11, "q3": 15, "hi": 21, "outs": [25, 2]},
+        {"group": "Treatment A", "lo": 7, "q1": 12, "med": 16, "q3": 20, "hi": 27, "outs": [31]},
+        {"group": "Treatment B", "lo": 5, "q1": 9, "med": 12, "q3": 18, "hi": 24, "outs": []},
+    ]
+    return (spread,)
+
+
+@app.cell
+def _(EvidentialTable, col, mo, settings, spread):
+    boxes = mo.ui.anywidget(
+        EvidentialTable(
+            spread,
+            settings=settings(
+                title="Distribution by group",
+                row_lines=False,
+                border=False,
+                stretch=False,
+            ),
+            columns=[
+                col.text("group"),
+                col.boxplot("lo", "q1", "med", "q3", "hi", outliers="outs", whisker="iqr", title="Spread"),
+            ],
+        )
+    )
+    boxes
     return
 
 

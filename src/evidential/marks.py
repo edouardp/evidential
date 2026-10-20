@@ -32,7 +32,7 @@ from typing import Any, Literal
 
 from ._column import Column, _clean, _field
 
-__all__ = ["MarkColumn", "bar", "point", "range", "stacked_bar", "strip", "LABEL_POSITIONS"]
+__all__ = ["MarkColumn", "bar", "boxplot", "point", "range", "stacked_bar", "strip", "LABEL_POSITIONS"]
 
 #: Where a mark-owned label may sit.
 LABEL_POSITIONS = (
@@ -71,6 +71,11 @@ _ENCODING_KEYS = (
     "colors",
     "segmented",
     "strip_labels",
+    "parts",
+    "outliers",
+    "whisker",
+    "diverge_at",
+    "neutral",
     "size",
     "side",
     "cap",
@@ -183,6 +188,11 @@ def _canonical_encoding(
         "colors",
         "segmented",
         "strip_labels",
+        "parts",
+        "outliers",
+        "whisker",
+        "diverge_at",
+        "neutral",
     ):
         if style.get(key) is not None:
             encoding[key] = style.pop(key)
@@ -471,6 +481,22 @@ def _resolve_column(
             name = f"__mark_{spec['name']}_{index}_label"
             hidden[name] = [label["source"](row) for row in rows]
             encoding["label"] = {**label, "source": name}
+        parts = encoding.get("parts")
+        if isinstance(parts, Mapping):
+            resolved_parts: dict[str, Any] = {}
+            for part, value in parts.items():
+                if callable(value):
+                    name = f"__mark_{spec['name']}_{index}_part_{part}"
+                    hidden[name] = [value(row) for row in rows]
+                    resolved_parts[part] = name
+                else:
+                    resolved_parts[part] = value
+            encoding["parts"] = resolved_parts
+        outliers = encoding.get("outliers")
+        if callable(outliers):
+            name = f"__mark_{spec['name']}_{index}_outliers"
+            hidden[name] = [outliers(row) for row in rows]
+            encoding["outliers"] = name
         resolved.append(encoding)
     spec["encodings"] = resolved
     return spec
@@ -570,13 +596,18 @@ def stacked_bar(
     colors: Sequence[Any] | None = None,
     labels: bool | None = None,
     normalize: str | None = None,
+    diverge_at: str | None = None,
+    neutral: str | None = None,
     **options: Any,
 ) -> MarkColumn:
     """A cumulative stack of segment magnitudes (a distinct encoding).
 
     Each ``source`` is a segment magnitude; ``colors`` is positional. Stacking
     uses the raw additive values and does not normalise automatically; pass
-    ``normalize="percent"`` to divide each row by its total.
+    ``normalize="percent"`` to divide each row by its total. With
+    ``diverge_at="neutral", neutral="split"`` the named segment is split around
+    a central origin and the categories either side grow left and right.
+
     """
     if not sources:
         raise TypeError("stacked_bar needs at least one segment column")
@@ -591,9 +622,59 @@ def stacked_bar(
         if labels:
             encoding["label"] = {"value": True, "position": options.get("label_position", "inside_end")}
         encodings.append(encoding)
+    if diverge_at is not None:
+        if diverge_at not in [str(source) for source in sources]:
+            raise ValueError(f"diverge_at={diverge_at!r} is not one of the segment columns")
+        if neutral not in (None, "split"):
+            raise ValueError("neutral is 'split' or None")
+        encodings[0]["diverge_at"] = diverge_at
+        encodings[0]["neutral"] = neutral or "split"
     column = column._with(encodings=encodings)
     if normalize is not None:
         if normalize != "percent":
             raise ValueError("stacked_bar normalize is 'percent' or None")
-        column = column._with(scale={"normalize": "percent"})
+        scale = dict(column._spec.get("scale") or {})
+        scale["normalize"] = "percent"
+        column = column._with(scale=scale)
     return column
+
+
+def boxplot(
+    minimum: Any,
+    q1: Any,
+    median: Any,
+    q3: Any,
+    maximum: Any,
+    *,
+    outliers: Any = None,
+    whisker: str | None = "extrema",
+    title: str | None = None,
+    color: str | None = None,
+    **options: Any,
+) -> MarkColumn:
+    """A precomputed five-number summary, with optional outliers.
+
+    ``whisker="extrema"`` (the default) means the whisker endpoints are the
+    data minima/maxima; ``whisker="iqr"`` marks 1.5×IQR whiskers. The renderer
+    never computes statistics — the five numbers arrive from SQL or Python.
+    """
+    if whisker not in (None, "extrema", "iqr"):
+        raise ValueError("boxplot whisker is 'extrema', 'iqr' or None")
+    parts = {
+        "minimum": _field(minimum),
+        "q1": _field(q1),
+        "median": _field(median),
+        "q3": _field(q3),
+        "maximum": _field(maximum),
+    }
+    encoding: dict[str, Any] = {"kind": "boxplot", "source": _field(median), "parts": parts}
+    if outliers is not None:
+        encoding["outliers"] = _field(outliers)
+    if whisker is not None:
+        encoding["whisker"] = whisker
+    if color is not None:
+        encoding["color"] = color
+    if options:
+        raise TypeError(f"Unknown boxplot option(s): {', '.join(sorted(options))}")
+    column = _mark_column(median, title=title)
+    return column._with(encodings=[encoding])

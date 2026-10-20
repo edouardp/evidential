@@ -456,6 +456,8 @@ columns=[
                     labels=True, normalize="percent"),
     # an ordered categorical sequence (form / states)
     col.strip("form", colors={"W": "green", "D": "grey", "L": "red"}, labels=True),
+    # a precomputed five-number summary with outliers
+    col.boxplot("minimum", "q1", "median", "q3", "maximum", outliers="outliers", whisker="iqr"),
 ]
 ```
 
@@ -463,6 +465,13 @@ columns=[
   size=, color=)`, `range(low, high, cap="none"|"line"|"dot")`. `side="left"|
   "right"` draws a nonnegative magnitude from the central origin; `size` is the bar
   height fraction or the point/range marker size.
+- **Stacks** — `stacked_bar(*sources, colors=, labels=, normalize="percent",
+  diverge_at=, neutral="split")`. `diverge_at="neutral", neutral="split"`
+  centres the named segment on the origin and grows the categories either side
+  left and right (a Likert chart).
+- **Boxplot** — `boxplot(minimum, q1, median, q3, maximum, outliers=, whisker=`
+  `"extrema"|"iqr")`. The renderer never computes statistics; the five numbers
+  arrive from SQL or Python.
 - **Labels** — `label=True` labels the mark's own value, `label="@field"` labels
   another field, `.label(text=, source=, position=, format=)` is the long form.
   Where a label position is omitted, bars label `outside_end` and points `center`.
@@ -593,8 +602,9 @@ other than `auto`, `merge`, `group` and `subcolumns` return a `Column`;
 | `col.bar(source, *, title=, label=, size=, side=, color=, …)` | bar (single = classic, chained = marks) |
 | `col.point(source, *, title=, size=, color=, label=)` | point marker |
 | `col.range(low, high, *, cap=, color=, label=)` | interval / dumbbell |
-| `col.stacked_bar(*sources, *, colors=, labels=, normalize="percent")` | cumulative stack |
+| `col.stacked_bar(*sources, *, colors=, labels=, normalize="percent", diverge_at=, neutral="split")` | cumulative stack |
 | `col.strip(source, *, colors=, labels=, segmented=)` | ordered categorical strip |
+| `col.boxplot(minimum, q1, median, q3, maximum, *, outliers=, whisker="extrema")` | box plot |
 | `col.shapes(name, *, shape=, color=, …)` | alias for `symbols` |
 | `col.color(name, *, title=, **options)` | colour scale |
 | `col.chip(name, *, min_width=, conditional_colors=, scale=, min=, max=, midpoint=, **extra)` | pill |

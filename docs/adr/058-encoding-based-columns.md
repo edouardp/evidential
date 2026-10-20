@@ -86,9 +86,10 @@ used, and the browser falls back to the legacy path when `encodings` is absent.
   `Callable[[Row], T]`. A callable is evaluated Python-side into a generated
   hidden helper column (ADR-006), so the browser only ever sees field names;
   exports and untrusted data never execute Python.
-- Note: this phase ships `bar`, `point`, `range`, `stacked_bar` (raw or
-  `normalize="percent"`) and `strip`, plus the `shapes` alias for repeated
-  symbols. `boxplot` and `distribution` remain for a later phase.
+- Note: this phase ships `bar`, `point`, `range`, `stacked_bar` (raw,
+  `normalize="percent"`, or `diverge_at=…`), `strip` and `boxplot`, plus the
+  `shapes` alias for repeated symbols. `distribution` remains for a later
+  phase.
 - Note: composition validity (ADR-058 §5.2) is enforced in Python where cheap
   (e.g. a sparkline beside a scalar bar is rejected) and reported with a clear
   message.

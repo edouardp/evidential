@@ -177,3 +177,41 @@ def test_strip_encoding_maps_categories_to_colours() -> None:
 
 def test_shapes_is_the_repeated_symbol_encoding() -> None:
     assert dict(col.shapes("gold", shape="square", color="gold"))["viz"] == "symbols"
+
+
+def test_boxplot_carries_a_precomputed_summary() -> None:
+    spec = dict(col.boxplot("lo", "q1", "med", "q3", "hi", outliers="outs", whisker="iqr", color="#111"))
+    encoding = spec["encodings"][0]
+    assert encoding["kind"] == "boxplot"
+    assert encoding["parts"] == {"minimum": "lo", "q1": "q1", "median": "med", "q3": "q3", "maximum": "hi"}
+    assert encoding["outliers"] == "outs"
+    assert encoding["whisker"] == "iqr"
+    assert encoding["source"] == "med"
+
+
+def test_boxplot_rejects_an_unknown_whisker() -> None:
+    with pytest.raises(ValueError, match="whisker"):
+        col.boxplot("a", "b", "c", "d", "e", whisker="tukey")
+    with pytest.raises(TypeError, match="Unknown boxplot option"):
+        col.boxplot("a", "b", "c", "d", "e", wobble=True)
+
+
+def test_boxplot_callable_parts_become_hidden_columns() -> None:
+    table = EvidentialTable(
+        [{"lo": 1, "q1": 2, "med": 3, "q3": 4, "hi": 5}],
+        columns=[col.boxplot(lambda r: r["lo"], "q1", "med", "q3", "hi")],
+    )
+    parts = table.columns[0]["encodings"][0]["parts"]
+    assert table.rows[0][parts["minimum"]] == 1
+
+
+def test_diverging_stack_marks_the_pivot() -> None:
+    spec = dict(
+        col.stacked_bar(
+            "strongly_disagree", "disagree", "neutral", "agree", "strongly_agree", diverge_at="neutral", neutral="split"
+        )
+    )
+    first = spec["encodings"][0]
+    assert first["diverge_at"] == "neutral" and first["neutral"] == "split"
+    with pytest.raises(ValueError, match="diverge_at"):
+        col.stacked_bar("a", "b", diverge_at="c")

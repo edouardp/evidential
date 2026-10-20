@@ -78,6 +78,7 @@ from ._column import (
 from .marks import (
     MarkColumn,
     bar,
+    boxplot,
     point,
     range,  # noqa: A004 - the public constructor name
     stacked_bar,
@@ -92,6 +93,7 @@ __all__ = [
     "auto",
     "bar",
     "boolean",
+    "boxplot",
     "chip",
     "color",
     "currency",

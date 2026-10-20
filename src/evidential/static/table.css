@@ -522,6 +522,50 @@ tbody tr:last-child .et-bar-center .et-bar-axis { bottom: var(--et-bar-pad, 0); 
   overflow: hidden;
   text-overflow: clip;
 }
+.et-mark-box {
+  top: 15%;
+  bottom: 15%;
+  left: 0;
+  right: 0;
+}
+.et-box-whisker {
+  position: absolute;
+  top: 50%;
+  height: 1px;
+  transform: translateY(-50%);
+  opacity: 0.7;
+}
+.et-box-cap {
+  position: absolute;
+  top: 32%;
+  bottom: 32%;
+  width: 1px;
+  transform: translateX(-50%);
+  opacity: 0.8;
+}
+.et-box-iqr {
+  position: absolute;
+  top: 12%;
+  bottom: 12%;
+  border: 1px solid;
+  box-sizing: border-box;
+  opacity: 0.4;
+}
+.et-box-median {
+  position: absolute;
+  top: 12%;
+  bottom: 12%;
+  width: 2px;
+  transform: translateX(-50%);
+}
+.et-box-outlier {
+  position: absolute;
+  top: 50%;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+}
 .et-mark-strip {
   top: 22%;
   bottom: 22%;

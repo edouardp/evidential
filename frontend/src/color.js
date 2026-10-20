@@ -259,6 +259,28 @@ export function contrastTextColor(colorValue) {
   }
 }
 
+/**
+ * Split a diverging stack into its left and right arms. Categories before the
+ * ``diverge_at`` segment grow left; those after grow right; the pivot segment
+ * is halved across the origin.
+ */
+export function divergingTotals(encodings, row) {
+  const pivot = encodings.findIndex((enc) => enc.source === encodings[0].diverge_at);
+  let left = 0;
+  let right = 0;
+  encodings.forEach((enc, index) => {
+    const num = Number(row[enc.source]);
+    const value = isFinite(num) && num > 0 ? num : 0;
+    if (index < pivot) left += value;
+    else if (index > pivot) right += value;
+    else {
+      left += value / 2;
+      right += value / 2;
+    }
+  });
+  return { left, right };
+}
+
 /** Compute per-column visualization ranges (bar / color / chip) over data rows. */
 export function calculateVizRanges(columns, rows) {
   const ranges = new Map();
@@ -266,10 +288,21 @@ export function calculateVizRanges(columns, rows) {
     if (col.encodings && col.encodings.length) {
       // A marks column shares one scale across every encoding's sources.
       const stacked = col.encodings.some((enc) => enc.kind === "stacked_bar");
+      const diverging = stacked && col.encodings.some((enc) => enc.diverge_at);
       let min = Infinity;
       let max = -Infinity;
       for (const row of rows) {
         if (row.render_type === "row_total" || row.render_type === "row_subtotal") continue;
+        if (diverging) {
+          // A diverging stack is read against the larger of its two arms.
+          const arms = divergingTotals(col.encodings, row);
+          const span = Math.max(Math.abs(arms.left), Math.abs(arms.right));
+          if (span > 0) {
+            min = 0;
+            max = Math.max(max, span);
+          }
+          continue;
+        }
         if (stacked) {
           // A stack's scale is its cumulative total, not its individual parts.
           let total = 0;
@@ -284,12 +317,23 @@ export function calculateVizRanges(columns, rows) {
           continue;
         }
         for (const enc of col.encodings) {
-          for (const field of [enc.source, enc.high]) {
+          const fields = [enc.source, enc.high];
+          if (enc.parts) fields.push(...Object.values(enc.parts));
+          for (const field of fields) {
             const raw = field == null ? null : row[field];
             const num = Number(raw);
             if (raw !== null && raw !== undefined && isFinite(num)) {
               min = Math.min(min, num);
               max = Math.max(max, num);
+            }
+          }
+          if (enc.outliers && Array.isArray(row[enc.outliers])) {
+            for (const outlier of row[enc.outliers]) {
+              const num = Number(outlier);
+              if (isFinite(num)) {
+                min = Math.min(min, num);
+                max = Math.max(max, num);
+              }
             }
           }
         }

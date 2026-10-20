@@ -71,8 +71,56 @@ function renderStrip(enc, row) {
   return wrap;
 }
 
+/** One stack segment: an absolutely positioned coloured box with optional label. */
+function stackSegment(enc, row, col, leftPct, widthPct, showLabel = true) {
+  const segment = h("div", {
+    class: "et-mark-stack-seg",
+    style: {
+      left: `${leftPct}%`,
+      width: `${Math.max(0, widthPct)}%`,
+      backgroundColor: markColor(enc, row, "var(--et-accent, #2563eb)"),
+    },
+  });
+  if (showLabel && enc.label) {
+    const text = markLabelText(col, enc, row);
+    if (text) segment.append(h("span", { class: "et-mark-stack-label" }, text));
+  }
+  return segment;
+}
+
+/** A diverging stack: categories either side of a split neutral segment. */
+function renderDivergingStack(col, encodings, row, maxAbs) {
+  const pivot = encodings.findIndex((enc) => enc.source === encodings[0].diverge_at);
+  const magnitude = (enc) => {
+    const num = Number(row[enc.source]);
+    return isFinite(num) && num > 0 ? num : 0;
+  };
+  const at = (value) => (maxAbs ? (value / maxAbs) * 50 : 0);
+  const stack = h("div", { class: "et-mark et-mark-stack" });
+  const pv = magnitude(encodings[pivot]);
+  // The neutral segment straddles the origin: half left, half right.
+  let left = pv / 2;
+  stack.append(stackSegment(encodings[pivot], row, col, 50 - at(left), at(pv / 2)));
+  for (let index = pivot - 1; index >= 0; index -= 1) {
+    const value = magnitude(encodings[index]);
+    stack.append(stackSegment(encodings[index], row, col, 50 - at(left + value), at(value)));
+    left += value;
+  }
+  let right = pv / 2;
+  stack.append(stackSegment(encodings[pivot], row, col, 50, at(pv / 2), false));
+  for (let index = pivot + 1; index < encodings.length; index += 1) {
+    const value = magnitude(encodings[index]);
+    stack.append(stackSegment(encodings[index], row, col, 50 + at(right), at(value)));
+    right += value;
+  }
+  return stack;
+}
+
 /** A cumulative stack of segment magnitudes over the column's shared scale. */
 function renderStack(col, encodings, row, lo, hi) {
+  if (encodings[0].diverge_at) {
+    return renderDivergingStack(col, encodings, row, Math.max(Math.abs(lo), Math.abs(hi)) || 1);
+  }
   const values = encodings.map((enc) => {
     const num = Number(row[enc.source]);
     return isFinite(num) && num > 0 ? num : 0;
@@ -84,23 +132,34 @@ function renderStack(col, encodings, row, lo, hi) {
   let cursor = 0;
   encodings.forEach((enc, index) => {
     const magnitude = normalize ? (total ? values[index] / total : 0) : values[index];
-    const width = (magnitude / spanTotal) * 100;
-    const segment = h("div", {
-      class: "et-mark-stack-seg",
-      style: {
-        left: `${(cursor / spanTotal) * 100}%`,
-        width: `${Math.max(0, width)}%`,
-        backgroundColor: markColor(enc, row, "var(--et-accent, #2563eb)"),
-      },
-    });
-    if (enc.label) {
-      const text = markLabelText(col, enc, row);
-      if (text) segment.append(h("span", { class: "et-mark-stack-label" }, text));
-    }
+    stack.append(stackSegment(enc, row, col, (cursor / spanTotal) * 100, (magnitude / spanTotal) * 100));
     cursor += magnitude;
-    stack.append(segment);
   });
   return stack;
+}
+
+/** A precomputed five-number summary with optional outliers. */
+function renderBox(col, enc, row, pos) {
+  const parts = enc.parts || {};
+  const value = (name) => Number(row[parts[name]]);
+  const [minimum, q1, median, q3, maximum] = ["minimum", "q1", "median", "q3", "maximum"].map(value);
+  if ([minimum, q1, median, q3, maximum].some((number) => !isFinite(number))) {
+    return h("span", { class: "et-null" }, "–");
+  }
+  const color = markColor(enc, row, "var(--et-accent, #2563eb)");
+  const box = h("div", { class: "et-mark et-mark-box" });
+  box.append(h("div", { class: "et-box-whisker", style: { left: `${pos(minimum)}%`, width: `${Math.max(0, pos(maximum) - pos(minimum))}%`, backgroundColor: color } }));
+  box.append(h("div", { class: "et-box-cap", style: { left: `${pos(minimum)}%`, backgroundColor: color } }));
+  box.append(h("div", { class: "et-box-cap", style: { left: `${pos(maximum)}%`, backgroundColor: color } }));
+  box.append(h("div", { class: "et-box-iqr", style: { left: `${pos(q1)}%`, width: `${Math.max(0, pos(q3) - pos(q1))}%`, borderColor: color, backgroundColor: color } }));
+  box.append(h("div", { class: "et-box-median", style: { left: `${pos(median)}%`, backgroundColor: color } }));
+  const outliers = enc.outliers && Array.isArray(row[enc.outliers]) ? row[enc.outliers] : [];
+  for (const outlier of outliers) {
+    const number = Number(outlier);
+    if (!isFinite(number)) continue;
+    box.append(h("div", { class: "et-box-outlier", style: { left: `${pos(number)}%`, backgroundColor: color } }));
+  }
+  return box;
 }
 
 /**
@@ -144,9 +203,12 @@ export function renderMarks(col, row, range) {
   const barCount = encodings.filter((enc) => enc.kind === "bar").length;
   const stack = encodings.filter((enc) => enc.kind === "stacked_bar");
   if (stack.length) track.append(renderStack(col, stack, row, lo, hi));
+  for (const box of encodings.filter((enc) => enc.kind === "boxplot")) {
+    track.append(renderBox(col, box, row, (value) => ((value - lo) / span) * 100));
+  }
   let barIndex = 0;
   for (const enc of encodings) {
-    if (enc.kind === "stacked_bar") continue;
+    if (enc.kind === "stacked_bar" || enc.kind === "boxplot") continue;
     const value = Number(row[enc.source]);
     if (enc.kind === "bar") {
       const size = enc.size != null ? Number(enc.size) : barCount > 1 ? Math.max(0.25, 0.85 - barIndex * 0.3) : 1;

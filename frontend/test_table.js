@@ -1936,3 +1936,41 @@ test("strip renders one coloured segment per ordered category", () => {
   assert.equal(el.querySelectorAll(".et-strip-label").length, 4);
   renderer.destroy();
 });
+
+test("boxplot renders a whisker, IQR box, median and outliers", () => {
+  const rows = [{ lo: 0, q1: 10, med: 12, q3: 15, hi: 30, outs: [40, -5] }];
+  const columns = [{
+    name: "med", type: "number",
+    scale: { domain: [-10, 45] },
+    encodings: [{ kind: "boxplot", source: "med", parts: { minimum: "lo", q1: "q1", median: "med", q3: "q3", maximum: "hi" }, outliers: "outs", whisker: "iqr" }],
+  }];
+  const renderer = new EvidentialTableRenderer(makeModel(rows, columns, { page_size: 10 }, el), el);
+  assert.ok(el.querySelector(".et-box-whisker"));
+  assert.ok(el.querySelector(".et-box-iqr"));
+  assert.ok(el.querySelector(".et-box-median"));
+  assert.equal(el.querySelectorAll(".et-box-cap").length, 2);
+  assert.equal(el.querySelectorAll(".et-box-outlier").length, 2);
+  renderer.destroy();
+});
+
+test("diverging stacked_bar splits the neutral segment around the origin", () => {
+  const rows = [{ sd: 10, d: 20, n: 30, a: 25, sa: 15 }];
+  const columns = [{
+    name: "sd", type: "number",
+    encodings: [
+      { kind: "stacked_bar", source: "sd", diverge_at: "n", neutral: "split" },
+      { kind: "stacked_bar", source: "d" },
+      { kind: "stacked_bar", source: "n" },
+      { kind: "stacked_bar", source: "a" },
+      { kind: "stacked_bar", source: "sa" },
+    ],
+  }];
+  const renderer = new EvidentialTableRenderer(makeModel(rows, columns, { page_size: 10 }, el), el);
+  const segs = [...el.querySelectorAll(".et-mark-stack-seg")];
+  // Neutral contributes two halves; the four other categories stay whole.
+  assert.equal(segs.length, 6);
+  // Left arm total = 10 + 20 + 15 = 45; right = 15 + 25 + 15 = 55; max 55.
+  const leftSide = segs.filter((seg) => parseFloat(seg.style.left) < 50);
+  assert.ok(leftSide.length >= 3);
+  renderer.destroy();
+});

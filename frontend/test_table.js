@@ -2164,3 +2164,28 @@ test("icon_map renders a glyph per category and falls back to text", () => {
   assert.match(cells[1].textContent, /unknown/);
   renderer.destroy();
 });
+
+test("section rows participate in alternating shading", () => {
+  const rows = [
+    { a: "one" },
+    { render_type: "row_section", __label: "Group" },
+    { a: "two" },
+  ];
+  const renderer = new EvidentialTableRenderer(
+    makeModel(rows, [{ name: "a" }], { row_shading: true }, el), el,
+  );
+  const section = el.querySelector(".et-row-section");
+  assert.ok(section);
+  // The section row consumes a slot in the pattern, like a data row.
+  assert.ok(section.classList.contains("et-row-shaded"));
+  renderer.destroy();
+});
+
+test("spacer rows render a blank gap", () => {
+  const rows = [{ a: "one" }, { render_type: "row_spacer", __height: 8 }, { a: "two" }];
+  const renderer = new EvidentialTableRenderer(makeModel(rows, [{ name: "a" }], {}, el), el);
+  const spacer = el.querySelector(".et-row-spacer");
+  assert.ok(spacer);
+  assert.equal(spacer.textContent, "");
+  renderer.destroy();
+});

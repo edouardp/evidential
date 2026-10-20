@@ -37,6 +37,10 @@ Chosen option: extend the existing row model rather than add a parallel one.
 - `section_row(label, align="center")` sets `__align`, rendered as
   `et-section-center`. A centered section carries its meaning in the label, so
   it is used without summary cells.
+- `spacer_row(height=)` emits a blank gap (`render_type="row_spacer"`) with no
+  rule, for separating blocks without a label.
+- Section rows take part in the alternating `row_shading` pattern, consuming a
+  slot like any other row (the design system asks for this explicitly).
 - `row_lines` accepts a colour name as well as `True`/`False`; a string drives
   the `--et-row-border` token, so `"black"`, `"grey"` and `"white"` are one
   option.

@@ -22,9 +22,9 @@ app = marimo.App(width="full")
 def _():
     import marimo as mo
 
-    from evidential import EvidentialTable, col, grouped_records, section_row
+    from evidential import EvidentialTable, col, grouped_records, section_row, spacer_row
 
-    return EvidentialTable, col, grouped_records, mo, section_row
+    return EvidentialTable, col, grouped_records, mo, section_row, spacer_row
 
 
 @app.cell
@@ -152,6 +152,42 @@ def _(EvidentialTable, col, mo, sales, section_row):
         )
     )
     centered
+    return
+
+
+@app.cell
+def _(mo):
+    mo.md("""
+    ## Spacer rows
+
+    `spacer_row(height=)` inserts a blank gap with no rule, to separate blocks
+    without carrying a label. When `row_shading` is on, section rows take part
+    in the alternating pattern like any other row.
+    """)
+    return
+
+
+@app.cell
+def _(EvidentialTable, col, mo, sales, spacer_row):
+    blocks = []
+    for area in ("Americas", "EMEA"):
+        blocks.extend(row for row in sales if row["region"] == area)
+        blocks.append(spacer_row(10))
+    spaced = mo.ui.anywidget(
+        EvidentialTable(
+            rows=blocks,
+            title="Spaced blocks",
+            subtitle="spacer_row separates blocks without a label",
+            row_shading=True,
+            border=False,
+            columns=[
+                col.text("region"),
+                col.text("country"),
+                col.currency("arr", decimals=1),
+            ],
+        )
+    )
+    spaced
     return
 
 

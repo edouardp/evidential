@@ -747,6 +747,13 @@ tbody tr:last-child .et-bar-center .et-bar-axis { bottom: var(--et-bar-pad, 0); 
   font-weight: 500;
   border-bottom: none;
 }
+/* A blank spacer row (`spacer_row`): a gap with no rule. */
+.et-row-spacer .et-spacer-cell {
+  border: none;
+  background: transparent;
+  padding: 0;
+  height: 0.5rem;
+}
 /* A combined section+summary row: the group label and its subtotal share one
    row, so give it the section rule while keeping the measure cells. */
 .et-row-combined .et-td {

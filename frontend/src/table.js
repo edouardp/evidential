@@ -515,8 +515,20 @@ export class EvidentialTableRenderer {
       const colSpan = columns.length + (ctx.rowNumbers ? 1 : 0) + (opts.link ? 1 : 0);
       const label = row.__label ?? (columns[0] ? row[columns[0].name] : "");
       const align = row.__align === "center" ? "center" : "left";
-      return h("tr", { class: "et-row et-row-section" }, [
+      // A section row takes part in the alternating shading pattern.
+      const shadedSection = shaded(ctx.shadingCounter.value++, opts);
+      return h("tr", { class: `et-row et-row-section${shadedSection ? " et-row-shaded" : ""}` }, [
         h("td", { class: `et-td et-section-cell et-section-${align}`, colspan: colSpan }, String(label ?? "")),
+      ]);
+    }
+    if (renderType === "row_spacer") {
+      const colSpan = columns.length + (ctx.rowNumbers ? 1 : 0) + (opts.link ? 1 : 0);
+      const style =
+        row.__height == null
+          ? {}
+          : { height: typeof row.__height === "number" ? `${row.__height}px` : String(row.__height) };
+      return h("tr", { class: "et-row et-row-spacer" }, [
+        h("td", { class: "et-td et-spacer-cell", colspan: colSpan, style }),
       ]);
     }
     const isTotal = renderType === "row_total";

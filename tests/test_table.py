@@ -576,3 +576,13 @@ def test_section_row_alignment() -> None:
 def test_row_lines_accept_a_colour_name() -> None:
     table = EvidentialTable([{"a": 1}], row_lines="grey")
     assert table.options["row_lines"] == "grey"
+
+
+def test_spacer_row() -> None:
+    from evidential import spacer_row
+
+    assert spacer_row() == {"render_type": "row_spacer"}
+    assert spacer_row(12) == {"render_type": "row_spacer", "__height": 12}
+    table = EvidentialTable(rows=[{"a": 1}, spacer_row(8), {"a": 2}])
+    assert table.rows[1]["render_type"] == "row_spacer"
+    assert table.rows[1]["__height"] == 8

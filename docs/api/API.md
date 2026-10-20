@@ -720,7 +720,8 @@ Data sources and constructors: `EvidentialTable`, `LiveEvidentialTable`,
 `tab_format`, `text_transform`, `sub_missing`, `sub_zero`, `sub_small_vals`,
 `sub_large_vals`, `sub_values`, `cols_merge`, `cols_merge_range`,
 `cols_merge_uncert`, `cols_merge_n_pct`, `resolve_rules`. Helpers: `settings`,
-`date_range_sql`, `make_column`, `query_values`, `section_row`, `rows`, `Rows`,
+`date_range_sql`, `make_column`, `query_values`, `section_row`, `spacer_row`,
+`rows`, `Rows`,
 `duck`,
 `Column`, `ColumnGroup`, `CURRENCY_CODES`, `col`.
 

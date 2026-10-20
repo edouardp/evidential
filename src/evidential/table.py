@@ -36,6 +36,18 @@ def section_row(label: str, *, align: str = "left") -> dict[str, Any]:
     return {"render_type": "row_section", "__label": label, "__align": align}
 
 
+def spacer_row(height: int | float | None = None) -> dict[str, Any]:
+    """Return a blank spacer row, e.g. to separate blocks without a label.
+
+    ``height`` is a pixel number or a CSS length; without one the row uses the
+    table's default row height.
+    """
+    row: dict[str, Any] = {"render_type": "row_spacer"}
+    if height is not None:
+        row["__height"] = height
+    return row
+
+
 def _flatten_columns(columns: Iterable[Any]) -> Iterator[Any]:
     """Yield columns, flattening the groups built by ``col.subcolumns`` / ``col.group``.
 

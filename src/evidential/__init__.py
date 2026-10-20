@@ -57,7 +57,7 @@ from .rules import (
     tab_style,
     text_transform,
 )
-from .table import EvidentialTable, section_row
+from .table import EvidentialTable, section_row, spacer_row
 
 __all__ = [
     "TableOptions",
@@ -71,6 +71,7 @@ __all__ = [
     "settings",
     "EvidentialTable",
     "section_row",
+    "spacer_row",
     "LiveEvidentialTable",
     "grouped_table",
     "grouped_records",

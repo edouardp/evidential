@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import os
+import runpy
 from base64 import b64encode
 from math import log10
 from pathlib import Path
@@ -68,6 +69,38 @@ def mount(page, live_server, cases):
 def capture(page, name):
     if path := os.environ.get("EVIDENTIAL_REVIEW_SCREENSHOT"):
         page.screenshot(path=str(Path(path).with_name(name)), full_page=True)
+
+
+def test_centered_bar_notebook_renders_mark_labels_and_mirrored_bars(page, live_server):
+    notebook = Path(__file__).resolve().parents[2] / "notebooks" / "34_centered_bars.py"
+    _, definitions = runpy.run_path(str(notebook))["app"].run()
+    names = ("league_table", "variants", "back_to_back", "diverging")
+    mount(page, live_server, [(name, definitions[name].widget, []) for name in names])
+    page.locator("section").evaluate_all("nodes => nodes.forEach(el => el.style.width = '1100px')")
+    page.wait_for_timeout(100)
+    for index in range(len(names)):
+        case = page.locator(f"#case-{index}")
+        assert case.locator(".et-bar-wrap").count() == 0
+        assert case.locator(".et-mark-bar").count() > 0
+        while True:
+            labels = case.locator(".et-mark-label")
+            assert labels.count() > 0
+            assert labels.evaluate_all("nodes => nodes.every(el => getComputedStyle(el).visibility !== 'hidden')")
+            next_page = case.get_by_role("button", name="Next page")
+            if not next_page.count() or next_page.is_disabled():
+                break
+            next_page.click()
+        previous_page = case.get_by_role("button", name="Previous page")
+        while previous_page.count() and previous_page.is_enabled():
+            previous_page.click()
+    for index, column in ((2, 0), (3, 1)):
+        first_cell = page.locator(f"#case-{index} tbody tr").first.locator("td").nth(column)
+        bar = first_cell.locator(".et-mark-bar")
+        label = first_cell.locator(".et-mark-label")
+        assert bar.evaluate("el => parseFloat(el.style.left) > 0")
+        assert label.get_attribute("class").find("et-mark-label-negative") >= 0
+        assert "-" not in label.inner_text()
+    capture(page, "centered-bars-marks.png")
 
 
 def test_uncertainty_band_paints_density_as_intensity_and_stays_in_its_row(page, live_server):

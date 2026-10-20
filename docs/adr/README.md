@@ -79,7 +79,7 @@ dated, immutable record of the decisions behind them.
 | [058](058-encoding-based-columns.md) | Encoding-Based Columns (Declarative Marks) | Accepted |
 | [059](059-synthetic-row-presentation.md) | Synthetic Section and Summary Row Presentation | Accepted |
 | [060](060-synthetic-row-builder.md) | A Synthetic-Row Builder | Accepted |
-| [061](061-array-points-and-cell-presets.md) | Array Points, Sparkline Styles, and Boolean Display | Accepted |
+| [061](061-array-points-and-cell-presets.md) | Array Points, Cell Presets, and Icon Maps | Accepted |
 
 ## Creating New ADRs
 

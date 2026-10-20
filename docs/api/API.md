@@ -639,6 +639,7 @@ other than `auto`, `merge`, `group` and `subcolumns` return a `Column`;
 | `col.time(name, *, fmt=, relative=, align=, title=)` | `hms` |
 | `col.datetime(name, *, fmt=, relative=, align=, title=)` | `yyyy-mm-dd HH:MM:SS` |
 | `col.flag(name, *, title=)` | alpha-3 country codes |
+| `col.icons(name, *, map={...}, title=)` | category → glyph / image |
 | `col.bar(source, *, title=, label=, size=, side=, color=, …)` | bar (single = classic, chained = marks) |
 | `col.point(source, *, title=, size=, color=, label=)` | point marker |
 | `col.points(source, *, size=, color=)` | one marker per array observation |

@@ -2154,3 +2154,13 @@ test("boolean cells render their symbols and labels", () => {
   assert.ok(cells[0].querySelector(".et-boolean-true"));
   renderer.destroy();
 });
+
+test("icon_map renders a glyph per category and falls back to text", () => {
+  const rows = [{ signal: "buy" }, { signal: "unknown" }];
+  const columns = [{ name: "signal", type: "string", icon_map: { buy: "▲", sell: "▼" } }];
+  const renderer = new EvidentialTableRenderer(makeModel(rows, columns, { page_size: 10 }, el), el);
+  const cells = [...el.querySelectorAll("tbody td")];
+  assert.equal(cells[0].querySelector(".et-icon-glyph").textContent, "▲");
+  assert.match(cells[1].textContent, /unknown/);
+  renderer.destroy();
+});

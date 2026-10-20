@@ -295,6 +295,14 @@ function renderContent(col, value, formatted, ctx, row) {
       }),
       h("span", { class: "et-cell-media-label" }, formatted),
     ]);
+  } else if (col.icon_map && col.icon_map[String(value)] != null) {
+    const glyph = col.icon_map[String(value)];
+    const isImage = /^(https?:|data:|\/)/.test(glyph);
+    content = isImage
+      ? h("span", { class: "et-cell-icon" }, [
+          h("img", { class: "et-icon-image", src: glyph, alt: String(value), loading: "lazy", title: String(value) }),
+        ])
+      : h("span", { class: "et-cell-icon et-icon-glyph", title: String(value) }, glyph);
   } else if (col.type === "boolean" && col.boolean_options) {
     const opts = col.boolean_options;
     const isTrue = value === true || value === 1 || value === "true";

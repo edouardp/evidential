@@ -387,6 +387,8 @@ class ColumnOptions(TypedDict, total=False):
     sparkline_options: SparklineOptions | None
     chip_options: ChipOptions | None
     boolean_options: BooleanOptions | None
+    #: A category → glyph/image URL map (see ``col.icons``).
+    icon_map: Mapping[str, str] | None
     symbol_options: SymbolOptions | None
     image_options: ImageOptions | None
     logo_options: LogoOptions | None

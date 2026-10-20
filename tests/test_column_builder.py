@@ -331,3 +331,12 @@ def test_boolean_display_options() -> None:
     # The dict form routes the top-level shorthand into boolean_options too.
     table = EvidentialTable([{"a": True}], columns=[{"name": "a", "type": "boolean", "true_symbol": "✓"}])
     assert table.columns[0]["boolean_options"] == {"true_symbol": "✓"}
+
+
+def test_icons_maps_categories_to_glyphs() -> None:
+    spec = dict(col.icons("signal", map={"buy": "▲", "sell": "▼", "hold": "●"}))
+    assert spec["type"] == "string"
+    assert spec["icon_map"] == {"buy": "▲", "sell": "▼", "hold": "●"}
+    assert col.text("signal").icons({"hold": "●"})["icon_map"] == {"hold": "●"}
+    table = EvidentialTable([{"signal": "buy"}], columns=[{"name": "signal", "icon_map": {"buy": "▲"}}])
+    assert table.columns[0]["icon_map"] == {"buy": "▲"}

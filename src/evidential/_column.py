@@ -33,6 +33,7 @@ __all__ = [
     "flag",
     "group",
     "html",
+    "icons",
     "image",
     "integer",
     "link",
@@ -462,6 +463,17 @@ class Column(Mapping[str, Any]):
             col.text("badge").html()
         """
         return self._with(html=True)
+
+    def icons(self, map: Mapping[str, str]) -> Column:
+        """Map each category to a glyph or image URL.
+
+        :param map: category → glyph (e.g. ``"▲"``) or image URL/data-URI.
+
+        Example::
+
+            col.text("signal").icons({"buy": "▲", "sell": "▼", "hold": "●"})
+        """
+        return self._with(icon_map={str(key): value for key, value in map.items()})
 
     def link(self, column: str | None = None, *, label: str | None = None, new_tab: bool = False) -> Column:
         """Turn the cell into a hyperlink.
@@ -1225,6 +1237,25 @@ def boolean(
         or None,
         **extra,
     )
+
+
+def icons(
+    name: str,
+    *,
+    map: Mapping[str, str],
+    title: str | None = None,
+    **extra: Any,
+) -> Column:
+    """A categorical column drawn as an icon per category.
+
+    :param map: category → glyph (e.g. ``"▲"``) or image URL/data-URI; an
+        unmapped value falls back to its text.
+
+    Example::
+
+        col.icons("signal", map={"buy": "▲", "sell": "▼", "hold": "●"})
+    """
+    return _column(name, "string", title=title, icon_map=dict(map), **extra)
 
 
 def array(name: str, *, title: str | None = None, **extra: Any) -> Column:

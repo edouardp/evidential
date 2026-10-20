@@ -4,7 +4,7 @@ date: 2026-10-20
 deciders: edouard
 ---
 
-# ADR-061: Array Points, Sparkline Styles, and Boolean Display
+# ADR-061: Array Points, Cell Presets, and Icon Maps
 
 ## Context and Problem Statement
 
@@ -16,7 +16,9 @@ first encoding pass did not cover:
   its bar;
 - sparkline point-only and marker styles, and a **signed** area fill that
   distinguishes gains from losses;
-- a boolean written as a checkmark and label rather than `true`/`false`.
+- a boolean written as a checkmark and label rather than `true`/`false`;
+- a **category mapped to an icon** (`col.icons`), the design system's "icon
+  mapped from the underlying data".
 
 ## Decision Drivers
 
@@ -41,6 +43,8 @@ Chosen option: extend the existing marks and options rather than add new types.
 - **`col.boolean(..., true_text=, false_text=, true_symbol=, false_symbol=)`**
   writes `✓ Active` / `✗ Inactive`. The symbol is green when true and red when
   false (`--et-positive` / `--et-negative`).
+- **`col.icons(name, map=...)`** (`.icons(...)` on a column) maps each category
+  to a glyph or image URL/data-URI; an unmapped value falls back to its text.
 
 All three are presentation options on an existing value; none changes the data
 or the column's type for sorting/export.

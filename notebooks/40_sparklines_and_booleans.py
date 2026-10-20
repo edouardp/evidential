@@ -9,7 +9,7 @@
 
 `col.sparkline` draws an array as a line, area, bar or points, with per-point
 markers and a signed area fill. `col.boolean` writes a true/false value as a
-symbol and/or label.
+symbol and/or label. `col.icons` maps a category to a glyph or image.
 """
 
 import marimo
@@ -24,7 +24,7 @@ def _():
 
     from evidential import EvidentialTable, col, settings
 
-    return EvidentialTable, col, mo, settings
+    return EvidentialTable, col, mo
 
 
 @app.cell
@@ -153,6 +153,49 @@ def _(EvidentialTable, col, mo, services):
         )
     )
     status
+    return
+
+
+@app.cell
+def _(mo):
+    mo.md("""
+    ## An icon mapped from a category
+
+    `col.icons("signal", map={...})` draws each category as a glyph (or an image
+    URL / data-URI). An unmapped value falls back to its text.
+    """)
+    return
+
+
+@app.cell
+def _():
+    signals = [
+        {"asset": "Bonds", "signal": "buy", "note": "Yield peak"},
+        {"asset": "Equities", "signal": "hold", "note": "Fairly valued"},
+        {"asset": "Oil", "signal": "sell", "note": "Demand falling"},
+        {"asset": "Gold", "signal": "buy", "note": "Hedge"},
+    ]
+    return (signals,)
+
+
+@app.cell
+def _(EvidentialTable, col, mo, signals):
+    icons = mo.ui.anywidget(
+        EvidentialTable(
+            signals,
+            title="Position signals",
+            row_lines=False,
+            border=False,
+            stretch=False,
+            columns=[
+                col.text("asset"),
+                col.icons("signal", map={"buy": "▲", "sell": "▼", "hold": "●"}, title="Signal"),
+                col.text("signal", title="Meaning"),
+                col.text("note"),
+            ],
+        )
+    )
+    icons
     return
 
 

@@ -103,8 +103,23 @@ def test_centered_bar_notebook_renders_mark_labels_and_mirrored_bars(page, live_
         bar = first_cell.locator(".et-mark-bar")
         label = first_cell.locator(".et-mark-label")
         assert bar.evaluate("el => parseFloat(el.style.left) > 0")
-        assert label.get_attribute("class").find("et-mark-label-negative") >= 0
+        assert label.get_attribute("class").find("et-mark-label-left") >= 0
         assert "-" not in label.inner_text()
+    assert page.locator("#case-0 .et-table").bounding_box()["width"] < 900
+    for index in (0, 1):
+        labels = page.locator(f"#case-{index} .et-mark-label-outside_start")
+        assert labels.count() > 0
+        for label in labels.all():
+            geometry = label.evaluate("""el => {
+                const rect = el.getBoundingClientRect();
+                const track = el.closest('.et-marks').getBoundingClientRect();
+                return {left: rect.left, right: rect.right, zero: track.x + track.width / 2,
+                        negative: el.textContent.startsWith('-')};
+            }""")
+            if geometry["negative"]:
+                assert geometry["left"] > geometry["zero"]
+            else:
+                assert geometry["right"] < geometry["zero"]
     capture(page, "centered-bars-marks.png")
 
 

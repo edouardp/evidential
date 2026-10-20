@@ -9,6 +9,27 @@ import { fitMarkLabels } from "./src/mark-labels.js";
 global.document = new JSDOM("<!doctype html><html><body></body></html>").window.document;
 global.Node = document.defaultView.Node;
 
+test("outside-start bar labels sit across the origin from positive, negative and zero bars", () => {
+  for (const value of [10, -10, 0]) {
+    const column = {encodings: [{kind: "bar", source: "x", label: {value: true, position: "outside_start"}}],
+      scale: {domain: [-10, 10]}};
+    const node = renderMarks(column, {x: value});
+    const label = node.querySelector(".et-mark-label");
+    assert.equal(label.style.left, "50%");
+    assert.equal(label.classList.contains("et-mark-label-left"), value >= 0);
+    assert.equal(label.classList.contains("et-mark-label-inside"), false);
+    assert.equal(Number(label.textContent), value);
+    if (value) assert.equal(node.querySelector(".et-mark-bar").style.width, "50%");
+  }
+  for (const side of ["left", "right"]) {
+    const column = {encodings: [{kind: "bar", source: "x", side, label: {value: true, position: "outside_start"}}],
+      scale: {domain: [-10, 10]}};
+    const label = renderMarks(column, {x: 10}).querySelector(".et-mark-label");
+    assert.equal(label.style.left, "50%");
+    assert.equal(label.classList.contains("et-mark-label-left"), side === "right");
+  }
+});
+
 test("log minor ticks cover each decade, respect fractional bounds and preserve endpoint labels", () => {
   const ticks = axisTicks(0.1, 10, 4, "log");
   assert.equal(ticks.length, 19);

@@ -51,6 +51,7 @@ __all__ = [
 LABEL_POSITIONS = (
     "inside_start",
     "inside_end",
+    "outside_start",
     "outside_end",
     "center",
     "above",

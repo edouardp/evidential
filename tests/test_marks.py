@@ -55,6 +55,8 @@ def test_label_true_labels_the_mark_value_and_fluent_form_positions_it() -> None
     assert labelled["encodings"][0]["label"] == {"value": True}
     positioned = col.bar("current").label(value=True, position="inside_end")
     assert positioned["encodings"][0]["label"] == {"value": True, "position": "inside_end"}
+    at_origin = col.bar("current").label(value=True, position="outside_start")
+    assert at_origin["encodings"][0]["label"] == {"value": True, "position": "outside_start"}
     with pytest.raises(ValueError, match="Unknown label position"):
         col.bar("current").label(position="mid-air")
 

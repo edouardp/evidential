@@ -141,6 +141,8 @@ def test_centered_bar_demo_uses_marks_for_every_bar(monkeypatch, tmp_path) -> No
                 assert not column["encodings"][0].get("label")
             else:
                 assert column["encodings"][0]["label"]
+                if name in ("league_table", "variants"):
+                    assert column["encodings"][0]["label"]["position"] == "outside_start"
 
     for name in ("league_table", "variants"):
         table = definitions[name].widget
@@ -149,7 +151,8 @@ def test_centered_bar_demo_uses_marks_for_every_bar(monkeypatch, tmp_path) -> No
             assert low == -high
             assert column["references"][0]["value"] == 0
             source = column["encodings"][0]["source"]
-            assert all(abs(row[source]) < high for row in table.rows if row[source] is not None)
+            assert all(abs(row[source]) <= high for row in table.rows if row[source] is not None)
+            assert high == max(abs(row[source]) for row in table.rows if row[source] is not None)
 
     league = definitions["league_table"].widget
     assert "saved WDI query result" in definitions["wdi_source"]

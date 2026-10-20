@@ -732,6 +732,7 @@ tbody tr:last-child .et-bar-center .et-bar-axis { bottom: var(--et-bar-pad, 0); 
   line-height: 1.2;
   white-space: nowrap;
 }
+.et-mark-label-outside_start,
 .et-mark-label-outside_end { transform: translate(0.15rem, -50%); }
 .et-mark-label-center { transform: translate(-50%, -50%); }
 .et-mark-label-inside {
@@ -742,7 +743,7 @@ tbody tr:last-child .et-bar-center .et-bar-axis { bottom: var(--et-bar-pad, 0); 
   box-sizing: border-box;
 }
 .et-mark-label-text { flex: 0 0 auto; }
-.et-mark-label-negative { transform: translate(calc(-100% - 0.15rem), -50%); }
+.et-mark-label-left { transform: translate(calc(-100% - 0.15rem), -50%); }
 .et-mark-label-inside.et-mark-label-align-center { justify-content: center; }
 .et-marks-tall { height: 2.8em; }
 .et-mark-label-above { top: 0; transform: translateX(-50%); }

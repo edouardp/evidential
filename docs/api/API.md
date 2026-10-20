@@ -576,6 +576,10 @@ columns=[
   retaining its source unless a new source/text/value is supplied. `align`
   (`"begin"|"center"|"end"`) places text inside a bar or stack segment. Where a
   label position is omitted, bars label `outside_end` and points `center`.
+  For bars, `position="outside_start"` places the label beside the origin on
+  the opposite side from the bar: positive bars label left of zero, negative
+  bars label right of zero. A symmetric domain gives both signs equal space
+  without reserving room for labels beyond the bar tips.
   Labels that do not fit hide completely by default, with the original values
   retained in the mark tooltip and accessible text; `overflow="show"` opts out.
   `min_width` is a pixel threshold. `.range(..., cap="line", overflow="arrow")`

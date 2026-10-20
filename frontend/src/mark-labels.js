@@ -49,11 +49,13 @@ export function renderMarkLabel(col, enc, row, geometry) {
       if (spec.align === "end") node.classList.add("et-mark-label-align-end");
       if (spec.align === "center" || position === "center") node.classList.add("et-mark-label-align-center");
     } else {
-      node.style.left = `${geometry.negative ? geometry.leftPct : geometry.leftPct + geometry.widthPct}%`;
-      if (geometry.negative && position === "outside_end") node.classList.add("et-mark-label-negative");
+      const atLeft = position === "outside_start" ? !geometry.negative : geometry.negative;
+      node.style.left = `${atLeft ? geometry.leftPct : geometry.leftPct + geometry.widthPct}%`;
+      if (atLeft && ["outside_start", "outside_end"].includes(position)) node.classList.add("et-mark-label-left");
     }
   } else if (geometry.pointPct != null) {
     node.style.left = `${geometry.pointPct}%`;
+    if (position === "outside_start") node.classList.add("et-mark-label-left");
   }
   return node;
 }

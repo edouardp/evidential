@@ -9,7 +9,7 @@
 """Centred ("diverging") bars — labeled `col.bar()` marks on symmetric scales.
 
 A zero centre line, the bar growing left (negative) or right (positive) by its
-magnitude, and the value at its outer tip: the shape The
+magnitude, and the value on the opposite side of zero: the shape The
 Economist uses for its league-table-of-nations charts. The same module also
 shows the **back-to-back** ("tornado") variant — mirrored bars meeting at a
 shared centre (using a negative source), with an optional benchmark rule — and a
@@ -59,20 +59,20 @@ def _(mo):
     Use **`col.bar()`** with a symmetric scale and a zero reference line: the bar
     grows **right** for a positive value and
     **left** for a negative one, by how far the value sits from zero, and the value
-    is labeled at the **outer tip** of the bar.
+    is labeled beside zero on the **opposite side** from the bar.
 
     ```python
     (
         col.bar("gdp", title="Real GDP", color="#01A9C3", size=0.65)
-        .label(value=True, format="num1")
+        .label(value=True, format="num1", position="outside_start")
         .scale(domain=(-30, 30))
         .reference_line(0, color="#94a3b8")
     )
     ```
 
-    Equal positive and negative values draw the same length. The examples leave
-    space beyond the largest bar for its label. Colour follows the usual rule
-    (`color`, `color_negative`).
+    Equal positive and negative values draw the same length. The largest bar uses
+    its full half of the cell; its label occupies the other half. Colour follows
+    the usual rule (`color`, `color_negative`).
 
     The first two examples use **World Development Indicators** data for the
     pandemic comparison, in the style of The Economist's league table of nations.
@@ -118,7 +118,7 @@ def _(base_year, duckdb, end_year, json, mo, wdi_path):
         leagues = snapshot["records"]
         wdi_source = f"Bundle unavailable at `{wdi_path}`; displaying the saved WDI query result (2019–2021)."
     league_limits = {
-        field: 1.4 * (max((abs(row[field]) for row in leagues if row[field] is not None), default=0) or 1)
+        field: (max((abs(row[field]) for row in leagues if row[field] is not None), default=0) or 1)
         for field in ("gdp", "consumption", "prices", "investment", "debt")
     }
     league_domains = {field: (-limit, limit) for field, limit in league_limits.items()}
@@ -185,27 +185,27 @@ def _(
             columns=[
                 col.markdown("country"),
                 col.bar("gdp", title="Real GDP", color="#01A9C3", align="center")
-                .label(value=True, format="num1")
+                .label(value=True, format="num1", position="outside_start")
                 .scale(domain=league_domains["gdp"])
                 .reference_line(0, color="#94a3b8"),
                 col.bar("consumption", title="Real consumption\nper person", color="#086FA1", align="center")
-                .label(value=True, format="num1")
+                .label(value=True, format="num1", position="outside_start")
                 .scale(domain=league_domains["consumption"])
                 .reference_line(0, color="#94a3b8"),
                 col.bar("prices", title="Equity prices\n(USD)", color="#8BB9CE",  align="center")
-                .label(value=True, format="num1")
+                .label(value=True, format="num1", position="outside_start")
                 .scale(domain=league_domains["prices"])
                 .reference_line(0, color="#94a3b8"),
                 col.bar("investment", title="Real fixed\ninvestment", color="#559CB8", align="center")
-                .label(value=True, format="num1")
+                .label(value=True, format="num1", position="outside_start")
                 .scale(domain=league_domains["investment"])
                 .reference_line(0, color="#94a3b8"),
                 col.bar("debt", title="Central gov debt\n(pp of GDP)", color="#2EC1D3", align="center")
-                .label(value=True, format="num1")
+                .label(value=True, format="num1", position="outside_start")
                 .scale(domain=league_domains["debt"])
                 .reference_line(0, color="#94a3b8"),
             ],
-            rules=[tab_style(cells_body(columns=list(league_domains)), min_width="230px")],
+            rules=[tab_style(cells_body(columns=list(league_domains)), min_width="110px")],
         )
     )
     league_table
@@ -217,9 +217,10 @@ def _(mo):
     mo.md("""
     ## Options
 
-    The same column, three ways. `.label(value=True)` adds the value; omitting
-    it shows the bar alone. `color`/`color_negative` set one colour for both signs
-    (or two). `size=0.65` uses 65% of the row height, leaving space above and below
+    The same column, three ways. `.label(value=True, position="outside_start")`
+    places the value beside zero, across from the bar; omitting it shows the bar
+    alone. `color`/`color_negative` set one colour for both signs (or two).
+    `size=0.65` uses 65% of the row height, leaving space above and below
     the bar; the zero reference line stays continuous. `.scale(domain=...)`
     controls the range shared by the marks and the reference line.
 
@@ -249,23 +250,23 @@ def _(
                 row_lines=False,
                 # border=False,
                 # stretch=False,
-                width="1000px",
+                width="760px",
             ),
             columns=[
                 col.text("country"),
                 col.bar("gdp", title="With values", color="blue", color_negative="red", size=0.65)
-                .label(value=True, format='0.0"%"')
+                .label(value=True, format='0.0"%"', position="outside_start")
                 .scale(domain=league_domains["gdp"])
                 .reference_line(0, color="#94a3b8"),
                 col.bar("gdp", title="Bar only", color="blue", color_negative="red", size=0.65)
                 .scale(domain=league_domains["gdp"])
                 .reference_line(0, color="#94a3b8"),
                 col.bar("gdp", title="tab:blue, size=0.5", color="tab:blue", size=0.5)
-                .label(value=True, format='0.0"%"')
+                .label(value=True, format='0.0"%"', position="outside_start")
                 .scale(domain=league_domains["gdp"])
                 .reference_line(0, color="#94a3b8"),
             ],
-            rules=[tab_style(cells_body(columns=["gdp"]), min_width="230px")],
+            rules=[tab_style(cells_body(columns=["gdp"]), min_width="110px")],
         )
     )
     variants

@@ -105,6 +105,12 @@ track; `segmented=False` joins adjacent runs without gaps or outlines.
 
 Fluent `.scale(...)` and `.label(...)` calls refine existing settings. A new
 label binding replaces its prior binding while preserving positioning/style.
+Bar labels support `position="outside_start"` beside the origin, across from
+the bar: left of zero for positive values and right of zero for negative
+values. Zero values label to the left. This preserves the compact centered-bar
+layout without sacrificing bar length for labels at the tips. The default
+`outside_end` continues to place labels beyond the tips. Explicit `side` takes
+precedence over the value's sign when choosing the label's side.
 Labels support `overflow="hide"|"show"`, `min_width` in pixels and `color`;
 the default hides a label completely if it cannot fit. The original values
 remain in the track's accessible text and tooltip. Ranges support

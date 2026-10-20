@@ -16,7 +16,7 @@ import { hiddenColumns, visibleRows, searchRows, sortRows, paginateRows,
   computeRowspans, shaded, sectionContinuation } from "./rows.js";
 import { renderCell } from "./cells.js";
 import { formatTitle, formatValue } from "./format.js";
-import { niceTicks, marksDomain } from "./visualizations.js";
+import { niceTicks, marksDomain, scalePosition } from "./visualizations.js";
 
 /** Map a `font_size` to a CSS value.
  *
@@ -480,10 +480,12 @@ export class EvidentialTableRenderer {
         continue;
       }
       const { lo, hi } = marksDomain(col, ctx.ranges.get(col.name));
-      const span = (hi - lo) || 1;
+      const pos = scalePosition(lo, hi, scale.transform);
       const axis = h("div", { class: "et-axis" });
-      for (const tick of niceTicks(lo, hi)) {
-        const pct = Math.max(0, Math.min(100, ((tick - lo) / span) * 100));
+      for (const tick of niceTicks(lo, hi, 4, scale.transform)) {
+        const raw = pos(tick);
+        if (raw == null) continue;
+        const pct = Math.max(0, Math.min(100, raw));
         const label = formatValue(tick, col.fmt, {
           type: col.type,
           range: ctx.formatRanges.get(col.name),

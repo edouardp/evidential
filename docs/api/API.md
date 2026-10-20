@@ -490,12 +490,15 @@ columns=[
 ]
 ```
 
-- **Marks** — `bar(source, color=, color_negative=, size=, side=, ...)`, `point(source,
-  size=, color=)`, `points(source, size=, color=)` (one marker per array element),
-  `range(low, high, cap="none"|"line"|"dot"|"arrow")`. `side="left"`
+- **Marks** — `bar(source, color=, color_negative=, size=, side=, valign=, ...)`,
+  `point(source, size=, color=)`, `points(source, size=, color=)` (one marker per
+  array element), `range(low, high, cap="none"|"line"|"dot"|"arrow")`.
+  `side="left"`
   `|"right"` draws a nonnegative magnitude from the central origin; `size` is the
-  bar height fraction or the point/range marker size. `cap="arrow"` marks an
-  endpoint that extends beyond the displayed scale.
+  bar height fraction or the point/range marker size; `valign="top"|"center"|
+  "bottom"` places the mark vertically (top/bottom with small sizes gives
+  side-by-side bars). `cap="arrow"` marks an endpoint that extends beyond the
+  displayed scale.
 - **Stacks** — `stacked_bar(*sources, colors=, labels=, normalize="percent",
   diverge_at=, neutral="split")`. `diverge_at="neutral", neutral="split"`
   centres the named segment on the origin and grows the categories either side
@@ -518,7 +521,8 @@ columns=[
   and `.reference_band(low, high, label=, color=)` shades a zone (a target or
   equivalence range). `axis=True` draws tick labels for the column, and
   `gridlines=True` faint vertical lines through the cells. A log scale needs a
-  positive domain and is what a forest plot uses with `.reference_line(1)`.
+  positive domain, uses a power-of-ten tick ladder, and is what a forest plot
+  uses with `.reference_line(1)`.
 - **Sources** — a field name, `"@field"`, or a `lambda row: ...`. A callable is
   evaluated Python-side into a hidden helper column, so the browser (and any
   static export) only ever sees field names.

@@ -92,6 +92,7 @@ _ENCODING_KEYS = (
     "style",
     "size",
     "side",
+    "valign",
     "cap",
     "fit_to_data",
     "background",
@@ -189,6 +190,7 @@ def _canonical_encoding(
         "color_negative",
         "size",
         "side",
+        "valign",
         "cap",
         "fit_to_data",
         "background",
@@ -339,6 +341,7 @@ class MarkColumn(Column):
         reference_label: str | None = None,
         size: float | None = None,
         side: Literal["left", "right"] | None = None,
+        valign: Literal["top", "center", "bottom"] | None = None,
         label: Any = None,
         label_position: str | None = None,
     ) -> MarkColumn:
@@ -361,6 +364,7 @@ class MarkColumn(Column):
             "reference_label": reference_label,
             "size": size,
             "side": side,
+            "valign": valign,
         }
         if label is not None:
             options["label"] = label

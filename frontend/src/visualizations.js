@@ -2,6 +2,15 @@ import { h } from "./dom.js";
 import { formatValue } from "./format.js";
 import { resolveColor } from "./color.js";
 
+/** Inline top/bottom/transform for a mark's `valign` (default centred). */
+function verticalStyle(valign, point = false) {
+  if (valign === "top") return { top: "0", transform: point ? "translate(-50%, 0)" : "none" };
+  if (valign === "bottom") return { top: "auto", bottom: "0", transform: point ? "translate(-50%, 0)" : "none" };
+  return point
+    ? { top: "50%", transform: "translate(-50%, -50%)" }
+    : { top: "50%", transform: "translateY(-50%)" };
+}
+
 /** Resolve a mark's colour: an explicit colour, a per-row column, or a default. */
 function markColor(enc, row, fallback) {
   if (row && Number(row[enc.source]) < 0) {
@@ -252,8 +261,19 @@ export function marksDomain(col, range) {
 }
 
 /** Round tick values spanning ``lo..hi`` (for an axis or gridlines). */
-export function niceTicks(lo, hi, count = 4) {
+export function niceTicks(lo, hi, count = 4, transform = null) {
   if (!isFinite(lo) || !isFinite(hi) || hi <= lo) return [];
+  if (transform === "log" && lo > 0) {
+    // A power-of-ten ladder (with 2x and 5x subdivisions) for a log axis.
+    const ticks = [];
+    for (let exp = Math.floor(Math.log10(lo)) - 1; exp <= Math.ceil(Math.log10(hi)); exp += 1) {
+      for (const multiple of [1, 2, 5]) {
+        const value = multiple * Math.pow(10, exp);
+        if (value >= lo && value <= hi) ticks.push(Number(value.toPrecision(12)));
+      }
+    }
+    if (ticks.length) return ticks;
+  }
   const step0 = (hi - lo) / Math.max(1, count);
   const magnitude = Math.pow(10, Math.floor(Math.log10(step0)));
   const normalized = step0 / magnitude;
@@ -263,6 +283,11 @@ export function niceTicks(lo, hi, count = 4) {
     ticks.push(Number(value.toFixed(10)));
   }
   return ticks;
+}
+
+/** A position function mapping a value in ``lo..hi`` to 0..100 (percent). */
+export function scalePosition(lo, hi, transform) {
+  return markScale(lo, hi, transform);
 }
 
 function markScale(lo, hi, transform) {
@@ -302,7 +327,7 @@ export function renderMarks(col, row, range) {
 
   // Faint vertical lines at round values help read a mark against the scale.
   if (scale.gridlines) {
-    for (const tick of niceTicks(lo, hi)) {
+    for (const tick of niceTicks(lo, hi, 4, scale.transform)) {
       const pct = pos(tick);
       if (pct == null) continue;
       track.append(
@@ -394,6 +419,7 @@ export function renderMarks(col, row, range) {
         h("div", {
           class: `et-mark et-mark-bar${enc.side ? ` et-mark-bar-${enc.side}` : ""}`,
           style: {
+            ...verticalStyle(enc.valign),
             left: `${leftPct}%`,
             width: `${Math.max(0, widthPct)}%`,
             height: `${Math.max(0, Math.min(1, size)) * 100}%`,
@@ -413,7 +439,7 @@ export function renderMarks(col, row, range) {
         track.append(
           h("div", {
             class: "et-mark et-mark-point",
-            style: { left: `${pct}%`, width: `${size}px`, height: `${size}px`, backgroundColor: color },
+            style: { ...verticalStyle(enc.valign, true), left: `${pct}%`, width: `${size}px`, height: `${size}px`, backgroundColor: color },
           }),
         );
       }
@@ -424,7 +450,7 @@ export function renderMarks(col, row, range) {
       track.append(
         h("div", {
           class: "et-mark et-mark-point",
-          style: { left: `${pct}%`, width: `${size}px`, height: `${size}px`, backgroundColor: markColor(enc, row, "var(--et-accent, #2563eb)") },
+          style: { ...verticalStyle(enc.valign, true), left: `${pct}%`, width: `${size}px`, height: `${size}px`, backgroundColor: markColor(enc, row, "var(--et-accent, #2563eb)") },
         }),
       );
       if (enc.label) track.append(renderMarkLabel(col, enc, row, { pointPct: pct }));
@@ -449,7 +475,7 @@ export function renderMarks(col, row, range) {
       const color = markColor(enc, row, "var(--et-accent, #2563eb)");
       const line = h("div", {
         class: "et-mark et-mark-range",
-        style: { left: `${left}%`, width: `${Math.max(0, right - left)}%`, height: `${size}px`, backgroundColor: color },
+        style: { ...verticalStyle(enc.valign), left: `${left}%`, width: `${Math.max(0, right - left)}%`, height: `${size}px`, backgroundColor: color },
       });
       if (enc.cap === "line" || enc.cap === "dot") {
         line.append(h("span", { class: "et-mark-cap et-mark-cap-start", style: { backgroundColor: color } }));

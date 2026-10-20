@@ -51,8 +51,9 @@ col.bar("share").scale(domain=(0, 40), axis=True, gridlines=True, axis_position=
 - Good, because a bar or point can now be read to a value, not just labelled.
 - Good, because the axis shares the marks' domain, including a fixed domain and
   (for linear scales) `include_zero`.
-- Note: ticks are linear. A log-scale axis falls back to the same round-number
-  step, so its ticks are approximate; a power-of-ten tick ladder is future work.
+- Note: ticks use a 1/2/5×10ⁿ step on a linear scale and a power-of-ten
+  ladder (with 2× and 5× subdivisions) on a log scale, so the axis lines up
+  with the marks in both cases.
 - Note: the axis row is presentational and does not take part in row numbering
   or alternating shading.
 

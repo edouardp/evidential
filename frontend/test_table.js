@@ -2204,3 +2204,36 @@ test("marks axis renders tick labels and gridlines", () => {
   assert.ok(el.querySelector(".et-mark-gridline"));
   renderer.destroy();
 });
+
+test("log axis uses a power-of-ten tick ladder", () => {
+  const rows = [{ x: 10 }];
+  const columns = [{
+    name: "x", type: "number",
+    scale: { domain: [1, 100], transform: "log", axis: true, gridlines: true },
+    encodings: [{ kind: "point", source: "x" }],
+  }];
+  const renderer = new EvidentialTableRenderer(makeModel(rows, columns, { page_size: 10 }, el), el);
+  const ticks = [...el.querySelectorAll(".et-axis-tick")].map((node) => node.textContent);
+  assert.ok(ticks.some((tick) => tick.startsWith("10")));
+  assert.ok(ticks.length >= 4);
+  // log10(10) is the midpoint of the 1..100 domain.
+  const middles = [...el.querySelectorAll(".et-axis-tick")].filter((node) => /50%/.test(node.style.left));
+  assert.ok(middles.length >= 1);
+  renderer.destroy();
+});
+
+test("mark valign places bars at the top or bottom of the cell", () => {
+  const rows = [{ a: 3, b: 5 }];
+  const columns = [{
+    name: "a", type: "number",
+    encodings: [
+      { kind: "bar", source: "a", valign: "top", size: 0.4 },
+      { kind: "bar", source: "b", valign: "bottom", size: 0.4 },
+    ],
+  }];
+  const renderer = new EvidentialTableRenderer(makeModel(rows, columns, { page_size: 10 }, el), el);
+  const bars = [...el.querySelectorAll(".et-mark-bar")];
+  assert.match(bars[0].style.top, /^0/);
+  assert.match(bars[1].style.bottom, /^0/);
+  renderer.destroy();
+});

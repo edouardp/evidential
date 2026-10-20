@@ -335,6 +335,42 @@ def _(EvidentialTable, col, curves, mo, settings):
 @app.cell
 def _(mo):
     mo.md("""
+    ## Adjacent bars with `valign`
+
+    When bars should sit side by side rather than overlaid, place one at the top
+    of the cell and one at the bottom with `valign=` and sizes that do not
+    collide. The marks still share one horizontal scale.
+    """)
+    return
+
+
+@app.cell
+def _(EvidentialTable, col, mo, polling, settings):
+    adjacent = mo.ui.anywidget(
+        EvidentialTable(
+            polling,
+            settings=settings(
+                title="Polling",
+                subtitle="Last election above, this poll below",
+                row_lines=False,
+                border=False,
+                stretch=False,
+            ),
+            columns=[
+                col.text("party"),
+                col.bar("previous", color="#cbd5e1", size=0.36, valign="top")
+                .bar("votes", color="@colour", size=0.36, valign="bottom")
+                .scale(domain=(0, 45)),
+            ],
+        )
+    )
+    adjacent
+    return
+
+
+@app.cell
+def _(mo):
+    mo.md("""
     ## A strip of observations
 
     `col.points("observations", ...)` draws one marker per value in an array
@@ -370,7 +406,7 @@ def _(EvidentialTable, col, mo, settings, wards):
             columns=[
                 col.text("ward"),
                 col.bar("mean", color="#bfdbfe", title="Mean")
-                .points("observations", size=6, color="#1d4ed8"),
+                .points("observations", size=6, color="#1d4ed860"),
             ],
         )
     )

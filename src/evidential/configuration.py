@@ -299,6 +299,8 @@ class EncodingSpec(TypedDict, total=False):
     side: Literal["left", "right"] | None
     #: ``range``: end treatment, or ``"arrow"`` when an endpoint is off-scale.
     cap: Literal["none", "line", "dot", "arrow"] | None
+    #: Vertical placement of the mark within the cell.
+    valign: Literal["top", "center", "bottom"] | None
     #: ``strip``: an ordered category → colour map (W/D/L).
     colors: Mapping[str, str] | None
     #: ``strip``: draw a segment boundary per item rather than one run.

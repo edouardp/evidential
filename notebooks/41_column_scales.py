@@ -63,7 +63,7 @@ def _(EvidentialTable, col, mo, settings, shares):
                 subtitle="Axis above the bars, with gridlines",
                 row_lines=False,
                 border=False,
-                stretch=False,
+                stretch=True,
             ),
             columns=[
                 col.text("party"),
@@ -94,9 +94,9 @@ def _(EvidentialTable, col, mo, shares):
             shares,
             title="Share of the vote",
             subtitle="Axis below the bars",
-            row_lines=False,
+            row_lines=True,
             border=False,
-            stretch=False,
+            stretch=True,
             columns=[
                 col.text("party"),
                 col.bar("share", color="#0ea5e9")
@@ -105,6 +105,55 @@ def _(EvidentialTable, col, mo, shares):
         )
     )
     axis_below
+    return
+
+
+@app.cell
+def _(mo):
+    mo.md("""
+    ## A log-scale axis
+
+    `transform="log"` gives the axis a power-of-ten tick ladder (with 2× and 5×
+    subdivisions), which is how a forest plot or a ratio chart is read.
+    """)
+    return
+
+
+@app.cell
+def _():
+    ratios = [
+        {"study": "A", "low": 1.4, "estimate": 3.2, "high": 8.1},
+        {"study": "B", "low": 0.8, "estimate": 1.1, "high": 1.6},
+        {"study": "C", "low": 2.2, "estimate": 4.9, "high": 12.0},
+    ]
+    return (ratios,)
+
+
+@app.cell
+def _(EvidentialTable, col, mo, ratios):
+    log_axis = mo.ui.anywidget(
+        EvidentialTable(
+            ratios,
+            title="Odds ratios",
+            subtitle="A log axis with gridlines and the null at 1",
+            row_lines=False,
+            border=False,
+            stretch=False,
+            columns=[
+                col.text("study"),
+                col.range("low", "high", cap="line", color="#94a3b8")
+                .point("estimate", color="#1d4ed8", size=8)
+                .scale(
+                    domain=(0.5, 20),
+                    transform="log",
+                    axis=True,
+                    gridlines=True,
+                )
+                .reference_line(1, label="null"),
+            ],
+        )
+    )
+    log_axis
     return
 
 

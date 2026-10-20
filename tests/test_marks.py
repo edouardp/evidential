@@ -272,3 +272,8 @@ def test_scale_axis_gridlines_and_position() -> None:
     }
     with pytest.raises(ValueError, match="axis_position"):
         col.bar("x").scale(axis_position="side")
+
+
+def test_mark_valign_places_marks_vertically() -> None:
+    spec = dict(col.bar("x", valign="top").bar("y", valign="bottom").point("z", valign="center"))
+    assert [enc["valign"] for enc in spec["encodings"]] == ["top", "bottom", "center"]

@@ -106,6 +106,11 @@ remain in the track's accessible text and tooltip. Ranges support
 `overflow="arrow"` independently of `cap="line"|"dot"|"none"`; the earlier
 `cap="arrow"` spelling remains compatible. Paint order follows declaration
 order, including boxes and distributions.
+Scalar and array points accept `outline=False` to hide their one-pixel ring,
+or `outline="<color>"` to recolor it independently of the fill. Omission,
+`None`, or `True` preserves the existing theme ring. These are mark-owned
+options and apply equally to constructors and chained marks; marker size and
+position are unchanged because the outline remains an outer box shadow.
 Text inside bars and stack segments automatically uses white on dark fills
 and dark text on light fills, including CSS theme colors. Explicit label
 `color` takes precedence. `mark-labels.js` owns label rendering and fitting;

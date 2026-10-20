@@ -13,6 +13,13 @@ function verticalStyle(valign, point = false) {
     : { top: "50%", transform: "translateY(-50%)" };
 }
 
+/** Preserve the theme ring unless a point explicitly hides or recolors it. */
+function pointOutlineStyle(outline) {
+  if (outline === false) return { boxShadow: "none" };
+  if (typeof outline === "string") return { boxShadow: `0 0 0 1px ${resolveColor(outline) || outline}` };
+  return {};
+}
+
 /** Resolve a mark's colour: an explicit colour, a per-row column, or a default. */
 function markColor(enc, row, fallback) {
   if (row && Number(row[enc.source]) < 0) {
@@ -458,7 +465,7 @@ export function renderMarks(col, row, range) {
         track.append(
           h("div", {
             class: "et-mark et-mark-point",
-            style: { ...verticalStyle(enc.valign, true), left: `${pct}%`, width: `${size}px`, height: `${size}px`, backgroundColor: color },
+            style: { ...verticalStyle(enc.valign, true), ...pointOutlineStyle(enc.outline), left: `${pct}%`, width: `${size}px`, height: `${size}px`, backgroundColor: color },
           }),
         );
       }
@@ -469,7 +476,7 @@ export function renderMarks(col, row, range) {
       track.append(
         h("div", {
           class: "et-mark et-mark-point",
-          style: { ...verticalStyle(enc.valign, true), left: `${pct}%`, width: `${size}px`, height: `${size}px`, backgroundColor: markColor(enc, row, "var(--et-accent, #2563eb)") },
+          style: { ...verticalStyle(enc.valign, true), ...pointOutlineStyle(enc.outline), left: `${pct}%`, width: `${size}px`, height: `${size}px`, backgroundColor: markColor(enc, row, "var(--et-accent, #2563eb)") },
         }),
       );
       if (enc.label) track.append(renderMarkLabel(col, enc, row, { pointPct: pct }));

@@ -65,6 +65,29 @@ def test_bar_and_point_share_the_scale() -> None:
     assert [enc["source"] for enc in spec["encodings"]] == ["current", "target"]
 
 
+@pytest.mark.parametrize("outline", [False, True, "#334155"])
+def test_point_outline_round_trips_for_constructor_and_chained_marks(outline) -> None:
+    base = col.bar("current")
+    for column in (
+        col.point("target", outline=outline),
+        base.point("target", outline=outline),
+        col.points("samples", outline=outline),
+        base.points("samples", outline=outline),
+    ):
+        table = EvidentialTable([{"current": 3, "target": 4, "samples": [2, 3]}], columns=[column])
+        assert table.columns[0]["encodings"][-1]["outline"] == outline
+    assert "encodings" not in base
+
+
+def test_point_outline_defaults_and_validation() -> None:
+    assert "outline" not in col.point("target")["encodings"][0]
+    for outline in (0, [], ""):
+        with pytest.raises(ValueError, match="outline"):
+            col.point("target", outline=outline)
+    with pytest.raises(ValueError, match="point"):
+        col.range("low", "high", outline=False)
+
+
 def test_range_carries_both_endpoints_and_a_cap() -> None:
     spec = dict(col.range("low", "high", cap="line").point("target"))
     rng, point = spec["encodings"]

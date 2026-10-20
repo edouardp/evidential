@@ -212,5 +212,41 @@ def _(EvidentialTable, col, mo, rows):
     return
 
 
+@app.cell
+def _(mo):
+    mo.md("""
+    ## Point outlines
+
+    Use `outline=False` for a plain filled point, or `outline="#334155"` for a
+    colored ring independent of the fill. Omit it (or use `True`) for the
+    default outline. The same options work with arrays drawn by `col.points`.
+    """)
+    return
+
+
+@app.cell
+def _(EvidentialTable, col, mo):
+    point_outlines = mo.ui.anywidget(
+        EvidentialTable(
+            [{"case": "Sample", "value": 45, "samples": [25, 45, 70]}],
+            title="Default, hidden, and custom point outlines",
+            columns=[
+                col.text("case"),
+                col.point("value", title="Default", color="#93c5fd", size=12),
+                col.point("value", title="No outline", color="#93c5fd", size=12, outline=False),
+                col.point("value", title="Dark outline", color="#93c5fd", size=12, outline="#334155"),
+                col.points("samples", title="Array, no outline", color="#93c5fd", size=10, outline=False),
+                col.points("samples", title="Array, dark outline", color="#93c5fd", size=10, outline="#334155"),
+            ],
+            search=False,
+            page_size=0,
+            border=False,
+            width=1000,
+        )
+    )
+    point_outlines
+    return
+
+
 if __name__ == "__main__":
     app.run()

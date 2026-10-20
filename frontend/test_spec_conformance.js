@@ -9,6 +9,20 @@ import { fitMarkLabels } from "./src/mark-labels.js";
 global.document = new JSDOM("<!doctype html><html><body></body></html>").window.document;
 global.Node = document.defaultView.Node;
 
+test("scalar and array points can hide or independently recolor their outlines", () => {
+  for (const kind of ["point", "points"]) {
+    const row = {x: kind === "points" ? [2, 4] : 2};
+    const marker = outline => renderMarks({encodings: [{kind, source: "x", color: "#2563eb", outline}]}, row,
+      {min: 0, max: 10}).querySelector(".et-mark-point");
+    assert.equal(marker(undefined).style.boxShadow, "");
+    assert.equal(marker(true).style.boxShadow, "");
+    assert.equal(marker(false).style.boxShadow, "none");
+    const custom = marker("#334155");
+    assert.match(custom.style.boxShadow, /#334155/);
+    assert.equal(custom.style.backgroundColor, "rgb(37, 99, 235)");
+  }
+});
+
 test("fixed scale bounds win over automatic inclusion of zero", () => {
   assert.deepEqual(marksDomain({encodings: [{kind: "bar"}], scale: {domain: [10, 20]}}, {min: 12, max: 18}),
     {lo: 10, hi: 20, span: 10, transform: undefined});

@@ -529,7 +529,7 @@ columns=[
 ```
 
 - **Marks** — `bar(source, color=, color_negative=, size=, side=, valign=, ...)`,
-  `point(source, size=, color=)`, `points(source, size=, color=)` (one marker per
+  `point(source, size=, color=, outline=)`, `points(source, size=, color=, outline=)` (one marker per
   array element), `range(low, high, cap="none"|"line"|"dot"|"arrow", fill=)`.
   `fill=True` draws the interval as a translucent band instead of a line.
   `side="left"`
@@ -537,7 +537,10 @@ columns=[
   bar height fraction or the point/range marker size; `valign="top"|"center"|
   "bottom"` places the mark vertically (top/bottom with small sizes gives
   side-by-side bars). `cap="arrow"` marks an endpoint that extends beyond the
-  displayed scale.
+  displayed scale. Points accept `outline=False` to remove their ring, or a
+  color string such as `outline="#334155"` to recolor it independently of
+  `color` (the fill). Omission, `None`, or `True` keeps the default one-pixel
+  theme ring, without changing the marker's size or position.
 - **Stacks** — `stacked_bar(*sources, colors=, labels=, label_align="begin"|
   "center"|"end", normalize="percent", size=, diverge_at=, neutral="split")`.
   `labels=True` writes each segment's value and `labels="percent"` its share;

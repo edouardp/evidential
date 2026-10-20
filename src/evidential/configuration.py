@@ -319,6 +319,9 @@ class EncodingSpec(TypedDict, total=False):
     color_column: str | None
     #: Bar height fraction (0, 1]; a point/range marker size in pixels.
     size: float | None
+    #: ``point``/``points``: False hides the ring; a color string recolors it.
+    #: True or omission keeps the default one-pixel theme outline.
+    outline: bool | str | None
     #: A nonnegative magnitude extending left/right of the central origin.
     side: Literal["left", "right"] | None
     #: ``range``: end treatment, or ``"arrow"`` when an endpoint is off-scale.

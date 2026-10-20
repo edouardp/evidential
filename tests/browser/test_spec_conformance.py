@@ -111,6 +111,36 @@ def test_fixed_domain_stack_stays_inside_plot(page, live_server):
         assert box["x"] + box["width"] <= track["x"] + track["width"] + 1
 
 
+def test_point_outlines_can_be_hidden_or_recolored_without_changing_fill(page, live_server):
+    mount(
+        page,
+        live_server,
+        [
+            (
+                "Point outlines",
+                [{"value": 4, "samples": [3, 6]}],
+                [
+                    col.point("value", color="#2563eb"),
+                    col.point("value", color="#2563eb", outline=False),
+                    col.point("value", color="#2563eb", outline="#111111"),
+                    col.points("samples", color="#2563eb", outline=False),
+                    col.points("samples", color="#2563eb", outline="#111111"),
+                ],
+            )
+        ],
+    )
+    points = page.locator(".et-mark-point")
+    assert points.count() == 7
+    assert points.nth(0).evaluate("el => getComputedStyle(el).boxShadow") != "none"
+    for index in (1, 3, 4):
+        assert points.nth(index).evaluate("el => getComputedStyle(el).boxShadow") == "none"
+    for index in (2, 5, 6):
+        shadow = points.nth(index).evaluate("el => getComputedStyle(el).boxShadow")
+        assert "rgb(17, 17, 17)" in shadow and "1px" in shadow
+    for point in points.all():
+        assert point.evaluate("el => getComputedStyle(el).backgroundColor") == "rgb(37, 99, 235)"
+
+
 def test_scale_gallery(page, live_server):
     rows = [
         {"country": "Finland", "before": 29, "after": 94},

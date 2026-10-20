@@ -92,6 +92,7 @@ _ENCODING_KEYS = (
     "y",
     "style",
     "size",
+    "outline",
     "side",
     "valign",
     "cap",
@@ -220,6 +221,7 @@ def _canonical_encoding(
         "color_column",
         "color_negative",
         "size",
+        "outline",
         "side",
         "valign",
         "cap",
@@ -251,6 +253,12 @@ def _canonical_encoding(
     leftover = {key: value for key, value in style.items() if value is not None}
     if leftover:
         raise TypeError(f"Unknown {kind} option(s): {', '.join(sorted(leftover))}")
+    outline = encoding.get("outline")
+    if outline is not None:
+        if kind not in ("point", "points"):
+            raise ValueError("outline is only supported for point and points marks")
+        if not isinstance(outline, bool) and not (isinstance(outline, str) and outline.strip()):
+            raise ValueError("point outline must be True, False, or a color string")
     if encoding.get("side") is not None and encoding["side"] not in ("left", "right"):
         raise ValueError(f"side must be 'left' or 'right', got {encoding['side']!r}")
     if encoding.get("overflow") not in (None, "clip", "arrow"):
@@ -437,13 +445,13 @@ class MarkColumn(Column):
             return self._with(encodings=encodings)
         return self._add("bar", source, **_bar_kwargs(options))
 
-    def point(self, source: Any, **options: Any) -> MarkColumn:
-        """Add a point marker at ``source``."""
-        return self._add("point", source, **options)
+    def point(self, source: Any, *, outline: bool | str | None = None, **options: Any) -> MarkColumn:
+        """Add a point; ``outline=False`` removes its ring, or use a color string."""
+        return self._add("point", source, outline=outline, **options)
 
-    def points(self, source: Any, **options: Any) -> MarkColumn:
-        """Add one point per observation in the array ``source``."""
-        return self._add("points", source, **options)
+    def points(self, source: Any, *, outline: bool | str | None = None, **options: Any) -> MarkColumn:
+        """Add array points, with the same ``outline`` control as scalar points."""
+        return self._add("points", source, outline=outline, **options)
 
     def range(self, low: Any, high: Any | None = None, **options: Any) -> MarkColumn:
         """Connect two endpoints (a dumbbell / interval); not a confidence claim."""
@@ -731,11 +739,15 @@ def point(
     title: str | None = None,
     fmt: str | None = None,
     align: str | None = None,
+    outline: bool | str | None = None,
     **options: Any,
 ) -> MarkColumn:
-    """A point marker at ``source`` (e.g. a target on a bar's scale)."""
+    """A point marker; ``outline=False`` hides its ring, or use a color string.
+
+    Omitted/``True`` retains the default outline, independently of the fill.
+    """
     column = _mark_column(source, title=title, fmt=fmt, align=align)
-    return column._add("point", source, **options)
+    return column._add("point", source, outline=outline, **options)
 
 
 def points(
@@ -744,15 +756,17 @@ def points(
     title: str | None = None,
     size: float | None = None,
     color: str | None = None,
+    outline: bool | str | None = None,
     **options: Any,
 ) -> MarkColumn:
     """An array column drawn as one point per observation (a strip/scatter).
 
     ``source`` holds a list of numbers; each is placed on the column's shared
     scale, so the row's distribution is read directly against a bar or target.
+    ``outline=False`` removes rings; a color string sets their color.
     """
     column = _mark_column(source, title=title)
-    return column._add("points", source, size=size, color=color, **options)._with(type="array")
+    return column._add("points", source, size=size, color=color, outline=outline, **options)._with(type="array")
 
 
 def range(  # noqa: A001 - the public constructor name

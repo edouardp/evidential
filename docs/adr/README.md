@@ -83,6 +83,7 @@ dated, immutable record of the decisions behind them.
 | [062](062-column-scale-axes.md) | Column Scale Axes and Gridlines | Accepted |
 | [063](063-cell-style.md) | Cell Style Independent of Marks | Accepted |
 | [064](064-display-only-row-layout.md) | Display-Only Row Layout | Accepted |
+| [065](065-distribution-uncertainty-bands.md) | Distribution as an Uncertainty Band | Accepted |
 
 ## Creating New ADRs
 

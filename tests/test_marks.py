@@ -370,21 +370,6 @@ def test_diverging_stack_marks_the_pivot() -> None:
         col.stacked_bar("a", "b", diverge_at="c")
 
 
-def test_distribution_is_a_precomputed_density_band() -> None:
-    spec = dict(col.distribution("density", x="seats", y="share", color="#111"))
-    encoding = spec["encodings"][0]
-    assert spec["type"] == "array"
-    assert (encoding["kind"], encoding["x"], encoding["y"], encoding["style"]) == (
-        "distribution",
-        "seats",
-        "share",
-        "band",
-    )
-    assert encoding["color"] == "#111"
-    with pytest.raises(ValueError, match="style"):
-        col.distribution("d", style="violin")
-
-
 def test_log_scale_is_explicit_and_rejects_nonpositive_domains() -> None:
     spec = dict(col.range("lo", "hi").point("est").scale(domain=(1, 100), transform="log"))
     assert spec["scale"] == {"domain": (1, 100), "transform": "log"}

@@ -1,3 +1,5 @@
+import { readDensity } from "./density-band.js";
+
 /** Missing numeric values never become zero at the rendering boundary. */
 export function numeric(value) {
   return value == null || value === "" || !Number.isFinite(Number(value)) ? null : Number(value);
@@ -44,7 +46,7 @@ export function encodingRange(col, rows) {
       if (enc.kind === "points") {
         for (const item of Array.isArray(raw) ? raw : []) add(observationValue(item));
       } else if (enc.kind === "distribution") {
-        for (const item of Array.isArray(raw) ? raw : []) add(item?.[enc.x]);
+        for (const run of readDensity(raw, enc.distribution)) for (const sample of run) add(sample.x);
       } else if (enc.kind === "strip") {
         for (const item of Array.isArray(raw) ? raw : []) {
           if (!item || typeof item !== "object") continue;

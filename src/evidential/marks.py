@@ -32,6 +32,7 @@ from collections.abc import Mapping, Sequence
 from typing import Any, Literal
 
 from ._column import Column, _clean, _field
+from ._distribution import band_spec, validate_curve
 
 __all__ = [
     "MarkColumn",
@@ -91,6 +92,7 @@ _ENCODING_KEYS = (
     "x",
     "y",
     "style",
+    "distribution",
     "size",
     "outline",
     "side",
@@ -247,6 +249,7 @@ def _canonical_encoding(
         "x",
         "y",
         "style",
+        "distribution",
     ):
         if style.get(key) is not None:
             encoding[key] = style.pop(key)
@@ -672,6 +675,12 @@ def _validate_encoding_data(
     if "strip" in kinds and len(kinds) > 1:
         raise ValueError("strip cannot share coordinates with scalar marks")
     scale = column.get("scale") or {}
+    for encoding in encodings:
+        if encoding["kind"] == "distribution":
+            config = encoding.get("distribution")
+            if not isinstance(config, Mapping):
+                raise ValueError("distribution needs a band specification; use col.distribution(...)")
+            band_spec(**config)
     domain = scale.get("domain")
     if domain and any(encoding.get("side") or encoding.get("diverge_at") for encoding in encodings):
         low, high = domain
@@ -684,6 +693,9 @@ def _validate_encoding_data(
             source = encoding["source"]
             value = hidden[source][index] if source in hidden else row.get(source)
             kind = encoding["kind"]
+            if kind == "distribution":
+                validate_curve(value, encoding["distribution"], source=source, log=scale.get("transform") == "log")
+                continue
             if kind == "strip" and isinstance(value, list) and value:
                 last = value[-1]
                 if isinstance(last, Mapping) and last.get("position") is not None and last.get("end") is None:
@@ -914,24 +926,26 @@ def boxplot(
 
 
 def distribution(
-    source: str,
+    source: Any,
     *,
     x: str = "position",
     y: str = "density",
     style: str = "band",
     title: str | None = None,
     color: str | None = None,
+    height: float = 0.5,
+    density_max: float | None = None,
 ) -> MarkColumn:
-    """A density band from a precomputed ``LIST<STRUCT<x, y>>``.
+    """A flat uncertainty band from ordered, precomputed density records.
 
-    The list holds ordered positions and their densities (not raw samples);
-    ``style="band"`` fills under the curve. Combine with ``.point(...)`` to mark
-    a median or mode on the same axis.
+    Density sets opacity, not vertical height. ``height`` is a fraction of the
+    row's mark track. By default each row's peak is fully opaque; supply a
+    shared positive ``density_max`` for comparable intensity across rows.
+    Nulls break the band. Raw samples and density estimation belong upstream.
     """
     if style != "band":
         raise ValueError("distribution style is 'band'")
-    encoding: dict[str, Any] = {"kind": "distribution", "source": _field(source), "x": x, "y": y, "style": style}
-    if color is not None:
-        encoding["color"] = color
+    config = band_spec(x=x, y=y, height=height, density_max=density_max)
+    encoding = _canonical_encoding("distribution", source, distribution=config, color=color)
     column = _mark_column(source, title=title)
     return column._with(type="array", encodings=[encoding])

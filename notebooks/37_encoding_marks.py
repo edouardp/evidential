@@ -283,8 +283,14 @@ def _(mo):
     mo.md("""
     ## A distribution band
 
-    `col.distribution("density", x=, y=)` fills a precomputed density curve — a
-    band of uncertainty. Combine it with a point on the same axis.
+    `col.distribution("density", x=, y=)` draws a **flat uncertainty band**.
+    Darker ink means higher density; height does not encode a value. The input
+    is an ordered, precomputed density curve, not raw samples. Combine it with
+    a median point on the same quantitative axis. Nulls leave gaps.
+
+    `height=0.5` uses half the mark track. By default each row's peak is fully
+    opaque; set the same positive `density_max=` to compare intensities across
+    rows. The compact example uses the same component at a smaller width.
     """)
     return
 
@@ -295,6 +301,7 @@ def _():
         {
             "party": "A",
             "median": 52,
+            "ink": "#4169a0",
             "density": [
                 {"x": p, "y": y}
                 for p, y in ((40, 0.02), (48, 0.6), (52, 0.9), (58, 0.5), (66, 0.05))
@@ -303,6 +310,7 @@ def _():
         {
             "party": "B",
             "median": 44,
+            "ink": "#4169a0",
             "density": [
                 {"x": p, "y": y}
                 for p, y in ((30, 0.05), (40, 0.5), (44, 0.8), (50, 0.5), (58, 0.05))
@@ -322,17 +330,32 @@ def _(EvidentialTable, col, curves, mo, settings):
                 subtitle="Density band with a median marker",
                 row_lines=False,
                 border=False,
-                stretch=False,
+                stretch=True,
+                width=520,
             ),
             columns=[
                 col.text("party"),
-                col.distribution("density", x="x", y="y", color="#8b5cf6")
-                .point("median", color="#4c1d95", size=7)
+                col.distribution("density", x="x", y="y", color="@ink", height=0.5)
+                .point("median", color="#111111", size=7, outline=False)
                 .scale(domain=(28, 68)),
             ],
         )
     )
-    bands
+    compact_bands = mo.ui.anywidget(
+        EvidentialTable(
+            curves,
+            title="Share of the vote",
+            subtitle="Compact density band",
+            columns=[
+                col.text("party"),
+                col.distribution("density", x="x", y="y", color="@ink")
+                .point("median", color="#111111", size=5, outline=False)
+                .scale(domain=(28, 68)),
+            ],
+            width=200, search=False, page_size=0, border=False, row_lines=False,
+        )
+    )
+    mo.hstack([bands, compact_bands], justify="start", gap=2)
     return
 
 

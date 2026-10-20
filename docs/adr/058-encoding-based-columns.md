@@ -6,6 +6,11 @@ deciders: edouard
 
 # ADR-058: Encoding-Based Columns (Declarative Marks)
 
+The distribution implementation is replaced by
+[ADR-065](065-distribution-uncertainty-bands.md): a separately specified,
+validated, constant-height uncertainty band. The former area-chart renderer and
+distribution-specific top-level encoding fields are removed.
+
 ## Context and Problem Statement
 
 The current column builder (§ADR-042, ADR-043) binds a column to exactly one

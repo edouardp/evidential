@@ -2085,13 +2085,14 @@ test("distribution draws a density band over the shared axis", () => {
   }];
   const columns = [{
     name: "density", type: "array",
-    encodings: [{ kind: "distribution", source: "density", x: "seats", y: "share", style: "band" }],
+    encodings: [{ kind: "distribution", source: "density", distribution: {x: "seats", y: "share", height: 0.5, density_max: null} }],
   }];
   const renderer = new EvidentialTableRenderer(makeModel(rows, columns, { page_size: 10 }, el), el);
-  const svg = el.querySelector(".et-mark-distribution");
-  assert.ok(svg);
-  assert.ok(svg.querySelector("polygon"));
-  assert.ok(svg.querySelector("polyline"));
+  const band = el.querySelector(".et-mark-distribution");
+  assert.ok(band);
+  assert.equal(band.style.height, "50%");
+  assert.equal(band.querySelectorAll("svg, polygon, polyline").length, 0);
+  assert.ok(band.querySelector(".et-density-band-run"));
   renderer.destroy();
 });
 

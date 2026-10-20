@@ -303,6 +303,15 @@ class BoxParts(TypedDict, total=False):
     maximum: str | Callable[[Mapping[str, Any]], Any] | None
 
 
+class DistributionSpec(TypedDict, total=False):
+    """Precomputed density bindings and independent band presentation."""
+
+    x: str
+    y: str
+    height: float
+    density_max: float | None
+
+
 class EncodingSpec(TypedDict, total=False):
     """One visual mark bound to a source, sharing its column's scale."""
 
@@ -322,6 +331,7 @@ class EncodingSpec(TypedDict, total=False):
     #: ``point``/``points``: False hides the ring; a color string recolors it.
     #: True or omission keeps the default one-pixel theme outline.
     outline: bool | str | None
+    distribution: DistributionSpec | None
     #: A nonnegative magnitude extending left/right of the central origin.
     side: Literal["left", "right"] | None
     #: ``range``: end treatment, or ``"arrow"`` when an endpoint is off-scale.

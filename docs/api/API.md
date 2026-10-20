@@ -551,7 +551,20 @@ columns=[
   `"extrema"|"iqr")`. The renderer never computes statistics; the five numbers
   arrive from SQL or Python.
 - **Distribution** — `distribution(source, x="position", y="density",
-  style="band")` draws a density band from a precomputed `LIST<STRUCT<x, y>>`
+  style="band", height=0.5, density_max=None)` draws a flat uncertainty band.
+  Density controls opacity, with pale tails and darker high-density regions;
+  the height stays constant. Input is an ordered `LIST<STRUCT<x, y>>` of
+  precomputed coordinates and nonnegative densities. Raw samples are rejected;
+  the renderer never fits a density curve. Null samples or null fields leave
+  gaps, and the band ends at the supplied support. Coordinates must be strictly
+  increasing and positive on a log axis.
+  `height` is a fraction of the row's mark track in `(0, 1]`. By default each
+  row's peak maps to full opacity; this compares shape and uncertainty width,
+  not absolute density heights. Set the same positive `density_max` across rows
+  for a fixed intensity scale; opacity saturates at that value. Clipping and
+  search do not renormalize the visible tail. Add `.point("median")` for a
+  central estimate on the shared x-axis. See
+  [ADR-065](../adr/065-distribution-uncertainty-bands.md).
   (ordered positions, not raw samples). Combine with `.point("median")`.
 - **Strip input** — a list of categories (`LIST<category>`) is equal-width; a
   list of `{start, end, category}` structs is positioned on a shared x axis, and
@@ -726,7 +739,7 @@ other than `auto`, `merge`, `group` and `subcolumns` return a `Column`;
 | `col.stacked_bar(*sources, *, colors=, labels=, normalize="percent", diverge_at=, neutral="split")` | cumulative stack |
 | `col.strip(source, *, colors=, labels=, segmented=)` | ordered categorical strip |
 | `col.boxplot(minimum, q1, median, q3, maximum, *, outliers=, whisker="extrema")` | box plot |
-| `col.distribution(source, *, x="position", y="density", style="band")` | density band |
+| `col.distribution(source, *, x="position", y="density", style="band", height=0.5, density_max=None)` | constant-height uncertainty band; density controls opacity |
 | `col.shapes(name, *, shape=, color=, …)` | alias for `symbols` |
 | `col.color(name, *, title=, **options)` | colour scale |
 | `col.chip(name, *, min_width=, conditional_colors=, scale=, min=, max=, midpoint=, **extra)` | pill |

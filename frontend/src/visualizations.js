@@ -2,6 +2,7 @@ import { h } from "./dom.js";
 import { formatValue } from "./format.js";
 import { resolveColor } from "./color.js";
 import { numeric, observationValue } from "./mark-data.js";
+import { renderDensityBand } from "./density-band.js";
 import { markLabelText, renderMarkLabel, autoLabelColor } from "./mark-labels.js";
 
 /** Inline top/bottom/transform for a mark's `valign` (default centred). */
@@ -213,45 +214,6 @@ function renderBox(col, enc, row, pos) {
   return box;
 }
 
-/** A density band from a precomputed ordered ``[{x, y}]`` series. */
-function renderDistribution(enc, row, pos, color) {
-  const raw = row[enc.source];
-  const items = Array.isArray(raw) ? raw : [];
-  const points = [];
-  for (const item of items) {
-    if (!item) continue;
-    const x = Number(item[enc.x]);
-    const y = Number(item[enc.y]);
-    if (isFinite(x) && isFinite(y) && y >= 0) points.push([x, y]);
-  }
-  if (points.length < 2) return null;
-  const maxY = Math.max(...points.map((point) => point[1])) || 1;
-  const coords = points.map(([x, y]) => {
-    const left = pos(x);
-    return [Math.max(0, Math.min(100, left == null ? 0 : left)), 100 - (y / maxY) * 100];
-  });
-  const ns = "http://www.w3.org/2000/svg";
-  const svg = document.createElementNS(ns, "svg");
-  svg.setAttribute("class", "et-mark et-mark-distribution");
-  svg.setAttribute("viewBox", "0 0 100 100");
-  svg.setAttribute("preserveAspectRatio", "none");
-  const polygon = document.createElementNS(ns, "polygon");
-  polygon.setAttribute(
-    "points",
-    `${coords.map((point) => point.join(",")).join(" ")} ${coords[coords.length - 1][0]},100 ${coords[0][0]},100`,
-  );
-  polygon.setAttribute("fill", color);
-  polygon.setAttribute("opacity", "0.35");
-  svg.append(polygon);
-  const line = document.createElementNS(ns, "polyline");
-  line.setAttribute("points", coords.map((point) => point.join(",")).join(" "));
-  line.setAttribute("fill", "none");
-  line.setAttribute("stroke", color);
-  line.setAttribute("stroke-width", "1");
-  svg.append(line);
-  return svg;
-}
-
 /**
  * Render a column's ordered encodings over one shared scale. Bars, points and
  * ranges are positioned absolutely in a full-height track; the shared domain
@@ -414,7 +376,7 @@ export function renderMarks(col, row, range) {
       continue;
     }
     if (enc.kind === "distribution") {
-      const node = renderDistribution(enc, row, clampPos, markColor(enc, row, "var(--et-accent, #2563eb)"));
+      const node = renderDensityBand(enc, row, pos, markColor(enc, row, "var(--et-accent, #2563eb)"));
       if (node) track.append(node);
       continue;
     }

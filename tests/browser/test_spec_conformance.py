@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import os
+from base64 import b64encode
 from pathlib import Path
 
 import pytest
@@ -66,6 +67,109 @@ def mount(page, live_server, cases):
 def capture(page, name):
     if path := os.environ.get("EVIDENTIAL_REVIEW_SCREENSHOT"):
         page.screenshot(path=str(Path(path).with_name(name)), full_page=True)
+
+
+def test_uncertainty_band_paints_density_as_intensity_and_stays_in_its_row(page, live_server):
+    data = [
+        {
+            "name": "Symmetric",
+            "median": 50,
+            "curve": [{"x": x, "pdf": y} for x, y in [(0, 0), (25, 0.5), (50, 1), (75, 0.5), (100, 0)]],
+            "ink": "#4169a0",
+        },
+        {
+            "name": "Gapped",
+            "median": 70,
+            "curve": [{"x": 0, "pdf": 0}, {"x": 20, "pdf": 1}, None, {"x": 60, "pdf": 1}, {"x": 100, "pdf": 0}],
+            "ink": "#ad3038",
+        },
+        {"name": "Missing band", "median": 30, "curve": None, "ink": "#4169a0"},
+    ]
+    band = col.distribution("curve", x="x", y="pdf", color="@ink").point("median", color="#111111", outline=False)
+    mount(
+        page,
+        live_server,
+        [
+            (
+                "Uncertainty bands",
+                data,
+                [col.text("name"), band.scale(domain=(0, 100), axis=True)],
+                {"row_shading": False},
+            ),
+            (
+                "Compact — same band",
+                data[:2],
+                [col.text("name"), band.scale(domain=(0, 100))],
+                {"width": 210, "row_shading": False, "font_size": "11px"},
+            ),
+        ],
+    )
+    capture(page, "evidential-distribution-bands.png")
+    assert page.locator(".et-mark-distribution svg, .et-mark-distribution polygon").count() == 0
+    for node in page.locator(".et-mark-distribution").all():
+        box = node.bounding_box()
+        cell = node.locator("xpath=ancestor::td").bounding_box()
+        assert box["height"] > 3
+        assert box["y"] >= cell["y"]
+        assert box["y"] + box["height"] <= cell["y"] + cell["height"]
+        assert node.evaluate("el => getComputedStyle(el).height") != "auto"
+    missing = page.locator("#case-0 tbody tr", has_text="Missing band")
+    assert missing.locator(".et-mark-distribution").count() == 0
+    assert missing.locator(".et-mark-point").count() == 1
+    first = page.locator("#case-0 .et-mark-distribution").first.bounding_box()
+    second = page.locator("#case-0 .et-mark-distribution").nth(1).bounding_box()
+    sample_points = [[first["x"] + first["width"] * x, first["y"] + first["height"] / 2] for x in (0.1, 0.53, 0.9)]
+    sample_points.append([second["x"] + second["width"] * 0.4, second["y"] + second["height"] / 2])
+    pixels = page.evaluate(
+        """async ({png, points}) => {
+        const image = new Image();
+        image.src = 'data:image/png;base64,' + png;
+        await image.decode();
+        const canvas = document.createElement('canvas');
+        canvas.width = image.width; canvas.height = image.height;
+        const context = canvas.getContext('2d');
+        context.drawImage(image, 0, 0);
+        return points.map(([x,y]) => [...context.getImageData(Math.floor(x), Math.floor(y), 1, 1).data]);
+    }""",
+        {"png": b64encode(page.screenshot()).decode(), "points": sample_points},
+    )
+    assert pixels[0][0] > pixels[1][0] + 80
+    assert pixels[2][0] > pixels[1][0] + 80
+    assert pixels[3][:3] == [255, 255, 255]
+    capture(page, "evidential-distribution-bands.png")
+
+
+def test_distribution_clipping_height_and_log_scale_share_point_coordinates(page, live_server):
+    mount(
+        page,
+        live_server,
+        [
+            (
+                "Log density",
+                [
+                    {
+                        "curve": [
+                            {"position": 1, "density": 0},
+                            {"position": 10, "density": 1},
+                            {"position": 100, "density": 0},
+                        ],
+                        "median": 10,
+                    }
+                ],
+                [
+                    col.distribution("curve", height=0.4, density_max=2)
+                    .point("median", outline=False)
+                    .scale(domain=(1, 100), transform="log", axis=True)
+                ],
+            )
+        ],
+    )
+    track = page.locator(".et-marks").bounding_box()
+    band = page.locator(".et-mark-distribution").bounding_box()
+    assert band["height"] == pytest.approx(track["height"] * 0.4, abs=1)
+    point = page.locator(".et-mark-point").bounding_box()
+    assert point["x"] + point["width"] / 2 == pytest.approx(track["x"] + track["width"] / 2, abs=1)
+    assert "0.5) 50%" in page.locator(".et-density-band-run").evaluate("el => el.style.maskImage")
 
 
 def test_unlabelled_strips_have_height_and_joined_runs_have_no_gap(page, live_server):

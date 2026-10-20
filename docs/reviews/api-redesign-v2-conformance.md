@@ -90,6 +90,14 @@ columns, restores unlabeled strip height and joined runs, and clips stacked
 segments to fixed domains. Regression tests cover each defect, including real
 browser geometry and annotation rule/style precedence.
 
+The initial distribution implementation was incorrect: it drew a filled curve
+instead of the reference's flat uncertainty band. It is replaced end to end by
+[ADR-065](../adr/065-distribution-uncertainty-bands.md), with a distinct data and
+intensity/height specification, validation, domain integration, projection,
+painting, and dedicated tests. Notebook 37 now shows standard and compact bands.
+Browser coverage samples actual painted pixels to verify darker peaks, pale
+tails and transparent gaps, and checks confinement to the row and shared axes.
+
 The exact generic omitted-row API, more advanced marker collision handling,
 and deferred composition modes remain Open/V2 work. Label formats retain the
 existing Evidence format-code contract (`num0`, `pct1`, etc.); the draft's

@@ -574,12 +574,15 @@ tbody tr:last-child .et-bar-center .et-bar-axis { bottom: var(--et-bar-pad, 0); 
   transform: translate(-50%, -50%);
 }
 .et-mark-distribution {
-  top: 15%;
-  bottom: 15%;
+  top: 50%;
+  transform: translateY(-50%);
   left: 0;
   right: 0;
-  width: 100%;
-  height: auto;
+}
+.et-density-band-run {
+  position: absolute;
+  top: 0;
+  bottom: 0;
 }
 .et-mark-strip {
   position: absolute;

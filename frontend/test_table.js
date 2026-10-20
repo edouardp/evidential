@@ -2039,3 +2039,37 @@ test("range cap='arrow' marks endpoints beyond the domain", () => {
   assert.equal(el.querySelectorAll(".et-mark-arrow").length, 1);
   renderer.destroy();
 });
+
+test("row_lines as a colour name drives the row border variable", () => {
+  const renderer = new EvidentialTableRenderer(
+    makeModel([{ a: 1 }], [{ name: "a" }], { row_lines: "grey" }, el), el,
+  );
+  assert.equal(renderer.root.style.getPropertyValue("--et-row-border"), "grey");
+  renderer.destroy();
+});
+
+test("section rows honour center alignment", () => {
+  const rows = [
+    { a: "detail" },
+    { render_type: "row_section", __label: "Divider", __align: "center" },
+  ];
+  const renderer = new EvidentialTableRenderer(makeModel(rows, [{ name: "a" }], {}, el), el);
+  assert.ok(el.querySelector(".et-section-center"));
+  renderer.destroy();
+});
+
+test("combined section+summary rows keep their values and a section rule", () => {
+  const rows = [
+    { g: "A", n: 1 },
+    { g: "A", n: 2 },
+    { render_type: "row_subtotal", __combined: true, __level: 1, __group_key: "A", g: "A", n: 3 },
+  ];
+  const renderer = new EvidentialTableRenderer(
+    makeModel(rows, [{ name: "g" }, { name: "n", type: "number" }], {}, el), el,
+  );
+  const combined = el.querySelector(".et-row-combined");
+  assert.ok(combined);
+  assert.match(combined.textContent, /A/);
+  assert.match(combined.textContent, /3/);
+  renderer.destroy();
+});

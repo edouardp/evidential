@@ -83,7 +83,7 @@ class TableOptions(TypedDict, total=False):
     sortable: bool
     download: bool
     row_shading: bool | int | tuple[int, int] | list[int] | None
-    row_lines: bool
+    row_lines: bool | str
     border: bool
     freeze_columns: int
     wrap: bool

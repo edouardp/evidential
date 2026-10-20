@@ -36,6 +36,7 @@ def grouped_records(
     subtotal_position: str = "bottom",
     total_position: str = "bottom",
     total_label: str = "Total",
+    combined: bool = False,
     dimension_config: Mapping[str, Mapping[str, Any]] | None = None,
     measure_config: Mapping[str, Mapping[str, Any]] | None = None,
     **table_options: Any,
@@ -116,6 +117,7 @@ def grouped_records(
         subtotal_position=subtotal_position,
         total_position=total_position,
         total_label=total_label,
+        combined=combined,
     )
 
     def build_column(name: str, default_type: str, default_align: str, overrides: Mapping[str, Any]) -> dict[str, Any]:

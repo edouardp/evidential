@@ -562,3 +562,17 @@ def test_widget_has_static_assets(widget: EvidentialTable) -> None:
     static = files("evidential").joinpath("static")
     assert static.joinpath("table.js").is_file()
     assert static.joinpath("table.css").is_file()
+
+
+def test_section_row_alignment() -> None:
+    from evidential import section_row
+
+    centered = section_row("Divider", align="center")
+    assert centered == {"render_type": "row_section", "__label": "Divider", "__align": "center"}
+    with pytest.raises(ValueError, match="align"):
+        section_row("Divider", align="right")
+
+
+def test_row_lines_accept_a_colour_name() -> None:
+    table = EvidentialTable([{"a": 1}], row_lines="grey")
+    assert table.options["row_lines"] == "grey"

@@ -727,6 +727,13 @@ tbody tr:last-child .et-bar-center .et-bar-axis { bottom: var(--et-bar-pad, 0); 
   border-bottom: 1px solid var(--et-header-border);
   background: var(--et-subtotal-bg);
 }
+.et-row-section .et-section-center { text-align: center; }
+/* A combined section+summary row: the group label and its subtotal share one
+   row, so give it the section rule while keeping the measure cells. */
+.et-row-combined .et-td {
+  border-top: 1px solid var(--et-header-border);
+  border-bottom: 1px solid var(--et-header-border);
+}
 .et-caption {
   margin-top: 0.35rem;
   color: var(--et-muted);

@@ -52,6 +52,7 @@ def decorate_grouped_rows(
     subtotal_position: str = "bottom",
     total_position: str = "bottom",
     total_label: str = "Total",
+    combined: bool = False,
 ) -> list[dict[str, Any]]:
     """Turn DuckDB ``grouping()`` output into render-ready grouped rows.
 
@@ -94,6 +95,9 @@ def decorate_grouped_rows(
         elif subtotals:
             row["render_type"] = "row_subtotal"
             row["__group_key"] = _key(path)
+            if combined:
+                # The section label and its summary share one row.
+                row["__combined"] = True
         row["__ancestors"] = [_key(path[:size]) for size in range(1, level)]
         row["__parent_key"] = _key(path[: level - 1]) if level > 1 else None
         row.pop("__present", None)
@@ -127,6 +131,7 @@ def grouped_table(
     subtotal_position: str = "bottom",
     total_position: str = "bottom",
     total_label: str = "Total",
+    combined: bool = False,
     total_measures: Mapping[str, str] | None = None,
     aggregations: Any = None,
     weight_columns: Mapping[str, str] | None = None,
@@ -196,6 +201,7 @@ def grouped_table(
         subtotal_position=subtotal_position,
         total_position=total_position,
         total_label=total_label,
+        combined=combined,
     )
     if aggregations is not None:
         ordered = apply_aggregations(

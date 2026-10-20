@@ -137,7 +137,7 @@ export class EvidentialTableRenderer {
       "--et-text": theme.text,
       "--et-muted": theme.muted,
       "--et-border": theme.border,
-      "--et-row-border": theme.row_border,
+      "--et-row-border": theme.row_border || (typeof opts.row_lines === "string" ? opts.row_lines : null),
       "--et-header-bg": theme.header_bg || opts.header_color || surface,
       "--et-header-border": theme.header_border,
       "--et-header-text": theme.header_text || opts.header_font_color,
@@ -503,8 +503,9 @@ export class EvidentialTableRenderer {
     if (renderType === "row_section") {
       const colSpan = columns.length + (ctx.rowNumbers ? 1 : 0) + (opts.link ? 1 : 0);
       const label = row.__label ?? (columns[0] ? row[columns[0].name] : "");
+      const align = row.__align === "center" ? "center" : "left";
       return h("tr", { class: "et-row et-row-section" }, [
-        h("td", { class: "et-td et-section-cell", colspan: colSpan }, String(label ?? "")),
+        h("td", { class: `et-td et-section-cell et-section-${align}`, colspan: colSpan }, String(label ?? "")),
       ]);
     }
     const isTotal = renderType === "row_total";
@@ -520,6 +521,7 @@ export class EvidentialTableRenderer {
         "et-row",
         isTotal ? "et-row-total" : "",
         isSubtotal ? "et-row-subtotal" : "",
+        row.__combined ? "et-row-combined" : "",
         hasLink ? "et-row-link" : "",
         isSubtotal ? "et-row-collapsible" : "",
         renderType === "cell_data" && shaded(ctx.shadingCounter.value++, opts) ? "et-row-shaded" : "",

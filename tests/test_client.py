@@ -60,3 +60,12 @@ def test_grouped_records_custom_callable() -> None:
 def test_grouped_records_requires_measures() -> None:
     with pytest.raises(ValueError):
         grouped_records([{"only": "text"}], group_by="only")
+
+
+def test_grouped_records_combined_section_summary_rows() -> None:
+    table = grouped_records(DATA, group_by=["country", "city"], subtotals=True, total=False, combined=True)
+    subtotals = [row for row in table.rows if row["render_type"] == "row_subtotal"]
+    assert subtotals and all(row.get("__combined") is True for row in subtotals)
+    # The combined row still carries its aggregated values and its label.
+    usa = next(row for row in subtotals if row["country"] == "USA")
+    assert usa["revenue"] == 300.0

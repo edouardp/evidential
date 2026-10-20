@@ -24,9 +24,16 @@ _OPTION_KEYS = set(TableOptions.__annotations__)
 _OPTION_DEFAULTS = TABLE_DEFAULTS
 
 
-def section_row(label: str) -> dict[str, Any]:
-    """Return a full-width section divider row for :class:`EvidentialTable`."""
-    return {"render_type": "row_section", "__label": label}
+def section_row(label: str, *, align: str = "left") -> dict[str, Any]:
+    """Return a full-width section divider row for :class:`EvidentialTable`.
+
+    ``align`` places the label: ``"left"`` (default) or ``"center"``. A
+    centered section carries its meaning in the label alone, so it has no
+    summary cells.
+    """
+    if align not in ("left", "center"):
+        raise ValueError("section_row align is 'left' or 'center'")
+    return {"render_type": "row_section", "__label": label, "__align": align}
 
 
 def _flatten_columns(columns: Iterable[Any]) -> Iterator[Any]:

@@ -347,16 +347,25 @@ export function calculateVizRanges(columns, rows) {
         }
         if (diverging) {
           // A diverging stack is read against the larger of its two arms.
+          const normalize = (col.scale || {}).normalize === "percent";
           const arms = divergingTotals(col.encodings, row);
           const span = Math.max(Math.abs(arms.left), Math.abs(arms.right));
-          if (span > 0) {
+          if (normalize) {
+            min = 0;
+            max = 100;
+          } else if (span > 0) {
             min = 0;
             max = Math.max(max, span);
           }
           continue;
         }
         if (stacked) {
-          // A stack's scale is its cumulative total, not its individual parts.
+          // A percent stack always spans 0..100; a raw stack its cumulative total.
+          if ((col.scale || {}).normalize === "percent") {
+            min = 0;
+            max = 100;
+            continue;
+          }
           let total = 0;
           for (const enc of col.encodings) {
             const num = Number(row[enc.source]);

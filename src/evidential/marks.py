@@ -132,6 +132,7 @@ def _label_spec(
     prefix: str | None = None,
     suffix: str | None = None,
     align: str | None = None,
+    share: bool | None = None,
 ) -> dict[str, Any] | None:
     """Canonicalise a mark-owned label declaration.
 
@@ -172,6 +173,8 @@ def _label_spec(
     for key, item in (("format", format), ("prefix", prefix), ("suffix", suffix)):
         if item is not None:
             spec[key] = item
+    if share:
+        spec["share"] = True
     return spec or None
 
 
@@ -683,23 +686,30 @@ def stacked_bar(
     *sources: Any,
     title: str | None = None,
     colors: Sequence[Any] | None = None,
-    labels: bool | None = None,
+    labels: bool | str | None = None,
     normalize: str | None = None,
     diverge_at: str | None = None,
     neutral: str | None = None,
+    size: float | None = None,
     **options: Any,
 ) -> MarkColumn:
     """A cumulative stack of segment magnitudes (a distinct encoding).
 
     Each ``source`` is a segment magnitude; ``colors`` is positional. Stacking
     uses the raw additive values and does not normalise automatically; pass
-    ``normalize="percent"`` to divide each row by its total. With
+    ``normalize="percent"`` to divide each row's segments by its total. With
     ``diverge_at="neutral", neutral="split"`` the named segment is split around
     a central origin and the categories either side grow left and right.
 
+    ``labels=True`` writes each segment's value; ``labels="percent"`` writes its
+    share of the row instead. ``size`` is the stack's height fraction.
     """
     if not sources:
         raise TypeError("stacked_bar needs at least one segment column")
+    if labels not in (None, False, True, "percent", "share"):
+        raise ValueError("stacked_bar labels is True, False or 'percent'")
+    if size is not None and not 0 < float(size) <= 1:
+        raise ValueError("stacked_bar size is a fraction in (0, 1]")
     column = _mark_column(sources[0], title=title)
     encodings: list[dict[str, Any]] = []
     colour_list = list(colors or [])
@@ -707,12 +717,15 @@ def stacked_bar(
         style: dict[str, Any] = {}
         if index < len(colour_list) and colour_list[index] is not None:
             style["color"] = colour_list[index]
+        if size is not None:
+            style["size"] = float(size)
         encoding = _canonical_encoding("stacked_bar", source, **style)
         if labels:
             encoding["label"] = _label_spec(
                 True,
                 position=options.get("label_position", "inside_end"),
                 align=options.get("label_align"),
+                share=labels in ("percent", "share"),
             )
         encodings.append(encoding)
     if diverge_at is not None:

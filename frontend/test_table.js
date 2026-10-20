@@ -2263,3 +2263,62 @@ test("stacked bar label_align aligns segment text", () => {
   assert.equal(first.style.justifyContent, "flex-start");
   renderer.destroy();
 });
+
+test("percent stack spans 0..100 and labels shares", () => {
+  const rows = [{ a: 1, b: 3 }];
+  const columns = [{
+    name: "a", type: "number",
+    scale: { normalize: "percent", axis: true },
+    encodings: [
+      { kind: "stacked_bar", source: "a", label: { value: true, share: true } },
+      { kind: "stacked_bar", source: "b" },
+    ],
+  }];
+  const renderer = new EvidentialTableRenderer(makeModel(rows, columns, { page_size: 10 }, el), el);
+  const segs = [...el.querySelectorAll(".et-mark-stack-seg")];
+  assert.match(segs[0].style.width, /25%/);
+  assert.match(segs[1].style.width, /75%/);
+  // The first segment labels its share, not its raw value.
+  assert.match(segs[0].textContent, /25%/);
+  // The axis is a 0..100 percent scale.
+  const ticks = [...el.querySelectorAll(".et-axis-tick")].map((node) => node.textContent);
+  assert.ok(ticks.some((tick) => tick.startsWith("100")));
+  renderer.destroy();
+});
+
+test("diverging percent stack centres the neutral segment", () => {
+  const rows = [{ sd: 10, d: 20, n: 30, a: 25, sa: 15 }];
+  const columns = [{
+    name: "sd", type: "number",
+    scale: { normalize: "percent" },
+    encodings: [
+      { kind: "stacked_bar", source: "sd", diverge_at: "n", neutral: "split" },
+      { kind: "stacked_bar", source: "d" },
+      { kind: "stacked_bar", source: "n" },
+      { kind: "stacked_bar", source: "a" },
+      { kind: "stacked_bar", source: "sa" },
+    ],
+  }];
+  const renderer = new EvidentialTableRenderer(makeModel(rows, columns, { page_size: 10 }, el), el);
+  const segs = [...el.querySelectorAll(".et-mark-stack-seg")];
+  assert.equal(segs.length, 6);
+  // The neutral half starts at the centre (50%).
+  const centre = segs.find((seg) => /50%/.test(seg.style.left));
+  assert.ok(centre);
+  renderer.destroy();
+});
+
+test("stacked bar size sets the stack height", () => {
+  const rows = [{ a: 1, b: 1 }];
+  const columns = [{
+    name: "a", type: "number",
+    encodings: [
+      { kind: "stacked_bar", source: "a", size: 0.4 },
+      { kind: "stacked_bar", source: "b", size: 0.4 },
+    ],
+  }];
+  const renderer = new EvidentialTableRenderer(makeModel(rows, columns, { page_size: 10 }, el), el);
+  const stack = el.querySelector(".et-mark-stack");
+  assert.match(stack.style.top, /30%/);
+  renderer.destroy();
+});

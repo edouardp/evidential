@@ -117,7 +117,7 @@ function renderStrip(enc, row, lo, span) {
 }
 
 /** One stack segment: an absolutely positioned coloured box with optional label. */
-function stackSegment(enc, row, col, leftPct, widthPct, showLabel = true) {
+function stackSegment(enc, row, col, leftPct, widthPct, text = "") {
   const segment = h("div", {
     class: "et-mark-stack-seg",
     style: {
@@ -126,41 +126,66 @@ function stackSegment(enc, row, col, leftPct, widthPct, showLabel = true) {
       backgroundColor: markColor(enc, row, "var(--et-accent, #2563eb)"),
     },
   });
-  if (showLabel && enc.label) {
-    const text = markLabelText(col, enc, row);
-    if (text) {
-      const align = enc.label.align;
-      if (align === "begin") segment.style.justifyContent = "flex-start";
-      else if (align === "end") segment.style.justifyContent = "flex-end";
-      segment.append(h("span", { class: "et-mark-stack-label" }, text));
-    }
+  if (text) {
+    const align = (enc.label || {}).align;
+    if (align === "begin") segment.style.justifyContent = "flex-start";
+    else if (align === "end") segment.style.justifyContent = "flex-end";
+    segment.append(h("span", { class: "et-mark-stack-label" }, text));
   }
   return segment;
 }
 
+/** The stack's label text: its share of the row, or its own value. */
+function stackLabelText(col, enc, row, value, total, normalize) {
+  if (!enc.label) return "";
+  if (enc.label.share) {
+    const share = total ? value / total : 0;
+    return formatValue(share, enc.label.format || "pct0", {
+      type: "number",
+      fallback: `${Math.round(share * 100)}%`,
+    });
+  }
+  return markLabelText(col, enc, row);
+}
+
+/** The stack container, sized by the first segment's `size` (height fraction). */
+function stackContainer(encodings) {
+  const size = encodings[0].size != null ? Math.max(0.05, Math.min(1, Number(encodings[0].size))) : 0.7;
+  const inset = ((1 - size) / 2) * 100;
+  return h("div", { class: "et-mark et-mark-stack", style: { top: `${inset}%`, bottom: `${inset}%` } });
+}
+
 /** A diverging stack: categories either side of a split neutral segment. */
-function renderDivergingStack(col, encodings, row, maxAbs) {
-  const pivot = encodings.findIndex((enc) => enc.source === encodings[0].diverge_at);
-  const magnitude = (enc) => {
+function renderDivergingStack(col, encodings, row, normalize) {
+  const values = encodings.map((enc) => {
     const num = Number(row[enc.source]);
     return isFinite(num) && num > 0 ? num : 0;
-  };
-  const at = (value) => (maxAbs ? (value / maxAbs) * 50 : 0);
-  const stack = h("div", { class: "et-mark et-mark-stack" });
-  const pv = magnitude(encodings[pivot]);
+  });
+  const total = values.reduce((sum, value) => sum + value, 0);
+  const scaled = normalize ? values.map((value) => (total ? (value / total) * 100 : 0)) : values;
+  const pivot = encodings.findIndex((enc) => enc.source === encodings[0].diverge_at);
+  let leftTotal = scaled[pivot] / 2;
+  let rightTotal = scaled[pivot] / 2;
+  for (let index = 0; index < pivot; index += 1) leftTotal += scaled[index];
+  for (let index = pivot + 1; index < scaled.length; index += 1) rightTotal += scaled[index];
+  const maxArm = Math.max(leftTotal, rightTotal, 1e-9);
+  const at = (value) => (value / maxArm) * 50;
+  const stack = stackContainer(encodings);
+  const pv = scaled[pivot];
+  const label = (index, value) => stackLabelText(col, encodings[index], row, value, total, normalize);
   // The neutral segment straddles the origin: half left, half right.
   let left = pv / 2;
-  stack.append(stackSegment(encodings[pivot], row, col, 50 - at(left), at(pv / 2)));
+  stack.append(stackSegment(encodings[pivot], row, col, 50 - at(left), at(pv / 2), label(pivot, values[pivot])));
   for (let index = pivot - 1; index >= 0; index -= 1) {
-    const value = magnitude(encodings[index]);
-    stack.append(stackSegment(encodings[index], row, col, 50 - at(left + value), at(value)));
+    const value = scaled[index];
+    stack.append(stackSegment(encodings[index], row, col, 50 - at(left + value), at(value), label(index, values[index])));
     left += value;
   }
   let right = pv / 2;
-  stack.append(stackSegment(encodings[pivot], row, col, 50, at(pv / 2), false));
+  stack.append(stackSegment(encodings[pivot], row, col, 50, at(pv / 2), ""));
   for (let index = pivot + 1; index < encodings.length; index += 1) {
-    const value = magnitude(encodings[index]);
-    stack.append(stackSegment(encodings[index], row, col, 50 + at(right), at(value)));
+    const value = scaled[index];
+    stack.append(stackSegment(encodings[index], row, col, 50 + at(right), at(value), label(index, values[index])));
     right += value;
   }
   return stack;
@@ -168,21 +193,25 @@ function renderDivergingStack(col, encodings, row, maxAbs) {
 
 /** A cumulative stack of segment magnitudes over the column's shared scale. */
 function renderStack(col, encodings, row, lo, hi) {
+  const normalize = (col.scale || {}).normalize === "percent";
   if (encodings[0].diverge_at) {
-    return renderDivergingStack(col, encodings, row, Math.max(Math.abs(lo), Math.abs(hi)) || 1);
+    return renderDivergingStack(col, encodings, row, normalize);
   }
   const values = encodings.map((enc) => {
     const num = Number(row[enc.source]);
     return isFinite(num) && num > 0 ? num : 0;
   });
   const total = values.reduce((sum, value) => sum + value, 0);
-  const normalize = (col.scale || {}).normalize === "percent";
-  const spanTotal = normalize ? 1 : (hi - lo) || 1;
-  const stack = h("div", { class: "et-mark et-mark-stack" });
+  const stack = stackContainer(encodings);
+  // Percent stacks always span 0..100; raw stacks share the column's domain.
+  const spanTotal = normalize ? 100 : (hi - lo) || 1;
   let cursor = 0;
   encodings.forEach((enc, index) => {
-    const magnitude = normalize ? (total ? values[index] / total : 0) : values[index];
-    stack.append(stackSegment(enc, row, col, (cursor / spanTotal) * 100, (magnitude / spanTotal) * 100));
+    const magnitude = normalize ? (total ? (values[index] / total) * 100 : 0) : values[index];
+    const width = (magnitude / spanTotal) * 100;
+    stack.append(
+      stackSegment(enc, row, col, (cursor / spanTotal) * 100, width, stackLabelText(col, enc, row, values[index], total, normalize)),
+    );
     cursor += magnitude;
   });
   return stack;

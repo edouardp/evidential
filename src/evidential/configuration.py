@@ -269,6 +269,8 @@ class EncodingLabel(TypedDict, total=False):
     format: str | None
     prefix: str | None
     suffix: str | None
+    #: Label a stack segment with its share of the row total, not its raw value.
+    share: bool | None
     #: Text alignment within the mark/segment (stacked bars use ``"begin"``).
     align: Literal["begin", "center", "end"] | None
 

@@ -500,8 +500,9 @@ columns=[
   side-by-side bars). `cap="arrow"` marks an endpoint that extends beyond the
   displayed scale.
 - **Stacks** — `stacked_bar(*sources, colors=, labels=, label_align="begin"|
-  "center"|"end", normalize="percent", diverge_at=, neutral="split")`.
-  `diverge_at="neutral", neutral="split"`
+  "center"|"end", normalize="percent", size=, diverge_at=, neutral="split")`.
+  `labels=True` writes each segment's value and `labels="percent"` its share;
+  `size` is the stack height fraction. `diverge_at="neutral", neutral="split"`
   centres the named segment on the origin and grows the categories either side
   left and right (a Likert chart).
 - **Boxplot** — `boxplot(minimum, q1, median, q3, maximum, outliers=, whisker=`

@@ -293,3 +293,14 @@ def test_stacked_bar_label_align() -> None:
     assert spec["encodings"][0]["label"]["align"] == "begin"
     with pytest.raises(ValueError, match="label align"):
         col.stacked_bar("a", labels=True, label_align="left")
+
+
+def test_stacked_bar_percent_labels_and_thickness() -> None:
+    spec = dict(col.stacked_bar("a", "b", labels="percent", label_align="begin", size=0.5))
+    first = spec["encodings"][0]
+    assert first["label"] == {"value": True, "position": "inside_end", "align": "begin", "share": True}
+    assert [enc["size"] for enc in spec["encodings"]] == [0.5, 0.5]
+    with pytest.raises(ValueError, match="labels is True, False or 'percent'"):
+        col.stacked_bar("a", labels="count")
+    with pytest.raises(ValueError, match="size is a fraction"):
+        col.stacked_bar("a", size=2)

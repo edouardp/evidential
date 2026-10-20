@@ -86,10 +86,12 @@ used, and the browser falls back to the legacy path when `encodings` is absent.
   `Callable[[Row], T]`. A callable is evaluated Python-side into a generated
   hidden helper column (ADR-006), so the browser only ever sees field names;
   exports and untrusted data never execute Python.
-- Note: this phase ships `bar`, `point`, `range`, `stacked_bar` (raw,
-  `normalize="percent"`, or `diverge_at=…`), `strip` (equal-width, positioned
-  runs and change-points), `boxplot` and `distribution`, plus the `shapes`
-  alias for repeated symbols.
+- Note: this phase ships `bar`, `point`, `points`, `range`, `stacked_bar`
+  (raw, `normalize="percent"`, or `diverge_at=…`), `strip` (equal-width,
+  positioned runs and change-points), `boxplot` and `distribution`, plus the
+  `shapes` alias for repeated symbols. A percent stack works in 0–100 units, so
+  `labels="percent"` and a 0–100 axis read consistently, and `size=` sets the
+  stack's height.
 - Note: composition validity (ADR-058 §5.2) is enforced in Python where cheap
   (e.g. a sparkline beside a scalar bar is rejected) and reported with a clear
   message.

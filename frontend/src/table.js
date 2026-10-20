@@ -447,8 +447,11 @@ export class EvidentialTableRenderer {
 
   _renderTable(columns, rows, ctx) {
     const opts = this.options;
-    const table = h("table", { class: "et-table" });
-    table.append(this._renderHeader(columns, ctx));
+    const table = h("table", { class: `et-table${ctx.hasTopAxis ? " et-has-top-axis" : ""}` });
+    const thead = this._renderHeader(columns, ctx);
+    if (!ctx.isEmpty && ctx.stats) thead.append(this._renderStatsRow(columns, ctx));
+    if (ctx.hasTopAxis) this._appendTopAxis(thead, columns, ctx);
+    table.append(thead);
     const tbody = h("tbody");
     ctx.shadingCounter = { value: 0 };
     if (ctx.isEmpty) {
@@ -460,8 +463,6 @@ export class EvidentialTableRenderer {
         tbody.append(this._renderPlaceholderRow(columns, ctx));
       }
     } else {
-      if (ctx.hasTopAxis) tbody.append(this._renderAxisRow(columns, ctx, "top"));
-      if (ctx.stats) tbody.append(this._renderStatsRow(columns, ctx));
       if (ctx.continuationLabel) {
         // A section that spans pages repeats its label at the top of the page.
         const colSpan = columns.length + (ctx.rowNumbers ? 1 : 0) + (opts.link ? 1 : 0);
@@ -480,21 +481,37 @@ export class EvidentialTableRenderer {
         }
         ctx.displayInset = false;
       } else rows.forEach((row, index) => tbody.append(this._renderRow(row, columns, ctx, index)));
-      if (ctx.hasBottomAxis) {
-        tbody.append(this._renderAxisRow(columns, ctx, "bottom"));
-      }
     }
     table.append(tbody);
+    if (ctx.hasBottomAxis) table.append(h("tfoot", {}, this._renderAxisRow(columns, ctx, "bottom")));
     labelFootnotes(table, ctx.footnotes.length, opts);
     return table;
   }
 
+  /** Unscaled labels stay at the body's first line while scaled labels move up. */
+  _appendTopAxis(thead, columns, ctx) {
+    const covered = new Set();
+    if (!ctx.stats) {
+      for (const cell of thead.querySelector(".et-header-leaves").children) {
+        const start = Number(cell.dataset.columnStart);
+        const first = start - (ctx.rowNumbers ? 1 : 0);
+        const members = columns.slice(Math.max(0, first), first + cell.colSpan);
+        const hasAxis = first >= 0 && members.some(col => col.encodings && col.scale?.axis && col.scale.axis_position !== "bottom");
+        if (hasAxis) continue;
+        cell.rowSpan = 2;
+        for (let index = start; index < start + cell.colSpan; index++) covered.add(index);
+      }
+    }
+    thead.append(this._renderAxisRow(columns, ctx, "top", covered));
+  }
+
   /** A tick axis for the marks columns that ask for one (`scale(axis=True)`). */
-  _renderAxisRow(columns, ctx, position) {
+  _renderAxisRow(columns, ctx, position, covered = new Set()) {
     const opts = this.options;
-    const tr = h("tr", { class: `et-row et-axis-row et-axis-row-${position}` });
-    if (ctx.rowNumbers) tr.append(h("td", { class: "et-td et-row-num" }));
+    const tr = h("tr", { class: `et-axis-row et-axis-row-${position}` });
+    if (ctx.rowNumbers && !covered.has(0)) tr.append(h("td", { class: "et-td et-row-num", "data-column-index": 0 }));
     for (const [index, col] of columns.entries()) {
+      if (covered.has(index + (ctx.rowNumbers ? 1 : 0))) continue;
       const scale = col.scale || {};
       const cell = h("td", { class: `et-td${isStub(opts, col) ? " et-stub" : ""}` });
       decorateSubcolumn(cell, col, index, ctx);

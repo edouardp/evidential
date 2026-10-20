@@ -991,8 +991,9 @@ test("column statistics render under the header and before the data", () => {
     { city: "SF", trips: null },
   ];
   const renderer = new EvidentialTableRenderer(makeModel(rows, columns, { column_stats: true }, el), el);
-  const first = el.querySelector("tbody tr");
-  assert.ok(first.classList.contains("et-stats-row"), "stats row is the first body row");
+  const first = el.querySelector("thead .et-stats-row");
+  assert.ok(first, "statistics are header metadata outside the data body");
+  assert.equal(el.querySelectorAll("tbody tr").length, rows.length);
   const cells = first.querySelectorAll(".et-stats-cell");
   assert.equal(cells.length, 2);
   assert.match(cells[0].textContent, /STRING \(nulls = 0\)/);
@@ -2285,6 +2286,41 @@ test("marks axis renders tick labels and gridlines", () => {
   assert.ok(ticks.length >= 3);
   assert.match(el.querySelector(".et-axis-row").textContent, /25/);
   assert.ok(el.querySelector(".et-mark-gridline"));
+  renderer.destroy();
+});
+
+test("cell guides are clipped independently of marks, labels and interval arrows", () => {
+  const model = makeModel([{x: 20, lo: -5, hi: 105}], [{name: "x", encodings: [
+    {kind: "point", source: "x"}, {kind: "range", source: "lo", high: "hi", overflow: "arrow"}],
+    scale: {domain: [0, 100], gridlines: true}, references: [{value: 50}]}], {}, el);
+  const renderer = new EvidentialTableRenderer(model, el);
+  const cell = el.querySelector("tbody td");
+  assert.ok(cell.classList.contains("et-has-guides"));
+  assert.equal(cell.querySelectorAll(".et-cell-guides .et-mark-gridline").length, 5);
+  assert.equal(cell.querySelectorAll(".et-cell-guides .et-mark-reference").length, 1);
+  assert.equal(cell.querySelectorAll(".et-marks .et-mark-gridline, .et-marks .et-mark-reference").length, 0);
+  assert.equal(cell.querySelectorAll(".et-marks .et-mark-arrow").length, 2);
+  assert.equal(cell.querySelector(".et-cell-guides").getAttribute("aria-hidden"), "true");
+  renderer.destroy();
+});
+
+test("axes live outside the data body and only top-axis labels gain header height", () => {
+  const columns = [
+    {name: "country"},
+    {name: "top", encodings: [{kind: "point", source: "top"}], scale: {axis: true}},
+    {name: "bottom", encodings: [{kind: "point", source: "bottom"}], scale: {axis: true, axis_position: "bottom"}},
+  ];
+  const model = makeModel([{country: "A", top: 1, bottom: 2}, {country: "B", top: 3, bottom: 4}],
+    columns, {row_numbers: true}, el);
+  const renderer = new EvidentialTableRenderer(model, el);
+  assert.equal(el.querySelectorAll("tbody tr").length, 2);
+  assert.equal(el.querySelectorAll("tbody .et-axis").length, 0);
+  assert.ok(el.querySelector("thead .et-axis-row-top"));
+  assert.ok(el.querySelector("tfoot .et-axis-row-bottom"));
+  assert.equal(el.querySelector('th[data-column="country"]').rowSpan, 2);
+  assert.equal(el.querySelector('th[data-column="top"]').rowSpan, 1);
+  assert.equal(el.querySelector('th[data-column="bottom"]').rowSpan, 2);
+  assert.equal(el.querySelector(".et-axis-row").classList.contains("et-row"), false);
   renderer.destroy();
 });
 

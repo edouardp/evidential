@@ -155,7 +155,7 @@ export function renderHeader({columns, rowNumbers, options: opts, sort, onSort})
     });
   }
 
-  const row = h("tr");
+  const row = h("tr", {class: "et-header-leaves"});
   if (rowNumbers) {
     row.append(h("th", { class: "et-th et-row-num", "aria-label": "Row number", "data-column-start": 0 }, "#"));
   }

@@ -587,7 +587,11 @@ columns=[
   shared quantitative axis; `.reference_line(value, label=, color=)` adds a rule
   and `.reference_band(low, high, label=, color=)` shades a zone (a target or
   equivalence range). `axis=True` draws tick labels for the column, and
-  `gridlines=True` faint vertical lines through the cells. A log scale needs a
+  `gridlines=True` faint vertical lines through the cells. A top axis sits below
+  its column label and above the first horizontal line of the row area, pushing
+  the label upward; unscaled labels stay by that line. A bottom axis sits below
+  the last horizontal line. Tick marks touch those lines from outside the rows.
+  Axes belong to the header/footer, never synthetic body rows. A log scale needs a
   positive domain, uses a power-of-ten tick ladder, and is what a forest plot
   uses with `.reference_line(1)`.
   Repeated `.scale(...)` calls preserve earlier settings; `domain="auto"`

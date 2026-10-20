@@ -105,7 +105,9 @@ export class TableViewport {
         const rowHeight = row ? row.getBoundingClientRect().height : ROW_HEIGHT;
         const head = this.scroller.querySelector("thead");
         const headerHeight = head ? head.getBoundingClientRect().height : 0;
-        const available = this.scroller.clientHeight - headerHeight;
+        const foot = this.scroller.querySelector("tfoot");
+        const footerHeight = foot ? foot.getBoundingClientRect().height : 0;
+        const available = this.scroller.clientHeight - headerHeight - footerHeight;
         if (available <= 0 || rowHeight <= 0) break;
         // Leave a hair of slack so we never introduce a scrollbar.
         const fit = Math.max(1, Math.floor((available - 2) / rowHeight));
@@ -133,8 +135,9 @@ export class TableViewport {
     // Measure physical column edges, never infer them from spanning headers.
     // Reading before writing avoids measuring already-sticky cells on resize.
     const bodyCells = [...table.querySelectorAll("tbody [data-column-index]")];
+    const axisCells = [...table.querySelectorAll("thead .et-axis-row [data-column-index], tfoot [data-column-index]")];
     const spanningCells = [...table.querySelectorAll("[data-column-start]")];
-    for (const cell of [...bodyCells, ...spanningCells]) {
+    for (const cell of [...bodyCells, ...axisCells, ...spanningCells]) {
       cell.style.left = "";
       cell.classList.remove("et-frozen", "et-frozen-last");
       if (cell.tagName === "TD") cell.style.position = "";
@@ -156,11 +159,12 @@ export class TableViewport {
       if (index + cell.colSpan === n) cell.classList.add("et-frozen-last");
     };
     for (const cell of bodyCells) freeze(cell, Number(cell.dataset.columnIndex), 10);
+    for (const cell of axisCells) freeze(cell, Number(cell.dataset.columnIndex), cell.closest("thead") ? 30 : 10);
     for (const cell of spanningCells) {
       const start = Number(cell.dataset.columnStart);
       // A spanning header or summary crossing the boundary scrolls as a whole.
       if (start + cell.colSpan <= n) {
-        freeze(cell, start, cell.tagName === "TH" ? 30 : 10);
+        freeze(cell, start, cell.closest("thead") ? 30 : 10);
       }
     }
   }

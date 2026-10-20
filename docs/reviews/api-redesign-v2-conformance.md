@@ -98,6 +98,23 @@ painting, and dedicated tests. Notebook 37 now shows standard and compact bands.
 Browser coverage samples actual painted pixels to verify darker peaks, pale
 tails and transparent gaps, and checks confinement to the row and shared axes.
 
+The axis follow-up corrects a separate layout error: scales are now outside the
+data body, above its first horizontal line or below its last horizontal line,
+with tick marks touching the lines. A top scale raises its column label while
+unscaled labels remain beside the first body line. Statistics stay in the
+header; frozen columns and fullscreen fitting account for both scale tiers.
+Browser checks cover tick contact, label height at two font sizes, nested
+sub-column alignment and pagination with header metadata.
+Gridlines and reference lines now occupy a clipped layer bounded by each cell,
+instead of extending past the glyph track. Browser regressions check that they
+stay inside the row area without introducing tiny scrollbars at different font
+sizes and compact densities. Mark labels and interval arrows retain their
+independent overflow behavior.
+
+![Rebuilt uncertainty bands and transparent support gaps](images/distribution-bands.png)
+
+![Compact distribution rendering](images/distribution-compact.png)
+
 The exact generic omitted-row API, more advanced marker collision handling,
 and deferred composition modes remain Open/V2 work. Label formats retain the
 existing Evidence format-code contract (`num0`, `pct1`, etc.); the draft's

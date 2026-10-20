@@ -104,7 +104,9 @@ def test_uncertainty_band_paints_density_as_intensity_and_stays_in_its_row(page,
             ),
         ],
     )
-    capture(page, "evidential-distribution-bands.png")
+    if path := os.environ.get("EVIDENTIAL_REVIEW_SCREENSHOT"):
+        page.locator("#case-0").screenshot(path=str(Path(path).with_name("evidential-distribution-bands.png")))
+        page.locator("#case-1").screenshot(path=str(Path(path).with_name("evidential-distribution-compact.png")))
     assert page.locator(".et-mark-distribution svg, .et-mark-distribution polygon").count() == 0
     for node in page.locator(".et-mark-distribution").all():
         box = node.bounding_box()
@@ -136,7 +138,6 @@ def test_uncertainty_band_paints_density_as_intensity_and_stays_in_its_row(page,
     assert pixels[0][0] > pixels[1][0] + 80
     assert pixels[2][0] > pixels[1][0] + 80
     assert pixels[3][:3] == [255, 255, 255]
-    capture(page, "evidential-distribution-bands.png")
 
 
 def test_distribution_clipping_height_and_log_scale_share_point_coordinates(page, live_server):
@@ -329,6 +330,116 @@ def test_mixed_axis_positions_are_per_column(page, live_server):
     assert page.locator(".et-axis-row-top td").nth(1).locator(".et-axis").count() == 0
     assert page.locator(".et-axis-row-bottom td").nth(0).locator(".et-axis").count() == 0
     assert page.locator(".et-axis-row-bottom td").nth(1).locator(".et-axis").count() == 1
+
+
+def test_axes_touch_the_first_and_last_horizontal_lines_from_outside_the_rows(page, live_server):
+    for font in ("11px", "24px"):
+        mount(
+            page,
+            live_server,
+            [
+                (
+                    "Axes outside the row area",
+                    [
+                        {"country": "Canada", "top": 30, "bottom": 60},
+                        {"country": "Mexico", "top": 70, "bottom": 40},
+                    ],
+                    [
+                        col.text("country"),
+                        col.point("top").scale(domain=(0, 100), axis=True),
+                        col.point("bottom").scale(domain=(0, 100), axis=True, axis_position="bottom"),
+                    ],
+                    {"font_size": font},
+                )
+            ],
+        )
+        assert page.locator("tbody tr").count() == 2
+        assert page.locator("tbody .et-axis").count() == 0
+        top = page.locator("thead .et-axis").bounding_box()
+        bottom = page.locator("tfoot .et-axis").bounding_box()
+        first = page.locator("tbody tr").first.bounding_box()
+        last = page.locator("tbody tr").last.bounding_box()
+        assert top["y"] + top["height"] == pytest.approx(first["y"], abs=1)
+        assert bottom["y"] == pytest.approx(last["y"] + last["height"], abs=1)
+        country = page.locator('th[data-column="country"] .et-th-title').bounding_box()
+        raised = page.locator('th[data-column="top"] .et-th-title').bounding_box()
+        assert country["y"] - raised["y"] >= top["height"] - 1
+        for position, boundary in (("top", first["y"]), ("bottom", last["y"] + last["height"])):
+            tick = page.locator(f".et-axis-row-{position} .et-axis-tick").first
+            box = tick.bounding_box()
+            pseudo = tick.evaluate("""el => { const style = getComputedStyle(el, '::after');
+                return {top: parseFloat(style.top), height: parseFloat(style.height)}; }""")
+            edge = box["y"] + pseudo["top"] + (pseudo["height"] if position == "top" else 0)
+            assert edge == pytest.approx(boundary, abs=1)
+        for selector, property_name in (
+            ("tbody tr:first-child", "borderTopWidth"),
+            ("tbody tr:last-child", "borderBottomWidth"),
+        ):
+            # The boundary belongs to a real row, not an axis metadata row.
+            assert (
+                page.locator(selector)
+                .locator("td")
+                .first.evaluate("(el, property) => getComputedStyle(el)[property]", property_name)
+                == "1px"
+            )
+        capture(page, "evidential-axis-boundaries.png")
+
+
+def test_statistics_and_axes_stay_outside_paginated_details(page, live_server):
+    mount(
+        page,
+        live_server,
+        [
+            (
+                "Header metadata",
+                [{"x": 1}, {"x": 2}],
+                [col.point("x").scale(axis=True)],
+                {"column_stats": True, "page_size": 1, "row_numbers": True},
+            )
+        ],
+    )
+    assert page.locator("thead .et-stats-row").count() == 1
+    assert page.locator("thead .et-axis-row").count() == 1
+    assert page.locator("tbody tr").count() == 1
+    first = page.locator("tbody tr").bounding_box()
+    axis = page.locator(".et-axis").bounding_box()
+    assert axis["y"] + axis["height"] == pytest.approx(first["y"], abs=1)
+    assert page.locator(".et-page-current").inner_text() == "1/2"
+
+
+@pytest.mark.parametrize(
+    "options",
+    [{"font_size": "14px"}, {"font_size": "13px"}, {"compact": True}, {"row_lines": True}, {"font_size": "24px"}],
+)
+def test_gridlines_do_not_add_scroll_overflow_to_the_row_area(page, live_server, options):
+    mount(
+        page,
+        live_server,
+        [
+            (
+                "Gridline bounds",
+                [{"country": "Canada", "value": 30}, {"country": "Mexico", "value": 70}],
+                [col.text("country"), col.point("value").scale(domain=(0, 100), gridlines=True)],
+                {"row_lines": False, "border": False, **options},
+            )
+        ],
+    )
+    scroller = page.locator(".et-scroller")
+    sizes = scroller.evaluate(
+        "el => ({height: el.clientHeight, scrollHeight: el.scrollHeight, width: el.clientWidth, scrollWidth: el.scrollWidth})"
+    )
+    assert sizes["scrollHeight"] == sizes["height"], sizes
+    assert sizes["scrollWidth"] == sizes["width"], sizes
+    for line in page.locator(".et-mark-gridline").all():
+        box = line.bounding_box()
+        parent = line.locator("xpath=ancestor::td")
+        cell = parent.bounding_box()
+        assert box["y"] >= cell["y"]
+        assert box["y"] + box["height"] <= cell["y"] + cell["height"]
+        guides = parent.locator(".et-cell-guide-track").bounding_box()
+        marks = parent.locator(".et-marks").bounding_box()
+        assert guides["x"] == pytest.approx(marks["x"], abs=0.1)
+        assert guides["width"] == pytest.approx(marks["width"], abs=0.1)
 
 
 def test_axes_align_inside_nested_headers_and_subcolumns(page, live_server):

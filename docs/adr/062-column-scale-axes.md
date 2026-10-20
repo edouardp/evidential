@@ -41,10 +41,24 @@ col.bar("share").scale(domain=(0, 40), axis=True, gridlines=True, axis_position=
 - Ticks are computed with a 1/2/2.5/5×10ⁿ "nice" step over the marks' domain
   (`marksDomain`), so the axis lines up with the bars; the label is formatted
   with the column's own format code.
-- The axis is a body row rendered before the data rows (or after, for
-  `"bottom"`), spanning each axis column; gridlines are drawn inside the marks
-  cell behind the marks.
+- Axes are header/footer metadata, outside the row content area. A top axis is
+  the final header tier below its column label and above the first horizontal
+  body line; a bottom axis is in the table footer below the last horizontal
+  body line. Tick marks touch those lines from outside. Axes never create
+  synthetic records or body rows and do not acquire shading or body boundaries.
+- The top-axis tier pushes the corresponding column label upward. Labels with
+  no top axis span that extra tier and remain aligned just above the first body
+  line. A shared sub-column label moves up if any of its members has a top axis;
+  the individual scales retain their physical column widths. When column
+  statistics are present, they remain header metadata before the axis tier.
+- Axis tracks retain identical horizontal padding to mark tracks. Their height
+  includes both tick text and the tick itself; top and bottom cells have no
+  vertical padding that could create a gap at the horizontal boundary.
 - `axis` and `gridlines` are independent: either may be used alone.
+- Gridlines and reference lines use a cell-sized guide layer with inherited
+  horizontal padding. The layer clips its own paint to the cell, eliminating
+  fractional-pixel overflow from extending guides beyond the glyph track.
+  Marks, labels and endpoint arrows retain their independent overflow behavior.
 - Axis positions are independent per column; top and bottom scales can coexist.
   Axis and mark tracks share the same padded horizontal area, leaving room for
   endpoint tick text. Gridlines and reference rules join across adjacent data
@@ -58,8 +72,9 @@ col.bar("share").scale(domain=(0, 40), axis=True, gridlines=True, axis_position=
 - Note: ticks use a 1/2/2.5/5×10ⁿ step on a linear scale and a power-of-ten
   ladder (with 2× and 5× subdivisions) on a log scale, so the axis lines up
   with the marks in both cases.
-- Note: the axis row is presentational and does not take part in row numbering
-  or alternating shading.
+- Note: neither the axis tiers nor column statistics live in the data body.
+  Pagination and fullscreen fitting reserve their header/footer height; frozen
+  columns keep scale tracks horizontally aligned as the table scrolls.
 
 ## More Information
 

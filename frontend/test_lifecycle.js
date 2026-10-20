@@ -81,3 +81,44 @@ test("hold repeat interval eases from 700ms to 100ms by 3s", () => {
   assert.equal(holdInterval(3000), 100);
   assert.equal(holdInterval(10000), 100);
 });
+
+test("freezing keeps header and footer axes aligned with their physical columns", () => {
+  const scroller = dom.window.document.createElement("div");
+  scroller.innerHTML = `<table><thead>
+    <tr><th data-column-start="0" rowspan="2">Country</th><th data-column-start="1">Value</th></tr>
+    <tr class="et-axis-row"><td data-column-index="1">Top axis</td></tr>
+    </thead><tbody><tr><td data-column-index="0">A</td><td data-column-index="1">4</td></tr></tbody>
+    <tfoot><tr><td data-column-index="0"></td><td data-column-index="1">Bottom axis</td></tr></tfoot></table>`;
+  scroller.querySelector("table").getBoundingClientRect = () => ({left: 10});
+  scroller.querySelector("thead tr").getBoundingClientRect = () => ({height: 25});
+  for (const cell of scroller.querySelectorAll("tbody td")) {
+    cell.getBoundingClientRect = () => ({left: Number(cell.dataset.columnIndex) === 0 ? 10 : 100});
+  }
+  const viewport = new TableViewport({scroller, getOptions: () => ({freeze_columns: 2})});
+  viewport.applyFrozenOffsets();
+  const top = scroller.querySelector("thead td");
+  const bottom = scroller.querySelector('tfoot td[data-column-index="1"]');
+  assert.equal(top.style.left, "90px");
+  assert.equal(top.style.top, "25px");
+  assert.equal(bottom.style.left, "90px");
+  assert.equal(top.style.position, "sticky");
+  assert.equal(bottom.style.position, "sticky");
+  assert.ok(Number(top.style.zIndex) > Number(bottom.style.zIndex));
+  viewport.destroy();
+});
+
+test("fullscreen pagination reserves space for a bottom scale outside the body", () => {
+  const scroller = dom.window.document.createElement("div");
+  scroller.innerHTML = '<table><thead></thead><tbody><tr><td>A</td></tr></tbody><tfoot></tfoot></table>';
+  Object.defineProperty(scroller, "clientHeight", {value: 100});
+  for (const node of scroller.querySelectorAll("thead, tbody tr, tfoot")) {
+    node.getBoundingClientRect = () => ({height: 20});
+  }
+  let size = null;
+  const viewport = new TableViewport({scroller, getOptions: () => ({}),
+    getPageSizeOverride: () => size, setPageSizeOverride: value => { size = value; }, rerender() {}});
+  viewport.expanded = true;
+  viewport.fit();
+  assert.equal(size, 2);
+  viewport.destroy();
+});

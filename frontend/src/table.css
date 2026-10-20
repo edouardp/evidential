@@ -229,7 +229,8 @@
   font-size: 0.85em;
   cursor: help;
 }
-.et-table thead th {
+.et-table thead th,
+.et-table thead td {
   position: sticky;
   top: 0;
   z-index: 20;
@@ -646,22 +647,43 @@ tbody tr:last-child .et-bar-center .et-bar-axis { bottom: var(--et-bar-pad, 0); 
 }
 .et-mark-reference {
   position: absolute;
-  top: -0.25rem;
-  bottom: -0.25rem;
+  top: 0;
+  bottom: 0;
   width: 1px;
   opacity: 0.6;
 }
 .et-mark-gridline {
   position: absolute;
-  top: -0.25rem;
-  bottom: -0.25rem;
+  top: 0;
+  bottom: 0;
   width: 1px;
   background: color-mix(in srgb, CanvasText 12%, transparent);
 }
-.et-axis-cell { padding-top: 0; padding-bottom: 0.15rem; }
+/* Cell-sized guides cannot enlarge the table's scrollable content. Horizontal
+   padding follows the cell, including sub-columns and explicit style rules. */
+.et-td.et-has-guides { position: relative; }
+.et-cell-guides {
+  position: absolute;
+  inset: 0;
+  box-sizing: border-box;
+  padding-left: inherit;
+  padding-right: inherit;
+  overflow: hidden;
+  pointer-events: none;
+}
+.et-cell-guide-track { position: relative; height: 100%; }
+.et-cell-guides .et-mark-gridline,
+.et-cell-guides .et-mark-reference { top: 0; bottom: 0; }
+.et-root .et-axis-row > .et-td { padding-top: 0; padding-bottom: 0; border: 0; }
+/* A header span can make the first axis slot a later physical column. */
+.et-axis-row > .et-td { padding-left: 0.375rem; }
+.et-axis-row > .et-td[data-column-index="0"] { padding-left: 0.25rem; }
+.et-axis-row > .et-td.et-subcolumn-left { padding-left: 0.15rem; }
+.et-has-top-axis .et-header-leaves .et-th { border-bottom: 0; }
+.et-root .et-has-top-axis .et-stats-row .et-stats-cell { border-bottom: 0; }
 .et-axis {
   position: relative;
-  height: 1rem;
+  height: calc(0.85em + 0.25rem);
   min-width: 60px;
 }
 .et-axis-tick {
@@ -669,7 +691,8 @@ tbody tr:last-child .et-bar-center .et-bar-axis { bottom: var(--et-bar-pad, 0); 
   transform: translateX(-50%);
   font-size: 0.85em;
   line-height: 1;
-  color: var(--et-muted);
+  color: var(--et-text);
+  bottom: 0.25rem;
   white-space: nowrap;
 }
 .et-axis-tick::after {
@@ -678,9 +701,9 @@ tbody tr:last-child .et-bar-center .et-bar-axis { bottom: var(--et-bar-pad, 0); 
   left: 50%;
   top: 100%;
   height: 0.25rem;
-  border-left: 1px solid var(--et-muted);
+  border-left: 1px solid var(--et-border);
 }
-.et-axis-row-bottom .et-axis-tick { top: 0.25rem; }
+.et-axis-row-bottom .et-axis-tick { top: 0.25rem; bottom: auto; }
 .et-axis-row-bottom .et-axis-tick::after { top: -0.25rem; }
 .et-mark-band {
   position: absolute;

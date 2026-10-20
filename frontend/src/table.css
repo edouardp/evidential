@@ -671,6 +671,11 @@ tbody tr:last-child .et-bar-center .et-bar-axis { bottom: var(--et-bar-pad, 0); 
 }
 .et-mark-label-inside.et-mark-label-start { justify-content: flex-start; }
 
+/* A boolean cell written as a labelled symbol (`✓ Active`). */
+.et-boolean-symbol { font-weight: 600; }
+.et-boolean-true .et-boolean-symbol { color: var(--et-positive, #16a34a); }
+.et-boolean-false .et-boolean-symbol { color: var(--et-negative, #dc2626); }
+
 /* --------------------------------------------------------- symbol viz ------ */
 /* A value repeated as glyphs, emoji or images (ratings, medal tables). */
 .et-symbols {

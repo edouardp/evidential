@@ -2105,3 +2105,52 @@ test("reference bands shade a column-wide zone", () => {
   assert.match(band.style.width, /22\.5%/);
   renderer.destroy();
 });
+
+test("points draws one marker per array observation", () => {
+  const rows = [{ x: 1, observations: [1, 2, 3] }];
+  const columns = [{
+    name: "x", type: "number", scale: { domain: [0, 3] },
+    encodings: [
+      { kind: "bar", source: "x" },
+      { kind: "points", source: "observations", size: 5 },
+    ],
+  }];
+  const renderer = new EvidentialTableRenderer(makeModel(rows, columns, { page_size: 10 }, el), el);
+  assert.equal(el.querySelectorAll(".et-mark-point").length, 3);
+  renderer.destroy();
+});
+
+test("sparkline points and markers draw filled dots", () => {
+  const rows = [{ trend: [1, 2, 3] }];
+  const columns = [{ name: "trend", type: "array", viz: "sparkline", sparkline_options: { type: "points" } }];
+  const renderer = new EvidentialTableRenderer(makeModel(rows, columns, { page_size: 10 }, el), el);
+  const dots = [...el.querySelectorAll(".et-sparkline circle")];
+  assert.equal(dots.length, 3);
+  assert.notEqual(dots[0].getAttribute("fill"), "transparent");
+  renderer.destroy();
+});
+
+test("signed sparkline area splits at the zero baseline", () => {
+  const rows = [{ trend: [1, -1, 2] }];
+  const columns = [{
+    name: "trend", type: "array", viz: "sparkline",
+    sparkline_options: { type: "area", signed: true },
+  }];
+  const renderer = new EvidentialTableRenderer(makeModel(rows, columns, { page_size: 10 }, el), el);
+  assert.equal(el.querySelectorAll(".et-sparkline polygon").length, 2);
+  renderer.destroy();
+});
+
+test("boolean cells render their symbols and labels", () => {
+  const rows = [{ active: true }, { active: false }];
+  const columns = [{
+    name: "active", type: "boolean",
+    boolean_options: { true_text: "Active", false_text: "Inactive", true_symbol: "✓", false_symbol: "✗" },
+  }];
+  const renderer = new EvidentialTableRenderer(makeModel(rows, columns, { page_size: 10 }, el), el);
+  const cells = [...el.querySelectorAll("tbody td")];
+  assert.match(cells[0].textContent, /✓ Active/);
+  assert.match(cells[1].textContent, /✗ Inactive/);
+  assert.ok(cells[0].querySelector(".et-boolean-true"));
+  renderer.destroy();
+});

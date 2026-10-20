@@ -56,6 +56,7 @@ def _normalize_column_options(data: dict[str, Any]) -> dict[str, Any]:
         "delta_options",
         "sparkline_options",
         "chip_options",
+        "boolean_options",
         "image_options",
         "logo_options",
     ):
@@ -190,6 +191,13 @@ def _normalize_column_options(data: dict[str, Any]) -> dict[str, Any]:
         chip.setdefault("min_width", data.pop("chip_min_width"))
     if chip:
         data["chip_options"] = chip
+
+    boolean = dict(data.get("boolean_options") or {})
+    for key in ("true_text", "false_text", "true_symbol", "false_symbol"):
+        if key in data:
+            boolean.setdefault(key, data.pop(key))
+    if boolean:
+        data["boolean_options"] = boolean
 
     image = dict(data.get("image_options") or {})
     for key in ("height", "width", "alt"):

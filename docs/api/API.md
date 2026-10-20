@@ -419,6 +419,7 @@ columns=[
     col.color("share", title="Share"),                      # a shaded cell
     col.chip("region", title="Chip"),                       # a pill
     col.sparkline("trend", type="area", title="Trend"),     # a trend
+    col.boolean("active", true_symbol="✓", false_symbol="✗"),  # ✓/✗
     col.percent("growth", decimals=0, title="Δ").delta(),   # a change indicator
 ]
 ```
@@ -441,8 +442,10 @@ columns=[
 - **Delta** — `.delta(down_is_good=, neutral_range=, chip=, show_value=,
   show_symbol=, symbol_position=)`. Green for up, red for down, a grey dash
   inside `neutral_range`.
-- **Sparkline** — `.sparkline(type=, x=, y=, color=, fit_to_data=, y_fmt=,
-  width=, height=)` over an array column.
+- **Sparkline** — `.sparkline(type="line"|"area"|"bar"|"points", x=, y=,
+  color=, fit_to_data=, y_fmt=, width=, height=, markers=, signed=)` over an array
+  column. `type="points"` draws only markers; `markers=True` adds a dot at every
+  point on a line/area; `signed=True` splits an area fill at the zero baseline.
 - **Symbols** — `.symbols(symbol=, shape=, empty=, max=, image=, color=,
   empty_color=, size=, gap=)`: repeat the value as glyphs, emoji, images, or
   font-independent CSS boxes. `max` is a *floor* (the row is filled to at least
@@ -488,7 +491,8 @@ columns=[
 ```
 
 - **Marks** — `bar(source, color=, color_negative=, size=, side=, ...)`, `point(source,
-  size=, color=)`, `range(low, high, cap="none"|"line"|"dot"|"arrow")`. `side="left"`
+  size=, color=)`, `points(source, size=, color=)` (one marker per array element),
+  `range(low, high, cap="none"|"line"|"dot"|"arrow")`. `side="left"`
   `|"right"` draws a nonnegative magnitude from the central origin; `size` is the
   bar height fraction or the point/range marker size. `cap="arrow"` marks an
   endpoint that extends beyond the displayed scale.
@@ -630,13 +634,14 @@ other than `auto`, `merge`, `group` and `subcolumns` return a `Column`;
 | `col.integer(name, *, fmt=, title=)` | `num0` |
 | `col.percent(name, *, whole=False, decimals=, fmt=, title=)` | `pct…`; `whole=True` → `0.0"%"` |
 | `col.currency(name, *, code="usd", decimals=, fmt=, title=)` | `usd, eur, gbp, aud, cad, cny, jpy, inr, krw, ngn, sek` |
-| `col.boolean(name, *, title=)` | true/false |
+| `col.boolean(name, *, title=, true_text=, false_text=, true_symbol=, false_symbol=)` | true/false |
 | `col.date(name, *, fmt=, relative=, align=, title=)` | `type="date"` |
 | `col.time(name, *, fmt=, relative=, align=, title=)` | `hms` |
 | `col.datetime(name, *, fmt=, relative=, align=, title=)` | `yyyy-mm-dd HH:MM:SS` |
 | `col.flag(name, *, title=)` | alpha-3 country codes |
 | `col.bar(source, *, title=, label=, size=, side=, color=, …)` | bar (single = classic, chained = marks) |
 | `col.point(source, *, title=, size=, color=, label=)` | point marker |
+| `col.points(source, *, size=, color=)` | one marker per array observation |
 | `col.range(low, high, *, cap=, color=, label=)` | interval / dumbbell |
 | `col.stacked_bar(*sources, *, colors=, labels=, normalize="percent", diverge_at=, neutral="split")` | cumulative stack |
 | `col.strip(source, *, colors=, labels=, segmented=)` | ordered categorical strip |
@@ -646,7 +651,7 @@ other than `auto`, `merge`, `group` and `subcolumns` return a `Column`;
 | `col.color(name, *, title=, **options)` | colour scale |
 | `col.chip(name, *, min_width=, conditional_colors=, scale=, min=, max=, midpoint=, **extra)` | pill |
 | `col.delta(name, *, down_is_good=, neutral_range=, chip=)` | change indicator |
-| `col.sparkline(name, *, type="line", x=, y=, color=, fit_to_data=, y_fmt=, width=, height=, title=)` | trend |
+| `col.sparkline(name, *, type="line"\|"area"\|"bar"\|"points", x=, y=, color=, fit_to_data=, y_fmt=, width=, height=, markers=, signed=, title=)` | trend |
 | `col.symbols(name, *, symbol=, shape=, empty=, max=, image=, color=, empty_color=, size=, gap=, align=, title=)` | repeated symbols |
 | `col.rating(name, *, max=5, symbol="★", empty="☆", color="#f59e0b")` | star rating |
 | `col.repeat(name, **options)` | alias for `symbols` |

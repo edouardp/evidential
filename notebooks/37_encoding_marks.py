@@ -335,6 +335,52 @@ def _(EvidentialTable, col, curves, mo, settings):
 @app.cell
 def _(mo):
     mo.md("""
+    ## A strip of observations
+
+    `col.points("observations", ...)` draws one marker per value in an array
+    column, on the same scale as a bar or target — a compact strip/scatter for
+    the row's distribution.
+    """)
+    return
+
+
+@app.cell
+def _():
+    wards = [
+        {"ward": "North", "mean": 48, "observations": [42, 45, 47, 49, 52, 55]},
+        {"ward": "South", "mean": 44, "observations": [39, 41, 43, 44, 47, 50]},
+        {"ward": "East", "mean": 52, "observations": [46, 49, 51, 53, 57, 61]},
+        {"ward": "West", "mean": 46, "observations": [38, 42, 46, 48, 51, 56]},
+    ]
+    return (wards,)
+
+
+@app.cell
+def _(EvidentialTable, col, mo, settings, wards):
+    observations_table = mo.ui.anywidget(
+        EvidentialTable(
+            wards,
+            settings=settings(
+                title="Waiting times by ward",
+                subtitle="Mean as a bar, every observation as a point",
+                row_lines=False,
+                border=False,
+                stretch=False,
+            ),
+            columns=[
+                col.text("ward"),
+                col.bar("mean", color="#bfdbfe", title="Mean")
+                .points("observations", size=6, color="#1d4ed8"),
+            ],
+        )
+    )
+    observations_table
+    return
+
+
+@app.cell
+def _(mo):
+    mo.md("""
     ## A box plot from precomputed statistics
 
     `col.boxplot(minimum, q1, median, q3, maximum, outliers=)` draws a

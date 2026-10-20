@@ -295,6 +295,16 @@ function renderContent(col, value, formatted, ctx, row) {
       }),
       h("span", { class: "et-cell-media-label" }, formatted),
     ]);
+  } else if (col.type === "boolean" && col.boolean_options) {
+    const opts = col.boolean_options;
+    const isTrue = value === true || value === 1 || value === "true";
+    const text = (isTrue ? opts.true_text : opts.false_text) ?? formatted;
+    const symbol = isTrue ? opts.true_symbol : opts.false_symbol;
+    content = h(
+      "span",
+      { class: `et-cell-value et-boolean ${isTrue ? "et-boolean-true" : "et-boolean-false"}` },
+      symbol ? [h("span", { class: "et-boolean-symbol" }, symbol), ` ${text}`] : text,
+    );
   } else if (col.viz === "chip") {
     const chipRange = ctx.ranges.get(col.name);
     const chipStyles =

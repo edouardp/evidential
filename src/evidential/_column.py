@@ -689,7 +689,7 @@ class Column(Mapping[str, Any]):
     def sparkline(
         self,
         *,
-        type: Literal["line", "area", "bar"] | None = None,
+        type: Literal["line", "area", "bar", "points"] | None = None,
         x: str | None = None,
         y: str | None = None,
         color: str | None = None,
@@ -697,10 +697,12 @@ class Column(Mapping[str, Any]):
         y_fmt: str | None = None,
         width: float | None = None,
         height: float | None = None,
+        markers: bool | None = None,
+        signed: bool | None = None,
     ) -> Column:
         """Draw the cell's array value as a small line/area/bar chart.
 
-        :param type: ``"line"`` (default), ``"area"`` or ``"bar"``.
+        :param type: ``"line"`` (default), ``"area"``, ``"bar"`` or ``"points"``.
         :param x: field for the x values.
         :param y: field for the y values.
         :param color: stroke/fill colour.
@@ -708,6 +710,8 @@ class Column(Mapping[str, Any]):
         :param y_fmt: format code for the tooltip y value.
         :param width: chart width (the viewBox, in pixels).
         :param height: chart height (the viewBox, in pixels).
+        :param markers: draw a marker at every point (line/area too).
+        :param signed: split an area fill at the zero baseline into up/down colours.
 
         Example::
 
@@ -725,6 +729,8 @@ class Column(Mapping[str, Any]):
                 y_fmt=y_fmt,
                 width=width,
                 height=height,
+                markers=markers,
+                signed=signed,
             ),
         )
 
@@ -1184,14 +1190,41 @@ def datetime(
     return _column(name, "date", fmt=fmt or "datetime", relative=relative, align=align, title=title, **extra)
 
 
-def boolean(name: str, *, title: str | None = None, **extra: Any) -> Column:
-    """A true/false column.
+def boolean(
+    name: str,
+    *,
+    title: str | None = None,
+    true_text: str | None = None,
+    false_text: str | None = None,
+    true_symbol: str | None = None,
+    false_symbol: str | None = None,
+    **extra: Any,
+) -> Column:
+    """A true/false column, optionally written as a symbol and/or label.
+
+    :param true_text: label for a true value (default ``"true"``).
+    :param false_text: label for a false value (default ``"false"``).
+    :param true_symbol: symbol shown before a true label (e.g. ``"✓"``).
+    :param false_symbol: symbol shown before a false label (e.g. ``"✗"``).
 
     Example::
 
-        col.boolean("is_active")
+        col.boolean("is_active", true_symbol="✓", false_symbol="✗",
+                    true_text="Active", false_text="Inactive")
     """
-    return _column(name, "boolean", title=title, **extra)
+    return _column(
+        name,
+        "boolean",
+        title=title,
+        boolean_options=_clean(
+            true_text=true_text,
+            false_text=false_text,
+            true_symbol=true_symbol,
+            false_symbol=false_symbol,
+        )
+        or None,
+        **extra,
+    )
 
 
 def array(name: str, *, title: str | None = None, **extra: Any) -> Column:
@@ -1325,7 +1358,7 @@ def color(name: str, *, title: str | None = None, **options: Any) -> Column:
 def sparkline(
     name: str,
     *,
-    type: Literal["line", "area", "bar"] = "line",
+    type: Literal["line", "area", "bar", "points"] = "line",
     x: str | None = None,
     y: str | None = None,
     color: str | None = None,
@@ -1333,13 +1366,15 @@ def sparkline(
     y_fmt: str | None = None,
     width: float | None = None,
     height: float | None = None,
+    markers: bool | None = None,
+    signed: bool | None = None,
     title: str | None = None,
     **extra: Any,
 ) -> Column:
     """An array column drawn as a sparkline.
 
     :param name: the column holding the array.
-    :param type: ``"line"`` (default), ``"area"`` or ``"bar"``.
+    :param type: ``"line"`` (default), ``"area"``, ``"bar"`` or ``"points"``.
     :param x: field for the x values.
     :param y: field for the y values.
     :param color: stroke/fill colour.
@@ -1347,6 +1382,8 @@ def sparkline(
     :param y_fmt: format code for the tooltip y value.
     :param width: chart width (the viewBox, in pixels).
     :param height: chart height (the viewBox, in pixels).
+    :param markers: draw a marker at every point (line/area too).
+    :param signed: split an area fill at the zero baseline into up/down colours.
     :param title: header text.
 
     See :meth:`Column.sparkline` for the same options on the chain.
@@ -1356,7 +1393,16 @@ def sparkline(
         col.sparkline("trend", type="area", x="date", y="trips", color="#53768a")
     """
     return array(name, title=title, **extra).sparkline(
-        type=type, x=x, y=y, color=color, fit_to_data=fit_to_data, y_fmt=y_fmt, width=width, height=height
+        type=type,
+        x=x,
+        y=y,
+        color=color,
+        fit_to_data=fit_to_data,
+        y_fmt=y_fmt,
+        width=width,
+        height=height,
+        markers=markers,
+        signed=signed,
     )
 
 

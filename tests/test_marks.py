@@ -246,3 +246,17 @@ def test_reference_band_is_a_column_wide_zone() -> None:
     assert spec["references"] == [{"value": 0.8, "high": 1.25, "label": "Equivalence"}]
     with pytest.raises(ValueError, match="high > low"):
         col.point("est").reference_band(2, 1)
+
+
+def test_points_draws_an_array_as_a_marker_per_observation() -> None:
+    spec = dict(col.points("observations", size=5, color="#111"))
+    assert spec["type"] == "array"
+    encoding = spec["encodings"][0]
+    assert (encoding["kind"], encoding["source"], encoding["size"], encoding["color"]) == (
+        "points",
+        "observations",
+        5,
+        "#111",
+    )
+    table = EvidentialTable([{"x": 1, "observations": [1, 2, 3]}], columns=[col.bar("x").points("observations")])
+    assert [enc["kind"] for enc in table.columns[0]["encodings"]] == ["bar", "points"]

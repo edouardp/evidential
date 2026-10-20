@@ -38,6 +38,7 @@ __all__ = [
     "boxplot",
     "distribution",
     "point",
+    "points",
     "range",
     "stacked_bar",
     "strip",
@@ -383,6 +384,10 @@ class MarkColumn(Column):
         """Add a point marker at ``source``."""
         return self._add("point", source, **options)
 
+    def points(self, source: Any, **options: Any) -> MarkColumn:
+        """Add one point per observation in the array ``source``."""
+        return self._add("points", source, **options)
+
     def range(self, low: Any, high: Any | None = None, **options: Any) -> MarkColumn:
         """Connect two endpoints (a dumbbell / interval); not a confidence claim."""
         if high is None and isinstance(low, (tuple, list)) and len(low) == 2:
@@ -585,6 +590,23 @@ def point(
     """A point marker at ``source`` (e.g. a target on a bar's scale)."""
     column = _mark_column(source, title=title, fmt=fmt, align=align)
     return column._add("point", source, **options)
+
+
+def points(
+    source: Any,
+    *,
+    title: str | None = None,
+    size: float | None = None,
+    color: str | None = None,
+    **options: Any,
+) -> MarkColumn:
+    """An array column drawn as one point per observation (a strip/scatter).
+
+    ``source`` holds a list of numbers; each is placed on the column's shared
+    scale, so the row's distribution is read directly against a bar or target.
+    """
+    column = _mark_column(source, title=title)
+    return column._add("points", source, size=size, color=color, **options)._with(type="array")
 
 
 def range(  # noqa: A001 - the public constructor name

@@ -308,3 +308,26 @@ def test_grouped_helpers_accept_the_builder() -> None:
     by_name = {column["name"]: column for column in table.columns}
     assert by_name["g"]["title"] == "Group"
     assert by_name["sales"]["fmt"] == "usd0"
+
+
+def test_sparkline_points_markers_and_signed_area() -> None:
+    spec = dict(col.sparkline("trend", type="points", markers=True, signed=True))
+    assert spec["sparkline_options"]["type"] == "points"
+    assert spec["sparkline_options"]["markers"] is True
+    assert spec["sparkline_options"]["signed"] is True
+    chained = col.array("trend").sparkline(type="area", signed=True)
+    assert chained["sparkline_options"]["signed"] is True
+
+
+def test_boolean_display_options() -> None:
+    spec = dict(col.boolean("active", true_text="Active", false_text="Inactive", true_symbol="✓", false_symbol="✗"))
+    assert spec["type"] == "boolean"
+    assert spec["boolean_options"] == {
+        "true_text": "Active",
+        "false_text": "Inactive",
+        "true_symbol": "✓",
+        "false_symbol": "✗",
+    }
+    # The dict form routes the top-level shorthand into boolean_options too.
+    table = EvidentialTable([{"a": True}], columns=[{"name": "a", "type": "boolean", "true_symbol": "✓"}])
+    assert table.columns[0]["boolean_options"] == {"true_symbol": "✓"}

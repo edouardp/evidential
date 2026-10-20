@@ -291,10 +291,27 @@ export function calculateVizRanges(columns, rows) {
       const diverging = stacked && col.encodings.some((enc) => enc.diverge_at);
       const strip = col.encodings.some((enc) => enc.kind === "strip");
       const distribution = col.encodings.some((enc) => enc.kind === "distribution");
+      const scatter = col.encodings.some((enc) => enc.kind === "points");
       let min = Infinity;
       let max = -Infinity;
       for (const row of rows) {
         if (row.render_type === "row_total" || row.render_type === "row_subtotal") continue;
+        if (scatter) {
+          // An array-of-points column shares an axis across its observations.
+          for (const enc of col.encodings) {
+            const raw = row[enc.source];
+            if (!Array.isArray(raw)) continue;
+            for (const item of raw) {
+              const value = item && typeof item === "object" ? (item.value ?? item.x ?? item.y) : item;
+              const num = Number(value);
+              if (isFinite(num)) {
+                min = Math.min(min, num);
+                max = Math.max(max, num);
+              }
+            }
+          }
+          continue;
+        }
         if (distribution) {
           // A density band shares an ordered x axis across rows.
           for (const enc of col.encodings) {

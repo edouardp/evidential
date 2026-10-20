@@ -81,6 +81,7 @@ from .marks import (
     boxplot,
     distribution,
     point,
+    points,
     range,  # noqa: A004 - the public constructor name
     stacked_bar,
     strip,
@@ -114,6 +115,7 @@ __all__ = [
     "number",
     "percent",
     "point",
+    "points",
     "range",
     "rating",
     "repeat",

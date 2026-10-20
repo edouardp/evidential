@@ -361,6 +361,21 @@ export function renderMarks(col, row, range) {
         }),
       );
       if (enc.label) track.append(renderMarkLabel(col, enc, row, { leftPct, widthPct }));
+    } else if (enc.kind === "points") {
+      const values = Array.isArray(row[enc.source]) ? row[enc.source] : [];
+      const size = enc.size != null ? Number(enc.size) : 6;
+      const color = markColor(enc, row, "var(--et-accent, #2563eb)");
+      for (const item of values) {
+        const raw = item && typeof item === "object" ? (item.value ?? item.x ?? item.y) : item;
+        const pct = clampPos(Number(raw));
+        if (pct == null) continue;
+        track.append(
+          h("div", {
+            class: "et-mark et-mark-point",
+            style: { left: `${pct}%`, width: `${size}px`, height: `${size}px`, backgroundColor: color },
+          }),
+        );
+      }
     } else if (enc.kind === "point") {
       const pct = clampPos(value);
       if (pct == null) continue;
@@ -644,6 +659,7 @@ export function renderSparkline(col, value) {
   }
 
   const type = opts.type || "line";
+  const showMarkers = !!opts.markers || type === "points";
   if (type === "bar") {
     const slot = width / scaled.length;
     const barWidth = Math.max(1, slot * 0.7);
@@ -659,17 +675,16 @@ export function renderSparkline(col, value) {
       rect.append(tooltip(point.raw));
       svg.append(rect);
     });
-  } else {
+  } else if (type !== "points") {
     const linePoints = scaled.map((point) => `${point.x},${point.y}`).join(" ");
     if (type === "area") {
-      const area = document.createElementNS(svgNS, "polygon");
-      area.setAttribute(
-        "points",
-        `${linePoints} ${scaled[scaled.length - 1].x},${baseline} ${scaled[0].x},${baseline}`,
-      );
-      area.setAttribute("fill", color);
-      area.setAttribute("opacity", "0.18");
-      svg.append(area);
+      if (opts.signed) {
+        // Split the fill at the zero baseline: up and down get their own colour.
+        addArea(svgNS, svg, scaled, baseline, (point) => Math.min(point.y, baseline), color);
+        addArea(svgNS, svg, scaled, baseline, (point) => Math.max(point.y, baseline), "var(--et-negative, #dc2626)");
+      } else {
+        addArea(svgNS, svg, scaled, baseline, (point) => point.y, color);
+      }
     }
     const poly = document.createElementNS(svgNS, "polyline");
     poly.setAttribute("points", linePoints);
@@ -679,17 +694,30 @@ export function renderSparkline(col, value) {
     poly.setAttribute("stroke-linejoin", "round");
     poly.setAttribute("stroke-linecap", "round");
     svg.append(poly);
-    scaled.forEach((point) => {
-      const dot = document.createElementNS(svgNS, "circle");
-      dot.setAttribute("cx", String(point.x));
-      dot.setAttribute("cy", String(point.y));
-      dot.setAttribute("r", "2.5");
-      dot.setAttribute("fill", "transparent");
-      dot.append(tooltip(point.raw));
-      svg.append(dot);
-    });
   }
+  scaled.forEach((point) => {
+    const dot = document.createElementNS(svgNS, "circle");
+    dot.setAttribute("cx", String(point.x));
+    dot.setAttribute("cy", String(point.y));
+    dot.setAttribute("r", showMarkers ? "2.2" : "2.5");
+    dot.setAttribute("fill", showMarkers ? color : "transparent");
+    dot.append(tooltip(point.raw));
+    svg.append(dot);
+  });
   return svg;
+}
+
+/** Add an area polygon under a sparkline, following a per-point baseline clip. */
+function addArea(svgNS, svg, scaled, baseline, clip, fill) {
+  const area = document.createElementNS(svgNS, "polygon");
+  const points = scaled.map((point) => `${point.x},${clip(point)}`).join(" ");
+  area.setAttribute(
+    "points",
+    `${points} ${scaled[scaled.length - 1].x},${baseline} ${scaled[0].x},${baseline}`,
+  );
+  area.setAttribute("fill", fill);
+  area.setAttribute("opacity", "0.22");
+  svg.append(area);
 }
 
 /** Normalize numbers, [x, y] pairs or objects into sparkline points. */

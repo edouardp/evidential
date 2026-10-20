@@ -210,7 +210,7 @@ class DeltaOptions(TypedDict, total=False):
 
 
 class SparklineOptions(TypedDict, total=False):
-    type: Literal["line", "area", "bar"] | None
+    type: Literal["line", "area", "bar", "points"] | None
     x: str | None
     y: str | None
     color: str | None
@@ -218,10 +218,23 @@ class SparklineOptions(TypedDict, total=False):
     y_fmt: str | None
     width: float | None
     height: float | None
+    #: Draw a marker at every point (also for line/area).
+    markers: bool | None
+    #: Split an area fill at the zero baseline into positive/negative colours.
+    signed: bool | None
 
 
 class ChipOptions(TypedDict, total=False):
     min_width: Length | None
+
+
+class BooleanOptions(TypedDict, total=False):
+    """How a boolean cell is written: a label and/or a symbol per state."""
+
+    true_text: str | None
+    false_text: str | None
+    true_symbol: str | None
+    false_symbol: str | None
 
 
 class SymbolOptions(TypedDict, total=False):
@@ -269,7 +282,7 @@ class BoxParts(TypedDict, total=False):
 class EncodingSpec(TypedDict, total=False):
     """One visual mark bound to a source, sharing its column's scale."""
 
-    kind: Literal["bar", "point", "range", "stacked_bar", "strip", "boxplot", "distribution"]
+    kind: Literal["bar", "point", "points", "range", "stacked_bar", "strip", "boxplot", "distribution"]
     #: The field a scalar mark reads, or a range's lower endpoint.
     source: str | Callable[[Mapping[str, Any]], Any] | None
     #: A range's upper endpoint.
@@ -373,6 +386,7 @@ class ColumnOptions(TypedDict, total=False):
     delta_options: DeltaOptions | None
     sparkline_options: SparklineOptions | None
     chip_options: ChipOptions | None
+    boolean_options: BooleanOptions | None
     symbol_options: SymbolOptions | None
     image_options: ImageOptions | None
     logo_options: LogoOptions | None

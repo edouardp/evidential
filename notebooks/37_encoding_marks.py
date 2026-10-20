@@ -230,7 +230,8 @@ def _(mo):
     ## A log-scale forest plot
 
     `scale(domain=(0.1, 10), transform="log")` gives the marks one logarithmic
-    axis; `.reference_line(1)` is the null effect. `cap="arrow"` marks an
+    axis; `.reference_line(1)` is the null effect and `.reference_band(0.8,
+    1.25)` shades an equivalence zone. `cap="arrow"` marks an
     endpoint that extends beyond the shown scale instead of clipping it.
     """)
     return
@@ -264,6 +265,7 @@ def _(EvidentialTable, col, effects, mo, settings):
                 col.range("low", "high", cap="arrow", color="#94a3b8")
                 .point("estimate", color="#1d4ed8", size=8)
                 .scale(domain=(0.1, 10), transform="log")
+                .reference_band(0.8, 1.25, label="equivalence")
                 .reference_line(1, label="null"),
             ],
         )

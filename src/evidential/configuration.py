@@ -331,9 +331,11 @@ class ScaleSpec(TypedDict, total=False):
 
 
 class ReferenceSpec(TypedDict, total=False):
-    """A column-wide reference line drawn through every row."""
+    """A column-wide reference line or band drawn through every row."""
 
     value: float
+    #: The band's upper value; when set the reference is a filled band.
+    high: float | None
     label: str | None
     color: str | None
 

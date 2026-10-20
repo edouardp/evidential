@@ -276,6 +276,28 @@ export function renderMarks(col, row, range) {
     const raw = pos(Number(ref.value));
     if (raw == null) continue;
     const pct = Math.max(0, Math.min(100, raw));
+    if (ref.high != null && isFinite(Number(ref.high))) {
+      const rawHigh = pos(Number(ref.high));
+      if (rawHigh == null) continue;
+      const left = Math.max(0, Math.min(100, Math.min(pct, rawHigh)));
+      const right = Math.max(0, Math.min(100, Math.max(pct, rawHigh)));
+      track.append(
+        h("div", {
+          class: "et-mark-band",
+          style: {
+            left: `${left}%`,
+            width: `${right - left}%`,
+            backgroundColor: resolveColor(ref.color) || "var(--et-reference, #0f766e)",
+          },
+        }),
+      );
+      if (ref.label) {
+        track.append(
+          h("span", { class: "et-mark-reference-label", style: { left: `${left}%` } }, String(ref.label)),
+        );
+      }
+      continue;
+    }
     track.append(
       h("div", {
         class: "et-mark-reference",

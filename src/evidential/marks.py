@@ -448,6 +448,16 @@ class MarkColumn(Column):
         references.append(_clean(value=value, label=label, color=color))
         return self._with(references=references)
 
+    def reference_band(
+        self, low: float, high: float, *, label: str | None = None, color: str | None = None
+    ) -> MarkColumn:
+        """Shade a column-wide band from ``low`` to ``high`` (a target zone)."""
+        if high <= low:
+            raise ValueError("reference_band needs high > low")
+        references = list(self._spec.get("references") or [])
+        references.append(_clean(value=low, high=high, label=label, color=color))
+        return self._with(references=references)
+
     def to_config(self) -> dict[str, Any]:
         """The serialised column definition (same as ``dict(column)``)."""
         return self._serialized()

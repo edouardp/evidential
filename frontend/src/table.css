@@ -638,6 +638,12 @@ tbody tr:last-child .et-bar-center .et-bar-axis { bottom: var(--et-bar-pad, 0); 
   width: 1px;
   opacity: 0.6;
 }
+.et-mark-band {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  opacity: 0.14;
+}
 .et-mark-reference-label {
   position: absolute;
   bottom: 0.1rem;

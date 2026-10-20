@@ -239,3 +239,10 @@ def test_log_scale_is_explicit_and_rejects_nonpositive_domains() -> None:
         col.point("x").scale(domain=(0, 100), transform="log")
     with pytest.raises(ValueError, match="transform"):
         col.point("x").scale(transform="symlog")
+
+
+def test_reference_band_is_a_column_wide_zone() -> None:
+    spec = dict(col.point("est").reference_band(0.8, 1.25, label="Equivalence"))
+    assert spec["references"] == [{"value": 0.8, "high": 1.25, "label": "Equivalence"}]
+    with pytest.raises(ValueError, match="high > low"):
+        col.point("est").reference_band(2, 1)

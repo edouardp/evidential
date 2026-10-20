@@ -2088,3 +2088,20 @@ test("a section spanning a page repeats its label as a continuation", () => {
   assert.match(cont.textContent, /North \(cont\.\)/);
   renderer.destroy();
 });
+
+test("reference bands shade a column-wide zone", () => {
+  const rows = [{ est: 1 }];
+  const columns = [{
+    name: "est", type: "number",
+    scale: { domain: [0, 2] },
+    references: [{ value: 0.8, high: 1.25, label: "equivalence" }],
+    encodings: [{ kind: "point", source: "est" }],
+  }];
+  const renderer = new EvidentialTableRenderer(makeModel(rows, columns, { page_size: 10 }, el), el);
+  const band = el.querySelector(".et-mark-band");
+  assert.ok(band);
+  // 0.8..1.25 of a 0..2 domain.
+  assert.match(band.style.left, /40%/);
+  assert.match(band.style.width, /22\.5%/);
+  renderer.destroy();
+});

@@ -429,6 +429,52 @@ option names a column (`sort_by="@x"`, `scale="@color"`, `footnote="@note"`,
 `link="@url"`, `color="@bar_colour"`, …), and colours accept matplotlib names
 (`"tab:blue"`, `"C3"`, `"k"`).
 
+### Composing marks in a column
+
+A column is a *presentation slot*: it can hold an ordered list of **marks**
+(encodings), each bound to its own field and sharing one horizontal scale. The
+mark constructors — `col.bar`, `col.point`, `col.range`, `col.stacked_bar`,
+`col.strip` — return a chainable column; `.bar(...)`/`.point(...)`/`.range(...)`
+append a mark and `.label(...)` annotates the most recent one.
+
+```python
+columns=[
+    # two overlaid bars, this year over last (size is the height fraction)
+    col.bar("current", color="navy", size=0.8)
+       .bar("previous", color="#d1d5db", size=0.2),
+    # a bar whose label is another field, coloured per row
+    col.bar("votes", label="@candidate", color="@party_colour"),
+    # a value with an independent target marker
+    col.bar("current").point("target"),
+    # a point plus its interval, on a fixed 0–100% scale
+    col.range("low", "high", cap="line").point("estimate").scale(domain=(0, 100), unit="%"),
+    # a column-wide benchmark rule
+    col.bar("debt").reference_line(55, label="Developing average"),
+    # a five-part stack, labelled, normalised to percentages
+    col.stacked_bar("ally", "friendly", "unknown", "unfriendly", "hostile",
+                    colors=["#9333ea", "#c084fc", "#ddd", "#fb8b80", "#ef4444"],
+                    labels=True, normalize="percent"),
+    # an ordered categorical sequence (form / states)
+    col.strip("form", colors={"W": "green", "D": "grey", "L": "red"}, labels=True),
+]
+```
+
+- **Marks** — `bar(source, color=, color_negative=, size=, side=, ...)`, `point(source,
+  size=, color=)`, `range(low, high, cap="none"|"line"|"dot")`. `side="left"|
+  "right"` draws a nonnegative magnitude from the central origin; `size` is the bar
+  height fraction or the point/range marker size.
+- **Labels** — `label=True` labels the mark's own value, `label="@field"` labels
+  another field, `.label(text=, source=, position=, format=)` is the long form.
+  Where a label position is omitted, bars label `outside_end` and points `center`.
+- **Scale** — `.scale(domain=(lo, hi), include_zero=, unit=)` fixes the shared
+  quantitative axis; `.reference_line(value, label=, color=)` adds a rule.
+- **Sources** — a field name, `"@field"`, or a `lambda row: ...`. A callable is
+  evaluated Python-side into a hidden helper column, so the browser (and any
+  static export) only ever sees field names.
+
+A single plain bar still serialises to the classic `viz="bar"` shape, so
+`col.bar("revenue")` keeps working exactly as before.
+
 ### Back-to-back bars
 
 `direction="left"` mirrors the bar, so a leftward column and a rightward one
@@ -544,7 +590,12 @@ other than `auto`, `merge`, `group` and `subcolumns` return a `Column`;
 | `col.time(name, *, fmt=, relative=, align=, title=)` | `hms` |
 | `col.datetime(name, *, fmt=, relative=, align=, title=)` | `yyyy-mm-dd HH:MM:SS` |
 | `col.flag(name, *, title=)` | alpha-3 country codes |
-| `col.bar(name, *, title=, **options)` | bar |
+| `col.bar(source, *, title=, label=, size=, side=, color=, …)` | bar (single = classic, chained = marks) |
+| `col.point(source, *, title=, size=, color=, label=)` | point marker |
+| `col.range(low, high, *, cap=, color=, label=)` | interval / dumbbell |
+| `col.stacked_bar(*sources, *, colors=, labels=, normalize="percent")` | cumulative stack |
+| `col.strip(source, *, colors=, labels=, segmented=)` | ordered categorical strip |
+| `col.shapes(name, *, shape=, color=, …)` | alias for `symbols` |
 | `col.color(name, *, title=, **options)` | colour scale |
 | `col.chip(name, *, min_width=, conditional_colors=, scale=, min=, max=, midpoint=, **extra)` | pill |
 | `col.delta(name, *, down_is_good=, neutral_range=, chip=)` | change indicator |
@@ -586,6 +637,9 @@ other than `auto`, `merge`, `group` and `subcolumns` return a `Column`;
 | `.template(value, **formats)` | fill-in-the-blanks cell |
 | `.viz(kind, **options)` | set `viz` directly |
 | `.bar(...)` / `.color(...)` / `.chip(...)` / `.delta(...)` / `.sparkline(...)` / `.symbols(...)` | visualisations |
+| `.bar(source, …)` / `.point(source, …)` / `.range(low, high, …)` | append a mark |
+| `.label(value=True \| "@field", *, source=, text=, position=, format=)` | annotate the last mark |
+| `.scale(domain=(lo, hi), include_zero=, unit=)` / `.reference_line(value, label=, color=)` | shared axis / rule |
 | `.relative(value=True)` / `.fmt_column(column)` | relative time / format source |
 | `.to_config()` | the plain dict |
 

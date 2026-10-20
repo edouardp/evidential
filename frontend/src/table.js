@@ -13,7 +13,7 @@ import { LoadingController } from "./loading.js";
 import { TableViewport } from "./viewport.js";
 import { h, inlineMarkdown, withFigure, formatRowRanges, alignStyle } from "./dom.js";
 import { hiddenColumns, visibleRows, searchRows, sortRows, paginateRows,
-  computeRowspans, shaded } from "./rows.js";
+  computeRowspans, shaded, sectionContinuation } from "./rows.js";
 import { renderCell } from "./cells.js";
 import { formatTitle } from "./format.js";
 
@@ -251,8 +251,9 @@ export class EvidentialTableRenderer {
     const layout = headerLayout(columns);
     const subcolumns = layout.joins;
     const visibility = this._pipeline.visible(processed, this._groupVersion, (key) => this._isCollapsed(key));
-    const { rows, pageCount, page, total } = this._paginate(visibility.rows, visibility.hasGroups);
+    const { rows, pageCount, page, total, start } = this._paginate(visibility.rows, visibility.hasGroups);
     this._pageCount = pageCount;
+    const continuationLabel = sectionContinuation(visibility.rows, start, rows);
 
     // Section-style groups merge each group's dimension cell across its rows.
     // Count levels over all rows (not just the page) so a fully collapsed table
@@ -318,6 +319,7 @@ export class EvidentialTableRenderer {
           isEmpty,
           emptyRows: isEmpty ? this._emptyRowCount(opts) : 0,
           emptyMessage: opts.empty_message || "No records",
+          continuationLabel,
         }),
       );
     }
@@ -439,6 +441,15 @@ export class EvidentialTableRenderer {
       }
     } else {
       if (ctx.stats) tbody.append(this._renderStatsRow(columns, ctx));
+      if (ctx.continuationLabel) {
+        // A section that spans pages repeats its label at the top of the page.
+        const colSpan = columns.length + (ctx.rowNumbers ? 1 : 0) + (opts.link ? 1 : 0);
+        tbody.append(
+          h("tr", { class: "et-row et-row-section et-row-continuation" }, [
+            h("td", { class: "et-td et-section-cell", colspan: colSpan }, String(ctx.continuationLabel)),
+          ]),
+        );
+      }
       rows.forEach((row, index) => tbody.append(this._renderRow(row, columns, ctx, index)));
     }
     table.append(tbody);

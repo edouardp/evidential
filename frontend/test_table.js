@@ -2073,3 +2073,18 @@ test("combined section+summary rows keep their values and a section rule", () =>
   assert.match(combined.textContent, /3/);
   renderer.destroy();
 });
+
+test("a section spanning a page repeats its label as a continuation", () => {
+  const rows = [
+    { render_type: "row_section", __label: "North" },
+    { g: "d1", n: 1 }, { g: "d2", n: 2 }, { g: "d3", n: 3 }, { g: "d4", n: 4 }, { g: "d5", n: 5 },
+  ];
+  const renderer = new EvidentialTableRenderer(
+    makeModel(rows, [{ name: "g" }, { name: "n", type: "number" }], { page_size: 3 }, el), el,
+  );
+  renderer._gotoPage(1);
+  const cont = el.querySelector(".et-row-continuation");
+  assert.ok(cont);
+  assert.match(cont.textContent, /North \(cont\.\)/);
+  renderer.destroy();
+});

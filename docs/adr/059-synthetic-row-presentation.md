@@ -40,6 +40,10 @@ Chosen option: extend the existing row model rather than add a parallel one.
 - `row_lines` accepts a colour name as well as `True`/`False`; a string drives
   the `--et-row-border` token, so `"black"`, `"grey"` and `"white"` are one
   option.
+- A section that spans a page break is re-introduced at the top of the later
+  page as `"<label> (cont.)"` (`et-row-continuation`). Plain section rows no
+  longer suppress pagination; accordion groups and subtotal/total rows still
+  keep to one page so a group is never split.
 
 ### Consequences
 
@@ -48,6 +52,8 @@ Chosen option: extend the existing row model rather than add a parallel one.
 - Good, because row rules are themeable without new CSS.
 - Note: `__combined` is presentation metadata; the row keeps its `row_subtotal`
   kind and its collapsible behaviour.
+- Note: a continued section is derived at render time from the page's preceding
+  rows, so it does not appear in the exported CSV.
 - Note: this does not add a general row builder. Per-column summary values with
   arbitrary callables remain served by `grouped_records`' `aggregations`; a
   dedicated row-structure API is still open (specification §9).

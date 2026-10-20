@@ -365,7 +365,8 @@ top-level `neutral_range`, `down_is_good`) describe those derived columns. Use
 `grouped_records` does the same grouping client-side, from plain rows. Pass
 `combined=True` to put a group's label and its subtotal in **one section row**
 instead of a separate header and summary. `section_row(label, align="center")`
-inserts a full-width divider, centered if you ask. Rows are separated by the
+inserts a full-width divider, centered if you ask; when a section spans a page,
+the later page repeats it as `"<label> (cont.)"`. Rows are separated by the
 `row_lines` rule: `True` (default grey), `False` (none), or a colour name
 (`"black"`, `"grey"`, `"white"`).
 

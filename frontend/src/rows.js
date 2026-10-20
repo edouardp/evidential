@@ -143,14 +143,21 @@ export function paginateRows(rows, pageSize, pageIndex, options,
   hasGroups = rows.some((row) => row.render_type && row.render_type !== "cell_data")) {
   const opts = options;
 
-  if (!pageSize || pageSize === "all" || pageSize <= 0 || hasGroups || opts.collapsible) {
-    return { rows, pageCount: 1, page: 0, total: rows.length };
+  // Synthetic *section* rows (`.row_section`) may paginate; accordion groups
+  // and subtotal/total rows stay on one page so a group is never split.
+  const grouping = rows.some(
+    (row) => row.render_type === "row_subtotal" || row.render_type === "row_total",
+  );
+  void hasGroups;
+  if (!pageSize || pageSize === "all" || pageSize <= 0 || grouping || opts.collapsible) {
+    return { rows, pageCount: 1, page: 0, total: rows.length, start: 0 };
   }
   const total = rows.length;
   const pageCount = Math.max(1, Math.ceil(total / pageSize));
   const page = Math.min(Math.max(0, pageIndex), pageCount - 1);
+  const start = page * pageSize;
 
-  return { rows: rows.slice(page * pageSize, (page + 1) * pageSize), pageCount, page, total };
+  return { rows: rows.slice(start, start + pageSize), pageCount, page, total, start };
 }
 
 /** Summarize all detail rows; subtotal and total rows are excluded. */
@@ -242,4 +249,23 @@ export function shaded(index, options) {
     unshaded = shaded;
   }
   return index % (shaded + unshaded) >= unshaded;
+}
+
+/**
+ * The label for a repeated section row at the top of a page. A section that
+ * spans a page break is re-introduced as `"<label> (cont.)"` so the reader
+ * knows which section the page continues.
+ */
+export function sectionContinuation(allRows, start, pageRows) {
+  if (!start || !pageRows || !pageRows.length) return null;
+  if (pageRows[0].render_type === "row_section") return null;
+  for (let index = start - 1; index >= 0; index -= 1) {
+    const row = allRows[index];
+    if (row.render_type === "row_section") {
+      const label = row.__label;
+      return label == null || label === "" ? null : `${label} (cont.)`;
+    }
+    if (row.render_type === "row_total") break;
+  }
+  return null;
 }

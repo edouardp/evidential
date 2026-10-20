@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { sortRows, searchRows, visibleRows, paginateRows, columnStats, withDecimals } from "./src/rows.js";
+import { sortRows, searchRows, visibleRows, paginateRows, columnStats, withDecimals, sectionContinuation } from "./src/rows.js";
 import { RowPipeline } from "./src/derived.js";
 
 test("withDecimals keeps an explicit precision and pads an auto base", () => {
@@ -38,8 +38,25 @@ test("row pipeline preserves grouping and never mutates its inputs", () => {
 
 test("pagination clamps stale pages when results shrink", () => {
   const rows = [{ x: 1 }, { x: 2 }, { x: 3 }];
-  assert.deepEqual(paginateRows(rows, 2, 99, {}), { rows: [rows[2]], pageCount: 2, page: 1, total: 3 });
+  assert.deepEqual(paginateRows(rows, 2, 99, {}), {
+    rows: [rows[2]], pageCount: 2, page: 1, total: 3, start: 2,
+  });
   assert.equal(paginateRows(rows, "all", 99, {}).rows, rows);
+});
+
+test("section rows paginate and repeat their label as a continuation", () => {
+  const rows = [
+    { render_type: "row_section", __label: "North" },
+    { x: 1 }, { x: 2 },
+    { render_type: "row_section", __label: "South" },
+    { x: 3 }, { x: 4 },
+  ];
+  const page = paginateRows(rows, 4, 1, {});
+  assert.equal(page.pageCount, 2);
+  assert.equal(page.start, 4);
+  assert.equal(sectionContinuation(rows, page.start, page.rows), "South (cont.)");
+  // The first page starts with its own section row: no continuation needed.
+  assert.equal(sectionContinuation(rows, 0, rows.slice(0, 4)), null);
 });
 
 test("derived data invalidates search, sort, hidden columns and group visibility independently", () => {

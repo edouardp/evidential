@@ -227,6 +227,112 @@ def _(EvidentialTable, col, form, mo, settings):
 @app.cell
 def _(mo):
     mo.md("""
+    ## A log-scale forest plot
+
+    `scale(domain=(0.1, 10), transform="log")` gives the marks one logarithmic
+    axis; `.reference_line(1)` is the null effect. `cap="arrow"` marks an
+    endpoint that extends beyond the shown scale instead of clipping it.
+    """)
+    return
+
+
+@app.cell
+def _():
+    effects = [
+        {"study": "A", "low": 0.3, "estimate": 1.4, "high": 6.2},
+        {"study": "B", "low": 0.8, "estimate": 1.1, "high": 1.5},
+        {"study": "C", "low": 0.05, "estimate": 0.6, "high": 2.1},
+        {"study": "D", "low": 1.2, "estimate": 3.4, "high": 24.0},
+    ]
+    return (effects,)
+
+
+@app.cell
+def _(EvidentialTable, col, effects, mo, settings):
+    forest_log = mo.ui.anywidget(
+        EvidentialTable(
+            effects,
+            settings=settings(
+                title="Odds ratios",
+                subtitle="Log scale with the null effect at 1",
+                row_lines=False,
+                border=False,
+                stretch=False,
+            ),
+            columns=[
+                col.text("study"),
+                col.range("low", "high", cap="arrow", color="#94a3b8")
+                .point("estimate", color="#1d4ed8", size=8)
+                .scale(domain=(0.1, 10), transform="log")
+                .reference_line(1, label="null"),
+            ],
+        )
+    )
+    forest_log
+    return
+
+
+@app.cell
+def _(mo):
+    mo.md("""
+    ## A distribution band
+
+    `col.distribution("density", x=, y=)` fills a precomputed density curve — a
+    band of uncertainty. Combine it with a point on the same axis.
+    """)
+    return
+
+
+@app.cell
+def _():
+    curves = [
+        {
+            "party": "A",
+            "median": 52,
+            "density": [
+                {"x": p, "y": y}
+                for p, y in ((40, 0.02), (48, 0.6), (52, 0.9), (58, 0.5), (66, 0.05))
+            ],
+        },
+        {
+            "party": "B",
+            "median": 44,
+            "density": [
+                {"x": p, "y": y}
+                for p, y in ((30, 0.05), (40, 0.5), (44, 0.8), (50, 0.5), (58, 0.05))
+            ],
+        },
+    ]
+    return (curves,)
+
+
+@app.cell
+def _(EvidentialTable, col, curves, mo, settings):
+    bands = mo.ui.anywidget(
+        EvidentialTable(
+            curves,
+            settings=settings(
+                title="Share of the vote",
+                subtitle="Density band with a median marker",
+                row_lines=False,
+                border=False,
+                stretch=False,
+            ),
+            columns=[
+                col.text("party"),
+                col.distribution("density", x="x", y="y", color="#8b5cf6")
+                .point("median", color="#4c1d95", size=7)
+                .scale(domain=(28, 68)),
+            ],
+        )
+    )
+    bands
+    return
+
+
+@app.cell
+def _(mo):
+    mo.md("""
     ## A box plot from precomputed statistics
 
     `col.boxplot(minimum, q1, median, q3, maximum, outliers=)` draws a

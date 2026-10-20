@@ -576,7 +576,7 @@ def _mark_column(name: Any, **base: Any) -> MarkColumn:
 
 
 def _resolve_column(
-    column: Mapping[str, Any], rows: Sequence[Mapping[str, Any]], hidden: dict[str, list[Any]]
+    column: Mapping[str, Any], rows: Sequence[Mapping[str, Any]], hidden: dict[str, list[Any]], used: set[str]
 ) -> dict[str, Any]:
     """Replace callable sources/styles in one column with hidden-column names."""
     spec = dict(column)
@@ -584,14 +584,24 @@ def _resolve_column(
     if not encodings:
         return spec
     resolved: list[dict[str, Any]] = []
+
+    def bind(base: str, function: Any) -> str:
+        name = base
+        suffix = 1
+        while name in used:
+            name = f"{base}_{suffix}"
+            suffix += 1
+        used.add(name)
+        hidden[name] = [function(row) for row in rows]
+        return name
+
     for index, encoding in enumerate(encodings):
         encoding = dict(encoding)
         for role in ("source", "high", "color", "color_negative"):
             value = encoding.get(role)
             if not callable(value):
                 continue
-            name = f"__mark_{spec['name']}_{index}_{role}"
-            hidden[name] = [value(row) for row in rows]
+            name = bind(f"__mark_{spec['name']}_{index}_{role}", value)
             if role == "color":
                 encoding.pop("color", None)
                 encoding["color_column"] = name
@@ -602,24 +612,21 @@ def _resolve_column(
                 encoding[role] = name
         label = encoding.get("label")
         if isinstance(label, Mapping) and callable(label.get("source")):
-            name = f"__mark_{spec['name']}_{index}_label"
-            hidden[name] = [label["source"](row) for row in rows]
+            name = bind(f"__mark_{spec['name']}_{index}_label", label["source"])
             encoding["label"] = {**label, "source": name}
         parts = encoding.get("parts")
         if isinstance(parts, Mapping):
             resolved_parts: dict[str, Any] = {}
             for part, value in parts.items():
                 if callable(value):
-                    name = f"__mark_{spec['name']}_{index}_part_{part}"
-                    hidden[name] = [value(row) for row in rows]
+                    name = bind(f"__mark_{spec['name']}_{index}_part_{part}", value)
                     resolved_parts[part] = name
                 else:
                     resolved_parts[part] = value
             encoding["parts"] = resolved_parts
         outliers = encoding.get("outliers")
         if callable(outliers):
-            name = f"__mark_{spec['name']}_{index}_outliers"
-            hidden[name] = [outliers(row) for row in rows]
+            name = bind(f"__mark_{spec['name']}_{index}_outliers", outliers)
             encoding["outliers"] = name
         resolved.append(encoding)
     spec["encodings"] = resolved
@@ -637,7 +644,8 @@ def resolve_encodings(
     hidden ``{name: values}`` map to merge into the rows.
     """
     hidden: dict[str, list[Any]] = {}
-    resolved = [_resolve_column(column, rows, hidden) for column in columns]
+    used = {name for row in rows for name in row}
+    resolved = [_resolve_column(column, rows, hidden, used) for column in columns]
     for column in resolved:
         _validate_encoding_data(column, rows, hidden)
     return resolved, hidden

@@ -582,6 +582,7 @@ tbody tr:last-child .et-bar-center .et-bar-axis { bottom: var(--et-bar-pad, 0); 
   height: auto;
 }
 .et-mark-strip {
+  position: absolute;
   top: 22%;
   bottom: 22%;
   left: 0;
@@ -597,7 +598,8 @@ tbody tr:last-child .et-bar-center .et-bar-axis { bottom: var(--et-bar-pad, 0); 
   overflow: hidden;
   min-width: 0;
 }
-.et-strip-joined { outline: none; }
+.et-mark-strip-joined { gap: 0; }
+.et-mark-strip-joined .et-strip-run { outline: none; }
 .et-mark-strip-positioned { display: block; }
 .et-strip-run {
   position: absolute;

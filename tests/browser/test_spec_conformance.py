@@ -60,6 +60,49 @@ def capture(page, name):
         page.screenshot(path=str(Path(path).with_name(name)), full_page=True)
 
 
+def test_unlabelled_strips_have_height_and_joined_runs_have_no_gap(page, live_server):
+    mount(
+        page,
+        live_server,
+        [
+            (
+                "Unlabelled strips",
+                [{"states": ["W", "W", "L"]}],
+                [
+                    col.strip("states", colors={"W": "green", "L": "red"}),
+                    col.strip("states", colors={"W": "green", "L": "red"}, segmented=False),
+                ],
+            )
+        ],
+    )
+    strips = page.locator(".et-mark-strip")
+    assert strips.nth(0).bounding_box()["height"] > 5
+    assert strips.nth(0).evaluate("el => getComputedStyle(el).gap") == "1px"
+    assert strips.nth(1).evaluate("el => getComputedStyle(el).gap") == "0px"
+
+
+def test_fixed_domain_stack_stays_inside_plot(page, live_server):
+    mount(
+        page,
+        live_server,
+        [
+            (
+                "Clipped stack",
+                [{"name": "A", "a": 50, "b": 50}],
+                [
+                    col.text("name"),
+                    col.stacked_bar("a", "b").scale(domain=(20, 80), axis=True),
+                ],
+            )
+        ],
+    )
+    track = page.locator(".et-marks").bounding_box()
+    for segment in page.locator(".et-mark-stack-seg").all():
+        box = segment.bounding_box()
+        assert box["x"] >= track["x"] - 1
+        assert box["x"] + box["width"] <= track["x"] + track["width"] + 1
+
+
 def test_scale_gallery(page, live_server):
     rows = [
         {"country": "Finland", "before": 29, "after": 94},

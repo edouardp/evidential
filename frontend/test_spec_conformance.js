@@ -180,3 +180,14 @@ test("presentation slots reusing a source field retain independent domains", () 
   assert.deepEqual(ranges.get(stack), {min: 0, max: 100});
   assert.deepEqual(ranges.get(bar), {min: 50, max: 50});
 });
+
+test("stack segments clip their geometry to fixed domain bounds", () => {
+  const col = {encodings: [{kind: "stacked_bar", source: "a"}, {kind: "stacked_bar", source: "b"}],
+    scale: {domain: [20, 80]}};
+  const node = renderMarks(col, {a: 50, b: 50}, null);
+  const segments = [...node.querySelectorAll(".et-mark-stack-seg")];
+  assert.equal(parseFloat(segments[0].style.left), 0);
+  assert.ok(Math.abs(parseFloat(segments[0].style.width) - 50) < 1e-9);
+  assert.equal(parseFloat(segments[1].style.left) + parseFloat(segments[1].style.width), 100);
+  assert.match(node.getAttribute("aria-label"), /a: 50/);
+});

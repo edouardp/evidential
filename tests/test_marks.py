@@ -172,6 +172,18 @@ def test_two_sided_layout_rejects_an_asymmetric_signed_domain() -> None:
         EvidentialTable([{"a": 10}], columns=[col.bar("a", side="left").scale(domain=(-10, 30))])
 
 
+def test_callable_bindings_are_unique_per_presentation_and_preserve_source_fields() -> None:
+    data = [{"a": 5, "__mark_a_0_color": "original"}]
+    columns = [col.bar("a", label=True, color=lambda row: "red"), col.bar("a", label=True, color=lambda row: "blue")]
+    table = EvidentialTable(data, columns=columns)
+    names = [column["encodings"][0]["color_column"] for column in table.columns]
+    assert names[0] != names[1]
+    assert [table.rows[0][name] for name in names] == ["red", "blue"]
+    assert table.rows[0]["__mark_a_0_color"] == "original"
+    table.set_data(data)
+    assert [column["encodings"][0]["color_column"] for column in table.columns] == names
+
+
 def test_incompatible_coordinates_fail_clearly() -> None:
     with pytest.raises(ValueError, match="strip.*share"):
         EvidentialTable([{"states": ["W"], "a": 1}], columns=[strip_column("states").point("a")])

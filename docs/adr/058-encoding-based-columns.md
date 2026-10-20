@@ -92,6 +92,11 @@ signed domains are rejected for these layouts.
 Range/colour caches use the presentation column's identity as well as the
 legacy field-name lookup, so two columns bound to the same field can use
 different encodings without replacing each other's scales.
+Callable bindings allocate distinct helper names across all presentation slots
+and reserve source-data names, including label/box/outlier bindings. Stack
+segments clip their visible geometry to the shared domain while retaining true
+values in accessible text. Unlabelled categorical strips have a positioned
+track; `segmented=False` joins adjacent runs without gaps or outlines.
 
 Fluent `.scale(...)` and `.label(...)` calls refine existing settings. A new
 label binding replaces its prior binding while preserving positioning/style.

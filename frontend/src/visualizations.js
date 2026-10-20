@@ -36,7 +36,7 @@ function renderStrip(enc, row, lo, span) {
   const positioned =
     span != null && items.some((item) => item && typeof item === "object" && (item.start != null || item.position != null));
   if (positioned) {
-    const wrap = h("div", { class: "et-mark-strip et-mark-strip-positioned" });
+    const wrap = h("div", { class: `et-mark-strip et-mark-strip-positioned${enc.segmented === false ? " et-mark-strip-joined" : ""}` });
     const at = (value) => Math.max(0, Math.min(100, ((value - lo) / span) * 100));
     items.forEach((item, index) => {
       if (!item || typeof item !== "object") return;
@@ -61,7 +61,7 @@ function renderStrip(enc, row, lo, span) {
     });
     return wrap;
   }
-  const wrap = h("div", { class: "et-mark-strip" });
+  const wrap = h("div", { class: `et-mark-strip${enc.segmented === false ? " et-mark-strip-joined" : ""}` });
   for (const item of items) {
     const category = named(item);
     const segment = h("span", {
@@ -78,11 +78,13 @@ function renderStrip(enc, row, lo, span) {
 
 /** One stack segment: an absolutely positioned coloured box with optional label. */
 function stackSegment(enc, row, col, leftPct, widthPct, text = "") {
+  const left = Math.max(0, Math.min(100, leftPct));
+  const right = Math.max(0, Math.min(100, leftPct + widthPct));
   const segment = h("div", {
     class: "et-mark-stack-seg",
     style: {
-      left: `${leftPct}%`,
-      width: `${Math.max(0, widthPct)}%`,
+      left: `${left}%`,
+      width: `${Math.max(0, right - left)}%`,
       backgroundColor: markColor(enc, row, "var(--et-accent, #2563eb)"),
     },
   });

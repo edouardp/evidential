@@ -284,8 +284,8 @@ class EncodingSpec(TypedDict, total=False):
     size: float | None
     #: A nonnegative magnitude extending left/right of the central origin.
     side: Literal["left", "right"] | None
-    #: Range end treatment.
-    cap: Literal["none", "line", "dot"] | None
+    #: ``range``: end treatment, or ``"arrow"`` when an endpoint is off-scale.
+    cap: Literal["none", "line", "dot", "arrow"] | None
     #: ``strip``: an ordered category → colour map (W/D/L).
     colors: Mapping[str, str] | None
     #: ``strip``: draw a segment boundary per item rather than one run.
@@ -324,6 +324,8 @@ class ScaleSpec(TypedDict, total=False):
     domain: tuple[float | None, float | None] | None
     include_zero: bool | None
     unit: str | None
+    #: The shared axis transform. A log scale rejects nonpositive values.
+    transform: Literal["linear", "log"] | None
     #: Stack normalisation: raw additive values, or each row's share of its total.
     normalize: Literal["percent"] | None
 

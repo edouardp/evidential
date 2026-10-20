@@ -2012,3 +2012,30 @@ test("distribution draws a density band over the shared axis", () => {
   assert.ok(svg.querySelector("polyline"));
   renderer.destroy();
 });
+
+test("log scale positions marks logarithmically", () => {
+  const rows = [{ est: 10 }];
+  const columns = [{
+    name: "est", type: "number",
+    scale: { domain: [1, 100], transform: "log" },
+    encodings: [{ kind: "point", source: "est" }],
+  }];
+  const renderer = new EvidentialTableRenderer(makeModel(rows, columns, { page_size: 10 }, el), el);
+  const dot = el.querySelector(".et-mark-point");
+  // log10(10) is halfway between log10(1)=0 and log10(100)=2.
+  assert.match(dot.style.left, /50%/);
+  renderer.destroy();
+});
+
+test("range cap='arrow' marks endpoints beyond the domain", () => {
+  const rows = [{ lo: 1, hi: 100 }];
+  const columns = [{
+    name: "lo", type: "number",
+    scale: { domain: [0, 10] },
+    encodings: [{ kind: "range", source: "lo", high: "hi", cap: "arrow" }],
+  }];
+  const renderer = new EvidentialTableRenderer(makeModel(rows, columns, { page_size: 10 }, el), el);
+  assert.ok(el.querySelector(".et-mark-arrow-end"));
+  assert.equal(el.querySelectorAll(".et-mark-arrow").length, 1);
+  renderer.destroy();
+});

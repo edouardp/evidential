@@ -192,7 +192,7 @@ function renderBox(col, enc, row, pos) {
 }
 
 /** A density band from a precomputed ordered ``[{x, y}]`` series. */
-function renderDistribution(enc, row, lo, span, color) {
+function renderDistribution(enc, row, pos, color) {
   const raw = row[enc.source];
   const items = Array.isArray(raw) ? raw : [];
   const points = [];
@@ -204,7 +204,10 @@ function renderDistribution(enc, row, lo, span, color) {
   }
   if (points.length < 2) return null;
   const maxY = Math.max(...points.map((point) => point[1])) || 1;
-  const coords = points.map(([x, y]) => [Math.max(0, Math.min(100, ((x - lo) / span) * 100)), 100 - (y / maxY) * 100]);
+  const coords = points.map(([x, y]) => {
+    const left = pos(x);
+    return [Math.max(0, Math.min(100, left == null ? 0 : left)), 100 - (y / maxY) * 100];
+  });
   const ns = "http://www.w3.org/2000/svg";
   const svg = document.createElementNS(ns, "svg");
   svg.setAttribute("class", "et-mark et-mark-distribution");
@@ -232,23 +235,47 @@ function renderDistribution(enc, row, lo, span, color) {
  * ranges are positioned absolutely in a full-height track; the shared domain
  * comes from the column's own ``scale`` or the data range across every source.
  */
+function markScale(lo, hi, transform) {
+  if (transform === "log" && lo > 0 && hi > lo) {
+    const l0 = Math.log(lo);
+    const lspan = (Math.log(hi) - l0) || 1;
+    return (value) => {
+      const num = Number(value);
+      if (!isFinite(num) || num <= 0) return null;
+      return ((Math.log(num) - l0) / lspan) * 100;
+    };
+  }
+  const span = (hi - lo) || 1;
+  return (value) => {
+    const num = Number(value);
+    return isFinite(num) ? ((num - lo) / span) * 100 : null;
+  };
+}
+
 export function renderMarks(col, row, range) {
   const encodings = col.encodings || [];
   const scale = col.scale || {};
   let lo = scale.domain && scale.domain[0] != null ? Number(scale.domain[0]) : (range?.min ?? 0);
   let hi = scale.domain && scale.domain[1] != null ? Number(scale.domain[1]) : (range?.max ?? 1);
   const hasBar = encodings.some((enc) => enc.kind === "bar" || enc.kind === "stacked_bar");
-  if (scale.include_zero !== false && hasBar) {
+  if (scale.include_zero !== false && hasBar && scale.transform !== "log") {
     lo = Math.min(0, lo);
     hi = Math.max(0, hi);
   }
   const span = (hi - lo) || 1;
+  const pos = markScale(lo, hi, scale.transform);
+  const clampPos = (value) => {
+    const pct = pos(value);
+    return pct == null ? null : Math.max(0, Math.min(100, pct));
+  };
   const track = h("div", { class: "et-marks" });
 
   // Column-wide reference rules paint behind the marks.
   for (const ref of col.references || []) {
     if (ref.value == null || !isFinite(Number(ref.value))) continue;
-    const pct = Math.max(0, Math.min(100, ((Number(ref.value) - lo) / span) * 100));
+    const raw = pos(Number(ref.value));
+    if (raw == null) continue;
+    const pct = Math.max(0, Math.min(100, raw));
     track.append(
       h("div", {
         class: "et-mark-reference",
@@ -269,10 +296,10 @@ export function renderMarks(col, row, range) {
   const stack = encodings.filter((enc) => enc.kind === "stacked_bar");
   if (stack.length) track.append(renderStack(col, stack, row, lo, hi));
   for (const box of encodings.filter((enc) => enc.kind === "boxplot")) {
-    track.append(renderBox(col, box, row, (value) => ((value - lo) / span) * 100));
+    track.append(renderBox(col, box, row, clampPos));
   }
   for (const dist of encodings.filter((enc) => enc.kind === "distribution")) {
-    const node = renderDistribution(dist, row, lo, span, markColor(dist, row, "var(--et-accent, #2563eb)"));
+    const node = renderDistribution(dist, row, clampPos, markColor(dist, row, "var(--et-accent, #2563eb)"));
     if (node) track.append(node);
   }
   let barIndex = 0;
@@ -291,8 +318,14 @@ export function renderMarks(col, row, range) {
         widthPct = width;
         leftPct = enc.side === "left" ? 50 - width : 50;
       } else {
-        leftPct = ((0 - lo) / span) * 100;
-        widthPct = (value / span) * 100;
+        const origin = pos(0);
+        const end = pos(value);
+        leftPct = origin != null ? origin : 0;
+        widthPct = end != null ? end - leftPct : 0;
+        if (widthPct < 0) {
+          leftPct += widthPct;
+          widthPct = -widthPct;
+        }
       }
       track.append(
         h("div", {
@@ -307,7 +340,8 @@ export function renderMarks(col, row, range) {
       );
       if (enc.label) track.append(renderMarkLabel(col, enc, row, { leftPct, widthPct }));
     } else if (enc.kind === "point") {
-      const pct = ((value - lo) / span) * 100;
+      const pct = clampPos(value);
+      if (pct == null) continue;
       const size = enc.size != null ? Number(enc.size) : 7;
       track.append(
         h("div", {
@@ -321,20 +355,32 @@ export function renderMarks(col, row, range) {
     } else if (enc.kind === "range") {
       const low = Number(row[enc.source]);
       const high = Number(row[enc.high]);
-      const start = ((Math.min(low, high) - lo) / span) * 100;
-      const end = ((Math.max(low, high) - lo) / span) * 100;
+      let start = pos(low);
+      let end = pos(high);
+      const offScale = (value) => value == null || value < 0 || value > 100;
+      const arrowStart = enc.cap === "arrow" && offScale(start);
+      const arrowEnd = enc.cap === "arrow" && offScale(end);
+      if (arrowStart) start = start != null && start > 100 ? 100 : 0;
+      if (arrowEnd) end = end != null && end < 0 ? 0 : 100;
+      if (start == null || end == null) continue;
+      start = Math.max(0, Math.min(100, start));
+      end = Math.max(0, Math.min(100, end));
+      const left = Math.min(start, end);
+      const right = Math.max(start, end);
       const size = enc.size != null ? Number(enc.size) : 4;
       const color = markColor(enc, row, "var(--et-accent, #2563eb)");
       const line = h("div", {
         class: "et-mark et-mark-range",
-        style: { left: `${start}%`, width: `${Math.max(0, end - start)}%`, height: `${size}px`, backgroundColor: color },
+        style: { left: `${left}%`, width: `${Math.max(0, right - left)}%`, height: `${size}px`, backgroundColor: color },
       });
       if (enc.cap === "line" || enc.cap === "dot") {
         line.append(h("span", { class: "et-mark-cap et-mark-cap-start", style: { backgroundColor: color } }));
         line.append(h("span", { class: "et-mark-cap et-mark-cap-end", style: { backgroundColor: color } }));
       }
+      if (arrowStart) line.append(h("span", { class: "et-mark-cap et-mark-arrow et-mark-arrow-start", style: { borderColor: color } }));
+      if (arrowEnd) line.append(h("span", { class: "et-mark-cap et-mark-arrow et-mark-arrow-end", style: { borderColor: color } }));
       track.append(line);
-      if (enc.label) track.append(renderMarkLabel(col, enc, row, { pointPct: start }));
+      if (enc.label) track.append(renderMarkLabel(col, enc, row, { pointPct: left }));
     }
   }
   return track;

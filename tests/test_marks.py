@@ -230,3 +230,12 @@ def test_distribution_is_a_precomputed_density_band() -> None:
     assert encoding["color"] == "#111"
     with pytest.raises(ValueError, match="style"):
         col.distribution("d", style="violin")
+
+
+def test_log_scale_is_explicit_and_rejects_nonpositive_domains() -> None:
+    spec = dict(col.range("lo", "hi").point("est").scale(domain=(1, 100), transform="log"))
+    assert spec["scale"] == {"domain": (1, 100), "transform": "log"}
+    with pytest.raises(ValueError, match="log scale needs a positive domain"):
+        col.point("x").scale(domain=(0, 100), transform="log")
+    with pytest.raises(ValueError, match="transform"):
+        col.point("x").scale(transform="symlog")

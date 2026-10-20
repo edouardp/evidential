@@ -415,6 +415,7 @@ class MarkColumn(Column):
         *,
         include_zero: bool | None = None,
         unit: str | None = None,
+        transform: str | None = None,
     ) -> MarkColumn:
         """The quantitative axis shared by the column's encodings."""
         spec: dict[str, Any] = {}
@@ -431,6 +432,14 @@ class MarkColumn(Column):
             spec["include_zero"] = include_zero
         if unit is not None:
             spec["unit"] = unit
+        if transform is not None:
+            if transform not in ("linear", "log"):
+                raise ValueError("scale transform is 'linear' or 'log'")
+            if transform == "log" and domain is not None and not isinstance(domain, str):
+                bounds = [bound for bound in spec.get("domain", ()) if bound is not None]
+                if any(bound <= 0 for bound in bounds):
+                    raise ValueError("a log scale needs a positive domain")
+            spec["transform"] = transform
         return self._with(scale=spec or None)
 
     def reference_line(self, value: float, *, label: str | None = None, color: str | None = None) -> MarkColumn:

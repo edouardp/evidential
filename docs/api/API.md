@@ -462,9 +462,10 @@ columns=[
 ```
 
 - **Marks** — `bar(source, color=, color_negative=, size=, side=, ...)`, `point(source,
-  size=, color=)`, `range(low, high, cap="none"|"line"|"dot")`. `side="left"|
-  "right"` draws a nonnegative magnitude from the central origin; `size` is the bar
-  height fraction or the point/range marker size.
+  size=, color=)`, `range(low, high, cap="none"|"line"|"dot"|"arrow")`. `side="left"`
+  `|"right"` draws a nonnegative magnitude from the central origin; `size` is the
+  bar height fraction or the point/range marker size. `cap="arrow"` marks an
+  endpoint that extends beyond the displayed scale.
 - **Stacks** — `stacked_bar(*sources, colors=, labels=, normalize="percent",
   diverge_at=, neutral="split")`. `diverge_at="neutral", neutral="split"`
   centres the named segment on the origin and grows the categories either side
@@ -481,8 +482,10 @@ columns=[
 - **Labels** — `label=True` labels the mark's own value, `label="@field"` labels
   another field, `.label(text=, source=, position=, format=)` is the long form.
   Where a label position is omitted, bars label `outside_end` and points `center`.
-- **Scale** — `.scale(domain=(lo, hi), include_zero=, unit=)` fixes the shared
-  quantitative axis; `.reference_line(value, label=, color=)` adds a rule.
+- **Scale** — `.scale(domain=(lo, hi), include_zero=, unit=, transform=`
+  `"linear"|"log")` fixes the shared quantitative axis; `.reference_line(value,
+  label=, color=)` adds a rule. A log scale needs a positive domain and is what a
+  forest plot uses with `.reference_line(1)`.
 - **Sources** — a field name, `"@field"`, or a `lambda row: ...`. A callable is
   evaluated Python-side into a hidden helper column, so the browser (and any
   static export) only ever sees field names.
@@ -656,7 +659,7 @@ other than `auto`, `merge`, `group` and `subcolumns` return a `Column`;
 | `.bar(...)` / `.color(...)` / `.chip(...)` / `.delta(...)` / `.sparkline(...)` / `.symbols(...)` | visualisations |
 | `.bar(source, …)` / `.point(source, …)` / `.range(low, high, …)` | append a mark |
 | `.label(value=True \| "@field", *, source=, text=, position=, format=)` | annotate the last mark |
-| `.scale(domain=(lo, hi), include_zero=, unit=)` / `.reference_line(value, label=, color=)` | shared axis / rule |
+| `.scale(domain=(lo, hi), include_zero=, unit=, transform="linear"\|"log")` / `.reference_line(value, label=, color=)` | shared axis / rule |
 | `.relative(value=True)` / `.fmt_column(column)` | relative time / format source |
 | `.to_config()` | the plain dict |
 

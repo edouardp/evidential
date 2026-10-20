@@ -61,6 +61,8 @@ strips, irregular sparklines, boxplots and a logarithmic forest plot.
 
 ![Continued section with subtotal and next section](images/sections.png)
 
+![Independent centered heading, text summary and numeric grand summary](images/display-layout.png)
+
 ![Automatic light/dark label text with an explicit override](images/contrast.png)
 
 ## Acceptance and remaining scope
@@ -72,13 +74,21 @@ and contrast, and combined/paginated sections with sorting and search. Existing
 tests cover selection rules and the other table interactions. The new notebook
 is [44_spec_conformance.py](../../notebooks/44_spec_conformance.py).
 
-One material design limitation remains: **browser search does not recalculate
-precomputed synthetic summaries**. Arbitrary Python summary functions cannot
-run inside a static export. To get totals for a filtered result, filter in
-SQL/Python before calling `rows.of(...).build()`. This behavior is now explicit
-in the API documentation and ADR-060; it is not claimed to meet a requirement
-for live recalculation after browser search. Supporting that would require a
-separate reactive aggregation contract.
+The 2026-10-21 follow-up replaces injected synthetic records with a separate
+display layout ([ADR-064](../adr/064-display-only-row-layout.md)). Detail
+callables no longer receive headings or summaries. Named summary expressions
+and formatted counts now recalculate over browser search matches; pagination
+counts details and repeats nested ancestor headings, with summaries on the
+appropriate pages. Arbitrary Python callbacks and historical grouped-helper
+summaries retain their source scope until a Python refresh. The examples in
+[39_synthetic_rows.py](../../notebooks/39_synthetic_rows.py) and
+[45_display_row_layout.py](../../notebooks/45_display_row_layout.py) demonstrate
+the new contract.
+
+That follow-up also isolates callable helper fields for repeated presentation
+columns, restores unlabeled strip height and joined runs, and clips stacked
+segments to fixed domains. Regression tests cover each defect, including real
+browser geometry and annotation rule/style precedence.
 
 The exact generic omitted-row API, more advanced marker collision handling,
 and deferred composition modes remain Open/V2 work. Label formats retain the

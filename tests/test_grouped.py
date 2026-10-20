@@ -32,16 +32,16 @@ def test_grouped_rows_have_render_metadata(sales: duckdb.DuckDBPyConnection) -> 
         ["sum(revenue) AS revenue"],
     )
     by_type: dict[str, int] = {}
-    for row in table.rows:
+    for row in table.display_rows:
         by_type[row["render_type"]] = by_type.get(row["render_type"], 0) + 1
     assert by_type == {"cell_data": 4, "row_subtotal": 2, "row_total": 1}
 
-    subtotal = next(row for row in table.rows if row["render_type"] == "row_subtotal")
+    subtotal = next(row for row in table.display_rows if row["render_type"] == "row_subtotal")
     assert subtotal["__level"] == 1
     assert subtotal["__ancestors"] == []
     assert subtotal["city"] == ""
 
-    detail = next(row for row in table.rows if row["render_type"] == "cell_data")
+    detail = next(row for row in table.display_rows if row["render_type"] == "cell_data")
     assert detail["__level"] == 2
     assert detail["__parent_key"] == detail["__ancestors"][0]
 
@@ -53,7 +53,7 @@ def test_grand_total_label_and_value(sales: duckdb.DuckDBPyConnection) -> None:
         ["country", "city"],
         ["sum(revenue) AS revenue"],
     )
-    total = next(row for row in table.rows if row["render_type"] == "row_total")
+    total = next(row for row in table.display_rows if row["render_type"] == "row_total")
     assert total["country"] == "Total"
     assert total["revenue"] == 550.0
 
@@ -67,8 +67,8 @@ def test_subtotals_disabled(sales: duckdb.DuckDBPyConnection) -> None:
         subtotals=False,
         total=False,
     )
-    assert all(row["render_type"] == "cell_data" for row in table.rows)
-    assert len(table.rows) == 4
+    assert all(row["render_type"] == "cell_data" for row in table.display_rows)
+    assert len(table.display_rows) == 4
 
 
 def test_subtotal_position_top(sales: duckdb.DuckDBPyConnection) -> None:
@@ -79,7 +79,7 @@ def test_subtotal_position_top(sales: duckdb.DuckDBPyConnection) -> None:
         ["sum(revenue) AS revenue"],
         subtotal_position="top",
     )
-    types = [row["render_type"] for row in table.rows]
+    types = [row["render_type"] for row in table.display_rows]
     # First row after nothing is a subtotal when placed on top.
     assert types[0] == "row_subtotal"
     assert types[-1] == "row_total"
@@ -95,7 +95,7 @@ def test_measure_spec_forms(sales: duckdb.DuckDBPyConnection) -> None:
     )
     columns = [column["name"] for column in table.columns]
     assert columns == ["country", "revenue", "orders", "avg_revenue"]
-    detail = table.rows[0]
+    detail = table.display_rows[0]
     assert "revenue" in detail and "orders" in detail and "avg_revenue" in detail
 
 
@@ -107,9 +107,9 @@ def test_total_measures_override(sales: duckdb.DuckDBPyConnection) -> None:
         ["sum(revenue) AS revenue"],
         total_measures={"revenue": "avg(revenue)"},
     )
-    total = next(row for row in table.rows if row["render_type"] == "row_total")
+    total = next(row for row in table.display_rows if row["render_type"] == "row_total")
     assert total["revenue"] == pytest.approx(110.0)  # avg of 100/200/50/80/120
-    detail = next(row for row in table.rows if row["render_type"] == "cell_data")
+    detail = next(row for row in table.display_rows if row["render_type"] == "cell_data")
     assert detail["revenue"] in (200.0, 350.0)  # per-country sums
 
 

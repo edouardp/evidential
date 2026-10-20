@@ -363,32 +363,68 @@ top-level `neutral_range`, `down_is_good`) describe those derived columns. Use
 ![Ad-hoc query](images/query-table.png)
 
 `grouped_records` does the same grouping client-side, from plain rows. For
-report-specific synthetic rows — a section divider, a differently-labelled
-summary, or values computed from a group's own rows — use the fluent `rows`
-builder, whose `build()` returns rows for `EvidentialTable(rows=...)`:
+report-specific display rows, pass a separate `row_layout`. Headings and
+summaries never become detail records:
 
 ```python
-from evidential import rows
+from evidential import EvidentialTable, rows
 
-built = (
-    rows.of(detail)
-    .group_by("region")
-    .section()
-    .summary(label="Developing average",
-             values={"arr": lambda group: sum(r["arr"] for r in group) / len(group)})
-    .total(label="All regions")
-    .build()
+table = EvidentialTable(
+    detail,
+    row_layout=rows.group_by("region")
+        .section(values={"country": rows.count(suffix=" products"), "arr": "sum"})
+        .summary("Region average", values={"arr": "mean"})
+        .grand_summary("All regions", values={"arr": "sum"}),
+    page_size=10,
 )
 ```
 
-A `values` entry may be a callable, a built-in aggregation name (`"sum"`,
-`"mean"`, …) or a literal; a summary or total without `values` sums the numeric
-columns. Pass `combined=True` to the grouped helpers to put a group's label and
-its subtotal in **one section row** instead of a separate header and summary. `section_row(label, align="center")`
-inserts a full-width divider, centered if you ask; when a section spans a page,
-the later page repeats it as `"<label> (cont.)"`. Rows are separated by the
-`row_lines` rule: `True` (default grey), `False` (none), or a colour name
-(`"black"`, `"grey"`, `"white"`).
+`.section()` adds a heading per group, optionally with numeric values or text in
+named columns. `.summary()` and `.grand_summary()` are independently optional;
+`.total()` aliases the latter. A summary without `values` sums numeric detail
+fields, excluding internal metadata; use `values={}` for a label-only summary.
+Multiple `group_by` fields create nested groups in first-appearance order.
+Sorting reorders details within groups, without changing the source records.
+
+A `values` entry may be a built-in aggregation name (`"sum"`, `"mean"`,
+`"median"`, `"min"`, `"max"`, `"count"`, `"count_distinct"`), a portable
+`rows.aggregate("sum", "source", prefix=, suffix=, format=)` expression, a
+literal, or a Python callable receiving the group's detail records.
+`rows.count(suffix=" products")` counts detail records rather than nonnull
+values in a field. Named aggregations and portable expressions recalculate over
+all search matches, across pages. Literals, callable values and callable labels
+retain their source scope until a Python `set_data` refresh. Filter upstream to
+recalculate an arbitrary Python function over a filtered dataset.
+
+Page size counts details only. Every page repeats its active group headings as
+`"<label> (cont.)"`, without repeating heading values. A bottom group summary
+appears after its last matching detail; `summary(position="top")` puts it before
+the first one. The grand summary appears once on the final nonempty page.
+Empty search results have no annotations. CSV contains matching details in
+display order, without annotations; statistics, marks and scale domains use
+detail data exclusively.
+
+Each annotation accepts `style={...}`, `rule="none" | "above" | "below" |
+"both"`, and `label_column=`. A label and an explicit value in the same column
+both remain visible. `section(align="center")` spans the table and rejects
+value cells. Annotations participate in alternating shading; their rules and
+styles are independent of detail cell styles, marks and row rules. Page
+boundary rules remain visible. `section_indent=1` insets detail stubs below
+left-aligned headings by one rem.
+
+`set_data` preserves the layout, or replaces it with `row_layout=...`; pass
+`row_layout=None` to clear it. The bound spelling
+`rows.of(detail).group_by(...).section().build()` returns a `RowView`, containing
+detail records and a separate layout, and can be passed directly to
+`EvidentialTable`. Both iterating that view and reading `table.rows` return
+details only. `table.display_rows` is an unfiltered inspection snapshot that
+includes synthetic rows.
+
+Historical `grouped_records`/SQL helpers, `section_row` and `spacer_row` inputs
+are split at the table boundary before mark evaluation. They retain their
+precomputed summaries and accordion/merged-cell behavior. Pass `combined=True`
+to grouped helpers for combined labels and totals. Use `row_layout` for
+filter-sensitive summaries and detail-based pagination.
 
 ## Table settings
 
@@ -555,11 +591,10 @@ columns=[
 A single plain bar still serialises to the classic `viz="bar"` shape, so
 `col.bar("revenue")` keeps working exactly as before.
 
-Builder `.section(values=...)` rows display their summary values beside the
-section label. `section_indent=1` insets detail stubs below left-aligned sections
-by one rem. Builder summaries paginate; later pages repeat the section label.
-Prepare filtered input before `rows.of(...).build()` to recalculate aggregates:
-browser search preserves precomputed summary values, including Python callables.
+Display `.section(values=...)` rows use separate annotation cells, so a numeric
+column can show a literal such as `"27 products"` in a heading without applying
+its detail mark bindings. See the row-layout API above and
+[`45_display_row_layout.py`](../../notebooks/45_display_row_layout.py).
 
 `col.html(...)` and `.html()` explicitly opt into **trusted, unsanitized HTML**.
 Only use them with content you control or have sanitized upstream. Ordinary text

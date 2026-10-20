@@ -515,8 +515,8 @@ def test_section_row_and_caption() -> None:
         columns=[{"name": "a", "type": "number"}],
         caption="Source: example",
     )
-    assert table.rows[1]["render_type"] == "row_section"
-    assert table.rows[1]["__label"] == "Divider"
+    assert table.display_rows[1]["render_type"] == "row_section"
+    assert table.display_rows[1]["__label"] == "Divider"
     assert table.options["caption"] == "Source: example"
 
 
@@ -584,8 +584,8 @@ def test_spacer_row() -> None:
     assert spacer_row() == {"render_type": "row_spacer"}
     assert spacer_row(12) == {"render_type": "row_spacer", "__height": 12}
     table = EvidentialTable(rows=[{"a": 1}, spacer_row(8), {"a": 2}])
-    assert table.rows[1]["render_type"] == "row_spacer"
-    assert table.rows[1]["__height"] == 8
+    assert table.display_rows[1]["render_type"] == "row_spacer"
+    assert table.display_rows[1]["__height"] == 8
 
 
 def test_multiple_stub_columns() -> None:

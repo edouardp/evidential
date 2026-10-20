@@ -54,7 +54,7 @@ def test_pivot_values(sales: duckdb.DuckDBPyConnection) -> None:
         subtotals=False,
         total=False,
     )
-    rows = {row["category"]: row for row in table.rows}
+    rows = {row["category"]: row for row in table.display_rows}
     assert rows["Toys"]["sales__2021"] == 100.0
     assert rows["Toys"]["sales__2022"] == 150.0
     assert rows["Gear"]["sales__2022"] == 300.0  # 250 + 50
@@ -86,7 +86,7 @@ def test_pivot_total_row(sales: duckdb.DuckDBPyConnection) -> None:
         pivots=["year"],
         measures=["sum(sales) AS sales"],
     )
-    total = next(row for row in table.rows if row["render_type"] == "row_total")
+    total = next(row for row in table.display_rows if row["render_type"] == "row_total")
     assert total["category"] == "Total"
     assert total["sales__Total"] == 750.0
     assert table.options["show_total_row"] is True
@@ -109,7 +109,7 @@ def test_pivot_requires_pivots(sales: duckdb.DuckDBPyConnection) -> None:
 )
 def test_pivot_totals_aggregate_original_records(sales, measure, expected) -> None:
     table = pivot_table(sales, "SELECT * FROM sales", ["category"], ["year"], [("value", measure)])
-    total = next(row for row in table.rows if row["render_type"] == "row_total")
+    total = next(row for row in table.display_rows if row["render_type"] == "row_total")
     assert total["value__Total"] == pytest.approx(expected)
 
 
@@ -122,7 +122,7 @@ def test_pivot_aggregation_overrides_generated_columns(sales) -> None:
         ["sum(sales) AS sales"],
         aggregations={"sales": "mean"},
     )
-    total = next(row for row in table.rows if row["render_type"] == "row_total")
+    total = next(row for row in table.display_rows if row["render_type"] == "row_total")
     assert total["sales__2021"] == 150
     assert total["sales__2022"] == 225
     assert total["sales__Total"] == 375
@@ -139,10 +139,10 @@ def test_pivot_weighted_aggregation(sales) -> None:
         aggregations={"sales": "weighted_mean"},
         weight_columns={"sales": "weight"},
     )
-    total = next(row for row in table.rows if row["render_type"] == "row_total")
+    total = next(row for row in table.display_rows if row["render_type"] == "row_total")
     assert total["sales__2021"] == pytest.approx((100 + 200 * 2) / 3)
     assert total["sales__2022"] == pytest.approx((150 + 300 * 4) / 5)
-    assert all(not key.startswith("__w_") for row in table.rows for key in row)
+    assert all(not key.startswith("__w_") for row in table.display_rows for key in row)
 
 
 def test_pivot_total_label_collision_preserves_category_and_total() -> None:
@@ -157,8 +157,8 @@ def test_pivot_total_label_collision_preserves_category_and_total() -> None:
         )
     names = [column["name"] for column in table.columns]
     assert len(names) == len(set(names))
-    assert table.rows[0]["sales__Total"] == 30
-    assert sorted(table.rows[0][name] for name in names[1:]) == [10, 20, 30]
+    assert table.display_rows[0]["sales__Total"] == 30
+    assert sorted(table.display_rows[0][name] for name in names[1:]) == [10, 20, 30]
 
 
 def test_pivot_labels_with_identical_text_keep_distinct_values() -> None:
@@ -173,7 +173,7 @@ def test_pivot_labels_with_identical_text_keep_distinct_values() -> None:
         )
     names = [column["name"] for column in table.columns]
     assert len(names) == len(set(names))
-    assert sorted(table.rows[0][name] for name in names[1:]) == [10, 20, 30]
+    assert sorted(table.display_rows[0][name] for name in names[1:]) == [10, 20, 30]
 
 
 def test_pivot_distinct_count_deduplicates_across_groups() -> None:
@@ -185,7 +185,7 @@ def test_pivot_distinct_count_deduplicates_across_groups() -> None:
             ["year"],
             ["count(DISTINCT sales) AS sales"],
         )
-    total = next(row for row in table.rows if row["render_type"] == "row_total")
+    total = next(row for row in table.display_rows if row["render_type"] == "row_total")
     assert total["sales__Total"] == 1
 
 
@@ -200,6 +200,6 @@ def test_pivot_subtotals_use_raw_values_without_total_column() -> None:
             ["avg(sales) AS sales"],
             show_total_column=False,
         )
-    summaries = [row for row in table.rows if row["render_type"] != "cell_data"]
+    summaries = [row for row in table.display_rows if row["render_type"] != "cell_data"]
     assert len(summaries) == 2
     assert all(row["sales__2021"] == 30 for row in summaries)

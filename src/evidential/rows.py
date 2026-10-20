@@ -1,252 +1,308 @@
-"""Semantic synthetic rows for :class:`evidential.EvidentialTable` (ADR-060).
+"""Display-only group headings and summaries, separate from detail data.
 
-The grouped helpers (:func:`~evidential.grouped_table`,
-:func:`~evidential.grouped_records`) generate subtotals and totals for every
-grouping level. This module is for the cases they do not cover: a *section* row
-that introduces a group, and a *summary* row with a custom label and per-column
-values that are computed however the report needs — including from the group's
-own rows::
-
-    from evidential import rows
-
-    builder = (
-        rows.of(detail)
-        .group_by("region")
-        .section()
-        .summary(
-            label="Developing average",
-            values={"debt": lambda group: sum(r["debt"] for r in group) / len(group)},
-        )
-        .total()
-    )
-
-    EvidentialTable(rows=builder.build(), columns=[...])
-
-Data rows and synthetic rows are distinct records: a synthetic row carries a
-``render_type`` (``row_section`` / ``row_subtotal`` / ``row_total``) and its own
-values. Synthetic rows never change the detail records.
+Use ``EvidentialTable(data, row_layout=rows.group_by("region").section()
+.summary(values={"sales": "sum"}).grand_summary())``. The bound ``of(data)``
+form remains a convenience: its ``build()`` returns a RowView whose sequence
+contains only detail records, alongside the layout declaration (ADR-064).
 """
 
 from __future__ import annotations
 
+import builtins
+import copy
 import json
-from collections.abc import Callable, Mapping, Sequence
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from typing import Any
 
 from .aggregations import BUILTIN_AGGREGATIONS, resolve_aggregation
 from .data import jsonify, normalize_data
 
-__all__ = ["Rows", "of"]
-
-#: A per-column summary value: a callable over the group's rows, a built-in
-#: aggregation name, or a literal.
-Value = Callable[[Sequence[Mapping[str, Any]]], Any] | str | float | int | None
+__all__ = ["Aggregate", "Rows", "RowView", "aggregate", "count", "group_by", "of"]
 
 
-def _numeric_columns(members: Sequence[Mapping[str, Any]]) -> list[str]:
-    names: list[str] = []
-    for row in members:
-        for key, value in row.items():
-            if (
-                not key.startswith("__")
-                and key not in names
-                and isinstance(value, (int, float))
-                and not isinstance(value, bool)
-            ):
-                names.append(key)
-    return names
+@dataclass(frozen=True)
+class Aggregate:
+    """A portable summary expression, recalculated over matching detail rows."""
+
+    operation: str
+    source: str | None = None
+    prefix: str = ""
+    suffix: str = ""
+    format: str | None = None
+
+    def __post_init__(self) -> None:
+        operation = self.operation.strip().lower()
+        if operation not in BUILTIN_AGGREGATIONS:
+            raise ValueError(f"Unknown summary aggregation {operation!r}")
+        object.__setattr__(self, "operation", operation)
 
 
-def _resolve_value(name: str, source: Value, members: Sequence[Mapping[str, Any]]) -> Any:
-    if callable(source):
-        return source(members)
-    if isinstance(source, str) and source.strip().lower() in BUILTIN_AGGREGATIONS:
-        values = [row.get(name) for row in members if row.get(name) is not None]
-        return resolve_aggregation(source)(values, None) if values else None
-    return source
+def aggregate(
+    operation: str, source: str | None = None, *, prefix: str = "", suffix: str = "", format: str | None = None
+) -> Aggregate:
+    """Summarize a field; prefix/suffix produce formatted display text."""
+    return Aggregate(operation, source, prefix, suffix, format)
 
 
-def _resolve_values(spec: Mapping[str, Value] | None, members: Sequence[Mapping[str, Any]]) -> dict[str, Any]:
-    if spec is None:
-        # A summary/total with no explicit values sums each numeric column.
-        return {name: sum(row.get(name, 0) or 0 for row in members) for name in _numeric_columns(members)}
-    return {name: _resolve_value(name, source, members) for name, source in spec.items()}
-
-
-def _resolve_label(
-    label: str | Callable[[Sequence[Mapping[str, Any]]], str] | None,
-    members: Sequence[Mapping[str, Any]],
-    dims: Sequence[str],
-) -> str:
-    if callable(label):
-        return str(label(members))
-    if label is not None:
-        return str(label)
-    return str(members[0].get(dims[0], "")) if dims and members else ""
-
-
-def _sort_key(row: Mapping[str, Any], dims: Sequence[str]) -> tuple[str, ...]:
-    return tuple("" if row.get(dim) is None else str(row.get(dim)) for dim in dims)
+def count(*, prefix: str = "", suffix: str = "") -> Aggregate:
+    """Count matching detail records, e.g. ``rows.count(suffix=' products')``."""
+    return Aggregate("count", None, prefix, suffix, "num0")
 
 
 @dataclass(frozen=True)
 class _Annotation:
-    """A summary or total: an optional label, per-column values and a position."""
-
-    label: str | Callable[[Sequence[Mapping[str, Any]]], str] | None = None
-    values: Mapping[str, Value] | None = None
+    label: Any = None
+    values: Mapping[str, Any] | None = None
+    align: str = "left"
     position: str = "bottom"
+    style: Mapping[str, str] | None = None
+    rule: str = "none"
+    label_column: str | None = None
+
+
+@dataclass(frozen=True)
+class RowView(Sequence[Mapping[str, Any]]):
+    """Detail records plus a separate display declaration; never synthetic data."""
+
+    data: tuple[Mapping[str, Any], ...]
+    layout: Rows
+
+    def __getitem__(self, index: Any) -> Any:
+        return self.data[index]
+
+    def __len__(self) -> int:
+        return len(self.data)
 
 
 class Rows:
-    """An immutable synthetic-row builder; each method returns a new builder."""
+    """An immutable row-layout declaration, optionally bound with ``of(data)``."""
 
     def __init__(
         self,
-        detail: Sequence[Mapping[str, Any]],
+        detail: Sequence[Mapping[str, Any]] | None = None,
         *,
         dims: Sequence[str] = (),
         section: _Annotation | None = None,
         summary: _Annotation | None = None,
-        total: _Annotation | None = None,
+        grand: _Annotation | None = None,
     ) -> None:
-        self._detail = [dict(row) for row in detail]
+        self._detail = None if detail is None else [dict(row) for row in detail]
         self._dims = tuple(dims)
         self._section = section
         self._summary = summary
-        self._total = total
+        self._grand = grand
 
-    # ----------------------------------------------------------- builders ---
     @classmethod
     def of(cls, data: Any = None, *, rows: Sequence[Mapping[str, Any]] | None = None) -> Rows:
-        """Start from detail data (a list of dicts, Arrow table, DataFrame, …)."""
-        if rows is not None:
-            return cls([jsonify(dict(row)) for row in rows])
-        normalized, _ = normalize_data(data)
-        return cls(normalized)
+        detail = [jsonify(dict(row)) for row in rows] if rows is not None else normalize_data(data)[0]
+        if any(row.get("render_type") not in (None, "cell_data") for row in detail):
+            raise ValueError("rows.of expects detail data; declare synthetic rows through the layout")
+        return cls(detail)
 
-    def group_by(self, *dims: str) -> Rows:
-        """Set the grouping dimensions; sections and summaries group by the first."""
-        if not dims:
-            raise ValueError("group_by needs at least one column")
-        return self._replace(dims=dims)
-
-    def section(
-        self,
-        label: str | Callable[[Sequence[Mapping[str, Any]]], str] | None = None,
-        *,
-        values: Mapping[str, Value] | None = None,
-        align: str = "left",
-    ) -> Rows:
-        """Insert a section row before each group; without a label it names the group."""
-        if align not in ("left", "center"):
-            raise ValueError("section align is 'left' or 'center'")
-        if align == "center" and values:
-            raise ValueError("a centered section cannot have summary values")
-        return self._replace(section=_Annotation(label, values, align))
-
-    def summary(
-        self,
-        label: str | Callable[[Sequence[Mapping[str, Any]]], str] | None = None,
-        *,
-        values: Mapping[str, Value] | None = None,
-        position: str = "bottom",
-    ) -> Rows:
-        """Insert a summary row after (or before) each group."""
-        if position not in ("top", "bottom"):
-            raise ValueError("summary position is 'top' or 'bottom'")
-        return self._replace(summary=_Annotation(label, values, position))
-
-    def total(
-        self,
-        label: str | Callable[[Sequence[Mapping[str, Any]]], str] | None = "Total",
-        *,
-        values: Mapping[str, Value] | None = None,
-    ) -> Rows:
-        """Append a grand-total row computed from every detail row."""
-        return self._replace(total=_Annotation(label, values, "bottom"))
-
-    # -------------------------------------------------------------- build ---
-    def build(self) -> list[dict[str, Any]]:
-        """Return the detail and synthetic rows, ready for ``EvidentialTable``."""
-        if not self._dims:
-            rows = [{**row, "__row_builder": True} for row in self._detail]
-            if self._total is not None:
-                rows.append(self._total_row(self._total, self._detail))
-            return rows
-
-        detail = sorted(self._detail, key=lambda row: _sort_key(row, self._dims))
-        rows: list[dict[str, Any]] = []
-        index = 0
-        while index < len(detail):
-            group_value = detail[index].get(self._dims[0])
-            members: list[dict[str, Any]] = []
-            while index < len(detail) and detail[index].get(self._dims[0]) == group_value:
-                members.append(detail[index])
-                index += 1
-            group_key = "rows:" + json.dumps(group_value, sort_keys=True)
-            metadata = {"__group_key": group_key, "__row_builder": True}
-            if self._section is not None:
-                rows.append({**self._section_row(self._section, members), **metadata})
-            if self._summary is not None and self._summary.position == "top":
-                rows.append({**self._summary_row(self._summary, members), **metadata})
-            rows.extend(
-                {**member, "__parent_key": group_key, "__ancestors": [group_key], "__row_builder": True}
-                for member in members
-            )
-            if self._summary is not None and self._summary.position == "bottom":
-                rows.append({**self._summary_row(self._summary, members), **metadata})
-        if self._total is not None:
-            rows.append(self._total_row(self._total, detail))
-        return rows
-
-    def __iter__(self):
-        return iter(self.build())
-
-    # ------------------------------------------------------------ helpers ---
     def _replace(self, **changes: Any) -> Rows:
-        values: dict[str, Any] = {
+        values = {
             "detail": self._detail,
             "dims": self._dims,
             "section": self._section,
             "summary": self._summary,
-            "total": self._total,
+            "grand": self._grand,
         }
         values.update(changes)
         return Rows(**values)
 
-    def _section_row(self, annotation: _Annotation, members: Sequence[Mapping[str, Any]]) -> dict[str, Any]:
-        # Explicit values make this a combined section and summary row.
-        row = _resolve_values(annotation.values or {}, members)
-        row["render_type"] = "row_section"
-        row["__label"] = _resolve_label(annotation.label, members, self._dims)
-        row["__align"] = annotation.position
-        if annotation.values:
-            row["__combined"] = True
-        return row
+    def group_by(self, *dims: str) -> Rows:
+        """Group presentation by one or more fields, in first-appearance order."""
+        if not dims or any(not isinstance(dim, str) or not dim for dim in dims):
+            raise ValueError("group_by needs at least one nonempty column name")
+        return self._replace(dims=dims)
 
-    def _summary_row(self, annotation: _Annotation, members: Sequence[Mapping[str, Any]]) -> dict[str, Any]:
-        row = _resolve_values(annotation.values, members)
-        row["render_type"] = "row_subtotal"
-        # Level 0 keeps the row flat: no accordion indent and no chevron.
-        row["__level"] = 0
-        row["__row_builder"] = True
-        row["__label"] = _resolve_label(annotation.label, members, self._dims)
-        row[self._dims[0]] = _resolve_label(annotation.label, members, self._dims)
-        return row
+    def section(
+        self,
+        label: Any = None,
+        *,
+        values: Mapping[str, Any] | None = None,
+        align: str = "left",
+        style: Mapping[str, str] | None = None,
+        rule: str = "none",
+        label_column: str | None = None,
+    ) -> Rows:
+        """Show a group heading, optionally with totals or text in named columns."""
+        if align not in ("left", "center"):
+            raise ValueError("section align is 'left' or 'center'")
+        if align == "center" and values:
+            raise ValueError("a centered section cannot have summary values")
+        _validate_rule(rule)
+        return self._replace(
+            section=_Annotation(
+                label,
+                copy.deepcopy(values),
+                align,
+                position="section",
+                style=copy.deepcopy(style),
+                rule=rule,
+                label_column=label_column,
+            )
+        )
 
-    def _total_row(self, annotation: _Annotation, members: Sequence[Mapping[str, Any]]) -> dict[str, Any]:
-        row = _resolve_values(annotation.values, members)
-        row["render_type"] = "row_total"
-        row["__level"] = 0
-        row["__row_builder"] = True
-        row["__label"] = _resolve_label(annotation.label, members, self._dims)
-        if self._dims:
-            row[self._dims[0]] = _resolve_label(annotation.label, members, self._dims)
-        return row
+    def summary(
+        self,
+        label: Any = "Subtotal",
+        *,
+        values: Mapping[str, Any] | None = None,
+        position: str = "bottom",
+        style: Mapping[str, str] | None = None,
+        rule: str = "above",
+        label_column: str | None = None,
+    ) -> Rows:
+        """Show an optional summary once per group; no summary is implicit."""
+        if position not in ("top", "bottom"):
+            raise ValueError("summary position is 'top' or 'bottom'")
+        _validate_rule(rule)
+        return self._replace(
+            summary=_Annotation(
+                label,
+                copy.deepcopy(values),
+                position=position,
+                style=copy.deepcopy(style),
+                rule=rule,
+                label_column=label_column,
+            )
+        )
+
+    def grand_summary(
+        self,
+        label: Any = "Total",
+        *,
+        values: Mapping[str, Any] | None = None,
+        style: Mapping[str, str] | None = None,
+        rule: str = "above",
+        label_column: str | None = None,
+    ) -> Rows:
+        """Show one final summary, computed from detail records only."""
+        _validate_rule(rule)
+        return self._replace(
+            grand=_Annotation(
+                label, copy.deepcopy(values), style=copy.deepcopy(style), rule=rule, label_column=label_column
+            )
+        )
+
+    def total(self, label: Any = "Total", **options: Any) -> Rows:
+        """Compatibility spelling of ``grand_summary``."""
+        return self.grand_summary(label, **options)
+
+    def build(self) -> RowView:
+        """Bind detail data and the layout without inserting display records."""
+        if self._detail is None:
+            raise ValueError("build needs data: use rows.of(data), or pass this layout as row_layout=")
+        return RowView(tuple(dict(row) for row in self._detail), self._replace(detail=None))
+
+    def __iter__(self):
+        return iter(self.build())
+
+    def compile(self, detail: Sequence[Mapping[str, Any]]) -> dict[str, Any]:
+        """Resolve annotations separately; member indices refer only to detail data."""
+        if (self._section or self._summary) and not self._dims:
+            raise ValueError("section/summary needs group_by; use grand_summary for an ungrouped table")
+
+        def groups(indices: list[int], level: int, path: tuple[Any, ...]) -> list[dict[str, Any]]:
+            if level == len(self._dims):
+                return []
+            buckets: dict[str, tuple[Any, list[int]]] = {}
+            for index in indices:
+                value = detail[index].get(self._dims[level])
+                key = json.dumps(value, sort_keys=True, default=str)
+                buckets.setdefault(key, (value, []))[1].append(index)
+            result = []
+            for value, members in buckets.values():
+                group_path = (*path, value)
+                group: dict[str, Any] = {
+                    "id": json.dumps(group_path, sort_keys=True, default=str),
+                    "members": members,
+                    "depth": level,
+                    "children": groups(members, level + 1, group_path),
+                }
+                records = [detail[index] for index in members]
+                if self._section:
+                    group["section"] = _compile_annotation(
+                        self._section, records, str(value) if value is not None else ""
+                    )
+                if self._summary:
+                    group["summary"] = _compile_annotation(self._summary, records, "")
+                result.append(group)
+            return result
+
+        plan: dict[str, Any] = {"version": 1, "groups": groups(list(builtins.range(len(detail))), 0, ())}
+        if self._grand:
+            plan["grand_summary"] = _compile_annotation(self._grand, detail, "")
+        return plan
+
+
+def _validate_rule(rule: str) -> None:
+    if rule not in ("none", "above", "below", "both"):
+        raise ValueError("row rule is 'none', 'above', 'below', or 'both'")
+
+
+def _compile_annotation(
+    annotation: _Annotation, members: Sequence[Mapping[str, Any]], default_label: str
+) -> dict[str, Any]:
+    label = annotation.label(members) if callable(annotation.label) else annotation.label
+    values = annotation.values
+    if values is None and annotation.position in ("top", "bottom"):
+        values = {
+            name: "sum"
+            for row in members
+            for name, value in row.items()
+            if not name.startswith("__") and isinstance(value, (int, float)) and not isinstance(value, bool)
+        }
+    cells = {}
+    for name, spec in (values or {}).items():
+        expression = (
+            aggregate(spec, name) if isinstance(spec, str) and spec.strip().lower() in BUILTIN_AGGREGATIONS else spec
+        )
+        if isinstance(expression, Aggregate):
+            source = expression.source if expression.source is not None or expression.operation == "count" else name
+            observed = [row[source] for row in members if source is not None and row.get(source) is not None]
+            value = (
+                len(members)
+                if source is None and expression.operation == "count"
+                else (
+                    0
+                    if not observed
+                    and expression.operation in ("count", "count_distinct", "countdistinct", "distinct_count")
+                    else resolve_aggregation(expression.operation)(observed, None)
+                    if observed
+                    else None
+                )
+            )
+            cells[name] = {
+                "value": jsonify(value),
+                "operation": expression.operation,
+                "source": source,
+                "prefix": expression.prefix,
+                "suffix": expression.suffix,
+                "format": expression.format,
+            }
+        else:
+            cells[name] = {
+                "value": jsonify(expression(members) if callable(expression) else expression),
+                "scope": "source",
+            }
+    return {
+        "label": str(default_label if label is None else label),
+        "cells": cells,
+        "align": annotation.align,
+        "position": annotation.position,
+        "style": dict(annotation.style or {}),
+        "rule": annotation.rule,
+        "label_column": annotation.label_column,
+    }
+
+
+def group_by(*dims: str) -> Rows:
+    """Declare a display layout independently of its data source."""
+    return Rows().group_by(*dims)
 
 
 def of(data: Any = None, *, rows: Sequence[Mapping[str, Any]] | None = None) -> Rows:
-    """Start a synthetic-row builder from detail data."""
     return Rows.of(data, rows=rows)

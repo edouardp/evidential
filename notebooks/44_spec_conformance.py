@@ -194,9 +194,10 @@ def _(EvidentialTable, col, mo, rows):
     ]
     sections = mo.ui.anywidget(
         EvidentialTable(
-            rows.of(detail).group_by("region").section(values={"arr": "sum"}).summary("Subtotal").total().build(),
+            detail,
+            row_layout=rows.group_by("region").section(values={"arr": "sum"}).summary("Subtotal").grand_summary(),
             title="Combined section totals with pagination",
-            page_size=3,
+            page_size=1,
             section_indent=1,
             stub="country",
             border=False,
@@ -204,7 +205,7 @@ def _(EvidentialTable, col, mo, rows):
             row_shading=True,
             width=800,
             columns=[col.text("country"), col.integer("arr")],
-            caption="Next page repeats the section label. Summaries are prepared from detail rows in Python; search preserves those values.",
+            caption="Next page repeats the section label. Named summaries recalculate over matching detail records when you search.",
         )
     )
     mo.vstack([sections])

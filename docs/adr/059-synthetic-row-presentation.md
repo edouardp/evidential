@@ -6,6 +6,11 @@ deciders: edouard
 
 # ADR-059: Synthetic Section and Summary Row Presentation
 
+[ADR-064](064-display-only-row-layout.md) updates this decision: synthetic rows
+now live in separate layout metadata. The new layout controls annotation style,
+rules, summaries and detail-based pagination; the behavior below is retained by
+the compatibility adapter for historical grouped helpers and divider records.
+
 ## Context and Problem Statement
 
 The *Tabular Design System* describes grouped tables in terms of **synthetic

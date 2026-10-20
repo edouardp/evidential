@@ -177,6 +177,56 @@ test("batched comm changes render once and pending work stops on disposal", asyn
   assert.equal(Number(el.dataset.renderCount), initial + 1);
 });
 
+test("display annotations have independent cells, style, numbering and selection", () => {
+  const model = makeModel([{city: "A", value: 10}, {city: "B", value: 20}],
+    [{name: "city"}, {name: "value", type: "number", fmt: "num1", encodings: [{kind: "bar", source: "value"}]}],
+    {row_numbers: true, row_shading: true, select: "city", page_size: 1}, el);
+  model.data.row_layout = {version: 1, groups: [{id: "all", members: [0, 1], depth: 0, children: [],
+    section: {label: "Group", cells: {city: {value: "2 products"}, value: {value: "Approved"}},
+      style: {font_weight: "normal"}, rule: "below"},
+    summary: {label: "Subtotal", cells: {value: {operation: "sum", source: "value"}}, position: "bottom"}}]};
+  const renderer = new EvidentialTableRenderer(model, el);
+  const heading = el.querySelector(".et-display-section");
+  assert.match(heading.textContent, /Group2 productsApproved/);
+  assert.equal(heading.querySelectorAll(".et-marks").length, 0);
+  assert.ok(heading.classList.contains("et-display-rule-below"));
+  assert.equal(heading.querySelector(".et-row-num").textContent, "");
+  assert.equal(heading.querySelectorAll("td")[1].style.fontWeight, "normal");
+  heading.click();
+  assert.equal(model.data.selected, null);
+  assert.deepEqual([...el.querySelectorAll("tbody .et-row-num")].map(cell => cell.textContent), ["", "1"]);
+  renderer._gotoPage(1);
+  assert.match(el.querySelector(".et-row-continuation").textContent, /Group \(cont\.\)/);
+  assert.deepEqual([...el.querySelectorAll("tbody .et-row-num")].map(cell => cell.textContent), ["2", ""]);
+  assert.equal(el.querySelector(".et-display-summary .et-display-value").textContent, "30.0");
+  renderer.destroy();
+});
+
+test("row layout comm changes rerender and dispose their listener", async () => {
+  const model = makeModel([{value: 1}], [{name: "value"}], {}, el);
+  const events = new Map();
+  model.on = (event, callback) => events.set(event, callback);
+  model.off = event => events.delete(event);
+  const dispose = render({model, el});
+  model.data.row_layout = {version: 1, groups: [], grand_summary: {label: "Total", cells: {value: {operation: "sum", source: "value"}}}};
+  events.get("change:row_layout")();
+  await Promise.resolve();
+  assert.equal(el.querySelectorAll(".et-display-grand_summary").length, 1);
+  dispose();
+  assert.equal(events.size, 0);
+});
+
+test("nested layout indentation reflects each displayed group level", () => {
+  const model = makeModel([{city: "A", value: 10}], [{name: "city"}, {name: "value"}], {section_indent: 1}, el);
+  model.data.row_layout = {version: 1, groups: [{id: "root", members: [0], depth: 0,
+    section: {label: "Root"}, children: [{id: "child", members: [0], depth: 1, children: [], section: {label: "Child"}}]}]};
+  const renderer = new EvidentialTableRenderer(model, el);
+  const displayed = [...el.querySelectorAll("tbody tr")];
+  assert.equal(displayed[1].querySelector("td").style.paddingLeft, "calc(1.25rem)");
+  assert.equal(displayed[2].querySelector("td").style.paddingLeft, "calc(2.25rem)");
+  renderer.destroy();
+});
+
 function makeModel(rows, columns, options = {}, el) {
   const data = { rows, columns, options, selected: null };
   const calls = [];
@@ -1797,6 +1847,38 @@ test("CSV download preserves search, indirect sorting, grouped column order and 
   assert.equal(csv, 'City,Value,Period,Forecast\n"keep ""A"",\nline",2,Q3,4\nkeep B,1,Nov,');
   assert.deepEqual(clicked, {href: "blob:csv-test", filename: "clean_table.csv"});
   assert.deepEqual(revoked, ["blob:csv-test"]);
+});
+
+test("CSV exports matching details in layout order without headings or summaries", async (t) => {
+  const data = [{city: "A", value: 1}, {city: "B", value: 20}, {city: "C", value: 10}];
+  const model = makeModel(data, [{name: "city"}, {name: "value", type: "number"}], {page_size: 1}, el);
+  model.data.row_layout = {version: 1, groups: [
+    {id: "first", members: [0, 2], depth: 0, children: [], section: {label: "Group 1"}},
+    {id: "second", members: [1], depth: 0, children: [], section: {label: "Group 2"}},
+  ], grand_summary: {label: "Total", cells: {value: {operation: "sum", source: "value"}}}};
+  const renderer = new EvidentialTableRenderer(model, el);
+  let blob;
+  const originalCreate = URL.createObjectURL;
+  const originalRevoke = URL.revokeObjectURL;
+  URL.createObjectURL = value => { blob = value; return "blob:test"; };
+  URL.revokeObjectURL = () => {};
+  t.after(() => {
+    if (originalCreate === undefined) delete URL.createObjectURL;
+    else URL.createObjectURL = originalCreate;
+    if (originalRevoke === undefined) delete URL.revokeObjectURL;
+    else URL.revokeObjectURL = originalRevoke;
+    renderer.destroy();
+  });
+  t.mock.method(window.HTMLAnchorElement.prototype, "click", () => {});
+  renderer._state.sort = {column: "value", direction: "desc"};
+  renderer._downloadCsv();
+  const csv = await new Promise(resolve => {
+    const reader = new window.FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.readAsText(blob);
+  });
+  assert.equal(csv, "City,Value\nC,10\nA,1\nB,20");
+  renderer.destroy();
 });
 
 test("marks encodings render overlaid bars with owned labels", () => {

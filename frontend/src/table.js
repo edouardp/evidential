@@ -6,6 +6,8 @@
 // CSV export, and a fullscreen dialog.
 import { footnoteMark, labelFootnotes } from "./footnotes.js";
 import { fitMarkLabels } from "./mark-labels.js";
+import { projectLayout, projectLegacy } from "./row-layout.js";
+import { renderAnnotation } from "./display-rows.js";
 import { renderStatsRow } from "./statistics.js";
 import { renderHeader, headerLayout, decorateSubcolumn, orderedColumns } from "./headers.js";
 import { RowPipeline } from "./derived.js";
@@ -247,15 +249,20 @@ export class EvidentialTableRenderer {
 
     const processed = this._pipeline.get({
       rows: this.rows, columns: this.columns, options: opts,
+      rowLayout: this.model.get("row_layout"),
       search: this._state.search, hidden: hiddenColumns(this.columns, this._state.hidden), sort: this._state.sort,
     });
     const { columns, hasGroups, dimCount, ranges, formatRanges, decimals, colorScales, stats } = processed;
     const layout = headerLayout(columns);
     const subcolumns = layout.joins;
     const visibility = this._pipeline.visible(processed, this._groupVersion, (key) => this._isCollapsed(key));
-    const { rows, pageCount, page, total, start } = this._paginate(visibility.rows, visibility.hasGroups);
+    const rowLayout = processed.rowLayout;
+    const displayPage = rowLayout?.version && !rowLayout.legacy
+      ? projectLayout(rowLayout, this.rows, processed.sorted, this._effectivePageSize(), this._state.page) : null;
+    const { rows, pageCount, page, total, start } = displayPage || this._paginate(visibility.rows, visibility.hasGroups);
+    this._state.page = page;
     this._pageCount = pageCount;
-    const continuationLabel = sectionContinuation(visibility.rows, start, rows);
+    const continuationLabel = displayPage ? null : sectionContinuation(visibility.rows, start, rows);
 
     // Section-style groups merge each group's dimension cell across its rows.
     // Count levels over all rows (not just the page) so a fully collapsed table
@@ -325,6 +332,7 @@ export class EvidentialTableRenderer {
           emptyRows: isEmpty ? this._emptyRowCount(opts) : 0,
           emptyMessage: opts.empty_message || "No records",
           continuationLabel,
+          displayEntries: displayPage?.entries,
           insetGroups: new Set(visibility.rows.filter(row => row.render_type === "row_section" && row.__align !== "center")
             .map(row => row.__group_key)),
           hasTopAxis,
@@ -463,7 +471,15 @@ export class EvidentialTableRenderer {
           ]),
         );
       }
-      rows.forEach((row, index) => tbody.append(this._renderRow(row, columns, ctx, index)));
+      if (ctx.displayEntries) {
+        for (const entry of ctx.displayEntries) {
+          if (entry.kind === "data") {
+            ctx.displayInset = entry.inset ? entry.depth : 0;
+            tbody.append(this._renderRow(entry.row, columns, ctx, entry.ordinal - ctx.rowNumberBase));
+          } else tbody.append(renderAnnotation(entry, columns, ctx, opts));
+        }
+        ctx.displayInset = false;
+      } else rows.forEach((row, index) => tbody.append(this._renderRow(row, columns, ctx, index)));
       if (ctx.hasBottomAxis) {
         tbody.append(this._renderAxisRow(columns, ctx, "bottom"));
       }
@@ -768,7 +784,11 @@ export class EvidentialTableRenderer {
     const columns = orderedColumns(this.columns.filter((c) => !hidden.has(c.name)), this.options);
     const searched = searchRows(this.rows, this.columns, this._state.search, hidden);
     const sorted = sortRows(searched, this.columns, this._state.sort);
-    const rows = visibleRows(sorted, (key) => this._isCollapsed(key));
+    const layout = this.model.get("row_layout");
+    const rows = layout?.legacy
+      ? projectLegacy(layout, this.rows, sorted, key => this._isCollapsed(key)).filter(row => !row.render_type || row.render_type === "cell_data")
+      : layout?.version ? projectLayout(layout, this.rows, sorted, "all", 0).rows
+        : visibleRows(sorted, key => this._isCollapsed(key));
     const escape = (v) => {
       if (v === null || v === undefined) return "";
       const s = typeof v === "object" ? JSON.stringify(v) : String(v);
@@ -806,12 +826,14 @@ export function render({ model, el }) {
   model.on("change:rows", dataChanged);
   model.on("change:columns", dataChanged);
   model.on("change:options", dataChanged);
+  model.on("change:row_layout", dataChanged);
   model.on("change:loading", setLoading);
   model.on("change:selected", rerender);
   return () => {
     model.off("change:rows", dataChanged);
     model.off("change:columns", dataChanged);
     model.off("change:options", dataChanged);
+    model.off("change:row_layout", dataChanged);
     model.off("change:selected", rerender);
     model.off("change:loading", setLoading);
     renderer.destroy();

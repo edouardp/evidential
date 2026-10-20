@@ -78,10 +78,11 @@ dated, immutable record of the decisions behind them.
 | [057](057-back-to-back-bars.md) | Back-to-Back Bars — Direction and Benchmark Rules | Accepted |
 | [058](058-encoding-based-columns.md) | Encoding-Based Columns (Declarative Marks) | Accepted |
 | [059](059-synthetic-row-presentation.md) | Synthetic Section and Summary Row Presentation | Accepted |
-| [060](060-synthetic-row-builder.md) | A Synthetic-Row Builder | Accepted |
+| [060](060-synthetic-row-builder.md) | A Synthetic-Row Builder | Superseded by ADR-064 |
 | [061](061-array-points-and-cell-presets.md) | Array Points, Cell Presets, and Icon Maps | Accepted |
 | [062](062-column-scale-axes.md) | Column Scale Axes and Gridlines | Accepted |
 | [063](063-cell-style.md) | Cell Style Independent of Marks | Accepted |
+| [064](064-display-only-row-layout.md) | Display-Only Row Layout | Accepted |
 
 ## Creating New ADRs
 

@@ -7,9 +7,17 @@ How `evidential` is built. For *why*, see
 
 `evidential` is an [anywidget](https://anywidget.dev): a Python class that
 ships a JavaScript module and a stylesheet to the browser. The Python side
-normalises data into three JSON traits — `rows`, `columns`, `options` — and the
+normalises data into JSON traits — `rows`, `row_layout`, `columns`, `options` — and the
 JavaScript side renders them. There is no server round-trip for interaction:
 sorting, searching, paging, collapsing and fullscreen all happen in the browser.
+
+Detail data stays in `rows`; synthetic headings and summaries live in the
+separate `row_layout` plan. The browser filters and sorts details, paginates
+them, then projects annotation rows into the page. A dedicated annotation
+renderer prevents display values from entering data bindings, statistics or
+scale inference. Named summary expressions recalculate over matching details;
+arbitrary Python callbacks retain their source scope until data refresh. See
+[ADR-064](adr/064-display-only-row-layout.md).
 
 ![Renderer output: formatting, bars, colour scales, sparklines and deltas](img/display-options.png)
 
@@ -152,11 +160,12 @@ classDiagram
 1. Split keyword arguments into known table options (`_OPTION_KEYS`) and the rest
    (forwarded to `AnyWidget`).
 2. Normalise `data` (or accept explicit `rows`).
-3. Infer columns if none were given.
+3. Split legacy synthetic records into display metadata, or compile the explicit
+   row layout; infer columns from details if none were given.
 4. Apply `column_config` blank predicates, then resolve rules.
 5. Coerce column definitions and assign column groups.
 6. Merge options over `_OPTION_DEFAULTS`.
-7. Call `super().__init__(rows=…, columns=…, options=…, loading=…)`.
+7. Call `super().__init__(rows=…, row_layout=…, columns=…, options=…, loading=…)`.
 
 `_OPTION_KEYS`/`_OPTION_DEFAULTS` are the single source of truth for table-level
 options; anything not listed is passed through to anywidget (so widget layout

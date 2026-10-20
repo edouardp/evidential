@@ -35,7 +35,7 @@ def test_builtin_mean_from_detail_values(sales: duckdb.DuckDBPyConnection) -> No
         ["sum(revenue) AS revenue"],
         aggregations={"revenue": "mean"},
     )
-    total = next(row for row in table.rows if row["render_type"] == "row_total")
+    total = next(row for row in table.display_rows if row["render_type"] == "row_total")
     # country-level sums are USA=350 and Canada=200 -> mean 275
     assert total["revenue"] == pytest.approx(275.0)
 
@@ -48,11 +48,11 @@ def test_custom_callable_aggregation(sales: duckdb.DuckDBPyConnection) -> None:
         ["sum(revenue) AS revenue"],
         aggregations={"revenue": max},
     )
-    total = next(row for row in table.rows if row["render_type"] == "row_total")
+    total = next(row for row in table.display_rows if row["render_type"] == "row_total")
     # city-level sums: 100, 250, 80, 120 -> max 250
     assert total["revenue"] == 250.0
 
-    usa = next(row for row in table.rows if row["render_type"] == "row_subtotal" and row["country"] == "USA")
+    usa = next(row for row in table.display_rows if row["render_type"] == "row_subtotal" and row["country"] == "USA")
     assert usa["revenue"] == 250.0  # max of NYC 100, LA 250
 
 
@@ -65,7 +65,7 @@ def test_aggregation_applies_to_all_measures(sales: duckdb.DuckDBPyConnection) -
         aggregations=statistics.median,
         subtotals=False,
     )
-    total = next(row for row in table.rows if row["render_type"] == "row_total")
+    total = next(row for row in table.display_rows if row["render_type"] == "row_total")
     assert total["revenue"] == pytest.approx(110.0)  # median of 100/250/80/120
     assert total["orders"] == 1  # median of four 1s
 
@@ -90,7 +90,7 @@ def test_weighted_mean(sales: duckdb.DuckDBPyConnection) -> None:
         aggregations={"revenue": "weighted_mean"},
         weight_columns={"revenue": "weight"},
     )
-    total = next(row for row in table.rows if row["render_type"] == "row_total")
+    total = next(row for row in table.display_rows if row["render_type"] == "row_total")
     # aggregated weights for city sums 100, 250, 80, 120 are 1, 3, 1, 1
     expected = (100 * 1 + 250 * 3 + 80 * 1 + 120 * 1) / 6
     assert total["revenue"] == pytest.approx(expected)
@@ -117,7 +117,7 @@ def test_weighted_mean_keeps_missing_values_and_weights_paired() -> None:
             aggregations={"value": "weighted_mean"},
             weight_columns={"value": "weight"},
         )
-    summaries = [row for row in table.rows if row["render_type"] != "cell_data"]
+    summaries = [row for row in table.display_rows if row["render_type"] != "cell_data"]
     assert summaries
     assert all(row["value"] == pytest.approx(15) for row in summaries)
 

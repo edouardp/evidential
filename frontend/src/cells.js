@@ -76,9 +76,9 @@ export function renderCell({row, col, index, ctx, rowIndex, options: opts, toggl
   const isSubtotal = row.render_type === "row_subtotal";
   const hidden = row.__hide_cell || {};
   const tdStyle = withFigure(alignStyle(col), col, opts);
-  if (opts.section_indent && ctx.insetGroups?.has(row.__parent_key) && !isSubtotal && !isTotal &&
+  if (opts.section_indent && (ctx.displayInset || ctx.insetGroups?.has(row.__parent_key)) && !isSubtotal && !isTotal &&
       (isStub(opts, col) || (!opts.stub && index === 0))) {
-    tdStyle.paddingLeft = `calc(0.25rem + ${Math.max(0, Number(opts.section_indent))}rem)`;
+    tdStyle.paddingLeft = `calc(0.25rem + ${Math.max(0, Number(opts.section_indent)) * (Number(ctx.displayInset) || 1)}rem)`;
   }
   // In accordion mode, indent dimension cells so children read as nested.
   const indent = ctx.accordion ? indentForCell(row, index, ctx) : 0;

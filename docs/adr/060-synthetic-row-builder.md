@@ -1,10 +1,14 @@
 ---
-status: accepted
+status: superseded by ADR-064
 date: 2026-10-20
 deciders: edouard
 ---
 
 # ADR-060: A Synthetic-Row Builder
+
+The injected-record model below is historical. See
+[ADR-064](064-display-only-row-layout.md) for the current display-only layout,
+detail-record `RowView`, nested groups and portable summary expressions.
 
 ## Context and Problem Statement
 

@@ -10,9 +10,11 @@ import anywidget
 import traitlets
 
 from ._column_options import _normalize_column_options
+from ._row_layout import display_records, split_legacy, unwrap_view
 from .configuration import TABLE_DEFAULTS, TableOptions, unknown_option, validate_options
 from .data import _merge_column_config, apply_blank_predicates, infer_columns, jsonify, make_column, normalize_data
 from .marks import apply_hidden_columns, resolve_encodings
+from .rows import Rows, RowView
 from .rules import resolve_rules
 
 __all__ = ["EvidentialTable"]
@@ -22,6 +24,7 @@ _ASSET_DIR = Path(__file__).parent / "static"
 #: Table-level options forwarded to the browser. Mirrors Evidence's prop names.
 _OPTION_KEYS = set(TableOptions.__annotations__)
 _OPTION_DEFAULTS = TABLE_DEFAULTS
+_UNSET = object()
 
 
 def section_row(label: str, *, align: str = "left") -> dict[str, Any]:
@@ -218,6 +221,8 @@ class EvidentialTable(anywidget.AnyWidget):
     rows = traitlets.List(trait=traitlets.Dict(), default_value=[]).tag(sync=True)
     columns = traitlets.List(trait=traitlets.Dict(), default_value=[]).tag(sync=True)
     options = traitlets.Dict(default_value={}).tag(sync=True)
+    #: Display annotations and group membership, separate from source records.
+    row_layout = traitlets.Dict(default_value={}).tag(sync=True)
     #: When true the renderer dims the current table and shows a spinner without
     #: changing its size (used while a live query is in flight).
     loading = traitlets.Bool(False).tag(sync=True)
@@ -229,7 +234,8 @@ class EvidentialTable(anywidget.AnyWidget):
         self,
         data: Any = None,
         *,
-        rows: Sequence[Mapping[str, Any]] | None = None,
+        rows: Sequence[Mapping[str, Any]] | RowView | Rows | None = None,
+        row_layout: Rows | None = None,
         columns: Iterable[str | Mapping[str, Any]] | None = None,
         column_config: Mapping[str, Mapping[str, Any]] | None = None,
         column_groups: Mapping[str, Sequence[str] | Mapping[str, Any]] | None = None,
@@ -250,6 +256,8 @@ class EvidentialTable(anywidget.AnyWidget):
         self._explicit_columns = list(columns) if columns is not None else None
         self._column_overrides = {name: dict(config) for name, config in (column_config or {}).items()}
         self._configured_groups = column_groups
+        data, rows, row_layout = unwrap_view(data, rows, row_layout)
+        self._row_layout_spec = row_layout
 
         if rows is None:
             normalized_rows, inferred = normalize_data(data)
@@ -257,6 +265,14 @@ class EvidentialTable(anywidget.AnyWidget):
             raw_rows = [dict(row) for row in rows]
             normalized_rows = [jsonify(row) for row in raw_rows]
             inferred = infer_columns(None, raw_rows)
+
+        normalized_rows, layout = split_legacy(normalized_rows)
+        if layout:
+            if row_layout is not None:
+                raise ValueError("row_layout expects detail data, not injected synthetic records")
+            inferred = infer_columns(None, normalized_rows)
+        elif row_layout is not None:
+            layout = row_layout.compile(normalized_rows)
 
         explicit_columns = self._explicit_columns
         had_explicit_columns = explicit_columns is not None
@@ -286,20 +302,31 @@ class EvidentialTable(anywidget.AnyWidget):
             rows=normalized_rows,
             columns=coerced,
             options=merged_options,
+            row_layout=layout,
             **options,
         )
 
     # ------------------------------------------------------------- helpers ---
+    @property
+    def display_rows(self) -> list[dict[str, Any]]:
+        """Unfiltered display snapshot for inspection; ``rows`` is detail data."""
+        return display_records(self.rows, self.row_layout)
+
     def set_data(
         self,
         data: Any = None,
         *,
-        rows: Sequence[Mapping[str, Any]] | None = None,
+        rows: Sequence[Mapping[str, Any]] | RowView | Rows | None = None,
+        row_layout: Any = _UNSET,
         columns: Iterable[str | Mapping[str, Any]] | None = None,
         column_config: Mapping[str, Mapping[str, Any]] | None = None,
         column_groups: Mapping[str, Sequence[str] | Mapping[str, Any]] | None = None,
     ) -> EvidentialTable:
         """Replace data, retaining column configuration unless replaced explicitly."""
+        layout_spec = self._row_layout_spec if row_layout is _UNSET else row_layout
+        if isinstance(rows if rows is not None else data, (Rows, RowView)):
+            layout_spec = None if row_layout is _UNSET else row_layout
+        data, rows, layout_spec = unwrap_view(data, rows, layout_spec)
         explicit_columns = list(columns) if columns is not None else self._explicit_columns
         column_config = (
             {name: dict(config) for name, config in column_config.items()}
@@ -315,6 +342,14 @@ class EvidentialTable(anywidget.AnyWidget):
             raw_rows = [dict(row) for row in rows]
             normalized_rows = [jsonify(row) for row in raw_rows]
             inferred = infer_columns(None, raw_rows)
+
+        normalized_rows, layout = split_legacy(normalized_rows)
+        if layout:
+            if layout_spec is not None:
+                raise ValueError("row_layout expects detail data, not injected synthetic records")
+            inferred = infer_columns(None, normalized_rows)
+        elif layout_spec is not None:
+            layout = layout_spec.compile(normalized_rows)
 
         columns = explicit_columns if explicit_columns is not None else inferred
         new_columns = list(self.columns)
@@ -334,10 +369,12 @@ class EvidentialTable(anywidget.AnyWidget):
         self._explicit_columns = explicit_columns
         self._column_overrides = {name: dict(config) for name, config in column_config.items()}
         self._configured_groups = column_groups
+        self._row_layout_spec = layout_spec
         with self.hold_sync():
             if new_columns != list(self.columns):
                 self.columns = new_columns
             self.rows = normalized_rows
+            self.row_layout = layout
             if client_rules:
                 current = dict(self.options)
                 current["rules"] = client_rules

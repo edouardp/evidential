@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from evidential import EvidentialTable, col
+from evidential import EvidentialTable, col, grouped_records
 from evidential import rows as row_builder
 
 pytestmark = pytest.mark.browser
@@ -30,8 +30,16 @@ def mount(page, live_server, cases):
             "theme": {"border": "#555555", "header_border": "#555555"},
         }
         options.update(overrides[0] if overrides else {})
-        table = EvidentialTable(rows, columns=columns, **options)
-        payload.append({"title": title, "rows": table.rows, "columns": table.columns, "options": table.options})
+        table = rows if isinstance(rows, EvidentialTable) else EvidentialTable(rows, columns=columns, **options)
+        payload.append(
+            {
+                "title": title,
+                "rows": table.rows,
+                "columns": table.columns,
+                "options": table.options,
+                "row_layout": table.row_layout,
+            }
+        )
     page.evaluate(
         """async cases => {
         const {default: widget} = await import('/src/evidential/static/table.js');
@@ -69,8 +77,8 @@ def test_unlabelled_strips_have_height_and_joined_runs_have_no_gap(page, live_se
                 "Unlabelled strips",
                 [{"states": ["W", "W", "L"]}],
                 [
-                    col.strip("states", colors={"W": "green", "L": "red"}),
-                    col.strip("states", colors={"W": "green", "L": "red"}, segmented=False),
+                    col.strip("states", colors={"W": "green", "L": "red"}),  # noqa: B005 — mark factory
+                    col.strip("states", colors={"W": "green", "L": "red"}, segmented=False),  # noqa: B005
                 ],
             )
         ],
@@ -287,40 +295,127 @@ def test_builder_sections_keep_values_search_sort_and_pagination(page, live_serv
         {"region": "North", "country": "Mexico", "arr": 135},
         {"region": "South", "country": "Brazil", "arr": 100},
     ]
-    built = row_builder.of(detail).group_by("region").section(values={"arr": "sum"}).summary("Subtotal").total().build()
+    layout = (
+        row_builder.group_by("region")
+        .section(values={"country": row_builder.count(suffix=" products"), "arr": "sum"})
+        .summary("Subtotal", values={"arr": "sum"})
+        .grand_summary(values={"arr": "sum"})
+    )
     mount(
         page,
         live_server,
         [
             (
-                "Section totals and continuation",
-                built,
+                "Display groups",
+                detail,
                 [col.text("country"), col.integer("arr")],
-                {"search": True, "page_size": 3, "section_indent": 1, "stub": "country"},
+                {
+                    "row_layout": layout,
+                    "search": True,
+                    "page_size": 1,
+                    "row_numbers": True,
+                    "section_indent": 1,
+                    "stub": "country",
+                },
             )
         ],
     )
     assert "North" in page.locator("tbody tr").first.inner_text()
+    assert "2 products" in page.locator("tbody tr").first.inner_text()
     assert "345" in page.locator("tbody tr").first.inner_text()
-    assert page.locator(".et-page-current").inner_text().startswith("1/")
+    assert page.locator(".et-page-current").inner_text() == "1/3"
+    assert page.locator(".et-display-summary, .et-display-grand_summary").count() == 0
     pad = (
         page.locator("tbody tr")
         .nth(1)
         .locator("td")
-        .first.evaluate("el => parseFloat(getComputedStyle(el).paddingLeft)")
+        .nth(1)
+        .evaluate("el => parseFloat(getComputedStyle(el).paddingLeft)")
     )
     assert pad > 12
     assert "et-row-shaded" in page.locator("tbody tr").nth(1).get_attribute("class")
     page.locator("th", has_text="Arr").click()
     assert "Canada" in page.locator("tbody tr").nth(1).inner_text()
-    assert "Mexico" in page.locator("tbody tr").nth(2).inner_text()
     page.locator(".et-page-controls button").nth(1).click()
     assert "North (cont.)" in page.locator("tbody tr").first.inner_text()
-    assert "Subtotal" in page.locator("tbody tr").nth(1).inner_text()
+    assert "Mexico" in page.locator("tbody tr").nth(1).inner_text()
+    assert "Subtotal" in page.locator("tbody tr").nth(2).inner_text()
+    assert "345" in page.locator(".et-display-summary").inner_text()
+    assert page.locator(".et-display-grand_summary").count() == 0
     capture(page, "evidential-sections.png")
+    page.locator(".et-page-controls button").nth(1).click()
+    assert "South" in page.locator("tbody tr").first.inner_text()
+    assert "445" in page.locator(".et-display-grand_summary").inner_text()
     page.locator(".et-search").fill("Mexico")
-    assert "North" in page.locator("tbody tr").first.inner_text()
-    assert "Mexico" in page.locator("tbody").inner_text()
+    assert "1 products" in page.locator("tbody tr").first.inner_text()
+    assert "135" in page.locator(".et-display-summary").inner_text()
+    assert "135" in page.locator(".et-display-grand_summary").inner_text()
+    assert "South" not in page.locator("tbody").inner_text()
+
+
+def test_display_annotations_keep_their_own_style_and_skip_mark_bindings(page, live_server):
+    detail = [
+        {"region": "North", "country": "Canada", "arr": 210},
+        {"region": "North", "country": "Mexico", "arr": 135},
+    ]
+    layout = (
+        row_builder.group_by("region")
+        .section(align="center", rule="below", style={"color": "#666666", "font_weight": "normal"})
+        .summary(values={"arr": "27 products"}, style={"background": "#eeeeee"})
+        .grand_summary(values={"arr": "sum"})
+    )
+    mount(
+        page,
+        live_server,
+        [
+            (
+                "Independent display rows",
+                detail,
+                [col.text("country"), col.bar("arr").point(lambda row: row["arr"])],
+                {"row_layout": layout},
+            )
+        ],
+    )
+    heading = page.locator(".et-display-section td")
+    assert heading.evaluate("el => getComputedStyle(el).textAlign") == "center"
+    assert heading.evaluate("el => getComputedStyle(el).color") == "rgb(102, 102, 102)"
+    assert heading.evaluate("el => getComputedStyle(el).fontWeight") == "400"
+    assert heading.evaluate("el => getComputedStyle(el).borderBottomWidth") == "1px"
+    assert heading.evaluate("el => getComputedStyle(el).borderTopWidth") == "1px"
+    assert page.locator(".et-display-row .et-marks").count() == 0
+    assert page.locator(".et-marks").count() == 2
+    assert "27 products" in page.locator(".et-display-summary").inner_text()
+    assert (
+        page.locator(".et-display-summary td").first.evaluate("el => getComputedStyle(el).backgroundColor")
+        == "rgb(238, 238, 238)"
+    )
+    assert (
+        page.locator(".et-display-grand_summary td").first.evaluate("el => getComputedStyle(el).borderBottomWidth")
+        == "1px"
+    )
+    capture(page, "evidential-display-layout.png")
+
+
+def test_legacy_grouped_widget_keeps_annotations_separate_and_collapses(page, live_server):
+    table = grouped_records(
+        [
+            {"region": "North", "country": "Canada", "arr": 210},
+            {"region": "North", "country": "Mexico", "arr": 135},
+            {"region": "South", "country": "Brazil", "arr": 100},
+        ],
+        group_by=["region", "country"],
+        measures=["arr"],
+        search=True,
+        collapsed=False,
+    )
+    assert len(table.rows) == 3
+    mount(page, live_server, [("Legacy adapter", table, [])])
+    assert "Canada" in page.locator("tbody").inner_text()
+    page.locator("button.et-chevron").first.click()
+    assert "Canada" not in page.locator("tbody").inner_text()
+    assert "Brazil" in page.locator("tbody").inner_text()
+    page.locator(".et-search").fill("Mexico")
+    assert "Brazil" not in page.locator("tbody").inner_text()
 
 
 def test_public_api_acceptance_marks(page, live_server):

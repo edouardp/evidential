@@ -42,7 +42,9 @@ and without network access.
 | [`34_centered_bars.py`](34_centered_bars.py) | Centred (diverging) `bar(center=True)`: a zero line, the bar left/right by sign, and the value on the opposite side — The Economist's league-table bar. Also back-to-back bars (`bar(direction="left")`) with a benchmark rule (`reference=`) and per-row colours (`color="@column"`), as a mirrored league table and a tolerance-vs-intolerance chart. |
 | [`35_negatives.py`](35_negatives.py) | Negative styling with `.neg()`: red negatives, a custom colour, and accounting-style brackets (`-1,234` → `(1,234)`), alone and with a centred bar. |
 | [`36_repeated_symbols.py`](36_repeated_symbols.py) | `col.symbols` / `col.repeat` / `col.rating`: a number drawn as repeated glyphs, emoji or images — The Economist's squares, a medal table, star ratings. |
+| [`39_synthetic_rows.py`](39_synthetic_rows.py) | Display-only headings, portable counts and averages, optional group/grand summaries, and continuation headings across detail-based pages. |
 | [`44_spec_conformance.py`](44_spec_conformance.py) | Scale reference layouts, fixed bounds and missing marks, shared diverging stacks, irregular sparklines and paginated section summaries. |
+| [`45_display_row_layout.py`](45_display_row_layout.py) | Display-only group headings with counts/totals, optional group and grand summaries, nested groups, centered headings, and detail-based pagination with continuation headings. |
 
 `sample_data/needful_things/orders.parquet` is Evidence's demo dataset, copied
 from the published docs site.

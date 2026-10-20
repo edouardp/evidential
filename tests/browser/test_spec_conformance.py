@@ -72,12 +72,14 @@ def capture(page, name):
 
 
 def test_centered_bar_notebook_renders_mark_labels_and_mirrored_bars(page, live_server):
+    page.set_viewport_size({"width": 1600, "height": 1000})
     notebook = Path(__file__).resolve().parents[2] / "notebooks" / "34_centered_bars.py"
     _, definitions = runpy.run_path(str(notebook))["app"].run()
     names = ("league_table", "variants", "back_to_back", "diverging")
     mount(page, live_server, [(name, definitions[name].widget, []) for name in names])
-    page.locator("section").evaluate_all("nodes => nodes.forEach(el => el.style.width = '1100px')")
+    page.locator("section").evaluate_all("nodes => nodes.forEach(el => el.style.width = '1500px')")
     page.wait_for_timeout(100)
+    capture(page, "centered-bars-marks.png")
     for index in range(len(names)):
         case = page.locator(f"#case-{index}")
         assert case.locator(".et-bar-wrap").count() == 0
@@ -85,7 +87,10 @@ def test_centered_bar_notebook_renders_mark_labels_and_mirrored_bars(page, live_
         while True:
             labels = case.locator(".et-mark-label")
             assert labels.count() > 0
-            assert labels.evaluate_all("nodes => nodes.every(el => getComputedStyle(el).visibility !== 'hidden')")
+            hidden = labels.evaluate_all("""nodes => nodes
+                .filter(el => getComputedStyle(el).visibility === 'hidden')
+                .map(el => ({text: el.textContent, width: el.closest('td').getBoundingClientRect().width}))""")
+            assert not hidden, hidden
             next_page = case.get_by_role("button", name="Next page")
             if not next_page.count() or next_page.is_disabled():
                 break

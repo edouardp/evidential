@@ -2,6 +2,7 @@
 # requires-python = ">=3.12"
 # dependencies = [
 #     "marimo",
+#     "duckdb>=1.3",
 #     "evidential",
 # ]
 # ///
@@ -13,6 +14,10 @@ Economist uses for its league-table-of-nations charts. The same module also
 shows the **back-to-back** ("tornado") variant — mirrored bars meeting at a
 shared centre (using a negative source), with an optional benchmark rule — and a
 recreation of Pew Research Center's tolerance-vs-intolerance chart.
+
+The first two tables query the local WDI Parquet bundle configured by
+``WDI_PARQUET`` (default: ``~/datasets/WDI_CSV_2026_10_01/parquet``).
+A saved real-data query result keeps the demo runnable without that bundle.
 """
 
 import marimo
@@ -23,11 +28,27 @@ app = marimo.App(width="full")
 
 @app.cell
 def _():
+    import json
+    import os
+    from pathlib import Path
+
+    import duckdb
     import marimo as mo
 
     from evidential import EvidentialTable, cells_body, col, settings, tab_style
 
-    return EvidentialTable, cells_body, col, mo, settings, tab_style
+    return (
+        EvidentialTable,
+        Path,
+        cells_body,
+        col,
+        duckdb,
+        json,
+        mo,
+        os,
+        settings,
+        tab_style,
+    )
 
 
 @app.cell
@@ -42,7 +63,7 @@ def _(mo):
 
     ```python
     (
-        col.bar("gdp", color="#01A9C3", size=0.65)
+        col.bar("gdp", title="Real GDP", color="#01A9C3", size=0.65)
         .label(value=True, format="num1")
         .scale(domain=(-30, 30))
         .reference_line(0, color="#94a3b8")
@@ -53,46 +74,94 @@ def _(mo):
     space beyond the largest bar for its label. Colour follows the usual rule
     (`color`, `color_negative`).
 
-    The data below is **illustrative**, in the style of The Economist's league
-    table of nations.
+    The first two examples use **World Development Indicators** data for the
+    pandemic comparison, in the style of The Economist's league table of nations.
     """)
     return
 
 
 @app.cell
-def _():
-    leagues = [
-        {"country": "**Denmark** (1)", "gdp": 2.1, "income": 3.4, "prices": 57.3, "investment": 12.1, "debt": 3.5},
-        {"country": "**Chile** (5)", "gdp": 10.4, "income": 32.7, "prices": -5.6, "investment": 6.7, "debt": 11.9},
-        {"country": "**Ireland** (=6)", "gdp": 22.3, "income": 4.8, "prices": 17.1, "investment": -78.8, "debt": 0.9},
-        {
-            "country": "**United States** (9)",
-            "gdp": 1.4,
-            "income": 6.2,
-            "prices": 24.4,
-            "investment": 3.6,
-            "debt": 18.9,
-        },
-        {"country": "**Australia** (=10)", "gdp": -0.2, "income": 3.5, "prices": 9.1, "investment": 7.4, "debt": 10.2},
-        {"country": "**Canada** (=10)", "gdp": -1.4, "income": 9.4, "prices": 25.9, "investment": 0.7, "debt": 11.6},
-        {"country": "**France** (=15)", "gdp": -0.1, "income": 0.7, "prices": 17.4, "investment": 1.3, "debt": 14.4},
-        {"country": "**Portugal** (=17)", "gdp": -3.2, "income": -0.3, "prices": 27.1, "investment": 0.5, "debt": 12.0},
-        {"country": "**Germany** (20)", "gdp": -1.1, "income": -0.9, "prices": 15.6, "investment": -1.9, "debt": 13.6},
-        {"country": "**Spain** (23)", "gdp": -6.6, "income": -6.3, "prices": -7.2, "investment": -6.5, "debt": 22.3},
-    ]
+def _(Path, os):
+    # Compare annual observations; edit these years to query another period.
+    base_year, end_year = 2019, 2021
+    wdi_path = Path(
+        os.environ.get("WDI_PARQUET", "~/datasets/WDI_CSV_2026_10_01/parquet")
+    ).expanduser()
+    return base_year, end_year, wdi_path
+
+
+@app.cell
+def _(base_year, duckdb, end_year, json, mo, wdi_path):
+    if end_year <= base_year:
+        raise ValueError("The comparison year must be after the baseline year")
+    wdi_sql = (mo.notebook_location() / "sql" / "34_wdi_league.sql").read_text()
+    if (wdi_path / "wdi_observations").is_dir() and (wdi_path / "country.parquet").is_file():
+        with duckdb.connect() as connection:
+            result = connection.execute(
+                wdi_sql,
+                {
+                    "observations": str(wdi_path / "wdi_observations/**/*.parquet"),
+                    "countries": str(wdi_path / "country.parquet"),
+                    "base_year": base_year,
+                    "end_year": end_year,
+                },
+            )
+            fields = [column[0] for column in result.description]
+            leagues = [dict(zip(fields, record, strict=True)) for record in result.fetchall()]
+        wdi_source = f"Queried local WDI bundle: `{wdi_path}`"
+    else:
+        snapshot = json.loads(
+            (mo.notebook_location() / "data" / "34_wdi_league_2019_2021.json").read_text()
+        )
+        if (base_year, end_year) != (snapshot["base_year"], snapshot["end_year"]):
+            raise ValueError("The saved WDI result covers only 2019–2021; set WDI_PARQUET to query other years")
+        leagues = snapshot["records"]
+        wdi_source = f"Bundle unavailable at `{wdi_path}`; displaying the saved WDI query result (2019–2021)."
     league_limits = {
-        field: 1.4 * max(abs(row[field]) for row in leagues)
-        for field in ("gdp", "income", "prices", "investment", "debt")
+        field: 1.4 * (max((abs(row[field]) for row in leagues if row[field] is not None), default=0) or 1)
+        for field in ("gdp", "consumption", "prices", "investment", "debt")
     }
     league_domains = {field: (-limit, limit) for field, limit in league_limits.items()}
-    return league_domains, leagues
+    return league_domains, leagues, wdi_source
+
+
+@app.cell
+def _(base_year, end_year, mo, wdi_source):
+    mo.md(f"""
+    ## WDI source and calculation
+
+    {wdi_source}
+
+    The baseline is **{base_year}** and the comparison year is **{end_year}**.
+    Edit those years in the configuration cell, or set `WDI_PARQUET` to another
+    copy of the long-format Parquet bundle used in notebook 23.
+
+    | Column | WDI indicator | Calculation |
+    | --- | --- | --- |
+    | Real GDP | `NY.GDP.MKTP.KD` | Endpoint % change in constant-price GDP |
+    | Real consumption per person | `NE.CON.PRVT.PC.KD` | Endpoint % change in constant-price household and NPISH consumption per person |
+    | Equity prices (USD) | `CM.MKT.INDX.ZG` | Compound every annual return after the baseline, through the comparison year |
+    | Real fixed investment | `NE.GDI.FTOT.KD` | Endpoint % change in constant-price gross fixed capital formation |
+    | Central government debt | `GC.DOD.TOTL.GD.ZS` | Difference in debt/GDP, in percentage points |
+
+    Consumption is **not household income**; central-government debt is a
+    narrower measure than general-government debt. Missing endpoints or an
+    incomplete sequence of equity returns remain missing. Countries keep the
+    example's original order; the old illustrative ranks have been removed.
+
+    Without a local bundle, the notebook uses a saved **real WDI query result**
+    for 2019–2021. The drug-price and Pew examples below use their own sources.
+    """)
+    return
 
 
 @app.cell
 def _(
     EvidentialTable,
+    base_year,
     cells_body,
     col,
+    end_year,
     league_domains,
     leagues,
     mo,
@@ -104,8 +173,8 @@ def _(
             leagues,
             settings=settings(
                 title="League table of nations",
-                subtitle="Selected OECD countries, % change during the covid-19 pandemic*",
-                caption="Illustrative data, in the style of The Economist.",
+                subtitle=f"Selected OECD countries, {base_year}→{end_year}; % change except debt (percentage points)",
+                caption="Source: World Bank WDI. Missing observations are left blank; debt covers central government only.",
                 row_shading=True,
                 row_lines=False,
                 border=False,
@@ -115,28 +184,28 @@ def _(
             ),
             columns=[
                 col.markdown("country"),
-                col.bar("gdp", color="#01A9C3", align="center")
+                col.bar("gdp", title="Real GDP", color="#01A9C3", align="center")
                 .label(value=True, format="num1")
                 .scale(domain=league_domains["gdp"])
                 .reference_line(0, color="#94a3b8"),
-                col.bar("income", title="Household income\nper person", color="#086FA1", align="center")
+                col.bar("consumption", title="Real consumption\nper person", color="#086FA1", align="center")
                 .label(value=True, format="num1")
-                .scale(domain=league_domains["income"])
+                .scale(domain=league_domains["consumption"])
                 .reference_line(0, color="#94a3b8"),
-                col.bar("prices", title="Share prices", color="#8BB9CE",  align="center")
+                col.bar("prices", title="Equity prices\n(USD)", color="#8BB9CE",  align="center")
                 .label(value=True, format="num1")
                 .scale(domain=league_domains["prices"])
                 .reference_line(0, color="#94a3b8"),
-                col.bar("investment", color="#559CB8", align="center")
+                col.bar("investment", title="Real fixed\ninvestment", color="#559CB8", align="center")
                 .label(value=True, format="num1")
                 .scale(domain=league_domains["investment"])
                 .reference_line(0, color="#94a3b8"),
-                col.bar("debt", title="Public debt\nto GDP", color="#2EC1D3", align="center")
+                col.bar("debt", title="Central gov debt\n(pp of GDP)", color="#2EC1D3", align="center")
                 .label(value=True, format="num1")
                 .scale(domain=league_domains["debt"])
                 .reference_line(0, color="#94a3b8"),
             ],
-            rules=[tab_style(cells_body(columns=list(league_domains)), min_width="150px")],
+            rules=[tab_style(cells_body(columns=list(league_domains)), min_width="230px")],
         )
     )
     league_table
@@ -161,7 +230,16 @@ def _(mo):
 
 
 @app.cell
-def _(EvidentialTable, col, league_domains, leagues, mo, settings):
+def _(
+    EvidentialTable,
+    cells_body,
+    col,
+    league_domains,
+    leagues,
+    mo,
+    settings,
+    tab_style,
+):
     variants = mo.ui.anywidget(
         EvidentialTable(
             leagues,
@@ -171,7 +249,7 @@ def _(EvidentialTable, col, league_domains, leagues, mo, settings):
                 row_lines=False,
                 # border=False,
                 # stretch=False,
-                width="760px",
+                width="1000px",
             ),
             columns=[
                 col.text("country"),
@@ -187,6 +265,7 @@ def _(EvidentialTable, col, league_domains, leagues, mo, settings):
                 .scale(domain=league_domains["gdp"])
                 .reference_line(0, color="#94a3b8"),
             ],
+            rules=[tab_style(cells_body(columns=["gdp"]), min_width="230px")],
         )
     )
     variants

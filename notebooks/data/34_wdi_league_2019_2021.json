@@ -1,0 +1,98 @@
+{
+  "source": "World Bank, World Development Indicators",
+  "bundle": "WDI_CSV_2026_10_01",
+  "base_year": 2019,
+  "end_year": 2021,
+  "records": [
+    {
+      "country_code": "DNK",
+      "country": "**Denmark**",
+      "gdp": 4.6044370184453065,
+      "consumption": 3.517536477939176,
+      "prices": 63.09467954252348,
+      "investment": 17.60899492093071,
+      "debt": null
+    },
+    {
+      "country_code": "CHL",
+      "country": "**Chile**",
+      "gdp": 4.501624099805368,
+      "consumption": 10.395306630237489,
+      "prices": -25.170924876491753,
+      "investment": 3.393539765074882,
+      "debt": null
+    },
+    {
+      "country_code": "IRL",
+      "country": "**Ireland**",
+      "gdp": 24.574944372829698,
+      "consumption": -4.699916970912199,
+      "prices": 25.87461529360475,
+      "investment": -49.798368332808565,
+      "debt": null
+    },
+    {
+      "country_code": "USA",
+      "country": "**United States**",
+      "gdp": 3.9425997828594905,
+      "consumption": 5.454721777597893,
+      "prices": 47.524127300527994,
+      "investment": 4.742651044780577,
+      "debt": 18.05044536852148
+    },
+    {
+      "country_code": "AUS",
+      "country": "**Australia**",
+      "gdp": 1.8707366225707345,
+      "consumption": -3.9069988149183277,
+      "prices": 19.068985203625545,
+      "investment": 1.7411845799257586,
+      "debt": 9.852986974403755
+    },
+    {
+      "country_code": "CAN",
+      "country": "**Canada**",
+      "gdp": 0.6124931285603097,
+      "consumption": -2.4769092006508675,
+      "prices": 28.182686016272363,
+      "investment": 4.714615005369249,
+      "debt": 15.408159198471239
+    },
+    {
+      "country_code": "FRA",
+      "country": "**France**",
+      "gdp": -1.0703984536843514,
+      "consumption": -2.2083782508889316,
+      "prices": 19.65469707552181,
+      "investment": 3.3378252156275323,
+      "debt": null
+    },
+    {
+      "country_code": "PRT",
+      "country": "**Portugal**",
+      "gdp": -3.101950382638552,
+      "consumption": -2.9078731503810573,
+      "prices": 4.915813775136768,
+      "investment": 5.265020084669181,
+      "debt": null
+    },
+    {
+      "country_code": "DEU",
+      "country": "**Germany**",
+      "gdp": -0.3834723422703856,
+      "consumption": -5.032063805887066,
+      "prices": 19.894694289577863,
+      "investment": -2.202814794536978,
+      "debt": null
+    },
+    {
+      "country_code": "ESP",
+      "country": "**Spain**",
+      "gdp": -4.988067126945895,
+      "consumption": -6.469561448175709,
+      "prices": -7.666951617162388,
+      "investment": -6.528049448399975,
+      "debt": 21.25443792763646
+    }
+  ]
+}

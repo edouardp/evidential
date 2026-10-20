@@ -263,6 +263,26 @@ export function contrastTextColor(colorValue) {
 export function calculateVizRanges(columns, rows) {
   const ranges = new Map();
   for (const col of columns) {
+    if (col.encodings && col.encodings.length) {
+      // A marks column shares one scale across every encoding's sources.
+      let min = Infinity;
+      let max = -Infinity;
+      for (const row of rows) {
+        if (row.render_type === "row_total" || row.render_type === "row_subtotal") continue;
+        for (const enc of col.encodings) {
+          for (const field of [enc.source, enc.high]) {
+            const raw = field == null ? null : row[field];
+            const num = Number(raw);
+            if (raw !== null && raw !== undefined && isFinite(num)) {
+              min = Math.min(min, num);
+              max = Math.max(max, num);
+            }
+          }
+        }
+      }
+      if (min !== Infinity && max !== -Infinity) ranges.set(col.name, { min, max });
+      continue;
+    }
     if (col.viz !== "bar" && col.viz !== "color" && col.viz !== "chip") continue;
     const opts = col.color_options || {};
     const scaleColumn =

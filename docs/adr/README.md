@@ -76,6 +76,7 @@ dated, immutable record of the decisions behind them.
 | [055](055-table-font-size.md) | Table-level `font_size` (Absolute or Relative) | Accepted |
 | [056](056-repeated-symbols.md) | Repeated Symbols | Accepted |
 | [057](057-back-to-back-bars.md) | Back-to-Back Bars — Direction and Benchmark Rules | Accepted |
+| [058](058-encoding-based-columns.md) | Encoding-Based Columns (Declarative Marks) | Accepted |
 
 ## Creating New ADRs
 

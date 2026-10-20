@@ -48,7 +48,6 @@ accepted anywhere a column definition is — including
 from ._column import (
     array,
     auto,
-    bar,
     boolean,
     chip,
     color,
@@ -76,6 +75,13 @@ from ._column import (
     time,
     url,
 )
+from .marks import (
+    MarkColumn,
+    bar,
+    point,
+    range,  # noqa: A004 - the public constructor name
+    stacked_bar,
+)
 
 __all__ = [
     "array",
@@ -99,12 +105,16 @@ __all__ = [
     "merge",
     "number",
     "percent",
+    "point",
+    "range",
     "rating",
     "repeat",
     "sparkline",
+    "stacked_bar",
     "subcolumns",
     "symbols",
     "text",
     "time",
     "url",
+    "MarkColumn",
 ]

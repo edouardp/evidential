@@ -246,6 +246,63 @@ class LogoOptions(TypedDict, total=False):
     height: float | None
 
 
+class EncodingLabel(TypedDict, total=False):
+    """A mark-owned annotation. Exactly one of ``text``/``source``/``value``."""
+
+    source: str | None
+    text: str | None
+    value: bool | None
+    position: str | None
+    format: str | None
+
+
+class EncodingSpec(TypedDict, total=False):
+    """One visual mark bound to a source, sharing its column's scale."""
+
+    kind: Literal["bar", "point", "range", "stacked_bar"]
+    #: The field a scalar mark reads, or a range's lower endpoint.
+    source: str | None
+    #: A range's upper endpoint.
+    high: str | None
+    color: str | None
+    color_negative: str | None
+    #: A per-row colour column (the ``@column`` convention).
+    color_column: str | None
+    #: Bar height fraction (0, 1]; a point/range marker size in pixels.
+    size: float | None
+    #: A nonnegative magnitude extending left/right of the central origin.
+    side: Literal["left", "right"] | None
+    #: Range end treatment.
+    cap: Literal["none", "line", "dot"] | None
+    fit_to_data: bool | None
+    #: Bar-only legacy extras (mirrored into ``bar_options`` when alone).
+    background: str | None
+    hide_labels: bool | None
+    center: bool | None
+    pad: float | str | None
+    direction: Literal["left", "right"] | None
+    reference: float | None
+    reference_color: str | None
+    reference_label: str | None
+    label: EncodingLabel | None
+
+
+class ScaleSpec(TypedDict, total=False):
+    """The quantitative axis shared by a column's encodings."""
+
+    domain: tuple[float | None, float | None] | None
+    include_zero: bool | None
+    unit: str | None
+
+
+class ReferenceSpec(TypedDict, total=False):
+    """A column-wide reference line drawn through every row."""
+
+    value: float
+    label: str | None
+    color: str | None
+
+
 class ColumnOptions(TypedDict, total=False):
     name: str
     type: str
@@ -283,6 +340,9 @@ class ColumnOptions(TypedDict, total=False):
     image_options: ImageOptions | None
     logo_options: LogoOptions | None
     viz_include_subtotals: bool | None
+    encodings: Sequence[EncodingSpec] | None
+    scale: ScaleSpec | None
+    references: Sequence[ReferenceSpec] | None
     sort_by: str | None
     highlight: str | None
     null_text: str | None

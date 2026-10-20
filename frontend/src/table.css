@@ -467,6 +467,79 @@ tbody tr:last-child .et-bar-center .et-bar-axis { bottom: var(--et-bar-pad, 0); 
   padding-left: 0.4rem;
 }
 
+/* ---------------------------------------------------------- marks viz ------ */
+/* A column composing several encodings (bar/point/range) over one scale. The
+   track is full-height and pulls into the cell padding like the classic bar. */
+.et-marks {
+  --et-mark-pad-right: 0.75rem;
+  position: relative;
+  display: block;
+  min-width: 60px;
+  height: 1.5em;
+  margin: -0.25rem calc(-1 * var(--et-mark-pad-right)) -0.25rem 0;
+}
+.et-mark { position: absolute; }
+.et-mark-bar {
+  top: 50%;
+  transform: translateY(-50%);
+  min-width: 1px;
+  opacity: 0.55;
+}
+.et-mark-point {
+  top: 50%;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  box-shadow: 0 0 0 1px color-mix(in srgb, Canvas 60%, transparent);
+  z-index: 2;
+}
+.et-mark-range {
+  top: 50%;
+  transform: translateY(-50%);
+  min-width: 1px;
+  opacity: 0.9;
+}
+.et-mark-cap {
+  position: absolute;
+  top: 50%;
+  width: 2px;
+  height: 0.7em;
+  transform: translate(-50%, -50%);
+}
+.et-mark-cap-end { right: 0; transform: translate(50%, -50%); }
+.et-mark-reference {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  opacity: 0.6;
+}
+.et-mark-reference-label {
+  position: absolute;
+  bottom: 0.1rem;
+  font-size: 0.72em;
+  line-height: 1.2;
+  white-space: nowrap;
+  transform: translateX(-50%);
+}
+.et-mark-label {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  padding: 0 0.2rem;
+  font-size: 0.85em;
+  line-height: 1.2;
+  white-space: nowrap;
+  z-index: 3;
+}
+.et-mark-label-outside_end { transform: translate(0.15rem, -50%); }
+.et-mark-label-center { transform: translate(-50%, -50%); }
+.et-mark-label-inside {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+.et-mark-label-inside.et-mark-label-start { justify-content: flex-start; }
+
 /* --------------------------------------------------------- symbol viz ------ */
 /* A value repeated as glyphs, emoji or images (ratings, medal tables). */
 .et-symbols {

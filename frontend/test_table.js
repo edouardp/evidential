@@ -1798,3 +1798,83 @@ test("CSV download preserves search, indirect sorting, grouped column order and 
   assert.deepEqual(clicked, {href: "blob:csv-test", filename: "clean_table.csv"});
   assert.deepEqual(revoked, ["blob:csv-test"]);
 });
+
+test("marks encodings render overlaid bars with owned labels", () => {
+  const rows = [
+    { current: 8, previous: 5, candidate: "Alpha", target: 6 },
+    { current: 3, previous: 7, candidate: "Beta", target: 6 },
+  ];
+  const columns = [{
+    name: "current", type: "number", fmt: "num0",
+    encodings: [
+      { kind: "bar", source: "current", color: "#1d4ed8", size: 0.4, label: { source: "candidate" } },
+      { kind: "bar", source: "previous", color: "#d1d5db", size: 0.8 },
+    ],
+  }];
+  const renderer = new EvidentialTableRenderer(makeModel(rows, columns, { page_size: 10 }, el), el);
+  const cells = [...el.querySelectorAll("tbody td")];
+  assert.equal(cells.length, 2);
+  const bars = cells[0].querySelectorAll(".et-mark-bar");
+  assert.equal(bars.length, 2);
+  // The wider "previous" bar sits behind the thinner "current" bar.
+  assert.match(bars[0].style.height, /40%/);
+  assert.match(bars[1].style.height, /80%/);
+  // The label names the candidate field, not the value.
+  assert.match(cells[0].textContent, /Alpha/);
+  assert.match(cells[1].textContent, /Beta/);
+  renderer.destroy();
+});
+
+test("marks colour and shared scale come from the column", () => {
+  const rows = [
+    { votes: 25, candidate: "A", colour: "#ff0000" },
+    { votes: 75, candidate: "B", colour: "#00ff00" },
+  ];
+  const columns = [{
+    name: "votes", type: "number",
+    scale: { domain: [0, 100] },
+    encodings: [{ kind: "bar", source: "votes", color_column: "colour" }],
+  }];
+  const renderer = new EvidentialTableRenderer(makeModel(rows, columns, { page_size: 10 }, el), el);
+  const bars = [...el.querySelectorAll(".et-mark-bar")];
+  assert.equal(bars.length, 2);
+  // 25/100 and 75/100 of the shared domain.
+  assert.match(bars[0].style.width, /25%/);
+  assert.match(bars[1].style.width, /75%/);
+  assert.notEqual(bars[0].style.backgroundColor, bars[1].style.backgroundColor);
+  renderer.destroy();
+});
+
+test("point and range marks share the column's bar scale", () => {
+  const rows = [{ estimate: 20, low: 10, high: 40, target: 30 }];
+  const columns = [{
+    name: "estimate", type: "number",
+    encodings: [
+      { kind: "range", source: "low", high: "high", cap: "line" },
+      { kind: "point", source: "estimate" },
+      { kind: "point", source: "target", size: 9 },
+    ],
+  }];
+  const renderer = new EvidentialTableRenderer(makeModel(rows, columns, { page_size: 10 }, el), el);
+  const cell = el.querySelector("tbody td");
+  assert.ok(cell.querySelector(".et-mark-range"));
+  assert.equal(cell.querySelectorAll(".et-mark-point").length, 2);
+  assert.equal(cell.querySelectorAll(".et-mark-cap").length, 2);
+  renderer.destroy();
+});
+
+test("reference lines render at the shared scale", () => {
+  const rows = [{ debt: 40 }, { debt: 80 }];
+  const columns = [{
+    name: "debt", type: "number",
+    scale: { domain: [0, 100] },
+    references: [{ value: 50, label: "Average" }],
+    encodings: [{ kind: "bar", source: "debt" }],
+  }];
+  const renderer = new EvidentialTableRenderer(makeModel(rows, columns, { page_size: 10 }, el), el);
+  const rule = el.querySelector(".et-mark-reference");
+  assert.ok(rule);
+  assert.match(rule.style.left, /50%/);
+  assert.match(el.textContent, /Average/);
+  renderer.destroy();
+});

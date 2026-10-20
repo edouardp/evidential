@@ -2,6 +2,155 @@ import { h } from "./dom.js";
 import { formatValue } from "./format.js";
 import { resolveColor } from "./color.js";
 
+/** Resolve a mark's colour: an explicit colour, a per-row column, or a default. */
+function markColor(enc, row, fallback) {
+  if (row && Number(row[enc.source]) < 0) {
+    const negative = resolveColor(enc.color_negative);
+    if (negative) return negative;
+  }
+  if (enc.color_column && row) {
+    const resolved = resolveColor(row[enc.color_column]);
+    if (resolved) return resolved;
+  }
+  return resolveColor(enc.color) || fallback;
+}
+
+/** The label text for a mark: a literal, another field, or the mark's value. */
+function markLabelText(col, enc, row) {
+  const spec = enc.label || {};
+  const raw = spec.source != null ? row[spec.source] : row[enc.source];
+  if (spec.text != null) return String(spec.text);
+  if (raw === null || raw === undefined) return "";
+  return formatValue(raw, spec.format || col.fmt, {
+    type: col.type,
+    fallback: String(raw),
+  });
+}
+
+/** A mark-owned label, positioned relative to its bar or point. */
+function renderMarkLabel(col, enc, row, geometry) {
+  const spec = enc.label || {};
+  const text = markLabelText(col, enc, row);
+  if (!text) return h("span", { class: "et-mark-label et-mark-label-empty" });
+  const position = spec.position || (enc.kind === "bar" ? "outside_end" : "center");
+  const node = h("span", { class: `et-mark-label et-mark-label-${position}` }, text);
+  if (geometry.leftPct != null) {
+    const inside = ["inside_start", "inside_end", "center"].includes(position);
+    if (inside) {
+      node.style.left = `${geometry.leftPct}%`;
+      node.style.width = `${Math.max(0, geometry.widthPct)}%`;
+      node.classList.add("et-mark-label-inside");
+      if (position === "inside_start") node.classList.add("et-mark-label-start");
+    } else {
+      node.style.left = `${geometry.leftPct + geometry.widthPct}%`;
+    }
+  } else if (geometry.pointPct != null) {
+    node.style.left = `${geometry.pointPct}%`;
+  }
+  return node;
+}
+
+/**
+ * Render a column's ordered encodings over one shared scale. Bars, points and
+ * ranges are positioned absolutely in a full-height track; the shared domain
+ * comes from the column's own ``scale`` or the data range across every source.
+ */
+export function renderMarks(col, row, range) {
+  const encodings = col.encodings || [];
+  const scale = col.scale || {};
+  let lo = scale.domain && scale.domain[0] != null ? Number(scale.domain[0]) : (range?.min ?? 0);
+  let hi = scale.domain && scale.domain[1] != null ? Number(scale.domain[1]) : (range?.max ?? 1);
+  const hasBar = encodings.some((enc) => enc.kind === "bar" || enc.kind === "stacked_bar");
+  if (scale.include_zero !== false && hasBar) {
+    lo = Math.min(0, lo);
+    hi = Math.max(0, hi);
+  }
+  const span = (hi - lo) || 1;
+  const track = h("div", { class: "et-marks" });
+
+  // Column-wide reference rules paint behind the marks.
+  for (const ref of col.references || []) {
+    if (ref.value == null || !isFinite(Number(ref.value))) continue;
+    const pct = Math.max(0, Math.min(100, ((Number(ref.value) - lo) / span) * 100));
+    track.append(
+      h("div", {
+        class: "et-mark-reference",
+        style: {
+          left: `${pct}%`,
+          backgroundColor: resolveColor(ref.color) || "var(--et-reference, #0f766e)",
+        },
+      }),
+    );
+    if (ref.label) {
+      track.append(
+        h("span", { class: "et-mark-reference-label", style: { left: `${pct}%` } }, String(ref.label)),
+      );
+    }
+  }
+
+  const barCount = encodings.filter((enc) => enc.kind === "bar").length;
+  let barIndex = 0;
+  for (const enc of encodings) {
+    const value = Number(row[enc.source]);
+    if (enc.kind === "bar") {
+      const size = enc.size != null ? Number(enc.size) : barCount > 1 ? Math.max(0.25, 0.85 - barIndex * 0.3) : 1;
+      barIndex += 1;
+      const color = markColor(enc, row, "var(--et-accent, #2563eb)");
+      let leftPct;
+      let widthPct;
+      if (enc.side === "left" || enc.side === "right") {
+        const maxAbs = Math.max(Math.abs(lo), Math.abs(hi), 1e-9);
+        const width = Math.max(0, Math.min(50, (Math.abs(value) / maxAbs) * 50));
+        widthPct = width;
+        leftPct = enc.side === "left" ? 50 - width : 50;
+      } else {
+        leftPct = ((0 - lo) / span) * 100;
+        widthPct = (value / span) * 100;
+      }
+      track.append(
+        h("div", {
+          class: `et-mark et-mark-bar${enc.side ? ` et-mark-bar-${enc.side}` : ""}`,
+          style: {
+            left: `${leftPct}%`,
+            width: `${Math.max(0, widthPct)}%`,
+            height: `${Math.max(0, Math.min(1, size)) * 100}%`,
+            backgroundColor: color,
+          },
+        }),
+      );
+      if (enc.label) track.append(renderMarkLabel(col, enc, row, { leftPct, widthPct }));
+    } else if (enc.kind === "point") {
+      const pct = ((value - lo) / span) * 100;
+      const size = enc.size != null ? Number(enc.size) : 7;
+      track.append(
+        h("div", {
+          class: "et-mark et-mark-point",
+          style: { left: `${pct}%`, width: `${size}px`, height: `${size}px`, backgroundColor: markColor(enc, row, "var(--et-accent, #2563eb)") },
+        }),
+      );
+      if (enc.label) track.append(renderMarkLabel(col, enc, row, { pointPct: pct }));
+    } else if (enc.kind === "range") {
+      const low = Number(row[enc.source]);
+      const high = Number(row[enc.high]);
+      const start = ((Math.min(low, high) - lo) / span) * 100;
+      const end = ((Math.max(low, high) - lo) / span) * 100;
+      const size = enc.size != null ? Number(enc.size) : 4;
+      const color = markColor(enc, row, "var(--et-accent, #2563eb)");
+      const line = h("div", {
+        class: "et-mark et-mark-range",
+        style: { left: `${start}%`, width: `${Math.max(0, end - start)}%`, height: `${size}px`, backgroundColor: color },
+      });
+      if (enc.cap === "line" || enc.cap === "dot") {
+        line.append(h("span", { class: "et-mark-cap et-mark-cap-start", style: { backgroundColor: color } }));
+        line.append(h("span", { class: "et-mark-cap et-mark-cap-end", style: { backgroundColor: color } }));
+      }
+      track.append(line);
+      if (enc.label) track.append(renderMarkLabel(col, enc, row, { pointPct: start }));
+    }
+  }
+  return track;
+}
+
 export function renderBar(col, value, formatted, range, row) {
   const opts = col.bar_options || {};
   const num = Number(value);

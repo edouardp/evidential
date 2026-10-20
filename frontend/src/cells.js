@@ -2,7 +2,7 @@ import { alignStyle, h, optString, inlineMarkdown, withFigure } from "./dom.js";
 import { formatValue } from "./format.js";
 import { withDecimals, indentForCell } from "./rows.js";
 import { calculateColorStyles, contrastTextColor } from "./color.js";
-import { renderBar, renderDelta, renderSparkline, renderSymbols } from "./visualizations.js";
+import { renderBar, renderDelta, renderMarks, renderSparkline, renderSymbols } from "./visualizations.js";
 
 /** Return the first matching substitution text, or null. */
 export function matchSubstitution(col, row, value, options) {
@@ -253,7 +253,9 @@ export function renderCell({row, col, index, ctx, rowIndex, options: opts, toggl
 function renderContent(col, value, formatted, ctx, row) {
   const isSubtotal = row.render_type === "row_subtotal";
   let content;
-  if (col.viz === "bar" && !(isSubtotal && col.viz_include_subtotals === false) && row.render_type !== "row_total") {
+  if (col.encodings && col.encodings.length && row.render_type !== "row_total") {
+    content = renderMarks(col, row, ctx.ranges.get(col.name));
+  } else if (col.viz === "bar" && !(isSubtotal && col.viz_include_subtotals === false) && row.render_type !== "row_total") {
     content = renderBar(col, value, formatted, ctx.ranges.get(col.name), row);
   } else if (col.viz === "delta") {
     content = renderDelta(col, value);

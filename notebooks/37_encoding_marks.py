@@ -75,7 +75,7 @@ def _(EvidentialTable, col, mo, polling, settings):
                 row_shading=True,
                 row_lines=False,
                 border=False,
-                stretch=False,
+                stretch=True, width=600
             ),
             columns=[
                 col.text("party"),
@@ -110,11 +110,11 @@ def _():
         {"name": "Effect C", "low": -1.8, "estimate": -0.5, "high": 0.7},
         {"name": "Effect D", "low": 0.3, "estimate": 0.9, "high": 1.5},
     ]
-    return (estimates,)
+    return
 
 
-@app.cell
-def _(EvidentialTable, col, estimates, mo, settings):
+app._unparsable_cell(
+    r"""
     forest = mo.ui.anywidget(
         EvidentialTable(
             estimates,
@@ -123,18 +123,21 @@ def _(EvidentialTable, col, estimates, mo, settings):
                 subtitle="Point with an interval",
                 row_lines=False,
                 border=False,
-                stretch=False,
+                stretch=True, width=600
             ),
             columns=[
                 col.text("name"),
-                col.range("low", "high", cap="line", color="#94a3b8")
-                .point("estimate", color="#1d4ed8", size=8)
-                .reference_line(0, label="No effect"),
+                col.range("low", "high", cap="line", color="#94a3b8", title="Estimate", align="center")
+                   .point("estimate", color="#1d4ed8", size=8)
+                 # .reference_line(0, label="No effect"),
+                col.numeric("low")
             ],
         )
     )
     forest
-    return
+    """,
+    name="_"
+)
 
 
 @app.cell
@@ -412,6 +415,52 @@ def _(EvidentialTable, col, mo, settings, wards):
         )
     )
     observations_table
+    return
+
+
+@app.cell
+def _(mo):
+    mo.md("""
+    ## A forecast band
+
+    `range(..., fill=True)` draws the interval as a translucent band — an
+    uncertainty or forecast range — behind a point estimate, instead of a line.
+    """)
+    return
+
+
+@app.cell
+def _():
+    forecast = [
+        {"month": "Jan", "low": 88, "estimate": 96, "high": 108},
+        {"month": "Feb", "low": 92, "estimate": 101, "high": 115},
+        {"month": "Mar", "low": 99, "estimate": 110, "high": 126},
+        {"month": "Apr", "low": 106, "estimate": 118, "high": 135},
+    ]
+    return (forecast,)
+
+
+@app.cell
+def _(EvidentialTable, col, forecast, mo, settings):
+    band = mo.ui.anywidget(
+        EvidentialTable(
+            forecast,
+            settings=settings(
+                title="Forecast",
+                subtitle="A filled range with a point estimate",
+                row_lines=False,
+                border=False,
+                stretch=False,
+            ),
+            columns=[
+                col.text("month"),
+                col.range("low", "high", fill=True, color="#a5b4fc")
+                .point("estimate", color="#4338ca", size=8)
+                .scale(domain=(80, 140)),
+            ],
+        )
+    )
+    band
     return
 
 

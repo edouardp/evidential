@@ -498,6 +498,11 @@ tbody tr:last-child .et-bar-center .et-bar-axis { bottom: var(--et-bar-pad, 0); 
   min-width: 1px;
   opacity: 0.9;
 }
+.et-mark-range-fill {
+  position: absolute;
+  opacity: 0.2;
+  border-radius: 2px;
+}
 .et-mark-stack {
   top: 15%;
   bottom: 15%;

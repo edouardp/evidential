@@ -318,6 +318,8 @@ class EncodingSpec(TypedDict, total=False):
     side: Literal["left", "right"] | None
     #: ``range``: end treatment, or ``"arrow"`` when an endpoint is off-scale.
     cap: Literal["none", "line", "dot", "arrow"] | None
+    #: ``range``: draw the interval as a translucent band rather than a line.
+    fill: bool | None
     #: Vertical placement of the mark within the cell.
     valign: Literal["top", "center", "bottom"] | None
     #: ``strip``: an ordered category → colour map (W/D/L).

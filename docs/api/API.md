@@ -494,7 +494,8 @@ columns=[
 
 - **Marks** — `bar(source, color=, color_negative=, size=, side=, valign=, ...)`,
   `point(source, size=, color=)`, `points(source, size=, color=)` (one marker per
-  array element), `range(low, high, cap="none"|"line"|"dot"|"arrow")`.
+  array element), `range(low, high, cap="none"|"line"|"dot"|"arrow", fill=)`.
+  `fill=True` draws the interval as a translucent band instead of a line.
   `side="left"`
   `|"right"` draws a nonnegative magnitude from the central origin; `size` is the
   bar height fraction or the point/range marker size; `valign="top"|"center"|
@@ -658,7 +659,7 @@ other than `auto`, `merge`, `group` and `subcolumns` return a `Column`;
 | `col.bar(source, *, title=, label=, size=, side=, color=, …)` | bar (single = classic, chained = marks) |
 | `col.point(source, *, title=, size=, color=, label=)` | point marker |
 | `col.points(source, *, size=, color=)` | one marker per array observation |
-| `col.range(low, high, *, cap=, color=, label=)` | interval / dumbbell |
+| `col.range(low, high, *, cap=, fill=, color=, label=)` | interval / dumbbell |
 | `col.stacked_bar(*sources, *, colors=, labels=, normalize="percent", diverge_at=, neutral="split")` | cumulative stack |
 | `col.strip(source, *, colors=, labels=, segmented=)` | ordered categorical strip |
 | `col.boxplot(minimum, q1, median, q3, maximum, *, outliers=, whisker="extrema")` | box plot |

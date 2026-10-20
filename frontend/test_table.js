@@ -2374,3 +2374,20 @@ test("multiple stub columns are marked as the row-label area", () => {
   assert.equal(el.querySelectorAll("th.et-stub-head").length, 2);
   renderer.destroy();
 });
+
+test("range fill draws a translucent band", () => {
+  const rows = [{ estimate: 20, low: 10, high: 40 }];
+  const columns = [{
+    name: "estimate", type: "number",
+    scale: { domain: [0, 50] },
+    encodings: [
+      { kind: "range", source: "low", high: "high", fill: true, color: "#8b5cf6" },
+      { kind: "point", source: "estimate" },
+    ],
+  }];
+  const renderer = new EvidentialTableRenderer(makeModel(rows, columns, { page_size: 10 }, el), el);
+  const band = el.querySelector(".et-mark-range-fill");
+  assert.ok(band);
+  assert.match(band.style.width, /60%/);
+  renderer.destroy();
+});

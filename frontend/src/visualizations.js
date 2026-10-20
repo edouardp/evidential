@@ -514,6 +514,24 @@ export function renderMarks(col, row, range) {
       const right = Math.max(start, end);
       const size = enc.size != null ? Number(enc.size) : 4;
       const color = markColor(enc, row, "var(--et-accent, #2563eb)");
+      if (enc.fill) {
+        // A translucent band, e.g. a forecast or uncertainty range.
+        track.append(
+          h("div", {
+            class: "et-mark et-mark-range-fill",
+            style: {
+              ...verticalStyle(enc.valign),
+              top: "15%",
+              bottom: "15%",
+              left: `${left}%`,
+              width: `${Math.max(0, right - left)}%`,
+              backgroundColor: color,
+            },
+          }),
+        );
+        if (enc.label) track.append(renderMarkLabel(col, enc, row, { pointPct: left }));
+        continue;
+      }
       const line = h("div", {
         class: "et-mark et-mark-range",
         style: { ...verticalStyle(enc.valign), left: `${left}%`, width: `${Math.max(0, right - left)}%`, height: `${size}px`, backgroundColor: color },

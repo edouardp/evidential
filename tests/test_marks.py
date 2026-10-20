@@ -304,3 +304,9 @@ def test_stacked_bar_percent_labels_and_thickness() -> None:
         col.stacked_bar("a", labels="count")
     with pytest.raises(ValueError, match="size is a fraction"):
         col.stacked_bar("a", size=2)
+
+
+def test_range_can_be_a_filled_band() -> None:
+    spec = dict(col.range("low", "high", fill=True, color="#8b5cf6").point("estimate"))
+    rng = spec["encodings"][0]
+    assert rng["fill"] is True and rng["kind"] == "range" and rng["color"] == "#8b5cf6"

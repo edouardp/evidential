@@ -28,17 +28,33 @@ WITH observations AS (
            END AS change
     FROM observations
     GROUP BY country_code, indicator_code
+), countries AS (
+    SELECT c."Country Code" AS country_code,
+           '**' || c."Short Name" || '**' AS country,
+           max(change) FILTER (WHERE indicator_code = 'NY.GDP.MKTP.KD') AS gdp,
+           max(change) FILTER (WHERE indicator_code = 'NE.CON.PRVT.PC.KD') AS consumption,
+           max(change) FILTER (WHERE indicator_code = 'CM.MKT.INDX.ZG') AS prices,
+           max(change) FILTER (WHERE indicator_code = 'NE.GDI.FTOT.KD') AS investment,
+           max(change) FILTER (WHERE indicator_code = 'GC.DOD.TOTL.GD.ZS') AS debt
+    FROM read_parquet($countries) c
+    LEFT JOIN changes ON changes.country_code = c."Country Code"
+    -- WDI aggregate regions/income groups have no Region in the country dimension.
+    WHERE c.Region IS NOT NULL
+    GROUP BY c."Country Code", c."Short Name"
+), scored AS (
+    -- list_sum ignores missing metrics; an entirely missing row stays NULL.
+    SELECT *, CAST(round(list_sum([gdp, consumption, prices, investment, debt]), 0) AS BIGINT) AS score
+    FROM countries
+), ranked AS (
+    SELECT country_code,
+           CAST(rank() OVER (ORDER BY score DESC) AS VARCHAR) ||
+           CASE WHEN count(*) OVER (PARTITION BY score) > 1 THEN '=' ELSE '' END AS rank_label
+    FROM scored
+    WHERE score IS NOT NULL
 )
-SELECT c."Country Code" AS country_code,
-       '**' || c."Short Name" || '**' AS country,
-       max(change) FILTER (WHERE indicator_code = 'NY.GDP.MKTP.KD') AS gdp,
-       max(change) FILTER (WHERE indicator_code = 'NE.CON.PRVT.PC.KD') AS consumption,
-       max(change) FILTER (WHERE indicator_code = 'CM.MKT.INDX.ZG') AS prices,
-       max(change) FILTER (WHERE indicator_code = 'NE.GDI.FTOT.KD') AS investment,
-       max(change) FILTER (WHERE indicator_code = 'GC.DOD.TOTL.GD.ZS') AS debt
-FROM read_parquet($countries) c
-LEFT JOIN changes ON changes.country_code = c."Country Code"
--- WDI aggregate regions/income groups have no Region in the country dimension.
-WHERE c.Region IS NOT NULL
-GROUP BY c."Country Code", c."Short Name"
-ORDER BY c."Short Name", c."Country Code"
+SELECT s.country_code,
+       s.country || CASE WHEN r.rank_label IS NOT NULL THEN ' (' || r.rank_label || ')' ELSE '' END AS country,
+       s.gdp, s.consumption, s.prices, s.investment, s.debt, s.score, r.rank_label
+FROM scored s
+LEFT JOIN ranked r USING (country_code)
+ORDER BY s.score DESC NULLS LAST, s.country, s.country_code

@@ -11,6 +11,71 @@ import pytest
 ROOT = Path(__file__).resolve().parents[2]
 
 
+def query_league(bundle, end_year=2021):
+    with duckdb.connect() as connection:
+        return (
+            connection.execute(
+                (ROOT / "notebooks/sql/34_wdi_league.sql").read_text(),
+                {
+                    "observations": str(bundle / "wdi_observations/**/*.parquet"),
+                    "countries": str(bundle / "country.parquet"),
+                    "base_year": 2019,
+                    "end_year": end_year,
+                },
+            )
+            .to_arrow_table()
+            .to_pylist()
+        )
+
+
+def test_wdi_rank_uses_quantized_sums_and_marks_competition_ties(wdi_bundle):
+    # Make three complete rows, with different raw sums rounding to the same point.
+    records = []
+    for code, gdp in (("DNK", 20.1), ("CHL", 20.4), ("IRL", 10.0)):
+        for indicator in ("NY.GDP.MKTP.KD", "NE.CON.PRVT.PC.KD", "NE.GDI.FTOT.KD"):
+            records.extend(
+                [
+                    {"country_code": code, "indicator_code": indicator, "year": 2019, "value": 100.0},
+                    {
+                        "country_code": code,
+                        "indicator_code": indicator,
+                        "year": 2021,
+                        "value": 100 + gdp if indicator == "NY.GDP.MKTP.KD" else 100.0,
+                    },
+                ]
+            )
+        records.extend(
+            [
+                {"country_code": code, "indicator_code": "CM.MKT.INDX.ZG", "year": year, "value": 0.0}
+                for year in (2020, 2021)
+            ]
+        )
+        records.extend(
+            [
+                {"country_code": code, "indicator_code": "GC.DOD.TOTL.GD.ZS", "year": year, "value": 40.0}
+                for year in (2019, 2021)
+            ]
+        )
+    # Replace each fixture partition, preserving missing data for other countries.
+    for shard in (wdi_bundle / "wdi_observations").rglob("*.parquet"):
+        table = pq.ParquetFile(shard).read()
+        year = int(shard.parent.name.split("=")[1])
+        retained = [row for row in table.to_pylist() if row["country_code"] not in {"DNK", "CHL", "IRL"}]
+        added = [{key: value for key, value in row.items() if key != "year"} for row in records if row["year"] == year]
+        pq.write_table(pa.Table.from_pylist(retained + added, schema=table.schema), shard)
+    rows = query_league(wdi_bundle)
+    by_country = {row["country_code"]: row for row in rows}
+    assert by_country["DNK"]["score"] == by_country["CHL"]["score"] == 20
+    assert by_country["NZL"]["score"] == 100
+    assert by_country["NZL"]["rank_label"] == "1"
+    assert by_country["DNK"]["rank_label"] == by_country["CHL"]["rank_label"] == "2="
+    assert by_country["IRL"]["rank_label"] == "4"
+    assert by_country["DNK"]["country"] == "**Denmark** (2=)"
+    assert [row["country_code"] for row in rows[:4]] == ["NZL", "CHL", "DNK", "IRL"]
+    assert by_country["CAN"]["score"] is None and by_country["CAN"]["rank_label"] is None
+    assert by_country["CAN"]["country"] == "**Canada**"
+
+
 @pytest.fixture
 def wdi_bundle(tmp_path):
     countries = [
@@ -78,38 +143,31 @@ def wdi_bundle(tmp_path):
 
 @pytest.mark.parametrize("end_year, gdp, equity, debt", [(2021, 21, -1, 15), (2020, -10, 10, None)])
 def test_wdi_query_preserves_missing_values_and_uses_correct_change_units(wdi_bundle, end_year, gdp, equity, debt):
-    query = (ROOT / "notebooks/sql/34_wdi_league.sql").read_text()
-    with duckdb.connect() as connection:
-        rows = (
-            connection.execute(
-                query,
-                {
-                    "observations": str(wdi_bundle / "wdi_observations/**/*.parquet"),
-                    "countries": str(wdi_bundle / "country.parquet"),
-                    "base_year": 2019,
-                    "end_year": end_year,
-                },
-            )
-            .to_arrow_table()
-            .to_pylist()
-        )
+    rows = query_league(wdi_bundle, end_year)
     assert len(rows) == 11
-    assert [row["country"] for row in rows] == sorted(row["country"] for row in rows)
+    scores = [row["score"] for row in rows if row["score"] is not None]
+    assert scores == sorted(scores, reverse=True)
     by_country = {row["country_code"]: row for row in rows}
     assert "WLD" not in by_country
     assert all(by_country["CAN"][field] is None for field in ("gdp", "consumption", "prices", "investment", "debt"))
     denmark, chile, ireland, usa = (by_country[code] for code in ("DNK", "CHL", "IRL", "USA"))
-    assert denmark["country"] == "**Denmark**"
+    assert denmark["country"].startswith("**Denmark** (")
     assert denmark["gdp"] == pytest.approx(gdp)
     assert denmark["prices"] == pytest.approx(equity)
     assert denmark["debt"] == debt
     assert denmark["investment"] is None
     assert all(chile[field] is None for field in ("gdp", "consumption", "prices", "investment", "debt"))
     assert usa["gdp"] is None
+    assert by_country["CAN"]["score"] is None and by_country["CAN"]["rank_label"] is None
     if end_year == 2021:
         assert denmark["consumption"] == pytest.approx(10)
         assert ireland["gdp"] == 0
         assert by_country["NZL"]["gdp"] == pytest.approx(100)
+        assert denmark["score"] == 45
+        assert denmark["rank_label"] == "2"
+    else:
+        assert denmark["score"] == 0
+        assert denmark["rank_label"] == "1"
 
 
 def test_centered_bar_demo_prefers_the_configured_local_wdi_bundle(monkeypatch, wdi_bundle):
@@ -175,7 +233,9 @@ def test_centered_bar_demo_uses_marks_for_every_bar(monkeypatch, tmp_path) -> No
     assert len(league.rows) == 217
     by_country = {row["country_code"]: row for row in league.rows}
     assert "NZL" in by_country and "WLD" not in by_country
-    assert by_country["DNK"]["country"] == "**Denmark**"
+    assert by_country["DNK"]["country"] == "**Denmark** (4)"
+    assert by_country["DNK"]["score"] == 89
+    assert sum(row["rank_label"] is not None for row in league.rows) == 208
     assert by_country["DNK"]["debt"] is None
     assert by_country["DNK"]["consumption"] is not None
     assert "percentage points" in league.options["subtitle"]

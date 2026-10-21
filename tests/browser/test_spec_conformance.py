@@ -86,7 +86,9 @@ def test_centered_bar_notebook_renders_mark_labels_and_mirrored_bars(page, live_
         assert case.locator(".et-mark-bar").count() > 0
         while True:
             labels = case.locator(".et-mark-label")
-            assert labels.count() > 0
+            assert case.locator("tbody tr").count() > 0
+            if not labels.count():
+                assert case.locator(".et-mark-bar").count() == 0
             hidden = labels.evaluate_all("""nodes => nodes
                 .filter(el => getComputedStyle(el).visibility === 'hidden')
                 .map(el => ({text: el.textContent, width: el.closest('td').getBoundingClientRect().width}))""")
@@ -98,6 +100,7 @@ def test_centered_bar_notebook_renders_mark_labels_and_mirrored_bars(page, live_
         previous_page = case.get_by_role("button", name="Previous page")
         while previous_page.count() and previous_page.is_enabled():
             previous_page.click()
+    assert "(1)" in page.locator("#case-0 tbody tr").first.locator("td").first.inner_text()
     for index, column in ((2, 0), (3, 1)):
         first_cell = page.locator(f"#case-{index} tbody tr").first.locator("td").nth(column)
         bar = first_cell.locator(".et-mark-bar")

@@ -22,6 +22,14 @@ For 2019–2021, level series use `100 * (value_2021 / value_2019 - 1)`. Equity
 price returns compound the annual changes for 2020 and 2021. Debt uses the
 2021 minus 2019 difference in percentage points of GDP. Missing observations
 remain JSON `null`; no values are imputed. All 217 WDI countries and territories
-are included in alphabetical order, including those with no observations.
+are included, including those with no observations.
 Aggregate regions and income groups are excluded using the country dimension's
-`Region` field. The ordering does not imply a ranking.
+`Region` field.
+
+`score` is the sum of the available metric values, including debt with its
+displayed sign, rounded to the nearest whole point. Higher scores rank first.
+`rank_label` uses competition ranks, with an `=` suffix for ties (for example,
+`1`, `2=`, `2=`, `4`). Rows without any reported metrics have a null score and
+rank and sort last. Country names break score ties alphabetically. The country
+display text includes its rank in parentheses. The score is an unweighted sum
+of the displayed changes.

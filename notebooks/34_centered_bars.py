@@ -147,8 +147,16 @@ def _(base_year, end_year, mo, wdi_source):
     Consumption is **not household income**; central-government debt is a
     narrower measure than general-government debt. Missing endpoints or an
     incomplete sequence of equity returns remain missing. All WDI countries
-    and territories are included, ordered by name; region and income-group
+    and territories are included; region and income-group
     aggregates are excluded. Countries with no observations remain in the table.
+
+    **Rank** sums the available values across the five columns, including debt
+    with its displayed sign, then rounds the total to the nearest whole point.
+    Higher scores rank first. Equal rounded scores share a rank and get an `=`
+    suffix (for example, `2=`); the following rank skips the tied places.
+    Countries with no reported metrics have no score or rank and appear last.
+    Countries sharing a score are ordered by name. These ranks use an unweighted
+    sum of the displayed changes.
 
     Without a local bundle, the notebook uses a saved **real WDI query result**
     for 2019–2021. The drug-price and Pew examples below use their own sources.

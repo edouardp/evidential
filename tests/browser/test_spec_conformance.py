@@ -1204,6 +1204,43 @@ def test_legacy_grouped_widget_keeps_annotations_separate_and_collapses(page, li
     assert "Brazil" not in page.locator("tbody").inner_text()
 
 
+def test_dumbbell_notebook_colors_changes_and_centers_direction_markers(page, live_server):
+    notebook = Path(__file__).resolve().parents[2] / "notebooks" / "48_dumbbell_plots.py"
+    _, definitions = runpy.run_path(str(notebook))["app"].run()
+    names = ("plain", "negative", "directed", "signed")
+    mount(page, live_server, [(name, definitions[name].widget, []) for name in names])
+    for index in (0, 1):
+        assert page.locator(f"#case-{index} .et-range-direction").count() == 0
+    plain_decrease = page.locator("#case-0 .et-mark-range").nth(1)
+    negative_decrease = page.locator("#case-1 .et-mark-range").nth(1)
+    assert plain_decrease.evaluate("el => getComputedStyle(el).backgroundColor") == "rgb(34, 34, 34)"
+    assert negative_decrease.evaluate("el => getComputedStyle(el).backgroundColor") == "rgb(204, 17, 17)"
+    markers = page.locator("#case-2 .et-range-direction")
+    assert markers.count() == 5
+    assert markers.first.get_attribute("data-direction") == "right"
+    assert markers.nth(1).get_attribute("data-direction") == "left"
+    assert markers.nth(1).evaluate("el => getComputedStyle(el).color") == "rgb(204, 17, 17)"
+    signed_rows = page.locator("#case-3 tbody tr")
+    assert (
+        signed_rows.nth(0).locator(".et-mark-range").evaluate("el => getComputedStyle(el).backgroundColor")
+        == "rgb(34, 34, 34)"
+    )
+    assert signed_rows.nth(1).locator(".et-range-direction").get_attribute("data-direction") == "left"
+    assert signed_rows.nth(2).locator(".et-range-direction").count() == 0
+    assert signed_rows.nth(3).locator(".et-mark-range").count() == 0
+    assert signed_rows.nth(3).locator(".et-mark-point").count() == 1
+    for marker in markers.all():
+        assert marker.get_attribute("aria-hidden") == "true"
+        geometry = marker.evaluate("""el => {
+            const marker = el.getBoundingClientRect(), line = el.parentElement.getBoundingClientRect();
+            return {markX: marker.x + marker.width / 2, markY: marker.y + marker.height / 2,
+                lineX: line.x + line.width / 2, lineY: line.y + line.height / 2};
+        }""")
+        assert abs(geometry["markX"] - geometry["lineX"]) < 1
+        assert abs(geometry["markY"] - geometry["lineY"]) < 1
+    capture(page, "dumbbell-plots.png")
+
+
 def test_interval_caps_stay_at_endpoints_independently_of_cell_alignment(page, live_server):
     data = [
         {"lo": -0.4, "estimate": 0.6, "hi": 1.9},

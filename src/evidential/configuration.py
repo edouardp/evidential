@@ -345,9 +345,9 @@ class EncodingSpec(TypedDict, total=False):
     """One visual mark bound to a source, sharing its column's scale."""
 
     kind: Literal["bar", "point", "points", "range", "stacked_bar", "strip", "boxplot", "distribution"]
-    #: The field a scalar mark reads, or a range's lower endpoint.
+    #: The field a scalar mark reads, or a range's first endpoint.
     source: str | Callable[[Mapping[str, Any]], Any] | None
-    #: A range's upper endpoint.
+    #: A range's second endpoint (may be less than the first).
     high: str | Callable[[Mapping[str, Any]], Any] | None
     color: str | Callable[[Mapping[str, Any]], Any] | None
     color_negative: str | Callable[[Mapping[str, Any]], Any] | None
@@ -365,6 +365,8 @@ class EncodingSpec(TypedDict, total=False):
     side: Literal["left", "right"] | None
     #: ``range``: end treatment, or ``"arrow"`` when an endpoint is off-scale.
     cap: Literal["none", "line", "dot", "arrow"] | None
+    #: ``range``: a centered chevron from the first endpoint to the second.
+    direction_marker: bool | None
     overflow: Literal["clip", "arrow"] | None
     #: ``range``: draw the interval as a translucent band rather than a line.
     fill: bool | None

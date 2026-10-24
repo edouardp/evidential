@@ -25,7 +25,7 @@ from __future__ import annotations
 
 import itertools
 import math
-from collections.abc import Mapping, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from typing import Any, Literal
 
 from ._aliases import alias, format_code
@@ -88,6 +88,7 @@ _ENCODING_KEYS = (
     "side",
     "valign",
     "cap",
+    "direction_marker",
     "overflow",
     "fill",
     "fit_to_data",
@@ -140,6 +141,7 @@ def _canonical_encoding(
         "side",
         "valign",
         "cap",
+        "direction_marker",
         "overflow",
         "fill",
         "fit_to_data",
@@ -178,7 +180,17 @@ def _canonical_encoding(
         "bar": {*_BAR_STYLE_KEYS, "color_negative_column", "side", "size", "valign"},
         "point": {"outline", "size", "valign"},
         "points": {"outline", "size", "valign"},
-        "range": {"high", "cap", "size", "overflow", "fill", "valign"},
+        "range": {
+            "high",
+            "cap",
+            "direction_marker",
+            "color_negative",
+            "color_negative_column",
+            "size",
+            "overflow",
+            "fill",
+            "valign",
+        },
         "strip": {"colors", "strip_labels", "segmented"},
         "stacked_bar": {"size", "diverge_at", "neutral"},
         "boxplot": {"parts", "outliers", "whisker"},
@@ -381,13 +393,23 @@ class MarkColumn(Column):
         """Add array points, with the same ``outline`` control as scalar points."""
         return self._add("points", source, outline=outline, **options)
 
-    def range(self, low: Any, high: Any | None = None, **options: Any) -> MarkColumn:
+    def range(
+        self,
+        low: Any,
+        high: Any | None = None,
+        *,
+        color_negative: str | Callable[[Mapping[str, Any]], Any] | None = None,
+        direction_marker: bool | None = None,
+        **options: Any,
+    ) -> MarkColumn:
         """Connect two endpoints (a dumbbell / interval); not a confidence claim."""
         if high is None and isinstance(low, (tuple, list)) and len(low) == 2:
             low, high = low
         if high is None:
             raise TypeError("range expects two endpoints: col.range(low, high)")
-        return self._add("range", low, high=high, **options)
+        return self._add(
+            "range", low, high=high, color_negative=color_negative, direction_marker=direction_marker, **options
+        )
 
     def _append_column(self, column: MarkColumn) -> MarkColumn:
         """Compose a factory's validated marks without replacing slot metadata."""
@@ -795,19 +817,27 @@ def range(  # noqa: A001 - the public constructor name
     low: Any,
     high: Any | None = None,
     *,
+    color_negative: str | Callable[[Mapping[str, Any]], Any] | None = None,
+    direction_marker: bool | None = None,
     title: str | None = None,
     format: str | None = None,
     fmt: str | None = None,
     align: str | None = None,
     **options: Any,
 ) -> MarkColumn:
-    """Connect two endpoints: ``col.range("low", "high").point("estimate")``."""
+    """Connect two endpoints; color decreases and optionally mark their direction.
+
+    ``color_negative`` applies when the second value is below the first.
+    ``direction_marker=True`` adds a centered chevron toward the second value.
+    """
     if high is None and isinstance(low, (tuple, list)) and len(low) == 2:
         low, high = low
     if high is None:
         raise TypeError("range expects two endpoints: col.range(low, high)")
     column = _factory_column(low, options, title=title, fmt=format_code(format, fmt), align=align)
-    return column._add("range", low, high=high, **options)
+    return column._add(
+        "range", low, high=high, color_negative=color_negative, direction_marker=direction_marker, **options
+    )
 
 
 def strip(

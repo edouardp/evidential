@@ -91,6 +91,7 @@ dated, immutable record of the decisions behind them.
 | [070](070-change-sparklines.md) | Change Sparklines | Accepted |
 | [071](071-shared-numeric-domains.md) | Shared Numeric Domains | Accepted |
 | [072](072-chart-column-sizing.md) | Chart Column Sizing | Accepted |
+| [073](073-directional-ranges.md) | Directional Ranges for Dumbbell Plots | Accepted |
 
 ## Creating New ADRs
 

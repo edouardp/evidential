@@ -22,8 +22,8 @@ function pointOutlineStyle(outline) {
 }
 
 /** Resolve a mark's colour: an explicit colour, a per-row column, or a default. */
-function markColor(enc, row, fallback) {
-  if (row && Number(row[enc.source]) < 0) {
+function markColor(enc, row, fallback, isNegative = row && Number(row[enc.source]) < 0) {
+  if (isNegative) {
     const negative = resolveColor(enc.color_negative) || resolveColor(row[enc.color_negative_column]);
     if (negative) return negative;
   }
@@ -32,6 +32,15 @@ function markColor(enc, row, fallback) {
     if (resolved) return resolved;
   }
   return resolveColor(enc.color) || fallback;
+}
+
+/** Direction follows projected endpoints; equality and fully clipped spans omit it. */
+function rangeDirection(enc, start, end, color) {
+  if (!enc.direction_marker || start === end) return null;
+  return h("span", {
+    class: "et-range-direction", "data-direction": end > start ? "right" : "left",
+    "aria-hidden": "true", style: { color },
+  });
 }
 
 /** An ordered categorical sequence: equal-width or positioned segments. */
@@ -501,7 +510,7 @@ export function renderMarks(col, row, range, format) {
       const left = Math.min(start, end);
       const right = Math.max(start, end);
       const size = enc.size != null ? Number(enc.size) : 4;
-      const color = markColor(enc, row, "var(--et-accent, #2563eb)");
+      const color = markColor(enc, row, "var(--et-accent, #2563eb)", high < low);
       if (enc.fill) {
         // A translucent band, e.g. a forecast or uncertainty range.
         const band = h("div", {
@@ -518,6 +527,11 @@ export function renderMarks(col, row, range, format) {
         if (arrowStart) band.append(h("span", { class: "et-mark-cap et-mark-arrow et-mark-arrow-start", style: { borderRightColor: color } }));
         if (arrowEnd) band.append(h("span", { class: "et-mark-cap et-mark-arrow et-mark-arrow-end", style: { borderLeftColor: color } }));
         track.append(band);
+        const direction = rangeDirection(enc, start, end, color);
+        if (direction) {
+          direction.style.left = `${(left + right) / 2}%`;
+          track.append(direction);
+        }
         if (enc.label) track.append(renderMarkLabel(col, enc, row, { pointPct: left }, format));
         continue;
       }
@@ -532,6 +546,8 @@ export function renderMarks(col, row, range, format) {
       }
       if (arrowStart) line.append(h("span", { class: "et-mark-cap et-mark-arrow et-mark-arrow-start", style: { borderRightColor: color } }));
       if (arrowEnd) line.append(h("span", { class: "et-mark-cap et-mark-arrow et-mark-arrow-end", style: { borderLeftColor: color } }));
+      const direction = rangeDirection(enc, start, end, color);
+      if (direction) line.append(direction);
       track.append(line);
       if (enc.label) track.append(renderMarkLabel(col, enc, row, { pointPct: left }, format));
     }

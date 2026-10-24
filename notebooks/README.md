@@ -45,6 +45,7 @@ and without network access.
 | [`39_synthetic_rows.py`](39_synthetic_rows.py) | Display-only headings, portable counts and averages, optional group/grand summaries, and continuation headings across detail-based pages. |
 | [`44_spec_conformance.py`](44_spec_conformance.py) | Scale reference layouts, fixed bounds and missing marks, point outlines, shared diverging stacks, irregular sparklines and paginated section summaries. |
 | [`45_display_row_layout.py`](45_display_row_layout.py) | Display-only group headings with counts/totals, optional group and grand summaries, nested groups, centered headings, and detail-based pagination with continuation headings. |
+| [`48_dumbbell_plots.py`](48_dumbbell_plots.py) | Plain dumbbells, negative connector colors, optional direction chevrons, and equal, missing and negative-valued endpoints. |
 
 `sample_data/needful_things/orders.parquet` is Evidence's demo dataset, copied
 from the published docs site.

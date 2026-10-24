@@ -638,6 +638,18 @@ tbody tr:last-child .et-bar-center .et-bar-axis { bottom: var(--et-bar-pad, 0); 
 .et-mark-cap-start { left: 0; }
 .et-mark-cap-end { right: 0; transform: translate(50%, -50%); }
 .et-mark-cap-dot { width: 0.6em; height: 0.6em; border-radius: 50%; }
+.et-range-direction {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 0.6em;
+  height: 0.6em;
+  border-top: 2px solid currentColor;
+  border-right: 2px solid currentColor;
+  transform: translate(-50%, -50%) rotate(45deg);
+  pointer-events: none;
+}
+.et-range-direction[data-direction="left"] { transform: translate(-50%, -50%) rotate(-135deg); }
 .et-mark-arrow {
   width: 0;
   height: 0;

@@ -692,8 +692,15 @@ columns=[
 
 - **Marks** — `bar(source, color=, color_negative=, size=, side=, valign=, ...)`,
   `point(source, size=, color=, outline=)`, `points(source, size=, color=, outline=)` (one marker per
-  array element), `range(low, high, cap="none"|"line"|"dot"|"arrow", fill=)`.
+  array element), `range(low, high, cap="none"|"line"|"dot"|"arrow", fill=,
+  color_negative=, direction_marker=)`.
   `fill=True` draws the interval as a translucent band instead of a line.
+  For dumbbells, `color_negative="red"` colors a range when its second value
+  is smaller than its first. `direction_marker=True` adds a centered chevron
+  pointing from the first endpoint to the second; equal endpoints omit it.
+  Both options preserve independent point colors. Negative colors also accept
+  `"@column"` and callable bindings. See
+  [`48_dumbbell_plots.py`](../../notebooks/48_dumbbell_plots.py).
   `side="left"`
   `|"right"` draws a nonnegative magnitude from the central origin; `size` is the
   bar height fraction or the point/range marker size; `valign="top"|"center"|
@@ -942,7 +949,7 @@ other than `auto`, `merge`, `group` and `subcolumns` return a `Column`;
 | `col.bar(source, *, title=, label=, size=, side=, color=, …)` | bar mark with an optional owned label |
 | `col.point(source, *, title=, size=, color=, label=)` | point marker |
 | `col.points(source, *, size=, color=)` | one marker per array observation |
-| `col.range(low, high, *, cap=, fill=, color=, label=)` | interval / dumbbell |
+| `col.range(low, high, *, cap=, fill=, color=, color_negative=, direction_marker=, label=)` | interval / dumbbell |
 | `col.stacked_bar(*sources, *, colors=, labels=, normalize="percent", diverge_at=, neutral="split")` | cumulative stack |
 | `col.strip(source, *, colors=, labels=, segmented=)` | ordered categorical strip |
 | `col.boxplot(minimum, q1, median, q3, maximum, *, outliers=, whisker="extrema")` | box plot |

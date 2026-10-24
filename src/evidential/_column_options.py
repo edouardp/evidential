@@ -7,6 +7,7 @@ from difflib import get_close_matches
 from typing import Any
 
 from ._aliases import alias
+from ._domain import domain_spec
 from ._sparkline import normalize_sparkline_options
 from .configuration import COLOR_SCALES, ColumnOptions, validate_options
 
@@ -266,5 +267,7 @@ def _normalize_column_options(data: dict[str, Any]) -> dict[str, Any]:
         from .marks import normalize_encoding
 
         data["encodings"] = [normalize_encoding(encoding) for encoding in data["encodings"]]
+    if data.get("domain") is not None:
+        data["domain"] = domain_spec(data["domain"])
     validate_options(data, ColumnOptions, "column")
     return data

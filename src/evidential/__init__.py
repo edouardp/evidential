@@ -29,8 +29,9 @@ Quick start::
     )
 """
 
-from . import col, duck, label, rows
+from . import col, domain, duck, label, rows
 from ._column import CURRENCY_CODES, Column, ColumnGroup
+from ._domain import Domain
 from ._label import Label
 from .aggregations import BUILTIN_AGGREGATIONS, apply_aggregations, resolve_aggregation
 from .client import grouped_records
@@ -65,6 +66,8 @@ __all__ = [
     "ColumnOptions",
     "col",
     "label",
+    "domain",
+    "Domain",
     "Label",
     "Column",
     "ColumnGroup",

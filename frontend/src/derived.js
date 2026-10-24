@@ -1,6 +1,7 @@
 import { searchRows, sortRows, visibleRows, columnStats, decimalPlaces } from "./rows.js";
 import { orderedColumns } from "./headers.js";
 import { calculateVizRanges, calculateFormatRanges, buildColorVizScale } from "./color.js";
+import { applySharedDomains } from "./shared-domains.js";
 import { prepareChangeScales } from "./change-sparkline.js";
 import { projectLegacy } from "./row-layout.js";
 
@@ -19,7 +20,7 @@ export class RowPipeline {
     const columns = orderedColumns(allColumns.filter((column) => !hidden.has(column.name)), options);
     const searched = searchRows(rows, allColumns, search, hidden);
     const sorted = sortRows(searched, allColumns, sort);
-    const ranges = calculateVizRanges(columns, sorted);
+    const ranges = applySharedDomains(allColumns, sorted, calculateVizRanges(columns, sorted));
     const formatRanges = calculateFormatRanges(columns, sorted);
     const decimals = new Map();
     if (options.align_decimals) {
@@ -43,7 +44,7 @@ export class RowPipeline {
     }
     const result = {
       columns, sorted, ranges, formatRanges, decimals, colorScales,
-      changeScales: prepareChangeScales(columns, sorted), sourceRows: rows, rowLayout,
+      changeScales: prepareChangeScales(columns, sorted, ranges), sourceRows: rows, rowLayout,
       hasGroups: !!rowLayout?.legacy || rows.some((row) => row.render_type && row.render_type !== "cell_data"),
       dimCount: (rowLayout?.legacy || []).reduce((max, token) => Math.max(max, token.row?.__level || 0),
         rows.reduce((max, row) => Math.max(max, row.__level ?? 0), 0)),

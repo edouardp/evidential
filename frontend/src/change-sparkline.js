@@ -1,4 +1,4 @@
-import { createColorScale, getColorForValue, resolveColor } from "./color.js";
+import { createColorScale, getColorForValue, resolveColor, buildDomainColorScale } from "./color.js";
 import { formatValue } from "./format.js";
 import { sparklinePoints } from "./sparkline-data.js";
 
@@ -33,11 +33,18 @@ export function changeColorScale(opts, values) {
 }
 
 /** Build once per matching dataset, before pagination; each physical column has its own scale. */
-export function prepareChangeScales(columns, rows) {
+export function prepareChangeScales(columns, rows, ranges) {
   const scales = new Map();
   for (const column of columns) {
     const opts = column.sparkline_options || {};
     if (column.viz !== "sparkline" || opts.type !== "change") continue;
+    const shared = ranges?.get(column);
+    const domain = typeof column.domain === "object" ? column.domain : {};
+    if (shared?.shared && (domain.palette || opts.color_scale)) {
+      const scale = buildDomainColorScale(domain, shared, domain.palette || opts.color_scale);
+      scales.set(column, value => getColorForValue(value, scale));
+      continue;
+    }
     const values = [];
     if (opts.color_scale && !opts.color_domain) {
       for (const row of rows) {

@@ -413,8 +413,21 @@ class ReferenceSpec(TypedDict, total=False):
     color: str | None
 
 
+class DomainSpec(TypedDict, total=False):
+    """A named numeric domain, resolved across all columns with that name."""
+
+    name: str
+    bounds: tuple[float, float]
+    include_zero: bool
+    palette: Palette
+    midpoint: float
+    #: Derived from member change sparklines, shared with every color encoding.
+    neutral_range: tuple[float, float]
+
+
 class ColumnOptions(TypedDict, total=False):
     name: str
+    domain: DomainSpec | str | None
     type: str
     title: str | None
     fmt: str | None

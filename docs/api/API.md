@@ -593,6 +593,61 @@ option names a column (`sort_by="@x"`, `scale="@color"`, `footnote="@note"`,
 `link="@url"`, `color="@bar_colour"`, …), and colours accept matplotlib names
 (`"tab:blue"`, `"C3"`, `"k"`).
 
+### Shared numeric domains
+
+Columns with `.domain("name")` pool their numeric values into one domain,
+independently of column groups or sub-columns. For shared color settings too,
+reuse an immutable domain specification:
+
+```python
+from evidential import col, domain
+
+payments = domain.numeric("payments").include_zero().palette("Blues")
+columns = [
+    col.bar("credit_card").domain(payments),
+    col.bar("cash").domain("payments"),
+    col.number("no_charge").color().domain(payments),
+]
+```
+
+All declarations with the same name belong to the same table-local domain.
+A configured declaration supplies settings to name-only members. Values from
+all member columns, including hidden ones and plain numeric columns, determine
+inferred bounds. Mark contributions use their plotted coordinates (including
+stack totals); sparkline contributions use their numeric observations. Synthetic
+rows and missing values do not contribute. Matching rows are pooled before
+pagination; filtering recomputes inferred bounds, while paging and hiding a
+member preserve them.
+
+- `.bounds(low, high)` fixes endpoints instead of inferring them.
+- `.include_zero()` includes zero in inferred bounds; `.include_zero(False)`
+  disables it. Without a setting, bars and zero-based area/bar sparklines
+  include zero. Explicit bounds remain fixed.
+- `.palette("Blues")` or `.palette(["red", "gray", "blue"])` shares the color
+  mapping for heatmaps, numeric chips and change sparklines. Bar/line fill colors
+  remain independent styling choices.
+- `.midpoint(0)` anchors a diverging palette. A shared palette also shares any
+  member's explicitly configured color midpoint.
+
+Centered or diverging marks make the domain symmetric for all members. Fixed
+bounds for these marks must be symmetric or expressed as `(0, magnitude)`.
+Change sparklines contribute their steady interval; every shared color encoding
+uses that whole interval as its neutral color, preserving equal colors for equal
+values across a heatmap and a sparkline. Change members must agree on that
+interval.
+
+Conflicting shared settings raise an error during table construction or update.
+Set shared bounds on the domain rather than individual scale/color options.
+Shared palettes use the existing LCH interpolation; incompatible per-column
+color overrides are rejected. Per-column axes and gridlines remain available.
+Shared numeric domains currently
+support linear scales. Reusing the same specification in separate tables shares
+configuration; inference remains local to each table. Use fixed bounds for
+comparisons across tables.
+
+See [notebook 47](../../notebooks/47_shared_domains.py) for bars, heatmaps,
+change sequences and independent header groups using shared domains.
+
 ### Composing marks in a column
 
 A column is a *presentation slot*: it can hold an ordered list of **marks**

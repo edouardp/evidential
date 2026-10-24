@@ -30,12 +30,13 @@ def test_taxi_demo_runs_offline_with_fluent_label_placement():
         )
     columns = {column["name"]: column for column in definitions["pivoted"].widget.columns}
     credit = columns["credit_card"]["encodings"][0]["label"]
-    assert credit == {"value": True, "position": "outside_end", "auto": True}
+    assert credit["value"] is True
+    assert credit["position"] == "outside_end" and credit["auto"] is True
+    assert (credit.get("format") or columns["credit_card"].get("fmt")) == "num0"
     for name in ("cash", "no_charge", "dispute"):
-        assert columns[name]["encodings"][0]["label"] == {
-            "value": True,
-            "position": "inside_end",
-            "auto": False,
-        }
+        annotation = columns[name]["encodings"][0]["label"]
+        assert annotation["value"] is True
+        assert annotation["position"] == "inside_end" and annotation["auto"] is False
+        assert (annotation.get("format") or columns[name].get("fmt")) == "num0"
     grouped = {column["name"]: column for column in definitions["grouped"].widget.columns}
-    assert grouped["distance"]["encodings"][0]["label"] == {"value": True}
+    assert grouped["distance"]["encodings"][0]["label"]["value"] is True

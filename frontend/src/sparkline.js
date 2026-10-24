@@ -6,7 +6,7 @@ import { renderChangeSparkline } from "./change-sparkline.js";
 
 export { sparklinePoints } from "./sparkline-data.js";
 
-export function renderSparkline(col, value, changeColor) {
+export function renderSparkline(col, value, changeColor, sharedRange) {
   const opts = col.sparkline_options || {};
   const points = sparklinePoints(value, opts);
   const present = points.filter(point => point[1] != null);
@@ -24,6 +24,7 @@ export function renderSparkline(col, value, changeColor) {
     min = Math.min(0, min);
     max = Math.max(0, max);
   }
+  if (sharedRange?.shared) { min = sharedRange.min; max = sharedRange.max; }
   const span = max - min || 1;
   // Numeric/date x coordinates preserve elapsed distance. Categorical labels
   // retain ordinal spacing, including the slots occupied by missing values.

@@ -13,6 +13,7 @@ from typing import Any, Literal, Self
 
 from ._aliases import alias, format_code
 from ._column_options import _normalize_column_options
+from ._domain import domain_spec
 from ._sparkline import normalize_sparkline_options
 from ._text_style import TextStyle
 from .configuration import Relative
@@ -121,6 +122,14 @@ class Column(TextStyle, Mapping[str, Any]):
             else:
                 spec[key] = value
         return type(self)(self._name, spec)
+
+    def domain(self, value: str | Mapping[str, Any]) -> Self:
+        """Share a named numeric domain with other columns, across header groups.
+
+        Pass a name to infer combined bounds, or a reusable ``domain.numeric``
+        specification to share fixed bounds and color settings too.
+        """
+        return self._with(domain=domain_spec(value))
 
     def _merge(self, key: str, **values: Any) -> Self:
         """Return a copy with ``values`` merged into the nested ``key`` options."""

@@ -10,7 +10,7 @@ from pathlib import Path
 
 import pytest
 
-from evidential import EvidentialTable, col, grouped_records, label
+from evidential import EvidentialTable, col, domain, grouped_records, label
 from evidential import rows as row_builder
 
 pytestmark = pytest.mark.browser
@@ -177,6 +177,65 @@ def test_fluent_label_typography_and_placement_in_the_browser(page, live_server)
         assert node.evaluate("el => getComputedStyle(el).fontVariantNumeric") == "lining-nums proportional-nums"
         assert node.evaluate("el => getComputedStyle(el).color") == "rgb(128, 0, 128)"
     capture(page, "fluent-labels.png")
+
+
+def test_shared_domains_match_bar_geometry_color_axes_and_pagination(page, live_server):
+    payments = domain.numeric("payments").include_zero().palette("Blues")
+    columns = [
+        col.text("name"),
+        col.bar("a", title="Card").domain(payments).scale(axis=True),
+        col.bar("b", title="Cash").domain("payments").scale(axis=True),
+        col.number("c").color().domain(payments),
+        col.number("d").color().domain("payments"),
+    ]
+    mount(
+        page,
+        live_server,
+        [
+            (
+                "Shared payments",
+                [
+                    {"name": "North", "a": 20, "b": 20, "c": 20, "d": 20},
+                    {"name": "South", "a": 100, "b": 50, "c": 150, "d": 200},
+                ],
+                columns,
+                {"page_size": 1, "search": True},
+            )
+        ],
+    )
+    bars = page.locator(".et-mark-bar")
+    assert bars.count() == 2
+    assert bars.first.evaluate("el => el.style.width") == "10%"
+    assert bars.last.evaluate("el => el.style.width") == "10%"
+    assert page.locator(".et-axis").first.inner_text() == page.locator(".et-axis").last.inner_text()
+    colors = page.locator("tbody tr td:nth-last-child(-n+2)")
+    assert colors.nth(0).evaluate("el => getComputedStyle(el).backgroundColor") == colors.nth(1).evaluate(
+        "el => getComputedStyle(el).backgroundColor"
+    )
+    page.get_by_role("button", name="Next page", exact=True).click()
+    assert bars.first.evaluate("el => el.style.width") == "50%"
+    page.get_by_role("searchbox").fill("North")
+    assert bars.first.evaluate("el => el.style.width") == "100%"
+
+
+def test_shared_domain_demo_renders_cross_encoding_colors(page, live_server):
+    path = Path(__file__).resolve().parents[2] / "notebooks/47_shared_domains.py"
+    _, definitions = runpy.run_path(str(path))["app"].run()
+    mount(
+        page,
+        live_server,
+        [
+            ("Shared counts", definitions["counts"].widget, []),
+            ("Shared change", definitions["change_table"].widget, []),
+        ],
+    )
+    page.locator("section").evaluate_all("nodes => nodes.forEach(el => el.style.width = '950px')")
+    heat = page.locator("#case-1 tbody tr").first.locator("td:nth-child(3)")
+    rect = page.locator("#case-1 .et-sparkline-change rect").nth(3)
+    assert heat.evaluate("el => getComputedStyle(el).backgroundColor") == rect.evaluate(
+        "el => getComputedStyle(el).fill"
+    )
+    capture(page, "shared-domains.png")
 
 
 def test_change_sparklines_geometry_color_anchors_and_pagination(page, live_server):

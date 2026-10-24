@@ -89,6 +89,7 @@ dated, immutable record of the decisions behind them.
 | [068](068-automatic-bar-label-placement.md) | Automatic Bar Label Placement | Accepted |
 | [069](069-fluent-label-builder.md) | Fluent Label Builder | Accepted |
 | [070](070-change-sparklines.md) | Change Sparklines | Accepted |
+| [071](071-shared-numeric-domains.md) | Shared Numeric Domains | Accepted |
 
 ## Creating New ADRs
 

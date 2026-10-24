@@ -225,6 +225,7 @@ function renderBox(col, enc, row, pos) {
  */
 export function marksDomain(col, range) {
   const scale = col.scale || {};
+  if (range?.shared) return {lo: range.min, hi: range.max, span: (range.max - range.min) || 1, transform: scale.transform};
   let lo = scale.domain && scale.domain[0] != null ? Number(scale.domain[0]) : (range?.min ?? 0);
   let hi = scale.domain && scale.domain[1] != null ? Number(scale.domain[1]) : (range?.max ?? 1);
   const hasBar = (col.encodings || []).some((enc) => enc.kind === "bar" || enc.kind === "stacked_bar");
@@ -544,8 +545,8 @@ export function renderMarks(col, row, range, format) {
 export function renderBar(col, value, formatted, range, row) {
   const opts = col.bar_options || {};
   const num = Number(value);
-  const min = opts.fit_to_data ? (range?.min ?? 0) : Math.min(0, range?.min ?? 0);
-  const max = opts.fit_to_data ? (range?.max ?? 0) : Math.max(0, range?.max ?? 0);
+  const min = range?.shared || opts.fit_to_data ? (range?.min ?? 0) : Math.min(0, range?.min ?? 0);
+  const max = range?.shared || opts.fit_to_data ? (range?.max ?? 0) : Math.max(0, range?.max ?? 0);
   const negative = num < 0;
   // A leftward bar fills from the right edge — the mirror of the default, for a
   // back-to-back ("tornado") league table.

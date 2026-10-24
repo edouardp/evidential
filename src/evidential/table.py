@@ -11,6 +11,7 @@ import anywidget
 import traitlets
 
 from ._column_options import _normalize_column_options
+from ._domain import resolve_domains
 from ._row_layout import display_records, split_legacy, unwrap_view
 from .configuration import TABLE_DEFAULTS, TableOptions, unknown_option, validate_options
 from .data import _merge_column_config, apply_blank_predicates, infer_columns, jsonify, make_column, normalize_data
@@ -221,6 +222,7 @@ def _prepare_columns_and_rows(
     prepared, client_rules = resolve_rules(prepared, rules)
     coerced = _resolve_column_groups(_coerce_columns(columns, column_config, inferred), column_groups)
     coerced = _center_chips(coerced, column_config, explicit_columns)
+    coerced = resolve_domains(coerced)
     coerced, hidden = resolve_encodings(coerced, prepared)
     apply_hidden_columns(prepared, hidden)
     link = options.get("link")

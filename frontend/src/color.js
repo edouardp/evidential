@@ -230,7 +230,7 @@ export function createColorScale(values, options) {
 
 export function getColorForValue(value, scaleResult) {
   if (!isFinite(value) || isNaN(value)) return scaleResult.colorPalette[0];
-  return scaleResult.scale(value).hex();
+  return scaleResult.scale(scaleResult.project ? scaleResult.project(value) : value).hex();
 }
 
 export function colorStylesFromHex(colorValue) {
@@ -324,8 +324,29 @@ export function calculateFormatRanges(columns, rows) {
   return ranges;
 }
 
+/** A shared palette may inherit a change sparkline's whole neutral interval. */
+export function buildDomainColorScale(domain, range, palette, mode = "lch") {
+  palette = Array.isArray(palette) ? palette.map(resolveColor) : palette;
+  const neutral = domain.neutral_range;
+  if (!neutral) return createColorScale([], {
+    colorPalette: palette, min: range.min, max: range.max, midpoint: domain.midpoint, mode,
+  });
+  const scale = createColorScale([], {colorPalette: palette, min: 0, max: 1, mode});
+  scale.project = value => {
+    let at = 0.5;
+    if (value < neutral[0]) at = range.min < neutral[0] ? 0.5 * (value - range.min) / (neutral[0] - range.min) : 0;
+    else if (value > neutral[1]) at = range.max > neutral[1] ? 0.5 + 0.5 * (value - neutral[1]) / (range.max - neutral[1]) : 1;
+    return Math.max(0, Math.min(1, at));
+  };
+  return scale;
+}
+
 export function buildColorVizScale(col, range, defaultColorScale) {
   const opts = col.color_options || {};
+  if (col.domain && range.shared) {
+    const domain = typeof col.domain === "string" ? {} : col.domain;
+    return buildDomainColorScale({...domain, midpoint: domain.midpoint ?? opts.midpoint}, range, domain.palette ?? opts.color_scale ?? defaultColorScale ?? FALLBACK_COLOR_SCALE, opts.scale_mode);
+  }
   if (typeof opts.color_scale === "string" && !COLOR_SCALES[opts.color_scale.toLowerCase()]) {
     throw new Error(
       `Unknown colour scale '${opts.color_scale}'. Use one of ${Object.keys(COLOR_SCALES).sort().join(", ")}, or a list of colours.`,

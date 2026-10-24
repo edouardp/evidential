@@ -10,6 +10,7 @@ import { projectLayout, projectLegacy } from "./row-layout.js";
 import { renderAnnotation } from "./display-rows.js";
 import { renderStatsRow } from "./statistics.js";
 import { renderHeader, headerLayout, decorateSubcolumn, orderedColumns } from "./headers.js";
+import { renderColumnSizing } from "./column-sizing.js";
 import { RowPipeline } from "./derived.js";
 import { HoldController, bindRowSelection } from "./interactions.js";
 import { LoadingController } from "./loading.js";
@@ -449,6 +450,8 @@ export class EvidentialTableRenderer {
   _renderTable(columns, rows, ctx) {
     const opts = this.options;
     const table = h("table", { class: `et-table${ctx.hasTopAxis ? " et-has-top-axis" : ""}` });
+    const sizing = renderColumnSizing(columns, {rowNumbers: ctx.rowNumbers, link: !!opts.link});
+    if (sizing) table.append(sizing);
     const thead = this._renderHeader(columns, ctx);
     if (!ctx.isEmpty && ctx.stats) thead.append(this._renderStatsRow(columns, ctx));
     if (ctx.hasTopAxis) this._appendTopAxis(thead, columns, ctx);

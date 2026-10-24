@@ -502,6 +502,13 @@ EvidentialTable(rows, columns=[...], settings=REPORT, width="700px")  # width=70
 The same options can be passed directly to `EvidentialTable(...)`. The full set
 is in the [Table options reference](#table-options).
 
+In tables containing charts, text and numeric columns fit their content while
+chart columns share the remaining width. Mark tracks have a minimum width of
+`10rem`, or `18rem` for stacked bars. Fixed-size sparklines retain their specified
+width. `stretch=False` sizes the whole table to its content and chart minimums;
+`width=` caps the table container. If the minimum content cannot fit, the table
+scrolls horizontally.
+
 ## Visualisations
 
 A visualisation is a column option (`viz`) plus a bag of options, set through a

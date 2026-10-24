@@ -71,6 +71,60 @@ def capture(page, name):
         page.screenshot(path=str(Path(path).with_name(name)), full_page=True)
 
 
+def test_chart_columns_receive_space_after_content_columns(page, live_server):
+    data = [
+        {"question": "Ease of use", "count": 1234, "down": 13, "neutral": 12, "up": 75},
+        {"question": "Value for money", "count": 27, "down": 29, "neutral": 20, "up": 51},
+    ]
+    stack = col.stacked_bar(
+        "down", "neutral", "up", title="Response", labels="percent", diverge_at="neutral", normalize="percent"
+    )
+    mount(
+        page,
+        live_server,
+        [
+            ("Diverging stack", data, [col.text("question"), stack], {"width": "100%"}),
+            ("Mixed measures", data, [col.text("question"), col.integer("count"), col.bar("up", label=True)]),
+            ("Two charts", data, [col.text("question"), col.bar("down"), col.bar("up")]),
+            ("Intrinsic stack", data, [col.text("question"), stack], {"stretch": False}),
+        ],
+    )
+    widths = page.locator("tbody tr:first-child").evaluate_all(
+        "rows => rows.map(row => [...row.cells].map(cell => cell.getBoundingClientRect().width))"
+    )
+    assert widths[0][1] > widths[0][0] * 2
+    assert widths[1][0] < 160
+    assert widths[1][1] < 90
+    assert widths[1][2] > sum(widths[1][:2])
+    assert abs(widths[2][1] - widths[2][2]) < 2
+    assert widths[2][1] > widths[2][0]
+    assert widths[3][1] >= 280
+    assert widths[3][1] > widths[3][0]
+    page.locator("section").first.evaluate("el => el.style.width = '900px'")
+    expanded = page.locator("#case-0 tbody tr").first.evaluate(
+        "row => [...row.cells].map(cell => cell.getBoundingClientRect().width)"
+    )
+    assert abs(expanded[0] - widths[0][0]) < 2
+    assert expanded[1] > widths[0][1] + 350
+    capture(page, "column-sizing.png")
+
+
+def test_stacked_bar_notebook_allocates_width_to_response_charts(page, live_server):
+    notebook = Path(__file__).resolve().parents[2] / "notebooks" / "42_stacked_bars.py"
+    outputs, _ = runpy.run_path(str(notebook))["app"].run()
+    tables = [output.widget for output in outputs if hasattr(output, "widget")]
+    assert len(tables) == 3
+    mount(page, live_server, [(table.options["title"], table, []) for table in tables])
+    page.locator("section").evaluate_all("nodes => nodes.forEach(el => el.style.width = '600px')")
+    for index in range(3):
+        widths = page.locator(f"#case-{index} tbody tr").first.evaluate(
+            "row => [...row.cells].map(cell => cell.getBoundingClientRect().width)"
+        )
+        assert widths[1] > widths[0] * 2
+    assert page.locator("#case-2 .et-marks").first.bounding_box()["width"] > 400
+    capture(page, "stacked-bars-column-sizing.png")
+
+
 def test_automatic_bar_label_preferences_signed_bars_and_resize(page, live_server):
     positions = ["outside_end", "inside_end", "outside_start", "inside_start"]
     data = [{"x": value} for value in (95, 60, 3, 0, None)]
@@ -132,12 +186,14 @@ def test_automatic_bar_label_preferences_signed_bars_and_resize(page, live_serve
     assert page.locator("#case-5 .et-mark-label").first.get_attribute("data-label-position") == "inside_end"
     assert signed.first.evaluate("el => getComputedStyle(el).color") == "rgb(255, 255, 255)"
     capture(page, "automatic-bar-labels.png")
-    # Narrow enough for neither position, then widen until the original preference fits again.
+    # Bypass the chart minimum to test a track too narrow for either position.
+    page.locator("#case-0 .et-marks").evaluate_all("nodes => nodes.forEach(el => el.style.minWidth = '0')")
     page.locator("section").first.evaluate("el => el.style.width = '24px'")
     first = page.locator("#case-0 .et-mark-label").first
     page.wait_for_function("document.querySelector('#case-0 .et-mark-label').hidden")
     assert first.get_attribute("title") == "Revenue: $95"
     assert first.evaluate("el => getComputedStyle(el).display") == "none"
+    page.locator("#case-0 .et-marks").evaluate_all("nodes => nodes.forEach(el => el.style.minWidth = '')")
     page.locator("section").first.evaluate("el => el.style.width = '2000px'")
     page.wait_for_function("document.querySelector('#case-0 .et-mark-label').dataset.labelPosition === 'outside_end'")
     assert first.get_attribute("hidden") is None
@@ -448,7 +504,10 @@ def test_centered_bar_notebook_renders_mark_labels_and_mirrored_bars(page, live_
         assert bar.evaluate("el => parseFloat(el.style.left) > 0")
         assert label.get_attribute("class").find("et-mark-label-left") >= 0
         assert "-" not in label.inner_text()
-    assert page.locator("#case-0 .et-table").bounding_box()["width"] < 900
+    assert (
+        page.locator("#case-0 .et-table").bounding_box()["width"]
+        < page.locator("section").first.bounding_box()["width"]
+    )
     for index in (0, 1):
         labels = page.locator(f"#case-{index} .et-mark-label-outside_start")
         assert labels.count() > 0

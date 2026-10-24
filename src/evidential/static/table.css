@@ -200,6 +200,10 @@
 .et-root:not(.et-wrap) .et-td { white-space: nowrap; }
 /* Don't stretch the table: size columns to their content (ALA). */
 .et-root.et-stretch-off .et-table { width: auto; }
+/* In mixed tables, content columns use their intrinsic width while charts
+   share the surplus. The table algorithm still accounts for cell padding,
+   headers, sub-columns and unbreakable content. */
+.et-col-content { width: 1px; }
 /* White space as a grouping device (proximity): extra room around group
    boundaries instead of rules or fills. */
 .et-root.et-group-gap .et-row-subtotal .et-td,
@@ -378,7 +382,7 @@
   --et-bar-pad-right: 0.75rem;
   position: relative;
   display: block;
-  min-width: 60px;
+  min-width: 10rem;
   margin: -0.25rem calc(-1 * var(--et-bar-pad-right)) -0.25rem 0;
   padding: 0.25rem var(--et-bar-pad-right) 0.25rem 0;
 }
@@ -478,10 +482,12 @@ tbody tr:last-child .et-bar-center .et-bar-axis { bottom: var(--et-bar-pad, 0); 
   --et-mark-pad-right: 0.75rem;
   position: relative;
   display: block;
-  min-width: 60px;
+  min-width: 10rem;
   height: 1.5em;
   margin: -0.25rem 0;
 }
+/* Stacks carry several values and labels in one coordinate area. */
+.et-marks:has(.et-mark-stack) { min-width: 18rem; }
 .et-mark { position: absolute; }
 .et-mark-bar {
   top: 50%;

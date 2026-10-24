@@ -90,6 +90,7 @@ dated, immutable record of the decisions behind them.
 | [069](069-fluent-label-builder.md) | Fluent Label Builder | Accepted |
 | [070](070-change-sparklines.md) | Change Sparklines | Accepted |
 | [071](071-shared-numeric-domains.md) | Shared Numeric Domains | Accepted |
+| [072](072-chart-column-sizing.md) | Chart Column Sizing | Accepted |
 
 ## Creating New ADRs
 

@@ -1204,6 +1204,46 @@ def test_legacy_grouped_widget_keeps_annotations_separate_and_collapses(page, li
     assert "Brazil" not in page.locator("tbody").inner_text()
 
 
+def test_interval_caps_stay_at_endpoints_independently_of_cell_alignment(page, live_server):
+    data = [
+        {"lo": -0.4, "estimate": 0.6, "hi": 1.9},
+        {"lo": 0.1, "estimate": 1.2, "hi": 2.4},
+        {"lo": -1.8, "estimate": -0.5, "hi": 0.7},
+    ]
+    mount(
+        page,
+        live_server,
+        [
+            (
+                f"{cap} caps · {align}",
+                data,
+                [col.range("lo", "hi", cap=cap, align=align).point("estimate").scale(domain=(-2, 3))],
+                {"width": "100%"},
+            )
+            for cap in ("line", "dot")
+            for align in ("left", "center", "right")
+        ],
+    )
+    for width in (520, 800):
+        page.locator("section").evaluate_all(
+            "(nodes, width) => nodes.forEach(el => el.style.width = width + 'px')", width
+        )
+        endpoints = page.locator(".et-mark-range").evaluate_all("""lines => lines.map(line => {
+            const bounds = line.getBoundingClientRect();
+            const center = selector => {
+                const cap = line.querySelector(selector).getBoundingClientRect();
+                return cap.x + cap.width / 2;
+            };
+            return {left: bounds.left, right: bounds.right,
+                start: center('.et-mark-cap-start'), end: center('.et-mark-cap-end')};
+        })""")
+        assert len(endpoints) == 18
+        for endpoint in endpoints:
+            assert abs(endpoint["start"] - endpoint["left"]) < 1, endpoint
+            assert abs(endpoint["end"] - endpoint["right"]) < 1, endpoint
+    capture(page, "interval-cap-endpoints.png")
+
+
 def test_public_api_acceptance_marks(page, live_server):
     errors = []
     page.on("pageerror", lambda error: errors.append(str(error)))

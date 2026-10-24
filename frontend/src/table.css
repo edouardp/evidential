@@ -633,6 +633,9 @@ tbody tr:last-child .et-bar-center .et-bar-axis { bottom: var(--et-bar-pad, 0); 
   height: 0.7em;
   transform: translate(-50%, -50%);
 }
+/* Both endpoints need explicit anchors; an automatic left position follows
+   the cell's text alignment and can put the start cap halfway along the line. */
+.et-mark-cap-start { left: 0; }
 .et-mark-cap-end { right: 0; transform: translate(50%, -50%); }
 .et-mark-cap-dot { width: 0.6em; height: 0.6em; border-radius: 50%; }
 .et-mark-arrow {

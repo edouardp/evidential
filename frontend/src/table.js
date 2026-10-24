@@ -521,7 +521,7 @@ export class EvidentialTableRenderer {
       }
       cell.classList.add("et-axis-cell");
       const { lo, hi } = marksDomain(col, ctx.ranges.get(col) || ctx.ranges.get(col.name));
-      const pos = scalePosition(lo, hi, scale.transform);
+      const pos = scalePosition(lo, hi, scale.transform, (col.encodings || []).some(enc => enc.kind === "bar" && enc.direction === "left"));
       const axis = h("div", { class: "et-axis" });
       for (const {value: tick, major} of axisTicks(lo, hi, 4, scale.transform)) {
         const raw = pos(tick);

@@ -9,9 +9,11 @@ build a column from.
 from __future__ import annotations
 
 from collections.abc import Iterable, Mapping, Sequence
-from typing import Any, Literal
+from typing import Any, Literal, Self
 
-from .configuration import ColumnOptions, Relative, validate_options
+from ._aliases import alias, format_code
+from ._column_options import _normalize_column_options
+from .configuration import Relative
 
 Align = Literal["left", "right", "center"]
 Rotation = Literal["vertical"] | float
@@ -107,23 +109,25 @@ class Column(Mapping[str, Any]):
         return f"col({self._name!r}, {args})" if args else f"col({self._name!r})"
 
     # ---------------------------------------------------------- builder ---
-    def _with(self, **changes: Any) -> Column:
+    def _with(self, **changes: Any) -> Self:
         """Return a copy with ``changes`` applied; ``None`` values remove a key."""
         spec = dict(self._spec)
         for key, value in changes.items():
             if value is None:
                 spec.pop(key, None)
+            elif key.endswith("_options") and isinstance(value, Mapping):
+                spec[key] = {**dict(spec.get(key) or {}), **value}
             else:
                 spec[key] = value
-        return Column(self._name, spec)
+        return type(self)(self._name, spec)
 
-    def _merge(self, key: str, **values: Any) -> Column:
+    def _merge(self, key: str, **values: Any) -> Self:
         """Return a copy with ``values`` merged into the nested ``key`` options."""
         merged = {**dict(self._spec.get(key) or {}), **_clean(**values)}
         return self._with(**{key: merged or None})
 
     # -- labels and formatting -------------------------------------------
-    def title(self, value: str) -> Column:
+    def title(self, value: str) -> Self:
         """Override the column's header text.
 
         A ``"\\n"`` in the title forces a line break.
@@ -134,7 +138,7 @@ class Column(Mapping[str, Any]):
         """
         return self._with(title=value)
 
-    def fmt(self, code: str) -> Column:
+    def fmt(self, code: str) -> Self:
         """Set the value format code.
 
         ``code`` is a named preset (``"usd0"``, ``"pct1"``, ``"num0k"``, ``"yyyy"``,
@@ -150,7 +154,7 @@ class Column(Mapping[str, Any]):
     #: ``format`` reads better in a chain; ``fmt`` matches the option name.
     format = fmt
 
-    def relative(self, value: Relative = True) -> Column:
+    def relative(self, value: Relative = True) -> Self:
         """Render the value relative to now (e.g. ``"3 days ago"``) instead of as
         an absolute date, using :js:class:`Intl.RelativeTimeFormat`.
 
@@ -165,7 +169,7 @@ class Column(Mapping[str, Any]):
         """
         return self._with(relative=value)
 
-    def fmt_column(self, column: str) -> Column:
+    def fmt_column(self, column: str) -> Self:
         """Take the format code from another column, per row.
 
         The named column holds a format code; each cell is formatted with its own
@@ -177,7 +181,9 @@ class Column(Mapping[str, Any]):
         """
         return self._with(fmt_column=_field(column))
 
-    def total_fmt(self, code: str) -> Column:
+    format_column = fmt_column
+
+    def total_fmt(self, code: str) -> Self:
         """Format the total row differently from the cells.
 
         Example::
@@ -186,7 +192,7 @@ class Column(Mapping[str, Any]):
         """
         return self._with(total_fmt=code)
 
-    def subtotal_fmt(self, code: str) -> Column:
+    def subtotal_fmt(self, code: str) -> Self:
         """Format subtotal rows differently from the cells.
 
         Example::
@@ -195,7 +201,10 @@ class Column(Mapping[str, Any]):
         """
         return self._with(subtotal_fmt=code)
 
-    def align(self, value: Align) -> Column:
+    total_format = total_fmt
+    subtotal_format = subtotal_fmt
+
+    def align(self, value: Align) -> Self:
         """Set the text alignment: ``"left"``, ``"right"`` or ``"center"``.
 
         Numbers default to right and text to left.
@@ -206,7 +215,7 @@ class Column(Mapping[str, Any]):
         """
         return self._with(align=value)
 
-    def align_decimals(self, value: bool = True) -> Column:
+    def align_decimals(self, value: bool = True) -> Self:
         """Align the whole column on the decimal point.
 
         Example::
@@ -215,7 +224,7 @@ class Column(Mapping[str, Any]):
         """
         return self._with(align_decimals=value)
 
-    def figure_style(self, value: str) -> Column:
+    def figure_style(self, value: str) -> Self:
         """Override the CSS ``font-variant-numeric`` for this column.
 
         The default is ``"lining-nums tabular-nums"``; pass e.g.
@@ -227,7 +236,7 @@ class Column(Mapping[str, Any]):
         """
         return self._with(figure_style=value)
 
-    def font(self, family: str) -> Column:
+    def font(self, family: str) -> Self:
         """Set the CSS ``font-family`` for this column.
 
         Example::
@@ -236,7 +245,7 @@ class Column(Mapping[str, Any]):
         """
         return self._with(font=family)
 
-    def font_color(self, color: str) -> Column:
+    def font_color(self, color: str) -> Self:
         """Set the cell text colour (any CSS colour).
 
         Example::
@@ -245,7 +254,7 @@ class Column(Mapping[str, Any]):
         """
         return self._with(font_color=color)
 
-    def bold(self, value: bool = True) -> Column:
+    def bold(self, value: bool = True) -> Self:
         """Render the column's cells in bold.
 
         Example::
@@ -254,7 +263,7 @@ class Column(Mapping[str, Any]):
         """
         return self._with(font_weight="600" if value else None)
 
-    def italic(self, value: bool = True) -> Column:
+    def italic(self, value: bool = True) -> Self:
         """Render the column's cells in italics.
 
         Example::
@@ -263,7 +272,7 @@ class Column(Mapping[str, Any]):
         """
         return self._with(font_style="italic" if value else None)
 
-    def font_weight(self, value: str) -> Column:
+    def font_weight(self, value: str) -> Self:
         """Set the CSS ``font-weight`` (e.g. ``"600"``, ``"bold"``).
 
         Example::
@@ -272,7 +281,7 @@ class Column(Mapping[str, Any]):
         """
         return self._with(font_weight=value)
 
-    def font_style(self, value: str) -> Column:
+    def font_style(self, value: str) -> Self:
         """Set the CSS ``font-style`` (e.g. ``"italic"``, ``"oblique"``).
 
         Example::
@@ -281,7 +290,7 @@ class Column(Mapping[str, Any]):
         """
         return self._with(font_style=value)
 
-    def wrap(self, value: bool = True) -> Column:
+    def wrap(self, value: bool = True) -> Self:
         """Allow (or forbid) the cell text to wrap onto several lines.
 
         Example::
@@ -290,7 +299,7 @@ class Column(Mapping[str, Any]):
         """
         return self._with(wrap=value)
 
-    def null_text(self, text: str) -> Column:
+    def null_text(self, text: str) -> Self:
         """Text to show for a NULL value (the default is the table's ``null_text``).
 
         Example::
@@ -299,7 +308,7 @@ class Column(Mapping[str, Any]):
         """
         return self._with(null_text=text)
 
-    def blank_below(self, value: float) -> Column:
+    def blank_below(self, value: float) -> Self:
         """Leave the cell blank when the value is below ``value``.
 
         Example::
@@ -308,7 +317,7 @@ class Column(Mapping[str, Any]):
         """
         return self._with(blank_below=value)
 
-    def blank_above(self, value: float) -> Column:
+    def blank_above(self, value: float) -> Self:
         """Leave the cell blank when the value is above ``value``.
 
         Example::
@@ -317,7 +326,7 @@ class Column(Mapping[str, Any]):
         """
         return self._with(blank_above=value)
 
-    def blank(self, predicate: Any) -> Column:
+    def blank(self, predicate: Any) -> Self:
         """Leave the cell blank when a rule matches.
 
         ``predicate`` is a rule name or expression, as understood by the rule
@@ -329,7 +338,7 @@ class Column(Mapping[str, Any]):
         """
         return self._with(blank=predicate)
 
-    def red_negatives(self, value: bool = True) -> Column:
+    def red_negatives(self, value: bool = True) -> Self:
         """Colour negative values red (Evidence's ``redNegatives``).
 
         :meth:`neg` is the richer spelling.
@@ -340,7 +349,7 @@ class Column(Mapping[str, Any]):
         """
         return self._with(red_negatives=value)
 
-    def neg(self, color: str | None = None, bracket: bool = False) -> Column:
+    def neg(self, color: str | None = None, bracket: bool = False) -> Self:
         """Style negative values: colour them, and optionally bracket them.
 
         :param color: the colour for negative values (default the theme's
@@ -355,7 +364,7 @@ class Column(Mapping[str, Any]):
         """
         return self._with(red_negatives=True, negative_color=color, bracket_negatives=bracket or None)
 
-    def rotate_title(self, value: Rotation) -> Column:
+    def rotate_title(self, value: Rotation) -> Self:
         """Rotate the header: ``"vertical"`` or an angle in degrees.
 
         Example::
@@ -365,7 +374,7 @@ class Column(Mapping[str, Any]):
         return self._with(rotate_title=value)
 
     # -- placement and metadata ------------------------------------------
-    def group(self, value: str | Sequence[str]) -> Column:
+    def group(self, value: str | Sequence[str]) -> Self:
         """Place the column under a header group.
 
         A string is one level; a sequence nests (``["Root", "Sub"]``). Dotted
@@ -377,7 +386,7 @@ class Column(Mapping[str, Any]):
         """
         return self._with(column_group=value)
 
-    def subcolumn(self, value: str) -> Column:
+    def subcolumn(self, value: str) -> Self:
         """Give the column a shared sub-header (the ``X`` in an ``X value`` pair).
 
         Example::
@@ -386,7 +395,7 @@ class Column(Mapping[str, Any]):
         """
         return self._with(subcolumn_group=value)
 
-    def repeat_values(self, value: bool = True) -> Column:
+    def repeat_values(self, value: bool = True) -> Self:
         """Repeat a grouped value on every row instead of only the first.
 
         Example::
@@ -395,7 +404,7 @@ class Column(Mapping[str, Any]):
         """
         return self._with(repeat_values=value)
 
-    def hide(self, value: bool = True) -> Column:
+    def hide(self, value: bool = True) -> Self:
         """Hide the column, keeping it available for ``sort_by`` / links.
 
         Example::
@@ -404,7 +413,7 @@ class Column(Mapping[str, Any]):
         """
         return self._with(hide=value)
 
-    def info(self, text: str) -> Column:
+    def info(self, text: str) -> Self:
         """Set the column's description (shown behind the ⓘ and as the header ``title``).
 
         Example::
@@ -413,7 +422,7 @@ class Column(Mapping[str, Any]):
         """
         return self._with(info=text)
 
-    def footnote(self, column: str) -> Column:
+    def footnote(self, column: str) -> Self:
         """Attach a footnote column, rendered as a marker next to the value.
 
         Example::
@@ -422,7 +431,7 @@ class Column(Mapping[str, Any]):
         """
         return self._with(footnote=_field(column))
 
-    def sort_by(self, column: str) -> Column:
+    def sort_by(self, column: str) -> Self:
         """Sort this column by another column's values.
 
         The target may be hidden or not otherwise shown.
@@ -433,7 +442,7 @@ class Column(Mapping[str, Any]):
         """
         return self._with(sort_by=_field(column))
 
-    def highlight(self, color: str) -> Column:
+    def highlight(self, color: str) -> Self:
         """Shade the column with a background colour band.
 
         Wins over row shading; the group header is filled only when every
@@ -452,7 +461,7 @@ class Column(Mapping[str, Any]):
         color: str | None = None,
         border: str | None = None,
         padding: str | None = None,
-    ) -> Column:
+    ) -> Self:
         """Style the cell chrome, independently of any marks on it.
 
         :param background: a colour, or ``"@column"`` for a per-row colour.
@@ -482,7 +491,7 @@ class Column(Mapping[str, Any]):
         )
 
     # -- cell content ----------------------------------------------------
-    def markdown(self) -> Column:
+    def markdown(self) -> Self:
         """Render the cell text as Markdown.
 
         Example::
@@ -491,7 +500,7 @@ class Column(Mapping[str, Any]):
         """
         return self._with(markdown=True)
 
-    def html(self) -> Column:
+    def html(self) -> Self:
         """Render the cell text as raw HTML.
 
         Example::
@@ -500,7 +509,7 @@ class Column(Mapping[str, Any]):
         """
         return self._with(html=True)
 
-    def icons(self, map: Mapping[str, str]) -> Column:
+    def icons(self, map: Mapping[str, str]) -> Self:
         """Map each category to a glyph or image URL.
 
         :param map: category → glyph (e.g. ``"▲"``) or image URL/data-URI.
@@ -511,7 +520,7 @@ class Column(Mapping[str, Any]):
         """
         return self._with(icon_map={str(key): value for key, value in map.items()})
 
-    def link(self, column: str | None = None, *, label: str | None = None, new_tab: bool = False) -> Column:
+    def link(self, column: str | None = None, *, label: str | None = None, new_tab: bool = False) -> Self:
         """Turn the cell into a hyperlink.
 
         :param column: the column holding the URL (defaults to this column).
@@ -533,7 +542,7 @@ class Column(Mapping[str, Any]):
         height: float | None = None,
         width: float | None = None,
         alt: str | None = None,
-    ) -> Column:
+    ) -> Self:
         """Render the cell as an image.
 
         :param column: the column holding the image URL (defaults to this column).
@@ -549,7 +558,7 @@ class Column(Mapping[str, Any]):
             image=_field(column) or self._name, **_merge_options("image_options", height=height, width=width, alt=alt)
         )
 
-    def logo(self, column: str | None = None, *, height: float | None = None) -> Column:
+    def logo(self, column: str | None = None, *, height: float | None = None) -> Self:
         """Render the cell as a logo (an image sized to the row height).
 
         Example::
@@ -558,7 +567,7 @@ class Column(Mapping[str, Any]):
         """
         return self._with(logo=_field(column) or self._name, **_merge_options("logo_options", height=height))
 
-    def template(self, value: str, **formats: str) -> Column:
+    def template(self, value: str, **formats: str) -> Self:
         """Render the cell with a template, e.g. ``"{last}, {first}"``.
 
         Extra keyword arguments are format codes for the referenced columns.
@@ -570,7 +579,7 @@ class Column(Mapping[str, Any]):
         return self._with(template=value, template_fmt=_clean(**formats) or None)
 
     # -- visualizations --------------------------------------------------
-    def viz(self, kind: str, **options: Any) -> Column:
+    def viz(self, kind: str, **options: Any) -> Self:
         """Set a visualisation by name, passing its options.
 
         Prefer the typed helpers (:meth:`bar`, :meth:`color`, :meth:`delta`,
@@ -587,6 +596,7 @@ class Column(Mapping[str, Any]):
         *,
         color: str | None = None,
         negative_color: str | None = None,
+        color_negative: str | None = None,
         fit_to_data: bool | None = None,
         hide_labels: bool | None = None,
         background: str | None = None,
@@ -596,7 +606,7 @@ class Column(Mapping[str, Any]):
         reference: float | None = None,
         reference_color: str | None = None,
         reference_label: str | None = None,
-    ) -> Column:
+    ) -> Self:
         """Show each value as an inline horizontal bar with its label.
 
         :param color: bar colour (default a light blue), or ``"@column"`` to take
@@ -631,10 +641,13 @@ class Column(Mapping[str, Any]):
                 direction="left", reference=4.3, reference_label="OECD median"
             ).align("left")
         """
+        colors = {"negative_color": negative_color, "color_negative": color_negative}
+        alias(colors, "negative_color", "color_negative")
+        negative_color = colors.get("negative_color")
         color_column = None
         if isinstance(color, str) and color.startswith("@"):
             color_column, color = color[1:], None
-        return self._with(
+        result = self._with(
             viz="bar",
             **_merge_options(
                 "bar_options",
@@ -652,6 +665,12 @@ class Column(Mapping[str, Any]):
                 reference_label=reference_label,
             ),
         )
+        bar = dict(result._spec.get("bar_options") or {})
+        if color is not None:
+            bar.pop("bar_color_column", None)
+        if color_column is not None:
+            bar.pop("bar_color", None)
+        return result._with(bar_options=bar)
 
     def color(
         self,
@@ -663,7 +682,7 @@ class Column(Mapping[str, Any]):
         min: float | None = None,
         max: float | None = None,
         midpoint: float | None = None,
-    ) -> Column:
+    ) -> Self:
         """Shade each cell with a background colour for its value.
 
         :param scale: a named preset (``"green"``, ``"blue"``, ``"red"``,
@@ -706,7 +725,7 @@ class Column(Mapping[str, Any]):
         show_value: bool | None = None,
         show_symbol: bool | None = None,
         symbol_position: Literal["left", "right"] | None = None,
-    ) -> Column:
+    ) -> Self:
         """Show a change indicator (▲/▼) next to the value.
 
         :param down_is_good: invert the meaning (red up, green down).
@@ -748,7 +767,7 @@ class Column(Mapping[str, Any]):
         markers: bool | str | None = None,
         marker_color: str | None = None,
         signed: bool | None = None,
-    ) -> Column:
+    ) -> Self:
         """Draw the cell's array value as a small line/area/bar chart.
 
         :param type: ``"line"`` (default), ``"area"``, ``"bar"`` or ``"points"``.
@@ -796,7 +815,7 @@ class Column(Mapping[str, Any]):
         min: float | None = None,
         max: float | None = None,
         midpoint: float | None = None,
-    ) -> Column:
+    ) -> Self:
         """Render the value in a rounded "chip".
 
         The fill follows the same rules as :meth:`color`.
@@ -848,7 +867,7 @@ class Column(Mapping[str, Any]):
         empty_color: str | None = None,
         size: float | None = None,
         gap: float | None = None,
-    ) -> Column:
+    ) -> Self:
         """Render the value as that many repeated symbols — glyphs, emoji or images.
 
         :param symbol: the filled glyph (default ``"●"``).
@@ -896,9 +915,7 @@ class Column(Mapping[str, Any]):
 
             col.number("sales").fmt("usd0").to_config()
         """
-        config = {"name": self._name, **self._spec}
-        validate_options(config, ColumnOptions, "column")
-        return config
+        return _normalize_column_options(dict(self))
 
 
 class ColumnGroup(Sequence[Column]):
@@ -1013,6 +1030,7 @@ def _currency_code(code: str, decimals: int | None) -> str:
 # ------------------------------------------------------------------ factories ---
 def _column(name: str, type_name: str, **spec: Any) -> Column:
     """Build a ``Column`` from ``name``, a type and cleaned options."""
+    alias(spec, "fmt", "format")
     return Column(name, {"type": type_name, **_clean(**spec)})
 
 
@@ -1038,6 +1056,7 @@ def auto(name: str, **overrides: Any) -> Column:
     It is also the right value in ``column_config`` when you want to change one
     thing about a column: ``column_config={"gdp": col.auto("gdp").fmt("usd0")}``.
     """
+    alias(overrides, "fmt", "format")
     return Column(name, _clean(**overrides))
 
 
@@ -1078,7 +1097,13 @@ def text(name: str, *, title: str | None = None, **extra: Any) -> Column:
 
 
 def number(
-    name: str, *, fmt: str | None = None, align: Align | None = None, title: str | None = None, **extra: Any
+    name: str,
+    *,
+    format: str | None = None,
+    fmt: str | None = None,
+    align: Align | None = None,
+    title: str | None = None,
+    **extra: Any,
 ) -> Column:
     """A number column with auto-scaling formatting.
 
@@ -1094,10 +1119,12 @@ def number(
         col.number("sales")
         col.number("score", fmt="num2")
     """
-    return _column(name, "number", fmt=fmt, align=align, title=title, **extra)
+    return _column(name, "number", fmt=format_code(format, fmt), align=align, title=title, **extra)
 
 
-def integer(name: str, *, fmt: str | None = None, title: str | None = None, **extra: Any) -> Column:
+def integer(
+    name: str, *, format: str | None = None, fmt: str | None = None, title: str | None = None, **extra: Any
+) -> Column:
     """A whole-number column (counts, ids), formatted ``num0``.
 
     :param name: the source column name.
@@ -1108,7 +1135,7 @@ def integer(name: str, *, fmt: str | None = None, title: str | None = None, **ex
 
         col.integer("orders")
     """
-    return _column(name, "number", fmt=fmt or "num0", title=title, **extra)
+    return _column(name, "number", fmt=format_code(format, fmt) or "num0", title=title, **extra)
 
 
 def percent(
@@ -1116,6 +1143,7 @@ def percent(
     *,
     whole: bool = False,
     decimals: int | None = None,
+    format: str | None = None,
     fmt: str | None = None,
     title: str | None = None,
     **extra: Any,
@@ -1135,7 +1163,13 @@ def percent(
         col.percent("rate", whole=True)            # 15.3   -> 15.3%
         col.percent("share", decimals=2)
     """
-    return _column(name, "number", fmt=fmt or _percent_code(whole, decimals), title=title, **extra)
+    return _column(
+        name,
+        "number",
+        fmt=format_code(format, fmt) or _percent_code(whole, decimals),
+        title=title,
+        **extra,
+    )
 
 
 def currency(
@@ -1143,6 +1177,7 @@ def currency(
     *,
     code: str = "usd",
     decimals: int | None = None,
+    format: str | None = None,
     fmt: str | None = None,
     title: str | None = None,
     **extra: Any,
@@ -1160,12 +1195,19 @@ def currency(
         col.currency("sales")                      # $12,400   (auto scale)
         col.currency("price", code="eur", decimals=2)   # €12.35
     """
-    return _column(name, "number", fmt=fmt or _currency_code(code, decimals), title=title, **extra)
+    return _column(
+        name,
+        "number",
+        fmt=format_code(format, fmt) or _currency_code(code, decimals),
+        title=title,
+        **extra,
+    )
 
 
 def date(
     name: str,
     *,
+    format: str | None = None,
     fmt: str | None = None,
     relative: Relative | None = None,
     align: Align | None = None,
@@ -1186,12 +1228,13 @@ def date(
         col.date("order_date")
         col.date("due_date", relative="day")
     """
-    return _column(name, "date", fmt=fmt, relative=relative, align=align, title=title, **extra)
+    return _column(name, "date", fmt=format_code(format, fmt), relative=relative, align=align, title=title, **extra)
 
 
 def time(
     name: str,
     *,
+    format: str | None = None,
     fmt: str | None = None,
     relative: Relative | None = None,
     align: Align | None = None,
@@ -1212,12 +1255,21 @@ def time(
 
         col.time("opened_at")
     """
-    return _column(name, "date", fmt=fmt or "hms", relative=relative, align=align, title=title, **extra)
+    return _column(
+        name,
+        "date",
+        fmt=format_code(format, fmt) or "hms",
+        relative=relative,
+        align=align,
+        title=title,
+        **extra,
+    )
 
 
 def datetime(
     name: str,
     *,
+    format: str | None = None,
     fmt: str | None = None,
     relative: Relative | None = None,
     align: Align | None = None,
@@ -1238,7 +1290,15 @@ def datetime(
         col.datetime("created_at")
         col.datetime("updated_at").relative()
     """
-    return _column(name, "date", fmt=fmt or "datetime", relative=relative, align=align, title=title, **extra)
+    return _column(
+        name,
+        "date",
+        fmt=format_code(format, fmt) or "datetime",
+        relative=relative,
+        align=align,
+        title=title,
+        **extra,
+    )
 
 
 def boolean(
@@ -1317,7 +1377,13 @@ def flag(name: str, *, title: str | None = None, **extra: Any) -> Column:
 
         col.flag("country")
     """
-    return _column(name, "string", fmt="flag", title=title, **extra)
+    return _column(
+        name,
+        "string",
+        fmt=format_code(extra.pop("format", None), extra.pop("fmt", None)) or "flag",
+        title=title,
+        **extra,
+    )
 
 
 def markdown(name: str, *, title: str | None = None, **extra: Any) -> Column:

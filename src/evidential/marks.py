@@ -13,15 +13,11 @@ source and sharing one coordinate system::
 A ``MarkColumn`` is still an immutable :class:`~evidential.Column` (a
 ``Mapping``), so it drops straight into ``columns=[...]`` and ``column_config``.
 
-Compatibility: a single plain bar over the column's own field with no label,
-size, side, scale or references serialises to the classic ``viz="bar"`` +
-``bar_options`` shape, so existing notebooks are unchanged. The new
-``encodings`` / ``scale`` / ``references`` keys are emitted only when the new
-features are used.
+Every mark column serializes to the same encoding shape, independent of which
+annotations, scales or overlays are configured. Classic ``viz="bar"`` mappings
+and ``col.number(...).bar(...)`` remain supported as compatibility declarations.
+Callable bindings are evaluated against prepared rows before crossing JSON.
 
-This phase binds field-name sources (including the ``@field`` convention).
-Per-row Python callables are resolved to hidden helper columns in a later
-phase (see ADR-058).
 """
 
 from __future__ import annotations
@@ -31,8 +27,10 @@ import math
 from collections.abc import Mapping, Sequence
 from typing import Any, Literal
 
+from ._aliases import alias, format_code
 from ._column import Column, _clean, _field
 from ._distribution import band_spec, validate_curve
+from .configuration import EncodingLabel, EncodingSpec, validate_options
 
 __all__ = [
     "MarkColumn",
@@ -58,19 +56,19 @@ LABEL_POSITIONS = (
     "below",
 )
 
-#: Classic bar options that map one-to-one onto ``bar_options``.
-_LEGACY_BAR_KEYS = {
-    "color": "bar_color",
-    "color_negative": "bar_color_negative",
-    "background": "background_color",
-    "hide_labels": "hide_labels",
-    "fit_to_data": "fit_to_data",
-    "center": "center",
-    "pad": "pad",
-    "direction": "direction",
-    "reference": "reference",
-    "reference_color": "reference_color",
-    "reference_label": "reference_label",
+#: Supported classic bar style options, honored by the marks renderer too.
+_BAR_STYLE_KEYS = {
+    "color",
+    "color_negative",
+    "background",
+    "hide_labels",
+    "fit_to_data",
+    "center",
+    "pad",
+    "direction",
+    "reference",
+    "reference_color",
+    "reference_label",
 }
 
 #: Encoding keys that are style, not source/composition.
@@ -117,17 +115,6 @@ _ENCODING_KEYS = (
 _ANONYMOUS = itertools.count()
 
 
-def _has_callable(value: Any) -> bool:
-    """True if a source/style value (or a nested label) is a Python callable."""
-    if callable(value):
-        return True
-    if isinstance(value, Mapping):
-        return any(_has_callable(item) for item in value.values())
-    if isinstance(value, (list, tuple)):
-        return any(_has_callable(item) for item in value)
-    return False
-
-
 def _label_spec(
     value: Any = None,
     *,
@@ -136,6 +123,7 @@ def _label_spec(
     literal: str | None = None,
     position: str | None = None,
     format: str | None = None,
+    fmt: str | None = None,
     prefix: str | None = None,
     suffix: str | None = None,
     align: str | None = None,
@@ -180,7 +168,7 @@ def _label_spec(
         if align not in ("begin", "center", "end"):
             raise ValueError("label align is 'begin', 'center' or 'end'")
         spec["align"] = align
-    for key, item in (("format", format), ("prefix", prefix), ("suffix", suffix)):
+    for key, item in (("format", format_code(format, fmt)), ("prefix", prefix), ("suffix", suffix)):
         if item is not None:
             spec[key] = item
     if share:
@@ -195,6 +183,16 @@ def _label_spec(
         spec["min_width"] = min_width
     if color is not None:
         spec["color"] = color
+    alias(spec, "format", "fmt")
+    if spec.get("source") is not None:
+        spec["source"] = _field(spec["source"])
+    if spec.get("position") is not None and spec["position"] not in LABEL_POSITIONS:
+        raise ValueError(f"Unknown label position {spec['position']!r}")
+    if spec.get("min_width") is not None and (not math.isfinite(spec["min_width"]) or spec["min_width"] < 0):
+        raise ValueError("label min_width must be finite and nonnegative")
+    if sum(key in spec for key in ("source", "text", "value")) > 1:
+        raise ValueError("label needs only one of source, text or value")
+    validate_options(spec, EncodingLabel, "label")
     return spec or None
 
 
@@ -213,6 +211,9 @@ def _canonical_encoding(
     if not isinstance(field, str) and not callable(field):
         raise TypeError(f"{kind} expects a field name or a callable, got {source!r}")
     encoding: dict[str, Any] = {"kind": kind, "source": field}
+    alias(style, "color_negative", "negative_color")
+    if kind in ("bar", "stacked_bar"):
+        alias(style, "size", "height")
     if high is not None:
         encoding["high"] = _field(high)
     color = style.pop("color", None)
@@ -223,6 +224,7 @@ def _canonical_encoding(
     for key in (
         "color_column",
         "color_negative",
+        "color_negative_column",
         "size",
         "outline",
         "side",
@@ -257,6 +259,36 @@ def _canonical_encoding(
     leftover = {key: value for key, value in style.items() if value is not None}
     if leftover:
         raise TypeError(f"Unknown {kind} option(s): {', '.join(sorted(leftover))}")
+    negative_color = encoding.get("color_negative")
+    if isinstance(negative_color, str) and negative_color.startswith("@"):
+        encoding["color_negative_column"] = negative_color[1:]
+        encoding.pop("color_negative")
+    common = {"kind", "source", "label", "color", "color_column"}
+    allowed = {
+        "bar": {*_BAR_STYLE_KEYS, "color_negative_column", "side", "size", "valign"},
+        "point": {"outline", "size", "valign"},
+        "points": {"outline", "size", "valign"},
+        "range": {"high", "cap", "size", "overflow", "fill", "valign"},
+        "strip": {"colors", "strip_labels", "segmented"},
+        "stacked_bar": {"size", "diverge_at", "neutral"},
+        "boxplot": {"parts", "outliers", "whisker"},
+        "distribution": {"distribution"},
+    }
+    if kind not in allowed:
+        raise ValueError(f"Unknown mark kind {kind!r}")
+    irrelevant = set(encoding) - common - allowed[kind]
+    if "outline" in irrelevant:
+        raise ValueError("outline is only supported for point and points marks")
+    if irrelevant:
+        raise ValueError(f"{', '.join(sorted(irrelevant))} is not supported for {kind} marks")
+    if kind == "range" and high is None:
+        raise TypeError("range expects two endpoints: col.range(low, high)")
+    size = encoding.get("size")
+    if size is not None:
+        if not isinstance(size, (int, float)) or isinstance(size, bool) or not math.isfinite(size) or size <= 0:
+            raise ValueError(f"{kind} size must be finite and positive")
+        if kind in ("bar", "stacked_bar") and size > 1:
+            raise ValueError(f"{kind} height (size) is a fraction in (0, 1]")
     outline = encoding.get("outline")
     if outline is not None:
         if kind not in ("point", "points"):
@@ -269,8 +301,27 @@ def _canonical_encoding(
         raise ValueError("range overflow is 'clip' or 'arrow'")
     label_spec = _label_spec(label, position=label_position, **(label_options or {}))
     if label_spec:
+        if kind == "stacked_bar" and label_spec.get("position", "inside_end") not in (
+            "inside_start",
+            "inside_end",
+            "center",
+        ):
+            raise ValueError("stacked_bar label position is inside_start, inside_end or center")
         encoding["label"] = label_spec
+    if kind == "bar" and label is False:
+        encoding["hide_labels"] = True
+    validate_options(encoding, EncodingSpec, "encoding")
     return {key: encoding[key] for key in _ENCODING_KEYS if key in encoding}
+
+
+def normalize_encoding(encoding: Mapping[str, Any]) -> dict[str, Any]:
+    """Use the same validation for dictionaries, builders and table updates."""
+    options = dict(encoding)
+    kind = options.pop("kind", None)
+    source = options.pop("source", None)
+    if kind is None:
+        raise ValueError("encoding.kind is required")
+    return _canonical_encoding(kind, source, **options)
 
 
 def _merge_label(previous: Mapping[str, Any] | None, update: Mapping[str, Any] | None) -> dict[str, Any] | None:
@@ -285,79 +336,18 @@ def _merge_label(previous: Mapping[str, Any] | None, update: Mapping[str, Any] |
     return merged
 
 
-def _legacy_bar_options(encoding: Mapping[str, Any]) -> dict[str, Any]:
-    """The classic ``bar_options`` for a single bar encoding."""
-    options: dict[str, Any] = {}
-    for source, target in _LEGACY_BAR_KEYS.items():
-        if encoding.get(source) is not None:
-            options[target] = encoding[source]
-    if encoding.get("color_column") is not None:
-        options["bar_color_column"] = encoding["color_column"]
-    return options
-
-
 class MarkColumn(Column):
     """A column that holds an ordered list of encodings (see module docstring)."""
 
     __slots__ = ()
 
     def _with(self, **changes: Any) -> MarkColumn:
-        spec = dict(self._spec)
-        for key, value in changes.items():
-            if value is None:
-                spec.pop(key, None)
-            else:
-                spec[key] = value
-        return MarkColumn(self._name, spec)
+        if changes.get("viz") in ("color", "chip", "delta", "symbols"):
+            changes["encodings"] = None
+        return super()._with(**changes)
 
-    def _merge(self, key: str, **values: Any) -> MarkColumn:
-        merged = {**dict(self._spec.get(key) or {}), **_clean(**values)}
-        return self._with(**{key: merged or None})
-
-    # ------------------------------------------------------ serialisation ---
     def _encodings(self) -> list[dict[str, Any]]:
         return list(self._spec.get("encodings") or [])
-
-    def _is_legacy(self) -> bool:
-        encodings = self._encodings()
-        if len(encodings) != 1:
-            return False
-        if self._spec.get("scale") or self._spec.get("references"):
-            return False
-        if self._spec.get("viz") == "sparkline":
-            return False
-        encoding = encodings[0]
-        if encoding.get("kind") != "bar" or encoding.get("source") != self._name:
-            return False
-        # Any callable must be resolved to a hidden column first.
-        if _has_callable(encoding):
-            return False
-        # Any new-only key makes this a marks column.
-        return not any(key in encoding for key in ("size", "side", "cap", "label", "valign"))
-
-    def _serialized(self) -> dict[str, Any]:
-        spec = dict(self._spec)
-        encodings = spec.pop("encodings", None)
-        if encodings and self._is_legacy():
-            spec["viz"] = "bar"
-            options = _legacy_bar_options(encodings[0])
-            spec["bar_options"] = options or None
-        else:
-            if encodings:
-                spec["encodings"] = encodings
-        return {key: value for key, value in spec.items() if value is not None or key == "type"}
-
-    def __getitem__(self, key: str) -> Any:
-        if key == "name":
-            return self._name
-        return self._serialized()[key]
-
-    def __iter__(self):
-        yield "name"
-        yield from (key for key in self._serialized() if key != "name")
-
-    def __len__(self) -> int:
-        return 1 + len([key for key in self._serialized() if key != "name"])
 
     # --------------------------------------------------------- mark chain ---
     def _add(
@@ -371,6 +361,7 @@ class MarkColumn(Column):
         label_position: str | None = None,
         **style: Any,
     ) -> MarkColumn:
+        metadata = _factory_column(self._name, style)._spec
         encodings = self._encodings()
         encodings.append(
             _canonical_encoding(
@@ -383,14 +374,21 @@ class MarkColumn(Column):
                 **style,
             )
         )
-        return self._with(encodings=encodings)
+        return self._with(
+            encodings=encodings, **{key: metadata[key] for key in ("title", "fmt", "align") if key in metadata}
+        )
 
     def bar(
         self,
         source: Any = None,
         *,
+        title: str | None = None,
+        format: str | None = None,
+        fmt: str | None = None,
+        align: str | None = None,
         color: str | None = None,
         negative_color: str | None = None,
+        color_negative: str | None = None,
         fit_to_data: bool | None = None,
         hide_labels: bool | None = None,
         background: str | None = None,
@@ -401,9 +399,11 @@ class MarkColumn(Column):
         reference_color: str | None = None,
         reference_label: str | None = None,
         size: float | None = None,
+        height: float | None = None,
         side: Literal["left", "right"] | None = None,
         valign: Literal["top", "center", "bottom"] | None = None,
         label: Any = None,
+        label_options: Mapping[str, Any] | None = None,
         label_position: str | None = None,
     ) -> MarkColumn:
         """Add a bar bound to ``source``; ``label=`` annotates this bar.
@@ -411,9 +411,13 @@ class MarkColumn(Column):
         Called without a source it refines the most recently declared encoding
         (kept for signature-compatibility with the classic ``Column.bar``).
         """
+        column = self._with(**_clean(title=title, fmt=format_code(format, fmt), align=align))
+        aliases = {"color_negative": color_negative, "negative_color": negative_color, "size": size, "height": height}
+        alias(aliases, "color_negative", "negative_color")
+        alias(aliases, "size", "height")
         options: dict[str, Any] = {
             "color": color,
-            "color_negative": negative_color,
+            "color_negative": aliases.get("color_negative"),
             "fit_to_data": fit_to_data,
             "hide_labels": hide_labels,
             "background": background,
@@ -423,7 +427,7 @@ class MarkColumn(Column):
             "reference": reference,
             "reference_color": reference_color,
             "reference_label": reference_label,
-            "size": size,
+            "size": aliases.get("size"),
             "side": side,
             "valign": valign,
         }
@@ -431,23 +435,31 @@ class MarkColumn(Column):
             options["label"] = label
         if label_position is not None:
             options["label_position"] = label_position
+        if label_options is not None:
+            options["label_options"] = label_options
         if source is None:
-            encodings = self._encodings()
+            encodings = column._encodings()
             if not encodings:
-                return self._with(**{key: value for key, value in options.items() if value is not None})
+                raise ValueError("bar() without a source needs a last bar to refine; pass a source to add one")
             enc = dict(encodings[-1])
+            if enc["kind"] != "bar":
+                raise ValueError("bar() without a source can only refine the last bar; pass a source to add one")
             if color is not None:
                 enc.pop("color_column", None)
+            if negative_color is not None or color_negative is not None:
+                enc.pop("color_negative_column", None)
             for key, value in options.items():
-                if value is not None and key not in ("label", "label_position"):
+                if value is not None and key not in ("label", "label_position", "label_options"):
                     enc[key] = value
-            if label is not None or label_position is not None:
-                enc["label"] = _merge_label(enc.get("label"), _label_spec(label, position=label_position))
+            if label is not None or label_position is not None or label_options is not None:
+                enc["label"] = _merge_label(
+                    enc.get("label"), _label_spec(label, position=label_position, **(label_options or {}))
+                )
             kind = enc.pop("kind")
             bound_source = enc.pop("source")
             encodings[-1] = _canonical_encoding(kind, bound_source, **enc)
-            return self._with(encodings=encodings)
-        return self._add("bar", source, **_bar_kwargs(options))
+            return column._with(encodings=encodings)
+        return column._add("bar", source, **options)
 
     def point(self, source: Any, *, outline: bool | str | None = None, **options: Any) -> MarkColumn:
         """Add a point; ``outline=False`` removes its ring, or use a color string."""
@@ -465,6 +477,36 @@ class MarkColumn(Column):
             raise TypeError("range expects two endpoints: col.range(low, high)")
         return self._add("range", low, high=high, **options)
 
+    def _append_column(self, column: MarkColumn) -> MarkColumn:
+        """Compose a factory's validated marks without replacing slot metadata."""
+        if any(enc["kind"] == "stacked_bar" for enc in self._encodings()) and any(
+            enc["kind"] == "stacked_bar" for enc in column._encodings()
+        ):
+            raise ValueError("a column can contain one stacked_bar; use separate columns for independent stacks")
+        result = self._with(
+            encodings=[*self._encodings(), *column._encodings()],
+            **{key: column._spec[key] for key in ("title", "fmt", "align") if key in column._spec},
+        )
+        if column._spec.get("scale"):
+            result = result._merge("scale", **column._spec["scale"])
+        return result
+
+    def strip(self, source: Any, **options: Any) -> MarkColumn:
+        """Append an ordered category sequence (shares coordinates with other strips)."""
+        return self._append_column(strip(source, **options))
+
+    def stacked_bar(self, *sources: Any, **options: Any) -> MarkColumn:
+        """Append one cumulative stack on the column's shared scale."""
+        return self._append_column(stacked_bar(*sources, **options))
+
+    def boxplot(self, minimum: Any, q1: Any, median: Any, q3: Any, maximum: Any, **options: Any) -> MarkColumn:
+        """Append a precomputed five-number summary."""
+        return self._append_column(boxplot(minimum, q1, median, q3, maximum, **options))
+
+    def distribution(self, source: Any, **options: Any) -> MarkColumn:
+        """Append a precomputed density band."""
+        return self._append_column(distribution(source, **options))
+
     def label(
         self,
         value: Any = None,
@@ -473,6 +515,7 @@ class MarkColumn(Column):
         text: str | None = None,
         position: str | None = None,
         format: str | None = None,
+        fmt: str | None = None,
         prefix: str | None = None,
         suffix: str | None = None,
         align: str | None = None,
@@ -490,6 +533,7 @@ class MarkColumn(Column):
             text=text,
             position=position,
             format=format,
+            fmt=fmt,
             prefix=prefix,
             suffix=suffix,
             align=align,
@@ -497,13 +541,18 @@ class MarkColumn(Column):
             min_width=min_width,
             color=color,
         )
+        if spec is None and value is not False:
+            return self
         encodings[-1] = {**encodings[-1], "label": _merge_label(encodings[-1].get("label"), spec)}
+        if encodings[-1]["kind"] == "bar" and (value is False or (value is True and "hide_labels" in encodings[-1])):
+            encodings[-1]["hide_labels"] = value is False
+        encodings[-1] = normalize_encoding(encodings[-1])
         return self._with(encodings=encodings)
 
     # ------------------------------------------------- column-wide options ---
     def scale(
         self,
-        domain: Sequence[float | None] | None = None,
+        domain: Sequence[float | None] | Literal["auto"] | None = None,
         *,
         include_zero: bool | None = None,
         unit: str | None = None,
@@ -566,15 +615,6 @@ class MarkColumn(Column):
         references.append(_clean(value=low, high=high, label=label, color=color))
         return self._with(references=references)
 
-    def to_config(self) -> dict[str, Any]:
-        """The serialised column definition (same as ``dict(column)``)."""
-        return self._serialized()
-
-
-def _bar_kwargs(options: Mapping[str, Any]) -> dict[str, Any]:
-    """Pass bar options through; ``label`` may be a bool, ``"@field"`` or a mapping."""
-    return dict(options)
-
 
 def _mark_column(name: Any, **base: Any) -> MarkColumn:
     spec = {"type": "number"}
@@ -585,6 +625,14 @@ def _mark_column(name: Any, **base: Any) -> MarkColumn:
         if base.get(key) is not None:
             spec[key] = base.pop(key)
     return MarkColumn(_field(name), {**spec, **{k: v for k, v in base.items() if v is not None}})
+
+
+def _factory_column(source: Any, options: dict[str, Any], **base: Any) -> MarkColumn:
+    """Split common column metadata from mark options for every factory."""
+    metadata = {key: options.pop(key) for key in ("title", "align", "fmt", "format") if key in options}
+    metadata = {**metadata, **{key: value for key, value in base.items() if value is not None}}
+    alias(metadata, "fmt", "format")
+    return _mark_column(source, **metadata)
 
 
 def _resolve_column(
@@ -675,6 +723,9 @@ def _validate_encoding_data(
         raise ValueError("sparkline cannot share coordinates with scalar marks")
     if "strip" in kinds and len(kinds) > 1:
         raise ValueError("strip cannot share coordinates with scalar marks")
+    directions = {encoding.get("direction", "right") for encoding in encodings if encoding["kind"] == "bar"}
+    if len(directions) > 1:
+        raise ValueError("bars sharing a scale must have the same direction")
     scale = column.get("scale") or {}
     for encoding in encodings:
         if encoding["kind"] == "distribution":
@@ -683,7 +734,9 @@ def _validate_encoding_data(
                 raise ValueError("distribution needs a band specification; use col.distribution(...)")
             band_spec(**config)
     domain = scale.get("domain")
-    if domain and any(encoding.get("side") or encoding.get("diverge_at") for encoding in encodings):
+    if domain and any(
+        encoding.get("center") or encoding.get("side") or encoding.get("diverge_at") for encoding in encodings
+    ):
         low, high = domain
         if low is not None and high is not None and low != 0 and low != -high:
             raise ValueError("a two-sided scale domain must be (0, magnitude) or (-magnitude, magnitude)")
@@ -733,7 +786,13 @@ def apply_hidden_columns(rows: list[dict[str, Any]], hidden: Mapping[str, Sequen
 
 
 def bar(
-    source: Any, *, title: str | None = None, fmt: str | None = None, align: str | None = None, **options: Any
+    source: Any,
+    *,
+    title: str | None = None,
+    format: str | None = None,
+    fmt: str | None = None,
+    align: str | None = None,
+    **options: Any,
 ) -> MarkColumn:
     """A number shown as an inline bar; ``label=``/``size=``/``side=`` are mark-owned.
 
@@ -742,14 +801,15 @@ def bar(
         col.bar("votes", label="@candidate", color="@party_colour")
         col.bar("current", color="navy", size=0.8).bar("previous", color="#d1d5db", size=0.2)
     """
-    column = _mark_column(source, title=title, fmt=fmt, align=align)
-    return column._add("bar", source, **_bar_kwargs(options))
+    column = _factory_column(source, options, title=title, fmt=format_code(format, fmt), align=align)
+    return column._add("bar", source, **options)
 
 
 def point(
     source: Any,
     *,
     title: str | None = None,
+    format: str | None = None,
     fmt: str | None = None,
     align: str | None = None,
     outline: bool | str | None = None,
@@ -759,7 +819,7 @@ def point(
 
     Omitted/``True`` retains the default outline, independently of the fill.
     """
-    column = _mark_column(source, title=title, fmt=fmt, align=align)
+    column = _factory_column(source, options, title=title, fmt=format_code(format, fmt), align=align)
     return column._add("point", source, outline=outline, **options)
 
 
@@ -767,6 +827,9 @@ def points(
     source: Any,
     *,
     title: str | None = None,
+    format: str | None = None,
+    fmt: str | None = None,
+    align: str | None = None,
     size: float | None = None,
     color: str | None = None,
     outline: bool | str | None = None,
@@ -778,7 +841,7 @@ def points(
     scale, so the row's distribution is read directly against a bar or target.
     ``outline=False`` removes rings; a color string sets their color.
     """
-    column = _mark_column(source, title=title)
+    column = _factory_column(source, options, title=title, fmt=format_code(format, fmt), align=align)
     return column._add("points", source, size=size, color=color, outline=outline, **options)._with(type="array")
 
 
@@ -787,6 +850,7 @@ def range(  # noqa: A001 - the public constructor name
     high: Any | None = None,
     *,
     title: str | None = None,
+    format: str | None = None,
     fmt: str | None = None,
     align: str | None = None,
     **options: Any,
@@ -794,7 +858,9 @@ def range(  # noqa: A001 - the public constructor name
     """Connect two endpoints: ``col.range("low", "high").point("estimate")``."""
     if high is None and isinstance(low, (tuple, list)) and len(low) == 2:
         low, high = low
-    column = _mark_column(low, title=title, fmt=fmt, align=align)
+    if high is None:
+        raise TypeError("range expects two endpoints: col.range(low, high)")
+    column = _factory_column(low, options, title=title, fmt=format_code(format, fmt), align=align)
     return column._add("range", low, high=high, **options)
 
 
@@ -802,6 +868,9 @@ def strip(
     source: str,
     *,
     title: str | None = None,
+    format: str | None = None,
+    fmt: str | None = None,
+    align: str | None = None,
     colors: Mapping[str, str] | None = None,
     labels: bool | None = None,
     segmented: bool | None = None,
@@ -813,7 +882,7 @@ def strip(
     ``colors`` maps each category to a colour. Unlike ``sparkline`` this encodes
     N ordered observations, not a numeric series.
     """
-    column = _mark_column(source, title=title)
+    column = _factory_column(source, options, title=title, fmt=format_code(format, fmt), align=align)
     encoding = _canonical_encoding(
         "strip", source, colors=dict(colors) if colors else None, segmented=segmented, strip_labels=labels, **options
     )
@@ -823,6 +892,9 @@ def strip(
 def stacked_bar(
     *sources: Any,
     title: str | None = None,
+    format: str | None = None,
+    fmt: str | None = None,
+    align: str | None = None,
     colors: Sequence[Any] | None = None,
     labels: bool | str | None = None,
     normalize: str | None = None,
@@ -848,7 +920,14 @@ def stacked_bar(
         raise ValueError("stacked_bar labels is True, False or 'percent'")
     if size is not None and not 0 < float(size) <= 1:
         raise ValueError("stacked_bar size is a fraction in (0, 1]")
-    column = _mark_column(sources[0], title=title)
+    column = _factory_column(sources[0], options, title=title, fmt=format_code(format, fmt), align=align)
+    height_options = {"size": size, "height": options.pop("height", None)}
+    alias(height_options, "size", "height")
+    size = height_options.get("size")
+    label_position = options.pop("label_position", "inside_end")
+    label_align = options.pop("label_align", None)
+    if options:
+        raise TypeError(f"Unknown stacked_bar option(s): {', '.join(sorted(options))}")
     encodings: list[dict[str, Any]] = []
     colour_list = list(colors or [])
     if colors is not None and len(colour_list) != len(sources):
@@ -863,11 +942,11 @@ def stacked_bar(
         if labels:
             encoding["label"] = _label_spec(
                 True,
-                position=options.get("label_position", "inside_end"),
-                align=options.get("label_align"),
+                position=label_position,
+                align=label_align,
                 share=labels in ("percent", "share"),
             )
-        encodings.append(encoding)
+        encodings.append(normalize_encoding(encoding))
     if diverge_at is not None:
         if diverge_at not in [str(source) for source in sources]:
             raise ValueError(f"diverge_at={diverge_at!r} is not one of the segment columns")
@@ -895,6 +974,9 @@ def boxplot(
     outliers: Any = None,
     whisker: str | None = "extrema",
     title: str | None = None,
+    format: str | None = None,
+    fmt: str | None = None,
+    align: str | None = None,
     color: str | None = None,
     **options: Any,
 ) -> MarkColumn:
@@ -913,6 +995,7 @@ def boxplot(
         "q3": _field(q3),
         "maximum": _field(maximum),
     }
+    column = _factory_column(median, options, title=title, fmt=format_code(format, fmt), align=align)
     encoding: dict[str, Any] = {"kind": "boxplot", "source": _field(median), "parts": parts}
     if outliers is not None:
         encoding["outliers"] = _field(outliers)
@@ -920,10 +1003,8 @@ def boxplot(
         encoding["whisker"] = whisker
     if color is not None:
         encoding["color"] = color
-    if options:
-        raise TypeError(f"Unknown boxplot option(s): {', '.join(sorted(options))}")
-    column = _mark_column(median, title=title)
-    return column._with(encodings=[encoding])
+    encoding.update(options)
+    return column._with(encodings=[normalize_encoding(encoding)])
 
 
 def distribution(
@@ -933,9 +1014,13 @@ def distribution(
     y: str = "density",
     style: str = "band",
     title: str | None = None,
+    format: str | None = None,
+    fmt: str | None = None,
+    align: str | None = None,
     color: str | None = None,
     height: float = 0.5,
     density_max: float | None = None,
+    **options: Any,
 ) -> MarkColumn:
     """A flat uncertainty band from ordered, precomputed density records.
 
@@ -947,6 +1032,6 @@ def distribution(
     if style != "band":
         raise ValueError("distribution style is 'band'")
     config = band_spec(x=x, y=y, height=height, density_max=density_max)
-    encoding = _canonical_encoding("distribution", source, distribution=config, color=color)
-    column = _mark_column(source, title=title)
+    column = _factory_column(source, options, title=title, fmt=format_code(format, fmt), align=align)
+    encoding = _canonical_encoding("distribution", source, distribution=config, color=color, **options)
     return column._with(type="array", encodings=[encoding])

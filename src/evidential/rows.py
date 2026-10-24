@@ -15,6 +15,7 @@ from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from typing import Any
 
+from ._aliases import format_code
 from .aggregations import BUILTIN_AGGREGATIONS, resolve_aggregation
 from .data import jsonify, normalize_data
 
@@ -39,10 +40,16 @@ class Aggregate:
 
 
 def aggregate(
-    operation: str, source: str | None = None, *, prefix: str = "", suffix: str = "", format: str | None = None
+    operation: str,
+    source: str | None = None,
+    *,
+    prefix: str = "",
+    suffix: str = "",
+    format: str | None = None,
+    fmt: str | None = None,
 ) -> Aggregate:
     """Summarize a field; prefix/suffix produce formatted display text."""
-    return Aggregate(operation, source, prefix, suffix, format)
+    return Aggregate(operation, source, prefix, suffix, format_code(format, fmt))
 
 
 def count(*, prefix: str = "", suffix: str = "") -> Aggregate:

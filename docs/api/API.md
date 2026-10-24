@@ -102,6 +102,65 @@ The result is a `Column`: an immutable `Mapping[str, Any]` in the widget's wire
 format. `dict(column)` or `column.to_config()` returns the plain dict, which is
 what the classic (non-fluent) API accepted — the two are interchangeable.
 
+### Consistent option names and updates
+
+Use `format=` in factories, mark labels, formatting rules and row aggregates.
+The existing `fmt=` spelling remains accepted. `.format(code)` and `.fmt(code)`
+are equivalent; the browser configuration continues to use `fmt`.
+
+| Preferred public spelling | Compatibility spelling |
+| --- | --- |
+| `format`, `.format(...)` | `fmt`, `.fmt(...)` |
+| `format_column`, `.format_column(...)` | `fmt_column`, `.fmt_column(...)` |
+| `total_format`, `.total_format(...)` | `total_fmt`, `.total_fmt(...)` |
+| `subtotal_format`, `.subtotal_format(...)` | `subtotal_fmt`, `.subtotal_fmt(...)` |
+| `template_format` in `cols_merge(...)` | `template_fmt` |
+| `pct_format` in `cols_merge_n_pct(...)` | `pct_fmt` |
+| `negative_color` in bar declarations | `color_negative` |
+| `height` in bar/stack declarations | `size` |
+
+Alias pairs may be supplied together only when their values agree. Bar and
+stack `height` is a fraction in `(0, 1]`. Point `size` is diameter in pixels;
+range `size` is line thickness in pixels. All mark factories accept `title`,
+`format`/`fmt` and `align`; those options configure the whole column. Mark
+color options accept literal colors, `@field` references, or row callables.
+
+```python
+col.bar("sales", format="usd0", height=0.7, negative_color="@loss_color")
+col.points("samples", format="num1", align="right", label=True)
+col.boxplot("low", "q1", "median", "q3", "high", color="@ink", format="num2")
+```
+
+`col.bar(...)` always serializes to `encodings`, with the same rendering path
+before and after adding a scale, label or overlay.
+
+`to_config()` includes the column name and validates the normalized definition,
+so its result is accepted anywhere a column mapping is accepted. Callables are
+resolved when the table binds the column to data. Dictionary definitions use
+the same alias and encoding validation as factories.
+
+Nested fluent options refine previous settings. `.label()` with no arguments
+preserves the current annotation; `.label(False)` removes it. `.bar(...)`
+without a source can refine the last bar, and raises if the last mark is another
+kind. Pass a source to add a new bar. All mark kinds have chain methods;
+coordinate compatibility is checked when the table binds the declarations.
+A column can hold one cumulative stack, and strips can compose with strips.
+
+Mark labels inherit per-row formatting, formatting rules, decimal alignment,
+summary formats, negative brackets and null text. A label's explicit `format`
+overrides the format code. Points arrays label each observation, boxplots place
+their annotation at the median, and band/strip captions use the track center.
+Stack label positions are `inside_start`, `center` and `inside_end`, within each
+segment. Mark factories use explicit annotations (`label=True` for a value).
+Classic `.number(...).bar()` declarations retain their default value label. `label=False` or `hide_labels=True` suppresses a bar's label.
+
+Constructing a table, calling `set_data()` and calling `set_column()` apply the
+same preparation: blank predicates, Python transforms, then callable mark
+bindings. Updates start from retained source records, so transforms do not
+compound. Invalid updates leave the previous state intact. `update_options()`
+uses constructor precedence, including `groups_open`/`collapsed` and link-column
+visibility.
+
 ### Kinds (the chain entry points)
 
 Each factory sets a sensible `type`, format and alignment for the kind. The
@@ -119,7 +178,7 @@ kind is the *starting point*; anything it sets can be overridden later.
 | `col.time(name)` | a time of day | `type="date"`, `hms` |
 | `col.datetime(name)` | date and time | `type="date"`, `yyyy-mm-dd HH:MM:SS` |
 | `col.flag(name)` | a country/region | `fmt="flag"` (alpha-3 codes) |
-| `col.bar(name)` | a bar | `viz="bar"` |
+| `col.bar(name)` | a bar | a `bar` encoding; optional `label=True` |
 | `col.color(name)` | a shaded cell | `viz="color"` |
 | `col.chip(name)` | a pill | `viz="chip"` |
 | `col.delta(name)` | a change indicator | `viz="delta"` |
@@ -450,8 +509,8 @@ search, statistics and CSV export keep using the underlying number.
 ```python
 columns=[
     col.text("region", title="Region"),
-    col.bar("revenue", title="Revenue"),                    # a bar
-    col.bar("growth", center=True, title="Growth"),         # a centred (diverging) bar
+    col.bar("revenue", title="Revenue", label=True),                    # a bar
+    col.bar("growth", center=True, title="Growth", label=True),         # a centred (diverging) bar
     col.color("share", title="Share"),                      # a shaded cell
     col.chip("region", title="Chip"),                       # a pill
     col.sparkline("trend", type="area", title="Trend"),     # a trend
@@ -614,8 +673,9 @@ columns=[
   evaluated Python-side into a hidden helper column, so the browser (and any
   static export) only ever sees field names.
 
-A single plain bar still serialises to the classic `viz="bar"` shape, so
-`col.bar("revenue")` keeps working exactly as before.
+Every mark factory serializes to `encodings`, including a single plain bar.
+Use `col.bar("revenue", label=True)` to annotate its value. Classic `viz="bar"`
+dictionaries and `.number(...).bar()` retain their previous behavior.
 
 Display `.section(values=...)` rows use separate annotation cells, so a numeric
 column can show a literal such as `"27 products"` in a heading without applying

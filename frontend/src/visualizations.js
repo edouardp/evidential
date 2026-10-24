@@ -97,7 +97,7 @@ function stackSegment(enc, row, col, leftPct, widthPct, text = "") {
     },
   });
   if (text) {
-    const align = (enc.label || {}).align;
+    const align = enc.label?.align || (enc.label?.position === "inside_start" ? "begin" : enc.label?.position === "center" ? "center" : "end");
     if (align === "begin") segment.style.justifyContent = "flex-start";
     else if (align === "end") segment.style.justifyContent = "flex-end";
     const spec = enc.label || {};
@@ -113,7 +113,7 @@ function stackSegment(enc, row, col, leftPct, widthPct, text = "") {
 }
 
 /** The stack's label text: its share of the row, or its own value. */
-function stackLabelText(col, enc, row, value, total, normalize) {
+function stackLabelText(col, enc, row, value, total, normalize, format) {
   if (!enc.label) return "";
   if (enc.label.share) {
     const share = total ? value / total : 0;
@@ -122,7 +122,7 @@ function stackLabelText(col, enc, row, value, total, normalize) {
       fallback: `${Math.round(share * 100)}%`,
     });
   }
-  return markLabelText(col, enc, row);
+  return markLabelText(col, enc, row, format);
 }
 
 /** The stack container, sized by the first segment's `size` (height fraction). */
@@ -133,7 +133,7 @@ function stackContainer(encodings) {
 }
 
 /** A diverging stack: categories either side of a split neutral segment. */
-function renderDivergingStack(col, encodings, row, normalize, lo, hi) {
+function renderDivergingStack(col, encodings, row, normalize, lo, hi, format) {
   const values = encodings.map((enc) => {
     const num = Number(row[enc.source]);
     return isFinite(num) && num > 0 ? num : 0;
@@ -145,7 +145,7 @@ function renderDivergingStack(col, encodings, row, normalize, lo, hi) {
   const at = (value) => (value / maxArm) * 50;
   const stack = stackContainer(encodings);
   const pv = scaled[pivot];
-  const label = (index, value) => stackLabelText(col, encodings[index], row, value, total, normalize);
+  const label = (index, value) => stackLabelText(col, encodings[index], row, value, total, normalize, format);
   // The neutral segment straddles the origin: half left, half right.
   let left = pv / 2;
   stack.append(stackSegment(encodings[pivot], row, col, 50 - at(left), at(pv / 2), label(pivot, values[pivot])));
@@ -165,10 +165,10 @@ function renderDivergingStack(col, encodings, row, normalize, lo, hi) {
 }
 
 /** A cumulative stack of segment magnitudes over the column's shared scale. */
-function renderStack(col, encodings, row, lo, hi) {
+function renderStack(col, encodings, row, lo, hi, format) {
   const normalize = (col.scale || {}).normalize === "percent";
   if (encodings[0].diverge_at) {
-    return renderDivergingStack(col, encodings, row, normalize, lo, hi);
+    return renderDivergingStack(col, encodings, row, normalize, lo, hi, format);
   }
   const values = encodings.map((enc) => {
     const num = Number(row[enc.source]);
@@ -183,7 +183,7 @@ function renderStack(col, encodings, row, lo, hi) {
     const magnitude = normalize ? (total ? (values[index] / total) * 100 : 0) : values[index];
     const width = (magnitude / spanTotal) * 100;
     stack.append(
-      stackSegment(enc, row, col, ((cursor - lo) / spanTotal) * 100, width, stackLabelText(col, enc, row, values[index], total, normalize)),
+      stackSegment(enc, row, col, ((cursor - lo) / spanTotal) * 100, width, stackLabelText(col, enc, row, values[index], total, normalize, format)),
     );
     cursor += magnitude;
   });
@@ -228,13 +228,15 @@ export function marksDomain(col, range) {
   let lo = scale.domain && scale.domain[0] != null ? Number(scale.domain[0]) : (range?.min ?? 0);
   let hi = scale.domain && scale.domain[1] != null ? Number(scale.domain[1]) : (range?.max ?? 1);
   const hasBar = (col.encodings || []).some((enc) => enc.kind === "bar" || enc.kind === "stacked_bar");
-  if (scale.include_zero !== false && hasBar && scale.transform !== "log") {
+  const bars = (col.encodings || []).filter(enc => enc.kind === "bar");
+  const fitToData = bars.length > 0 && bars.every(enc => enc.fit_to_data) && !(col.encodings || []).some(enc => enc.kind === "stacked_bar");
+  if (scale.include_zero !== false && hasBar && !fitToData && scale.transform !== "log") {
     if (scale.domain?.[0] == null) lo = Math.min(0, lo);
     if (scale.domain?.[1] == null) hi = Math.max(0, hi);
   }
   // Two-sided layouts accept a 0..magnitude domain or an explicit symmetric
   // signed domain. Their axes, references and overlay points use signed x.
-  if ((col.encodings || []).some(enc => enc.side || enc.diverge_at) && (!scale.domain || lo >= 0)) {
+  if ((col.encodings || []).some(enc => enc.center || enc.side || enc.diverge_at) && (!scale.domain || lo >= 0)) {
     hi = Math.max(Math.abs(lo), Math.abs(hi));
     lo = -hi;
   }
@@ -281,8 +283,12 @@ export function axisTicks(lo, hi, count = 4, transform = null) {
 }
 
 /** A position function mapping a value in ``lo..hi`` to 0..100 (percent). */
-export function scalePosition(lo, hi, transform) {
-  return markScale(lo, hi, transform);
+export function scalePosition(lo, hi, transform, reverse = false) {
+  const position = markScale(lo, hi, transform);
+  return value => {
+    const pct = position(value);
+    return pct == null ? null : reverse ? 100 - pct : pct;
+  };
 }
 
 function markScale(lo, hi, transform) {
@@ -302,11 +308,12 @@ function markScale(lo, hi, transform) {
   };
 }
 
-export function renderMarks(col, row, range) {
+export function renderMarks(col, row, range, format) {
   const encodings = col.encodings || [];
   const scale = col.scale || {};
   const {lo, hi, span} = marksDomain(col, range);
-  const pos = markScale(lo, hi, scale.transform);
+  const reverse = encodings.some(enc => enc.kind === "bar" && enc.direction === "left");
+  const pos = scalePosition(lo, hi, scale.transform, reverse);
   const clampPos = (value) => {
     const pct = pos(value);
     return pct == null ? null : Math.max(0, Math.min(100, pct));
@@ -332,7 +339,11 @@ export function renderMarks(col, row, range) {
   }
 
   // Column-wide reference rules paint behind the marks.
-  for (const ref of col.references || []) {
+  const barReferences = encodings.filter(enc => enc.kind === "bar" && enc.reference != null)
+    .map(enc => ({value: enc.reference, color: enc.reference_color, label: enc.reference_label}));
+  const hasCenter = encodings.some(enc => enc.center);
+  const references = [...(hasCenter ? [{value: 0}] : []), ...(col.references || []), ...barReferences];
+  for (const ref of references) {
     if (ref.value == null || !isFinite(Number(ref.value))) continue;
     const raw = pos(Number(ref.value));
     if (raw == null) continue;
@@ -382,16 +393,21 @@ export function renderMarks(col, row, range) {
   let barIndex = 0;
   for (const enc of encodings) {
     if (enc.kind === "stacked_bar") {
-      if (enc === stack[0]) track.append(renderStack(col, stack, row, lo, hi));
+      if (enc === stack[0]) track.append(renderStack(col, stack, row, lo, hi, format));
       continue;
     }
     if (enc.kind === "boxplot") {
       track.append(renderBox(col, enc, row, clampPos));
+      const median = clampPos(row[enc.source]);
+      if (enc.label && median != null) track.append(renderMarkLabel(col, enc, row, {pointPct: median}, format));
       continue;
     }
     if (enc.kind === "distribution") {
       const node = renderDensityBand(enc, row, pos, markColor(enc, row, "var(--et-accent, #2563eb)"));
-      if (node) track.append(node);
+      if (node) {
+        track.append(node);
+        if (enc.label) track.append(renderMarkLabel(col, enc, row, {pointPct: 50}, format));
+      }
       continue;
     }
     const value = numeric(row[enc.source]);
@@ -417,6 +433,10 @@ export function renderMarks(col, row, range) {
           widthPct = -widthPct;
         }
       }
+      if (enc.background) track.prepend(h("div", {class: "et-mark et-mark-background",
+        style: {inset: "0", backgroundColor: resolveColor(enc.background) || enc.background}}));
+      const pad = enc.pad == null ? null : typeof enc.pad === "number" ? `${enc.pad}px` : String(enc.pad);
+      const height = pad ? (typeof enc.pad === "number" ? `calc(${size * 100}% - ${2 * enc.pad}px)` : `calc(${size * 100}% - ${pad} - ${pad})`) : `${size * 100}%`;
       track.append(
         h("div", {
           class: `et-mark et-mark-bar${enc.side ? ` et-mark-bar-${enc.side}` : ""}`,
@@ -424,12 +444,15 @@ export function renderMarks(col, row, range) {
             ...verticalStyle(enc.valign),
             left: `${leftPct}%`,
             width: `${Math.max(0, widthPct)}%`,
-            height: `${Math.max(0, Math.min(1, size)) * 100}%`,
+            height,
             backgroundColor: color,
           },
         }),
       );
-      if (enc.label) track.append(renderMarkLabel(col, enc, row, { leftPct, widthPct, color, negative: value < 0 || enc.side === "left" }));
+      if (!enc.hide_labels && enc.label) {
+        const labelled = enc.center && !enc.label.position ? {...enc, label: {...enc.label, position: "outside_start"}} : enc;
+        track.append(renderMarkLabel(col, labelled, row, { leftPct, widthPct, color, negative: reverse ? value >= 0 : value < 0 || enc.side === "left" }, format));
+      }
     } else if (enc.kind === "points") {
       const values = Array.isArray(row[enc.source]) ? row[enc.source] : [];
       const size = enc.size != null ? Number(enc.size) : 6;
@@ -444,6 +467,7 @@ export function renderMarks(col, row, range) {
             style: { ...verticalStyle(enc.valign, true), ...pointOutlineStyle(enc.outline), left: `${pct}%`, width: `${size}px`, height: `${size}px`, backgroundColor: color },
           }),
         );
+        if (enc.label) track.append(renderMarkLabel(col, enc, {...row, [enc.source]: raw}, {pointPct: pct}, format));
       }
     } else if (enc.kind === "point") {
       const pct = clampPos(value);
@@ -455,9 +479,10 @@ export function renderMarks(col, row, range) {
           style: { ...verticalStyle(enc.valign, true), ...pointOutlineStyle(enc.outline), left: `${pct}%`, width: `${size}px`, height: `${size}px`, backgroundColor: markColor(enc, row, "var(--et-accent, #2563eb)") },
         }),
       );
-      if (enc.label) track.append(renderMarkLabel(col, enc, row, { pointPct: pct }));
+      if (enc.label) track.append(renderMarkLabel(col, enc, row, { pointPct: pct }, format));
     } else if (enc.kind === "strip") {
       track.append(renderStrip(enc, row, lo, span));
+      if (enc.label) track.append(renderMarkLabel(col, enc, row, {pointPct: 50}, format));
     } else if (enc.kind === "range") {
       const low = value;
       const high = numeric(row[enc.high]);
@@ -492,7 +517,7 @@ export function renderMarks(col, row, range) {
         if (arrowStart) band.append(h("span", { class: "et-mark-cap et-mark-arrow et-mark-arrow-start", style: { borderRightColor: color } }));
         if (arrowEnd) band.append(h("span", { class: "et-mark-cap et-mark-arrow et-mark-arrow-end", style: { borderLeftColor: color } }));
         track.append(band);
-        if (enc.label) track.append(renderMarkLabel(col, enc, row, { pointPct: left }));
+        if (enc.label) track.append(renderMarkLabel(col, enc, row, { pointPct: left }, format));
         continue;
       }
       const line = h("div", {
@@ -507,8 +532,11 @@ export function renderMarks(col, row, range) {
       if (arrowStart) line.append(h("span", { class: "et-mark-cap et-mark-arrow et-mark-arrow-start", style: { borderRightColor: color } }));
       if (arrowEnd) line.append(h("span", { class: "et-mark-cap et-mark-arrow et-mark-arrow-end", style: { borderLeftColor: color } }));
       track.append(line);
-      if (enc.label) track.append(renderMarkLabel(col, enc, row, { pointPct: left }));
+      if (enc.label) track.append(renderMarkLabel(col, enc, row, { pointPct: left }, format));
     }
+  }
+  if (!track.querySelector(".et-mark, .et-mark-strip, .et-density-band")) {
+    track.append(h("span", {class: "et-null"}, String(col.null_text ?? (format ? format(null) : "–"))));
   }
   return track;
 }
@@ -526,7 +554,7 @@ export function renderBar(col, value, formatted, range, row) {
   const rowColor =
     opts.bar_color_column && row ? resolveColor(row[opts.bar_color_column]) : null;
   const color = negative
-    ? (rowColor || resolveColor(opts.bar_color_negative) || resolveColor(opts.bar_color) || "var(--et-negative, #dc2626)")
+    ? (resolveColor(row?.[opts.bar_color_negative_column]) || rowColor || resolveColor(opts.bar_color_negative) || resolveColor(opts.bar_color) || "var(--et-negative, #dc2626)")
     : (rowColor || resolveColor(opts.bar_color) || "var(--et-accent, #2563eb)");
   const label = h(
     "span",

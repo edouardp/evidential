@@ -71,6 +71,89 @@ def capture(page, name):
         page.screenshot(path=str(Path(path).with_name(name)), full_page=True)
 
 
+def test_consistent_api_formats_colors_and_mark_annotations(page, live_server):
+    from evidential.rules import cells_body, tab_format
+
+    cases = [
+        (
+            "Cell formatting",
+            EvidentialTable(
+                [{"x": 1.25}, {"x": -1}, {"x": None}],
+                columns=[
+                    col.point("x", format="num0", label={"value": True, "overflow": "show"})
+                    .null_text("missing")
+                    .neg(bracket=True)
+                    .scale(domain=(-5, 5))
+                ],
+                rules=[tab_format(cells_body("x"), format="usd2")],
+            ),
+            [],
+        ),
+        (
+            "Mirrored bar and axis",
+            [{"x": 15, "ink": "#112233"}],
+            [
+                col.bar(
+                    "x",
+                    height=0.6,
+                    direction="left",
+                    fit_to_data=True,
+                    reference=12,
+                    reference_label="target",
+                    color="@ink",
+                    label=True,
+                ).scale(domain=(10, 20), axis=True)
+            ],
+        ),
+        (
+            "Observation labels",
+            [{"samples": [2, 4]}],
+            [
+                col.points(
+                    "samples", format="num1", label={"value": True, "position": "above", "overflow": "show"}
+                ).scale(domain=(0, 6))
+            ],
+        ),
+        (
+            "Summary annotation",
+            [{"lo": 0, "q1": 1, "median": 2, "q3": 3, "hi": 4, "ink": "#112233"}],
+            [
+                col.boxplot("lo", "q1", "median", "q3", "hi", color="@ink", format="num1")
+                .label(True, position="above", overflow="show")
+                .scale(domain=(0, 4))
+            ],
+        ),
+        (
+            "Band annotation",
+            [
+                {
+                    "curve": [
+                        {"position": 0, "density": 0},
+                        {"position": 2, "density": 1},
+                        {"position": 4, "density": 0},
+                    ],
+                    "caption": "Estimate",
+                }
+            ],
+            [col.distribution("curve").label(source="@caption", position="above", overflow="show")],
+        ),
+    ]
+    mount(page, live_server, cases)
+    assert page.locator("#case-0 tbody td").all_text_contents() == ["$1.25", "($1.00)", "missing"]
+    bar = page.locator("#case-1 .et-mark-bar")
+    assert bar.evaluate("el => el.style.left") == "50%"
+    assert bar.evaluate("el => getComputedStyle(el).backgroundColor") == "rgb(17, 34, 51)"
+    ticks = page.locator("#case-1 .et-axis-tick")
+    assert ticks.first.evaluate("el => parseFloat(el.style.left)") > ticks.last.evaluate(
+        "el => parseFloat(el.style.left)"
+    )
+    assert page.locator("#case-1 .et-mark-reference-label").inner_text() == "target"
+    assert page.locator("#case-2 .et-mark-label").all_text_contents() == ["2.0", "4.0"]
+    assert page.locator("#case-3 .et-mark-label").inner_text() == "2.0"
+    assert page.locator("#case-4 .et-mark-label").inner_text() == "Estimate"
+    capture(page, "api-consistency-render.png")
+
+
 def test_centered_bar_notebook_renders_mark_labels_and_mirrored_bars(page, live_server):
     page.set_viewport_size({"width": 1600, "height": 1000})
     notebook = Path(__file__).resolve().parents[2] / "notebooks" / "34_centered_bars.py"

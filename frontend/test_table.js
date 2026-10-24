@@ -2525,3 +2525,18 @@ test("range fill draws a translucent band", () => {
   assert.match(band.style.width, /60%/);
   renderer.destroy();
 });
+
+test("mark labels use the same cell formats and null text as ordinary columns", () => {
+  const cases = [
+    {row: {x: 1.25, fmt: "num2"}, column: {fmt: "num0", fmt_column: "fmt"}, expected: "1.25"},
+    {row: {x: 1.25}, column: {fmt: "num0"}, options: {rules: [{type: "format", columns: ["x"], fmt: "usd2"}]}, expected: "$1.25"},
+    {row: {x: -1}, column: {fmt: "num0", bracket_negatives: true, red_negatives: true}, expected: "(1)"},
+    {row: {x: null}, column: {null_text: "missing"}, expected: "missing"},
+  ];
+  for (const {row, column, options, expected} of cases) {
+    const col = {name: "x", type: "number", ...column, encodings: [{kind: "point", source: "x", label: {value: true}}]};
+    const renderer = new EvidentialTableRenderer(makeModel([row], [col], {search: false, ...options}, el), el);
+    assert.equal(el.querySelector("tbody td").textContent, expected);
+    renderer.destroy();
+  }
+});

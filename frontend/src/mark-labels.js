@@ -10,14 +10,14 @@ export function autoLabelColor(label, fill) {
 }
 
 /** The label text for a mark: a literal, another field, or the mark's value. */
-export function markLabelText(col, enc, row) {
+export function markLabelText(col, enc, row, format) {
   const spec = enc.label || {};
   let text;
   if (spec.text != null) {
     text = String(spec.text);
   } else {
     const raw = spec.source != null ? row[spec.source] : row[enc.source];
-    text =
+    text = format ? format(raw, spec) :
       raw === null || raw === undefined
         ? ""
         : formatValue(raw, spec.format || col.fmt, { type: col.type, fallback: String(raw) });
@@ -27,9 +27,9 @@ export function markLabelText(col, enc, row) {
 }
 
 /** A mark-owned label, positioned relative to its bar or point. */
-export function renderMarkLabel(col, enc, row, geometry) {
+export function renderMarkLabel(col, enc, row, geometry, format) {
   const spec = enc.label || {};
-  const text = markLabelText(col, enc, row);
+  const text = markLabelText(col, enc, row, format);
   if (!text) return h("span", { class: "et-mark-label et-mark-label-empty" });
   const position = spec.position || (enc.kind === "bar" ? "outside_end" : "center");
   const node = h("span", { class: `et-mark-label et-mark-label-${position}`,

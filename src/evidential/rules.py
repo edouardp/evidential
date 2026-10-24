@@ -19,9 +19,18 @@ before serialisation.
 from __future__ import annotations
 
 from collections.abc import Callable, Iterable, Mapping, Sequence
+from enum import Enum
 from typing import Any
 
+from ._aliases import format_code
 from .data import jsonify
+
+
+class _Default(Enum):
+    """Distinguish omitted format aliases from an explicit None."""
+
+    PERCENT = "pct1"
+
 
 __all__ = [
     "cells_body",
@@ -68,13 +77,16 @@ def tab_style(locations: Mapping[str, Any], **style: Any) -> dict[str, Any]:
     }
 
 
-def tab_format(locations: Mapping[str, Any], fmt: str) -> dict[str, Any]:
+def tab_format(locations: Mapping[str, Any], fmt: str | None = None, *, format: str | None = None) -> dict[str, Any]:
     """Override the format code for ``locations``."""
+    code = format_code(format, fmt)
+    if code is None:
+        raise TypeError("tab_format needs a format code")
     return {
         "type": "format",
         "columns": locations["columns"],
         "rows": locations.get("rows"),
-        "fmt": fmt,
+        "fmt": code,
     }
 
 
@@ -156,6 +168,7 @@ def _sub(
 def cols_merge(
     template: str,
     *,
+    template_format: Mapping[str, str] | None = None,
     template_fmt: Mapping[str, str] | None = None,
     **options: Any,
 ) -> dict[str, Any]:
@@ -163,6 +176,10 @@ def cols_merge(
 
     Example: ``cols_merge("{low}–{high}", template_fmt={"low": "num0", "high": "num0"})``.
     """
+    if template_format is not None:
+        if template_fmt is not None and dict(template_fmt) != dict(template_format):
+            raise ValueError("template_format and template_fmt disagree")
+        template_fmt = template_format
     config: dict[str, Any] = {"template": template, **options}
     if template_fmt:
         config["template_fmt"] = dict(template_fmt)
@@ -178,6 +195,7 @@ def cols_merge_range(
     **options: Any,
 ) -> dict[str, Any]:
     """Merge a begin/end pair into ``"begin–end"``."""
+    fmt = format_code(options.pop("format", None), fmt)
     template_fmt = {col_begin: fmt, col_end: fmt} if fmt else None
     return cols_merge(f"{{{col_begin}}}{sep}{{{col_end}}}", template_fmt=template_fmt, **options)
 
@@ -191,6 +209,7 @@ def cols_merge_uncert(
     **options: Any,
 ) -> dict[str, Any]:
     """Merge a value and its uncertainty into ``"value ± uncert"``."""
+    fmt = format_code(options.pop("format", None), fmt)
     template_fmt = {col_val: fmt, col_uncert: fmt} if fmt else None
     return cols_merge(f"{{{col_val}}}{sep}{{{col_uncert}}}", template_fmt=template_fmt, **options)
 
@@ -200,10 +219,15 @@ def cols_merge_n_pct(
     col_pct: str,
     *,
     fmt: str | None = None,
-    pct_fmt: str | None = "pct1",
+    pct_fmt: str | None | _Default = _Default.PERCENT,
     **options: Any,
 ) -> dict[str, Any]:
     """Merge a count and percentage into ``"n (pct)"``."""
+    if pct_fmt is _Default.PERCENT:
+        pct_fmt = options.pop("pct_format", "pct1")
+    else:
+        pct_fmt = format_code(options.pop("pct_format", None), pct_fmt)
+    fmt = format_code(options.pop("format", None), fmt)
     template_fmt: dict[str, str] = {}
     if fmt:
         template_fmt[col_n] = fmt

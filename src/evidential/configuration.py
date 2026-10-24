@@ -188,6 +188,7 @@ COLOR_SCALES = (
 class BarOptions(TypedDict, total=False):
     bar_color: str | None
     bar_color_negative: str | None
+    bar_color_negative_column: str | None
     bar_color_column: str | None
     background_color: str | None
     hide_labels: bool | None
@@ -280,7 +281,7 @@ class EncodingLabel(TypedDict, total=False):
     source: str | Callable[[Mapping[str, Any]], Any] | None
     text: str | None
     value: bool | None
-    position: str | None
+    position: Literal["inside_start", "inside_end", "outside_start", "outside_end", "center", "above", "below"] | None
     format: str | None
     prefix: str | None
     suffix: str | None

@@ -213,12 +213,19 @@ export function renderCell({row, col, index, ctx, rowIndex, options: opts, toggl
         : isSubtotal && col.subtotal_fmt
           ? col.subtotal_fmt
           : alignedBase;
-  const formatted = formatValue(value, formatCode, {
-    type: col.type,
-    range: ctx.formatRanges.get(col.name),
-    fallback: optString(value),
-    relative: col.relative,
-  });
+  // Marks and ordinary values share the resolved cell format. A mark-owned
+  // override changes only its code, retaining null text and accounting style.
+  const format = (raw, spec = {}) => {
+    if (raw == null) return String(col.null_text ?? opts.null_text ?? "–");
+    const text = formatValue(raw, spec.format ?? formatCode, {
+      type: typeof raw === "number" ? "number" : col.type,
+      range: ctx.formatRanges.get(col.name), fallback: optString(raw), relative: col.relative,
+    });
+    // Accounting-style brackets replace the sign: -$1,234 -> ($1,234).
+    return Number(raw) < 0 && col.bracket_negatives
+      ? `(${String(text).replace(/^-/, "")})` : text;
+  };
+  const formatted = format(value);
 
   // Conditional color background.
   let vizStyles = null;
@@ -233,11 +240,7 @@ export function renderCell({row, col, index, ctx, rowIndex, options: opts, toggl
 
   const negative =
     (col.red_negatives || col.negative_color) && !isNaN(Number(value)) && Number(value) < 0;
-  // Accounting-style brackets replace the sign: -$1,234 -> ($1,234).
-  const display =
-    negative && col.bracket_negatives ? `(${String(formatted).replace(/^-/, "")})` : formatted;
-
-  const content = renderContent(col, value, display, ctx, row);
+  const content = renderContent(col, value, formatted, ctx, row, format);
   // Column guides span the cell, not an over-sized region around the glyph
   // track. Isolating their clipping preserves overflow labels and end arrows.
   if (content.classList?.contains("et-marks")) {
@@ -275,11 +278,11 @@ export function renderCell({row, col, index, ctx, rowIndex, options: opts, toggl
   return finish();
 }
 
-function renderContent(col, value, formatted, ctx, row) {
+function renderContent(col, value, formatted, ctx, row, format) {
   const isSubtotal = row.render_type === "row_subtotal";
   let content;
   if (col.encodings && col.encodings.length && row.render_type !== "row_total") {
-    content = renderMarks(col, row, ctx.ranges.get(col) || ctx.ranges.get(col.name));
+    content = renderMarks(col, row, ctx.ranges.get(col) || ctx.ranges.get(col.name), format);
   } else if (col.viz === "bar" && !(isSubtotal && col.viz_include_subtotals === false) && row.render_type !== "row_total") {
     content = renderBar(col, value, formatted, ctx.ranges.get(col) || ctx.ranges.get(col.name), row);
   } else if (col.viz === "delta") {

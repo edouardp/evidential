@@ -75,11 +75,11 @@ The wire format gains three optional keys on a column:
 | `scale` | `domain`, `include_zero`, `unit` shared by the encodings |
 | `references` | column-wide reference lines/bands |
 
-**Compatibility.** When a `MarkColumn` holds a single plain bar over the
-column's own field with no label, size, side, scale or references, it serialises
-to the existing `viz="bar"` + `bar_options` shape. Existing notebooks and tests
-are unchanged. The multi-mark keys are only emitted when the new features are
-used, and the browser falls back to the legacy path when `encodings` is absent.
+**Compatibility (updated by ADR-066).** Every `MarkColumn` serializes to
+`encodings`, including a single plain bar, so adding a scale or annotation
+cannot switch rendering implementations. Mark labels are explicit. Classic
+`viz="bar"` dictionaries and `.number(...).bar()` remain supported with their
+existing default value labels.
 
 ## Consequences
 
@@ -154,6 +154,8 @@ without a terminal bound and incompatible scalar/series coordinates.
 
 ## More Information
 
+- [ADR-066](066-consistent-public-api-preparation.md) unifies factory metadata,
+  encoding validation, mutation preparation, formatting and compatibility options.
 - `src/evidential/marks.py` (the `MarkColumn` builder and serialisation),
   `src/evidential/col.py`, `src/evidential/configuration.py`
   (`EncodingSpec`, `ScaleSpec`, `ReferenceSpec`).

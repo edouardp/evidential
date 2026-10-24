@@ -6,6 +6,7 @@ from collections.abc import Mapping
 from difflib import get_close_matches
 from typing import Any
 
+from ._aliases import alias
 from .configuration import COLOR_SCALES, ColumnOptions, validate_options
 
 # Evidence `contentType` → (viz, sparkline type)
@@ -47,9 +48,16 @@ def _normalize_column_options(data: dict[str, Any]) -> dict[str, Any]:
     ``{"color_scale": "green", "sparkY": "sales"}`` to populate
     ``color_options`` / ``sparkline_options`` / ``bar_options`` / etc.
     """
-    for alias, canonical in _COLUMN_ALIASES.items():
-        if alias in data:
-            data.setdefault(canonical, data.pop(alias))
+    for canonical, compatibility in (
+        ("fmt", "format"),
+        ("fmt_column", "format_column"),
+        ("total_fmt", "total_format"),
+        ("subtotal_fmt", "subtotal_format"),
+    ):
+        alias(data, canonical, compatibility)
+    for alias_name, canonical in _COLUMN_ALIASES.items():
+        if alias_name in data:
+            data.setdefault(canonical, data.pop(alias_name))
     for key in (
         "color_options",
         "bar_options",
@@ -150,6 +158,10 @@ def _normalize_column_options(data: dict[str, Any]) -> dict[str, Any]:
     if isinstance(bar_color, str) and bar_color.startswith("@"):
         bar["bar_color_column"] = bar_color[1:]
         del bar["bar_color"]
+    negative_color = bar.get("bar_color_negative")
+    if isinstance(negative_color, str) and negative_color.startswith("@"):
+        bar["bar_color_negative_column"] = negative_color[1:]
+        bar.pop("bar_color_negative")
     if bar:
         data["bar_options"] = bar
 
@@ -249,5 +261,9 @@ def _normalize_column_options(data: dict[str, Any]) -> dict[str, Any]:
         cell_style.pop("background", None)
     if cell_style:
         data["cell_style"] = cell_style
+    if data.get("encodings"):
+        from .marks import normalize_encoding
+
+        data["encodings"] = [normalize_encoding(encoding) for encoding in data["encodings"]]
     validate_options(data, ColumnOptions, "column")
     return data

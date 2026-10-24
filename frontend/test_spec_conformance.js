@@ -238,3 +238,36 @@ test("stack segments clip their geometry to fixed domain bounds", () => {
   assert.equal(parseFloat(segments[1].style.left) + parseFloat(segments[1].style.width), 100);
   assert.match(node.getAttribute("aria-label"), /a: 50/);
 });
+
+test("bar compatibility options still work with a shared scale and explicit labels", () => {
+  const column = {name: "x", encodings: [{kind: "bar", source: "x", center: true, pad: 4,
+    background: "#eeeeee", reference: 5, reference_label: "target", label: {value: true}}]};
+  const node = renderMarks(column, {x: 10}, {min: -20, max: 20});
+  assert.equal(node.querySelector(".et-mark-bar").style.left, "50%");
+  assert.equal(node.querySelector(".et-mark-bar").style.width, "25%");
+  assert.equal(node.querySelector(".et-mark-bar").style.height, "calc(100% - 8px)");
+  assert.equal(node.querySelector(".et-mark-background").style.backgroundColor, "rgb(238, 238, 238)");
+  assert.equal(node.querySelector(".et-mark-reference-label").textContent, "target");
+  const hidden = structuredClone(column);
+  hidden.encodings[0].hide_labels = true;
+  assert.equal(renderMarks(hidden, {x: 10}, {min: -20, max: 20}).querySelectorAll(".et-mark-label").length, 0);
+  const mirrored = {encodings: [{kind: "bar", source: "x", direction: "left", fit_to_data: true}]};
+  const bar = renderMarks(mirrored, {x: 15}, {min: 10, max: 20}).querySelector(".et-mark-bar");
+  assert.equal(bar.style.left, "50%");
+  assert.equal(bar.style.width, "50%");
+});
+
+test("all label-capable marks render their labels", () => {
+  const row = {x: 3, samples: [2, 4], states: ["W", "L"], caption: "caption", lo: 1, q1: 2, q3: 4, hi: 5,
+    curve: [{position: 0, density: 0}, {position: 2, density: 1}, {position: 5, density: 0}]};
+  for (const encoding of [
+    {kind: "boxplot", source: "x", parts: {minimum: "lo", q1: "q1", median: "x", q3: "q3", maximum: "hi"}},
+    {kind: "distribution", source: "curve", distribution: {x: "position", y: "density", height: 0.5}},
+    {kind: "strip", source: "states"},
+  ]) {
+    const node = renderMarks({encodings: [{...encoding, label: {source: "caption"}}]}, row, {min: 0, max: 5});
+    assert.equal(node.querySelector(".et-mark-label").textContent, "caption");
+  }
+  const points = renderMarks({fmt: "num0", encodings: [{kind: "points", source: "samples", label: {value: true}}]}, row, {min: 0, max: 5});
+  assert.deepEqual([...points.querySelectorAll(".et-mark-label")].map(label => label.textContent), ["2", "4"]);
+});

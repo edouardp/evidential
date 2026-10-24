@@ -16,22 +16,22 @@ ROWS = [
 ]
 
 
-def test_single_plain_bar_keeps_the_classic_wire_shape() -> None:
+def test_single_plain_bar_uses_the_same_wire_shape_as_composed_marks() -> None:
     column = col.bar("current", color="#1d4ed8", fit_to_data=True)
     spec = dict(column)
     assert spec == {
         "name": "current",
         "type": "number",
-        "viz": "bar",
-        "bar_options": {"bar_color": "#1d4ed8", "fit_to_data": True},
+        "encodings": [{"kind": "bar", "source": "current", "color": "#1d4ed8", "fit_to_data": True}],
     }
-    assert "encodings" not in spec
+    assert column.scale(axis=True)["encodings"] == spec["encodings"]
+    assert column.label(True)["encodings"][0]["source"] == "current"
 
 
 def test_at_color_is_a_per_row_column() -> None:
     spec = dict(col.bar("current", color="@party_colour"))
-    assert spec["bar_options"] == {"bar_color_column": "party_colour"}
-    assert "encodings" not in spec
+    assert spec["encodings"][0]["color_column"] == "party_colour"
+    assert "viz" not in spec
 
 
 def test_two_bars_emit_ordered_encodings() -> None:
@@ -78,7 +78,7 @@ def test_point_outline_round_trips_for_constructor_and_chained_marks(outline) ->
     ):
         table = EvidentialTable([{"current": 3, "target": 4, "samples": [2, 3]}], columns=[column])
         assert table.columns[0]["encodings"][-1]["outline"] == outline
-    assert "encodings" not in base
+    assert base["encodings"] == [{"kind": "bar", "source": "current"}]
 
 
 def test_point_outline_defaults_and_validation() -> None:

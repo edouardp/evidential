@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import copy
 from collections.abc import Iterable, Iterator, Mapping, Sequence
 from pathlib import Path
 from typing import Any, Unpack
@@ -198,6 +199,46 @@ def _resolve_column_groups(
     return result
 
 
+def _prepare_columns_and_rows(
+    source_rows: Sequence[Mapping[str, Any]],
+    inferred: Sequence[Mapping[str, Any]] | None,
+    explicit_columns: list[Any] | None,
+    column_config: Mapping[str, Mapping[str, Any]] | None,
+    column_groups: Mapping[str, Sequence[str] | Mapping[str, Any]] | None,
+    rules: Iterable[Mapping[str, Any]] | None,
+    options: Mapping[str, Any],
+) -> tuple[list[dict[str, Any]], list[dict[str, Any]], list[dict[str, Any]]]:
+    """Prepare Python display values before resolving any callable mark bindings.
+
+    All public construction/update paths start from the retained source snapshot,
+    never from rows that already contain transforms or generated helper fields.
+    """
+    columns = explicit_columns if explicit_columns is not None else inferred or []
+    blanks = {str(column["name"]): dict(column) for column in _flatten_columns(columns) if isinstance(column, Mapping)}
+    for name, config in (column_config or {}).items():
+        blanks[name] = {**blanks.get(name, {}), **config}
+    prepared = apply_blank_predicates(copy.deepcopy(source_rows), blanks)
+    prepared, client_rules = resolve_rules(prepared, rules)
+    coerced = _resolve_column_groups(_coerce_columns(columns, column_config, inferred), column_groups)
+    coerced = _center_chips(coerced, column_config, explicit_columns)
+    coerced, hidden = resolve_encodings(coerced, prepared)
+    apply_hidden_columns(prepared, hidden)
+    link = options.get("link")
+    if link and explicit_columns is None and not options.get("show_link_column"):
+        for column in coerced:
+            if column["name"] == link:
+                column["hide"] = True
+    return prepared, coerced, client_rules
+
+
+def _merge_options(current: Mapping[str, Any], updates: Mapping[str, Any]) -> dict[str, Any]:
+    """Normalize constructor and mutation options with identical precedence."""
+    merged = {**current, **updates}
+    if "groups_open" in updates and updates["groups_open"] is not None and "collapsed" not in updates:
+        merged["collapsed"] = not updates["groups_open"]
+    return merged
+
+
 class EvidentialTable(anywidget.AnyWidget):
     """An Evidence-style interactive data table.
 
@@ -274,29 +315,20 @@ class EvidentialTable(anywidget.AnyWidget):
         elif row_layout is not None:
             layout = row_layout.compile(normalized_rows)
 
-        explicit_columns = self._explicit_columns
-        had_explicit_columns = explicit_columns is not None
-        columns = explicit_columns if had_explicit_columns else inferred
-        normalized_rows = apply_blank_predicates(normalized_rows, column_config)
-        normalized_rows, client_rules = resolve_rules(normalized_rows, self._rules)
-        coerced = _resolve_column_groups(_coerce_columns(columns, column_config, inferred), column_groups)
-        coerced = _center_chips(coerced, column_config, explicit_columns)
-        # Callable mark sources cross the JSON boundary as hidden helper columns.
-        coerced, hidden = resolve_encodings(coerced, normalized_rows)
-        apply_hidden_columns(normalized_rows, hidden)
-
-        merged_options = dict(_OPTION_DEFAULTS)
-        merged_options.update(table_options)
+        self._source_rows = [dict(row) for row in normalized_rows]
+        self._inferred_columns = inferred
+        merged_options = _merge_options(_OPTION_DEFAULTS, table_options)
+        normalized_rows, coerced, client_rules = _prepare_columns_and_rows(
+            self._source_rows,
+            inferred,
+            self._explicit_columns,
+            self._column_overrides,
+            column_groups,
+            self._rules,
+            merged_options,
+        )
         if client_rules:
             merged_options["rules"] = client_rules
-        if merged_options.get("groups_open") is not None and "collapsed" not in table_options:
-            merged_options["collapsed"] = not merged_options["groups_open"]
-
-        link = merged_options.get("link")
-        if link and not had_explicit_columns and not merged_options.get("show_link_column"):
-            link_column = next((column for column in coerced if column["name"] == link), None)
-            if link_column is not None:
-                link_column["hide"] = True
 
         super().__init__(
             rows=normalized_rows,
@@ -351,21 +383,19 @@ class EvidentialTable(anywidget.AnyWidget):
         elif layout_spec is not None:
             layout = layout_spec.compile(normalized_rows)
 
-        columns = explicit_columns if explicit_columns is not None else inferred
-        new_columns = list(self.columns)
-        if columns is not None:
-            new_columns = _resolve_column_groups(_coerce_columns(columns, column_config, inferred), column_groups)
-            new_columns = _center_chips(new_columns, column_config, explicit_columns)
-            new_columns, hidden = resolve_encodings(new_columns, normalized_rows)
-            apply_hidden_columns(normalized_rows, hidden)
-            link = self.options.get("link")
-            if link and explicit_columns is None and not self.options.get("show_link_column"):
-                for column in new_columns:
-                    if column["name"] == link:
-                        column["hide"] = True
-        normalized_rows = apply_blank_predicates(normalized_rows, column_config)
-        normalized_rows, client_rules = resolve_rules(normalized_rows, self._rules)
+        source_rows = [dict(row) for row in normalized_rows]
+        normalized_rows, new_columns, client_rules = _prepare_columns_and_rows(
+            source_rows,
+            inferred,
+            explicit_columns,
+            column_config,
+            column_groups,
+            self._rules,
+            self.options,
+        )
         # Commit configuration and synced state only after all preparation succeeds.
+        self._source_rows = source_rows
+        self._inferred_columns = inferred
         self._explicit_columns = explicit_columns
         self._column_overrides = {name: dict(config) for name, config in column_config.items()}
         self._configured_groups = column_groups
@@ -384,25 +414,47 @@ class EvidentialTable(anywidget.AnyWidget):
     def update_options(self, **options: Unpack[TableOptions]) -> EvidentialTable:
         """Update one or more table-level display options."""
         validate_options(options, TableOptions, "table")
-        current = dict(self.options)
-        current.update(options)
-        self.options = current
+        current = _merge_options(self.options, options)
+        columns = [dict(column) for column in self.columns]
+        if self._explicit_columns is None and {"link", "show_link_column"}.intersection(options):
+            # Restore configured visibility before applying automatic link hiding.
+            # Display-only option changes must not evaluate user callbacks again.
+            configured = _coerce_columns(self._inferred_columns, self._column_overrides)
+            visibility = {column["name"]: column.get("hide", False) for column in configured}
+            for column in columns:
+                column["hide"] = visibility.get(column["name"], False)
+                if column["name"] == current.get("link") and not current.get("show_link_column"):
+                    column["hide"] = True
+        with self.hold_sync():
+            self.options = current
+            if columns != list(self.columns):
+                self.columns = columns
         return self
 
     def set_column(self, name: str, **overrides: Any) -> EvidentialTable:
-        """Merge overrides into a single column definition."""
-        columns = [dict(column) for column in self.columns]
+        """Merge column overrides and recompute display values and callable sources."""
         normalized = _normalize_column_options({"name": name, **overrides})
-        self._column_overrides.setdefault(name, {}).update(normalized)
-        for column in columns:
-            if column["name"] == name:
-                column.update(normalized)
-                break
-        else:
-            columns.append(_coerce_column(normalized))
-        self.columns = _center_chips(
-            _resolve_column_groups(columns, self._configured_groups), self._column_overrides, self._explicit_columns
+        config = {key: dict(value) for key, value in self._column_overrides.items()}
+        config[name] = {**config.get(name, {}), **normalized}
+        explicit = self._explicit_columns
+        if not any(column["name"] == name for column in self.columns):
+            explicit = [*(explicit if explicit is not None else self._inferred_columns or []), {"name": name}]
+        prepared, columns, client_rules = _prepare_columns_and_rows(
+            self._source_rows,
+            self._inferred_columns,
+            explicit,
+            config,
+            self._configured_groups,
+            self._rules,
+            self.options,
         )
+        self._column_overrides = config
+        self._explicit_columns = explicit
+        with self.hold_sync():
+            self.columns = columns
+            self.rows = prepared
+            if client_rules:
+                self.options = {**self.options, "rules": client_rules}
         return self
 
     # ---------------------------------------------------------- constructors --

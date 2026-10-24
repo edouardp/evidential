@@ -45,7 +45,7 @@ def test_kind_factories_set_a_baseline() -> None:
     assert col.currency("sales")["fmt"] == "usd"
     assert col.currency("sales", code="EUR", decimals=2)["fmt"] == "eur2"
     assert col.flag("country")["fmt"] == "flag"
-    assert col.bar("sales", color="#111")["viz"] == "bar"
+    assert col.bar("sales", color="#111")["encodings"][0]["kind"] == "bar"
     assert col.color("sales")["viz"] == "color"
     assert col.url("link")["link"] == "link"
 

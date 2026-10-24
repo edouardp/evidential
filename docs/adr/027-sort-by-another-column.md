@@ -42,6 +42,12 @@ Option 3 was rejected: it would force a helper column into the view purely to
 be sortable. Option 2 was rejected: the values are already client-side, so the
 sort belongs with the other presentation logic (ADR-005).
 
+Missing sort keys (`null`, `undefined` or an absent field) follow present values
+in both ascending and descending order. Direction reverses only present-value
+comparisons. This applies equally to direct, hidden and unconfigured sort keys,
+and within each group. Equal values and missing keys retain their source order;
+clearing the sort restores the original order.
+
 ### Consequences
 
 - Good, because a sparkline or bar can sort by the number it draws.

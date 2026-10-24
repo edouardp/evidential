@@ -115,7 +115,13 @@ export function sortRows(rows, columns, sort) {
   const dir = sort.direction === "asc" ? 1 : -1;
 
   const hasGroups = rows.some((r) => r.render_type && r.render_type !== "cell_data");
-  const cmp = (a, b) => dir * compareValues(a[key], b[key], keyType);
+  const cmp = (a, b) => {
+    const av = a[key], bv = b[key];
+    const comparison = compareValues(av, bv, keyType);
+    // Missing keys stay last; descending only reverses actual values.
+    if (av === null || av === undefined || bv === null || bv === undefined) return comparison;
+    return dir * comparison;
+  };
 
   if (!hasGroups) return [...rows].sort(cmp);
 

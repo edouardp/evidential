@@ -3,6 +3,61 @@ import assert from "node:assert/strict";
 import { sortRows, searchRows, visibleRows, paginateRows, columnStats, withDecimals, sectionContinuation } from "./src/rows.js";
 import { RowPipeline } from "./src/derived.js";
 
+test("numeric sorts keep missing values last in both directions, with stable ties", () => {
+  const rows = Object.freeze([
+    Object.freeze({id: "null", x: null}),
+    Object.freeze({id: "negative", x: -2}),
+    Object.freeze({id: "absent"}),
+    Object.freeze({id: "ten-first", x: 10}),
+    Object.freeze({id: "zero", x: 0}),
+    Object.freeze({id: "undefined", x: undefined}),
+    Object.freeze({id: "ten-second", x: "10"}),
+  ]);
+  const columns = [{name: "x", type: "number"}];
+  for (const [direction, expected] of [
+    ["desc", ["ten-first", "ten-second", "zero", "negative", "null", "absent", "undefined"]],
+    ["asc", ["negative", "zero", "ten-first", "ten-second", "null", "absent", "undefined"]],
+  ]) {
+    assert.deepEqual(sortRows(rows, columns, {column: "x", direction}).map(row => row.id), expected);
+  }
+  assert.equal(sortRows(rows, columns, null), rows);
+});
+
+test("indirect sorting keeps missing hidden or unconfigured keys last", () => {
+  const rows = [{name: "missing", score: null}, {name: "low", score: 1}, {name: "high", score: 9}];
+  for (const keyColumn of [[], [{name: "score", type: "number", hide: true}]]) {
+    const columns = [{name: "name", sort_by: "score"}, ...keyColumn];
+    assert.deepEqual(sortRows(rows, columns, {column: "name", direction: "desc"}).map(row => row.name),
+      ["high", "low", "missing"]);
+    assert.deepEqual(sortRows(rows, columns, {column: "name", direction: "asc"}).map(row => row.name),
+      ["low", "high", "missing"]);
+  }
+});
+
+test("group sorting puts nulls last within each group without moving summaries", () => {
+  const rows = [
+    {x: null, __parent_key: "A"}, {x: 2, __parent_key: "A"}, {x: 1, __parent_key: "A"},
+    {x: null, render_type: "row_subtotal", __group_key: "A"},
+    {x: 3, __parent_key: "B"}, {__parent_key: "B"}, {x: -1, __parent_key: "B"},
+    {x: null, render_type: "row_subtotal", __group_key: "B"},
+    {x: null, render_type: "row_total"},
+  ];
+  const columns = [{name: "x", type: "number"}];
+  assert.deepEqual(sortRows(rows, columns, {column: "x", direction: "desc"}),
+    [rows[1], rows[2], rows[0], rows[3], rows[4], rows[6], rows[5], rows[7], rows[8]]);
+  assert.deepEqual(sortRows(rows, columns, {column: "x", direction: "asc"}),
+    [rows[2], rows[1], rows[0], rows[3], rows[6], rows[4], rows[5], rows[7], rows[8]]);
+});
+
+test("text and date columns use the same direction-independent null placement", () => {
+  for (const type of ["string", "date"]) {
+    const rows = [{x: null}, {x: "2025-02-01"}, {x: "2025-01-01"}];
+    const columns = [{name: "x", type}];
+    assert.deepEqual(sortRows(rows, columns, {column: "x", direction: "desc"}), [rows[1], rows[2], rows[0]]);
+    assert.deepEqual(sortRows(rows, columns, {column: "x", direction: "asc"}), [rows[2], rows[1], rows[0]]);
+  }
+});
+
 test("withDecimals keeps an explicit precision and pads an auto base", () => {
   // An explicit precision is already aligned: keep it.
   assert.equal(withDecimals("pct1", 4), "pct1");

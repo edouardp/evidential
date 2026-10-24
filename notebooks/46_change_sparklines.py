@@ -207,16 +207,18 @@ def update_teams(
 ):
     with teams.widget.hold_sync():
         teams.widget.set_data(team_summaries)
-        teams.widget.set_column(
-            "outcomes",
-            sparkline_options={
-                "type": "change",
-                "width": 184,
-                "y_fmt": "num0",
-                "color_scale": ["#b2182b", "#b8bcc2", "#2166ac"] if color_by_margin.value else None,
-                "color_domain": (-6, 6) if color_by_margin.value else None,
-            },
+        _outcome_options = next(
+            column["sparkline_options"] for column in teams.widget.columns if column["name"] == "outcomes"
         )
+        if _outcome_options.get("type", "line") == "change":
+            teams.widget.set_column(
+                "outcomes",
+                sparkline_options={
+                    **_outcome_options,
+                    "color_scale": ["#b2182b", "#b8bcc2", "#2166ac"] if color_by_margin.value else None,
+                    "color_domain": (-6, 6) if color_by_margin.value else None,
+                },
+            )
         teams.widget.update_options(
             title=f"{competition_picker.value.title()} teams · {year_picker.value}",
             subtitle=f"{source_label} · League participants; summaries include all recorded competitions. Click a row below.",

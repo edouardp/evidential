@@ -4,7 +4,7 @@ import math
 
 import pytest
 
-from evidential import EvidentialTable, col
+from evidential import EvidentialTable, SparklineType, col
 
 
 def test_change_sparkline_factory_fluent_and_mapping_share_one_wire_shape():
@@ -140,6 +140,55 @@ def test_change_demo_runs_offline_and_selection_populates_match_details(monkeypa
     assert any(game["competition"] != "england" for game in details.rows)
     assert not any(column.get("viz") == "sparkline" for column in details.columns)
     assert [game["match_date"] for game in details.rows] == sorted(game["match_date"] for game in details.rows)
+
+
+@pytest.mark.parametrize("style", ["line", "area", "bar", "points", "change"])
+@pytest.mark.parametrize("gradient", [False, True])
+def test_football_updates_preserve_declared_sparkline_style(monkeypatch, tmp_path, style: SparklineType, gradient):
+    import runpy
+    from pathlib import Path
+    from types import SimpleNamespace
+
+    import marimo as mo
+
+    monkeypatch.setenv("FOOTBALL_PARQUET", str(tmp_path / "missing.parquet"))
+    notebook = Path(__file__).resolve().parents[1] / "notebooks" / "46_change_sparklines.py"
+    app = runpy.run_path(str(notebook))["app"]
+    table = EvidentialTable(
+        [],
+        columns=[
+            col.sparkline(
+                "outcomes",
+                type=style,
+                width=137,
+                height=28,
+                y_fmt="num2",
+                color_scale="RdBu" if style == "change" else None,
+                color_domain=(-3, 3) if style == "change" else None,
+            )
+        ],
+    )
+    teams = mo.ui.anywidget(table)
+    app.run(
+        defs={
+            "teams": teams,
+            "color_by_margin": SimpleNamespace(value=gradient),
+            "year_picker": SimpleNamespace(value=2024),
+            "competition_picker": SimpleNamespace(value="england"),
+        }
+    )
+    options = table.columns[0]["sparkline_options"]
+    assert len(table.rows) == 23
+    assert options["type"] == style
+    assert options["width"] == 137
+    assert options["height"] == 28
+    assert options["y_fmt"] == "num2"
+    if style == "change" and gradient:
+        assert options["color_scale"] == ["#b2182b", "#b8bcc2", "#2166ac"]
+        assert options["color_domain"] == (-6, 6)
+    else:
+        assert "color_scale" not in options
+        assert "color_domain" not in options
 
 
 def test_football_sql_filters_year_and_league_but_keeps_international_matches(tmp_path):

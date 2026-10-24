@@ -213,7 +213,7 @@ class DeltaOptions(TypedDict, total=False):
 
 
 class SparklineOptions(TypedDict, total=False):
-    type: Literal["line", "area", "bar", "points"] | None
+    type: Literal["line", "area", "bar", "points", "change"] | None
     x: str | None
     y: str | None
     color: str | None
@@ -227,6 +227,12 @@ class SparklineOptions(TypedDict, total=False):
     marker_color: str | None
     #: Split an area fill at the zero baseline into positive/negative colours.
     signed: bool | None
+    #: Inclusive hold-steady range for change sparklines; defaults to (0, 0).
+    steady: tuple[float, float] | None
+    #: Optional continuous palette, with its midpoint anchored to the steady range.
+    color_scale: str | Sequence[str] | None
+    #: Fixed magnitude endpoints; automatic domains use all matching rows.
+    color_domain: tuple[float, float] | None
 
 
 class ChipOptions(TypedDict, total=False):

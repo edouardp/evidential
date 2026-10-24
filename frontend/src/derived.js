@@ -1,6 +1,7 @@
 import { searchRows, sortRows, visibleRows, columnStats, decimalPlaces } from "./rows.js";
 import { orderedColumns } from "./headers.js";
 import { calculateVizRanges, calculateFormatRanges, buildColorVizScale } from "./color.js";
+import { prepareChangeScales } from "./change-sparkline.js";
 import { projectLegacy } from "./row-layout.js";
 
 /** One current dataset projection per widget; pagination/selection do not invalidate it. */
@@ -41,7 +42,8 @@ export class RowPipeline {
       }
     }
     const result = {
-      columns, sorted, ranges, formatRanges, decimals, colorScales, sourceRows: rows, rowLayout,
+      columns, sorted, ranges, formatRanges, decimals, colorScales,
+      changeScales: prepareChangeScales(columns, sorted), sourceRows: rows, rowLayout,
       hasGroups: !!rowLayout?.legacy || rows.some((row) => row.render_type && row.render_type !== "cell_data"),
       dimCount: (rowLayout?.legacy || []).reduce((max, token) => Math.max(max, token.row?.__level || 0),
         rows.reduce((max, row) => Math.max(max, row.__level ?? 0), 0)),

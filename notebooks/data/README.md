@@ -33,3 +33,20 @@ displayed sign, rounded to the nearest whole point. Higher scores rank first.
 rank and sort last. Country names break score ties alphabetically. The country
 display text includes its rank in parentheses. The score is an unweighted sum
 of the displayed changes.
+
+## Football results
+
+`46_football_england_2024.json` is the output of
+[`46_football_outcomes.sql`](../sql/46_football_outcomes.sql), queried from
+`~/datasets/football-data/data/results/games.parquet` on 24 October 2026.
+It contains 812 team perspectives for the 23 clubs participating in England's
+recorded top domestic division during calendar year 2024, including those
+clubs' international matches in the dataset. Both sides of a match appear when
+both clubs are in that set. This is match data, not a season league table.
+
+Notebook 46 reads the local parquet first (`FOOTBALL_PARQUET` overrides its
+location); the snapshot keeps its default example usable without that file.
+Source: **football-data / worldclubratings.com**, distributed under the
+[Open Data Commons Attribution License 1.0](https://opendatacommons.org/licenses/by/1-0/).
+The source covers top domestic divisions and selected international
+competitions; domestic cup fixtures are not comprehensively included.

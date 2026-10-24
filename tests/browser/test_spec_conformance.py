@@ -179,6 +179,71 @@ def test_fluent_label_typography_and_placement_in_the_browser(page, live_server)
     capture(page, "fluent-labels.png")
 
 
+def test_change_sparklines_geometry_color_anchors_and_pagination(page, live_server):
+    data = [{"name": "A", "changes": [-1, 0, 1, None]}, {"name": "B", "changes": [-4, 0, 1, 8]}]
+    mount(
+        page,
+        live_server,
+        [
+            (
+                "Change states and shared gradient",
+                data,
+                [
+                    col.text("name"),
+                    col.sparkline("changes", title="State", type="change", width=100),
+                    col.sparkline(
+                        "changes",
+                        title="Gradient",
+                        type="change",
+                        width=100,
+                        color_scale=["#ff0000", "#808080", "#0000ff"],
+                    ),
+                ],
+                {"page_size": 1},
+            )
+        ],
+    )
+    state = page.locator("td:nth-child(2) .et-sparkline-change rect")
+    gradient = page.locator("td:nth-child(3) .et-sparkline-change rect")
+    assert state.count() == gradient.count() == 3
+    assert [node.get_attribute("data-state") for node in state.all()] == ["down", "steady", "up"]
+    geometry = state.evaluate_all(
+        "nodes => nodes.map(el => ({y: +el.getAttribute('y'), h: +el.getAttribute('height'), x: +el.getAttribute('x'), w: +el.getAttribute('width')}))"
+    )
+    assert geometry[0]["h"] == geometry[1]["h"] == geometry[2]["h"]
+    assert geometry[0]["y"] - geometry[1]["y"] == geometry[1]["y"] - geometry[2]["y"] == geometry[0]["h"] / 2
+    assert gradient.nth(1).get_attribute("fill") == "#808080"
+    one_color = gradient.nth(2).get_attribute("fill")
+    assert one_color != "#0000ff"  # The unseen next page contains +8.
+    assert gradient.nth(2).locator("title").text_content().endswith("(up)")
+    assert page.locator(".et-sparkline-change").first.get_attribute("aria-label").endswith("1 missing")
+    scroller = page.locator(".et-scroller")
+    assert scroller.evaluate("el => el.scrollHeight <= el.clientHeight")
+    page.get_by_role("button", name="Next page", exact=True).click()
+    assert gradient.count() == 4
+    assert gradient.nth(2).get_attribute("fill") == one_color
+    assert gradient.last.get_attribute("fill") == "#0000ff"
+    assert gradient.first.get_attribute("fill") == "#ff0000"
+
+
+def test_change_sparkline_football_demo_renders_aggregate_and_match_details(page, live_server, monkeypatch, tmp_path):
+    monkeypatch.setenv("FOOTBALL_PARQUET", str(tmp_path / "missing.parquet"))
+    path = Path(__file__).resolve().parents[2] / "notebooks" / "46_change_sparklines.py"
+    _, definitions = runpy.run_path(str(path))["app"].run(defs={"selected_team": "Arsenal FC (England)"})
+    tables = [definitions["teams"].widget, definitions["match_details"].widget]
+    mount(page, live_server, [("Teams", tables[0], []), ("Match details", tables[1], [])])
+    page.locator("section").evaluate_all("nodes => nodes.forEach(el => el.style.width = '1000px')")
+    assert page.locator("#case-0 .et-sparkline-change").count() == 12
+    assert page.locator("#case-1 .et-sparkline-change").count() == 0
+    assert page.locator("#case-1 tbody tr").count() == 15
+    assert page.locator("#case-1").get_by_role("columnheader", name="Competition", exact=True).is_visible()
+    assert page.locator("#case-0 rect[data-state=steady]").count() > 5
+    for svg in page.locator(".et-sparkline-change").all():
+        assert svg.is_visible()
+        assert svg.evaluate("el => el.getBoundingClientRect().height") < 25
+    capture(page, "change-sparklines.png")
+
+
 @pytest.mark.parametrize(
     ("notebook", "definition"),
     [

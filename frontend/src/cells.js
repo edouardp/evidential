@@ -288,7 +288,7 @@ function renderContent(col, value, formatted, ctx, row, format) {
   } else if (col.viz === "delta") {
     content = renderDelta(col, value);
   } else if (col.viz === "sparkline") {
-    content = renderSparkline(col, value);
+    content = renderSparkline(col, value, ctx.changeScales?.get(col));
   } else if (col.viz === "symbols") {
     content = renderSymbols(col, value, formatted);
   } else if (col.html) {

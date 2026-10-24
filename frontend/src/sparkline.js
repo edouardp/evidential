@@ -1,12 +1,18 @@
 import { h } from "./dom.js";
 import { formatValue } from "./format.js";
 import { numeric } from "./mark-data.js";
+import { sparklinePoints } from "./sparkline-data.js";
+import { renderChangeSparkline } from "./change-sparkline.js";
 
-export function renderSparkline(col, value) {
+export { sparklinePoints } from "./sparkline-data.js";
+
+export function renderSparkline(col, value, changeColor) {
   const opts = col.sparkline_options || {};
   const points = sparklinePoints(value, opts);
   const present = points.filter(point => point[1] != null);
   if (!present.length) return h("span", { class: "et-null" }, "–");
+
+  if (opts.type === "change") return renderChangeSparkline(points, opts, changeColor);
 
   const width = opts.width || 64;
   const height = opts.height || 18;
@@ -138,41 +144,4 @@ function addArea(svgNS, svg, scaled, baseline, clip, fill) {
   area.setAttribute("fill", fill);
   area.setAttribute("opacity", "0.22");
   svg.append(area);
-}
-
-/** Normalize numbers, [x, y] pairs or objects into sparkline points. */
-export function sparklinePoints(value, opts) {
-  if (!Array.isArray(value)) return [];
-  const xKey = opts.x;
-  const yKey = opts.y;
-  const points = [];
-  value.forEach((item, index) => {
-    if (item === null || item === undefined) {
-      points.push([index, null, item]);
-      return;
-    }
-    let x = index;
-    let y;
-    if (Array.isArray(item)) {
-      x = item[0];
-      y = numeric(item[1]);
-    } else if (typeof item === "object") {
-      const keys = Object.keys(item);
-      const yField = yKey || ["y", "value"].find(key => key in item) || keys.find((key) => _isNumeric(item[key]));
-      const xField =
-        xKey || ["x", "date"].find(key => key in item) || keys.find((key) => key !== yField && !_isNumeric(item[key]));
-      x = xField ? item[xField] : index;
-      y = numeric(yField ? item[yField] : null);
-    } else {
-      y = numeric(item);
-    }
-    points.push([x, y, item]);
-  });
-  return points;
-}
-
-function _isNumeric(value) {
-  if (typeof value === "number") return Number.isFinite(value);
-  if (typeof value === "string") return value.trim() !== "" && !isNaN(Number(value));
-  return false;
 }

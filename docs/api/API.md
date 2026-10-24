@@ -539,12 +539,48 @@ columns=[
 - **Delta** — `.delta(down_is_good=, neutral_range=, chip=, show_value=,
   show_symbol=, symbol_position=)`. Green for up, red for down, a grey dash
   inside `neutral_range`.
-- **Sparkline** — `.sparkline(type="line"|"area"|"bar"|"points", x=, y=,
+- **Sparkline** — `.sparkline(type="line"|"area"|"bar"|"points"|"change", x=, y=,
   color=, fit_to_data=, y_fmt=, width=, height=, markers=, marker_color=, signed=)`
   over an array column. `type="points"` draws only markers; `markers=True` adds a
   dot at every point and `markers="ends"` only the endpoints; a per-point
   `color` key on the data overrides `marker_color`; `signed=True` splits an area
   fill at the zero baseline.
+
+  `type="change"` draws one equal rectangle per observation, with an ordinal
+  position even for structured/date input. Values are changes or signed outcomes:
+  up above `steady`, down below it, centered within its inclusive range (default
+  `(0, 0)`). Up/down shift by exactly half a rectangle height. Missing or invalid
+  values leave empty slots; an entirely missing sequence shows the null marker.
+  `x`/`y` bindings and `y_fmt` supply formatted, per-match tooltips. The SVG also
+  exposes a summary of up/steady/down/missing counts.
+
+  ```python
+  # Win/loss/draw sequence: positive, negative and zero goal margins.
+  col.sparkline("outcomes", type="change", width=160)
+  # Continuous change: keep the whole neutral range gray, even on an asymmetric domain.
+  col.sparkline(
+      "changes", type="change", steady=(-0.5, 0.5),
+      color_scale=["#b2182b", "#b8bcc2", "#2166ac"], color_domain=(-4, 8),
+  )
+  ```
+
+  Default state colors are the theme's accent (up), negative (down), and gray
+  (steady). `color=` gives every rectangle one color. Optional `color_scale=`
+  accepts the existing named palettes or at least two colors. Its midpoint is
+  anchored to the **whole steady interval**, with independent ramps below and
+  above it; an odd palette makes the center color explicit. An even palette
+  uses its interpolated midpoint. `color_domain=(low, high)` fixes the endpoints
+  and must contain the steady interval. Colors outside it clamp to the endpoints.
+  Otherwise matching rows share inferred endpoints before pagination; filtering
+  recomputes them. Marks always retain their three positions and equal heights.
+  Change-only settings are validated for factories, refinements and mappings.
+  `color` and `color_scale` are mutually exclusive. Marker, signed-area and
+  fit-to-data settings do not apply to change rectangles.
+
+  [Notebook 46](../../notebooks/46_change_sparklines.py) queries the local
+  football results dataset: search teams, select a year and competition, then
+  click a team to update the second table with match details and labeled goal
+  margin bars. A switch adds a goal-margin gradient to the top table's sparklines.
 - **Symbols** — `.symbols(symbol=, shape=, empty=, max=, image=, color=,
   empty_color=, size=, gap=)`: repeat the value as glyphs, emoji, images, or
   font-independent CSS boxes. `max` is a *floor* (the row is filled to at least
@@ -850,7 +886,7 @@ other than `auto`, `merge`, `group` and `subcolumns` return a `Column`;
 | `col.color(name, *, title=, **options)` | colour scale |
 | `col.chip(name, *, min_width=, conditional_colors=, scale=, min=, max=, midpoint=, **extra)` | pill |
 | `col.delta(name, *, down_is_good=, neutral_range=, chip=)` | change indicator |
-| `col.sparkline(name, *, type="line"\|"area"\|"bar"\|"points", x=, y=, color=, fit_to_data=, y_fmt=, width=, height=, markers=, marker_color=, signed=, title=)` | trend |
+| `col.sparkline(name, *, type="line"\|"area"\|"bar"\|"points"\|"change", x=, y=, color=, fit_to_data=, y_fmt=, width=, height=, markers=, marker_color=, signed=, steady=, color_scale=, color_domain=, title=)` | trend |
 | `col.symbols(name, *, symbol=, shape=, empty=, max=, image=, color=, empty_color=, size=, gap=, align=, title=)` | repeated symbols |
 | `col.rating(name, *, max=5, symbol="★", empty="☆", color="#f59e0b")` | star rating |
 | `col.repeat(name, **options)` | alias for `symbols` |

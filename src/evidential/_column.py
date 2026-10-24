@@ -13,6 +13,7 @@ from typing import Any, Literal, Self
 
 from ._aliases import alias, format_code
 from ._column_options import _normalize_column_options
+from ._sparkline import normalize_sparkline_options
 from ._text_style import TextStyle
 from .configuration import Relative
 
@@ -593,7 +594,7 @@ class Column(TextStyle, Mapping[str, Any]):
     def sparkline(
         self,
         *,
-        type: Literal["line", "area", "bar", "points"] | None = None,
+        type: Literal["line", "area", "bar", "points", "change"] | None = None,
         x: str | None = None,
         y: str | None = None,
         color: str | None = None,
@@ -604,10 +605,13 @@ class Column(TextStyle, Mapping[str, Any]):
         markers: bool | str | None = None,
         marker_color: str | None = None,
         signed: bool | None = None,
+        steady: tuple[float, float] | None = None,
+        color_scale: str | Sequence[str] | None = None,
+        color_domain: tuple[float, float] | None = None,
     ) -> Self:
-        """Draw the cell's array value as a small line/area/bar chart.
+        """Draw the cell's array as a compact chart, including up/steady/down changes.
 
-        :param type: ``"line"`` (default), ``"area"``, ``"bar"`` or ``"points"``.
+        :param type: ``"line"`` (default), ``"area"``, ``"bar"``, ``"points"`` or ``"change"``.
         :param x: field for the x values.
         :param y: field for the y values.
         :param color: stroke/fill colour.
@@ -618,15 +622,19 @@ class Column(TextStyle, Mapping[str, Any]):
         :param markers: draw a marker at every point, or ``"ends"`` for the endpoints.
         :param marker_color: marker colour; a per-point ``color`` key wins.
         :param signed: split an area fill at the zero baseline into up/down colours.
+        :param steady: inclusive change interval rendered at the center; defaults to (0, 0).
+        :param color_scale: optional change gradient (named palette or color list).
+            The whole steady interval maps to the palette midpoint.
+        :param color_domain: fixed change gradient endpoints, containing the steady
+            interval. Otherwise all matching rows supply shared bounds.
 
         Example::
 
             col.sparkline("trend", type="area", color="#0ea5e9")
         """
-        return self._with(
-            viz="sparkline",
-            **_merge_options(
-                "sparkline_options",
+        options = {
+            **dict(self._spec.get("sparkline_options") or {}),
+            **_clean(
                 type=type,
                 x=x,
                 y=y,
@@ -638,8 +646,12 @@ class Column(TextStyle, Mapping[str, Any]):
                 markers=markers,
                 marker_color=marker_color,
                 signed=signed,
+                steady=steady,
+                color_scale=color_scale,
+                color_domain=color_domain,
             ),
-        )
+        }
+        return self._with(viz="sparkline", sparkline_options=normalize_sparkline_options(options))
 
     def chip(
         self,
@@ -1318,7 +1330,7 @@ def color(name: str, *, title: str | None = None, **options: Any) -> Column:
 def sparkline(
     name: str,
     *,
-    type: Literal["line", "area", "bar", "points"] = "line",
+    type: Literal["line", "area", "bar", "points", "change"] = "line",
     x: str | None = None,
     y: str | None = None,
     color: str | None = None,
@@ -1329,13 +1341,16 @@ def sparkline(
     markers: bool | str | None = None,
     marker_color: str | None = None,
     signed: bool | None = None,
+    steady: tuple[float, float] | None = None,
+    color_scale: str | Sequence[str] | None = None,
+    color_domain: tuple[float, float] | None = None,
     title: str | None = None,
     **extra: Any,
 ) -> Column:
     """An array column drawn as a sparkline.
 
     :param name: the column holding the array.
-    :param type: ``"line"`` (default), ``"area"``, ``"bar"`` or ``"points"``.
+    :param type: ``"line"`` (default), ``"area"``, ``"bar"``, ``"points"`` or ``"change"``.
     :param x: field for the x values.
     :param y: field for the y values.
     :param color: stroke/fill colour.
@@ -1345,6 +1360,9 @@ def sparkline(
     :param height: chart height (the viewBox, in pixels).
     :param markers: draw a marker at every point (line/area too).
     :param signed: split an area fill at the zero baseline into up/down colours.
+    :param steady: inclusive hold-steady interval for change rectangles (default 0..0).
+    :param color_scale: named palette or color list for change magnitude.
+    :param color_domain: fixed gradient endpoints; the steady interval anchors the midpoint.
     :param title: header text.
 
     See :meth:`Column.sparkline` for the same options on the chain.
@@ -1365,6 +1383,9 @@ def sparkline(
         markers=markers,
         marker_color=marker_color,
         signed=signed,
+        steady=steady,
+        color_scale=color_scale,
+        color_domain=color_domain,
     )
 
 

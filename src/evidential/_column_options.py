@@ -7,6 +7,7 @@ from difflib import get_close_matches
 from typing import Any
 
 from ._aliases import alias
+from ._sparkline import normalize_sparkline_options
 from .configuration import COLOR_SCALES, ColumnOptions, validate_options
 
 # Evidence `contentType` → (viz, sparkline type)
@@ -125,7 +126,7 @@ def _normalize_column_options(data: dict[str, Any]) -> dict[str, Any]:
     if "spark_y_scale" in data:
         spark.setdefault("fit_to_data", data.pop("spark_y_scale"))
     if spark:
-        data["sparkline_options"] = spark
+        data["sparkline_options"] = normalize_sparkline_options(spark)
 
     bar = dict(data.get("bar_options") or {})
     for camel, snake in (

@@ -88,6 +88,7 @@ dated, immutable record of the decisions behind them.
 | [067](067-remove-scalar-bar-decorator.md) | Remove the Scalar Bar Decorator | Accepted |
 | [068](068-automatic-bar-label-placement.md) | Automatic Bar Label Placement | Accepted |
 | [069](069-fluent-label-builder.md) | Fluent Label Builder | Accepted |
+| [070](070-change-sparklines.md) | Change Sparklines | Accepted |
 
 ## Creating New ADRs
 

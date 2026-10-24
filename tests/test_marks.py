@@ -16,6 +16,33 @@ ROWS = [
 ]
 
 
+@pytest.mark.parametrize("position", ["outside_start", "outside_end", "inside_start", "inside_end"])
+def test_automatic_bar_labels_keep_the_preferred_position(position):
+    for column in (
+        col.bar("current", label={"value": True, "position": position, "auto": True}),
+        col.bar("current", label=True, label_position=position, label_options={"auto": True}),
+        col.bar("current").label(True, position=position, auto=True),
+    ):
+        config = column.to_config()
+        assert config["encodings"][0]["label"] == {"value": True, "position": position, "auto": True}
+        assert EvidentialTable(ROWS, columns=[config]).columns[0]["encodings"][0]["label"]["auto"] is True
+
+
+@pytest.mark.parametrize("position", ["center", "above", "below"])
+def test_automatic_bar_labels_reject_positions_without_an_inside_outside_pair(position):
+    with pytest.raises(ValueError, match="auto.*position"):
+        col.bar("current").label(True, position=position, auto=True)
+
+
+def test_automatic_labels_validate_kind_and_boolean_setting():
+    with pytest.raises(ValueError, match="auto.*bar"):
+        col.point("current").label(True, auto=True)
+    with pytest.raises(TypeError, match="auto"):
+        col.bar("current", label={"value": True, "auto": "yes"})
+    with pytest.raises(ValueError, match="auto.*overflow"):
+        col.bar("current").label(True, auto=True, overflow="show")
+
+
 def test_measure_rebinding_copies_bindings_without_renaming_literal_text():
     original = {
         "encodings": [
@@ -461,7 +488,7 @@ def test_stacked_bar_percent_labels_and_thickness() -> None:
     first = spec["encodings"][0]
     assert first["label"] == {"value": True, "position": "inside_end", "align": "begin", "share": True}
     assert [enc["size"] for enc in spec["encodings"]] == [0.5, 0.5]
-    with pytest.raises(ValueError, match="labels is True, False or 'percent'"):
+    with pytest.raises(ValueError, match="labels is True, False, 'percent' or a label specification"):
         col.stacked_bar("a", labels="count")
     with pytest.raises(ValueError, match="size is a fraction"):
         col.stacked_bar("a", size=2)

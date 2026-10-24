@@ -13,6 +13,7 @@ from typing import Any, Literal, Self
 
 from ._aliases import alias, format_code
 from ._column_options import _normalize_column_options
+from ._text_style import TextStyle
 from .configuration import Relative
 
 Align = Literal["left", "right", "center"]
@@ -67,7 +68,7 @@ def _field(value: Any) -> Any:
     return value[1:] if isinstance(value, str) and value.startswith("@") else value
 
 
-class Column(Mapping[str, Any]):
+class Column(TextStyle, Mapping[str, Any]):
     """An immutable column definition; every method returns a new ``Column``.
 
     Build one with a ``col.<kind>("name")`` factory and refine it by chaining::
@@ -136,22 +137,6 @@ class Column(Mapping[str, Any]):
             col.text("first_name").title("First name")
         """
         return self._with(title=value)
-
-    def fmt(self, code: str) -> Self:
-        """Set the value format code.
-
-        ``code`` is a named preset (``"usd0"``, ``"pct1"``, ``"num0k"``, ``"yyyy"``,
-        ``"flag"``…) or a raw Excel/``ssf`` pattern. This is the escape hatch for
-        anything the column kinds do not cover.
-
-        Example::
-
-            col.number("sales").fmt("usd0")
-        """
-        return self._with(fmt=code)
-
-    #: ``format`` reads better in a chain; ``fmt`` matches the option name.
-    format = fmt
 
     def relative(self, value: Relative = True) -> Self:
         """Render the value relative to now (e.g. ``"3 days ago"``) instead of as
@@ -222,72 +207,6 @@ class Column(Mapping[str, Any]):
             col.number("price").fmt("usd2").align_decimals()
         """
         return self._with(align_decimals=value)
-
-    def figure_style(self, value: str) -> Self:
-        """Override the CSS ``font-variant-numeric`` for this column.
-
-        The default is ``"lining-nums tabular-nums"``; pass e.g.
-        ``"oldstyle-nums proportional-nums"``.
-
-        Example::
-
-            col.text("amount").figure_style("lining-nums proportional-nums")
-        """
-        return self._with(figure_style=value)
-
-    def font(self, family: str) -> Self:
-        """Set the CSS ``font-family`` for this column.
-
-        Example::
-
-            col.text("code").font("ui-monospace, monospace")
-        """
-        return self._with(font=family)
-
-    def font_color(self, color: str) -> Self:
-        """Set the cell text colour (any CSS colour).
-
-        Example::
-
-            col.number("change").font_color("#b91c1c")
-        """
-        return self._with(font_color=color)
-
-    def bold(self, value: bool = True) -> Self:
-        """Render the column's cells in bold.
-
-        Example::
-
-            col.text("item").bold()
-        """
-        return self._with(font_weight="600" if value else None)
-
-    def italic(self, value: bool = True) -> Self:
-        """Render the column's cells in italics.
-
-        Example::
-
-            col.text("note").italic()
-        """
-        return self._with(font_style="italic" if value else None)
-
-    def font_weight(self, value: str) -> Self:
-        """Set the CSS ``font-weight`` (e.g. ``"600"``, ``"bold"``).
-
-        Example::
-
-            col.text("total").font_weight("700")
-        """
-        return self._with(font_weight=value)
-
-    def font_style(self, value: str) -> Self:
-        """Set the CSS ``font-style`` (e.g. ``"italic"``, ``"oblique"``).
-
-        Example::
-
-            col.text("note").font_style("oblique")
-        """
-        return self._with(font_style=value)
 
     def wrap(self, value: bool = True) -> Self:
         """Allow (or forbid) the cell text to wrap onto several lines.

@@ -282,6 +282,8 @@ class EncodingLabel(TypedDict, total=False):
     text: str | None
     value: bool | None
     position: Literal["inside_start", "inside_end", "outside_start", "outside_end", "center", "above", "below"] | None
+    #: Bar labels: try the preferred position, then its inside/outside counterpart.
+    auto: bool | None
     format: str | None
     prefix: str | None
     suffix: str | None
@@ -292,6 +294,10 @@ class EncodingLabel(TypedDict, total=False):
     overflow: Literal["hide", "show"] | None
     min_width: float | None
     color: str | None
+    font: str | None
+    font_weight: str | None
+    font_style: str | None
+    figure_style: str | None
 
 
 class BoxParts(TypedDict, total=False):

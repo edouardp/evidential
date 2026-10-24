@@ -31,7 +31,8 @@ from typing import Any, Literal
 from ._aliases import alias, format_code
 from ._column import Column, _clean, _field
 from ._distribution import band_spec, validate_curve
-from .configuration import EncodingLabel, EncodingSpec, validate_options
+from ._label import LABEL_POSITIONS, _label_spec
+from .configuration import EncodingSpec, validate_options
 
 __all__ = [
     "MarkColumn",
@@ -45,17 +46,6 @@ __all__ = [
     "strip",
     "LABEL_POSITIONS",
 ]
-
-#: Where a mark-owned label may sit.
-LABEL_POSITIONS = (
-    "inside_start",
-    "inside_end",
-    "outside_start",
-    "outside_end",
-    "center",
-    "above",
-    "below",
-)
 
 #: Supported classic bar style options, honored by the marks renderer too.
 _BAR_STYLE_KEYS = {
@@ -114,87 +104,6 @@ _ENCODING_KEYS = (
 
 #: Names for callable-sourced columns whose field cannot be named in Python.
 _ANONYMOUS = itertools.count()
-
-
-def _label_spec(
-    value: Any = None,
-    *,
-    source: str | None = None,
-    text: str | None = None,
-    literal: str | None = None,
-    position: str | None = None,
-    format: str | None = None,
-    fmt: str | None = None,
-    prefix: str | None = None,
-    suffix: str | None = None,
-    align: str | None = None,
-    share: bool | None = None,
-    overflow: str | None = None,
-    min_width: float | None = None,
-    color: str | None = None,
-) -> dict[str, Any] | None:
-    """Canonicalise a mark-owned label declaration.
-
-    ``label=True`` labels the mark's own value; ``label="@field"`` labels
-    another field; ``label="text"`` (through the constructor) is a literal. A
-    mapping (``label={"source": "@x", "prefix": "$"}``) is the same as the
-    fluent form. ``.label(...)`` is unambiguous: ``source=`` vs ``text=``.
-    """
-    spec: dict[str, Any] = {}
-    if isinstance(value, Mapping):
-        spec.update({key: item for key, item in value.items() if item is not None})
-        value = None
-    if source is not None:
-        spec["source"] = _field(source)
-    if text is not None:
-        spec["text"] = text
-    if literal is not None:
-        spec["text"] = literal
-    if value is True:
-        spec["value"] = True
-    elif value is False:
-        return None
-    elif isinstance(value, str):
-        if value.startswith("@"):
-            spec["source"] = value[1:]
-        else:
-            spec["text"] = value
-    elif value is not None:
-        raise TypeError(f"label expects True, False, '@field', a string or a mapping, got {value!r}")
-    if position is not None:
-        if position not in LABEL_POSITIONS:
-            raise ValueError(f"Unknown label position {position!r}; use one of {', '.join(LABEL_POSITIONS)}")
-        spec["position"] = position
-    if align is not None:
-        if align not in ("begin", "center", "end"):
-            raise ValueError("label align is 'begin', 'center' or 'end'")
-        spec["align"] = align
-    for key, item in (("format", format_code(format, fmt)), ("prefix", prefix), ("suffix", suffix)):
-        if item is not None:
-            spec[key] = item
-    if share:
-        spec["share"] = True
-    if overflow is not None:
-        if overflow not in ("hide", "show"):
-            raise ValueError("label overflow is 'hide' or 'show'")
-        spec["overflow"] = overflow
-    if min_width is not None:
-        if not math.isfinite(min_width) or min_width < 0:
-            raise ValueError("label min_width must be finite and nonnegative")
-        spec["min_width"] = min_width
-    if color is not None:
-        spec["color"] = color
-    alias(spec, "format", "fmt")
-    if spec.get("source") is not None:
-        spec["source"] = _field(spec["source"])
-    if spec.get("position") is not None and spec["position"] not in LABEL_POSITIONS:
-        raise ValueError(f"Unknown label position {spec['position']!r}")
-    if spec.get("min_width") is not None and (not math.isfinite(spec["min_width"]) or spec["min_width"] < 0):
-        raise ValueError("label min_width must be finite and nonnegative")
-    if sum(key in spec for key in ("source", "text", "value")) > 1:
-        raise ValueError("label needs only one of source, text or value")
-    validate_options(spec, EncodingLabel, "label")
-    return spec or None
 
 
 def _canonical_encoding(
@@ -302,6 +211,8 @@ def _canonical_encoding(
         raise ValueError("range overflow is 'clip' or 'arrow'")
     label_spec = _label_spec(label, position=label_position, **(label_options or {}))
     if label_spec:
+        if label_spec.get("auto") and kind != "bar":
+            raise ValueError("auto label placement is only supported for bar marks")
         if kind == "stacked_bar" and label_spec.get("position", "inside_end") not in (
             "inside_start",
             "inside_end",
@@ -515,6 +426,7 @@ class MarkColumn(Column):
         source: str | None = None,
         text: str | None = None,
         position: str | None = None,
+        auto: bool | None = None,
         format: str | None = None,
         fmt: str | None = None,
         prefix: str | None = None,
@@ -523,6 +435,10 @@ class MarkColumn(Column):
         overflow: str | None = None,
         min_width: float | None = None,
         color: str | None = None,
+        font: str | None = None,
+        font_weight: str | None = None,
+        font_style: str | None = None,
+        figure_style: str | None = None,
     ) -> MarkColumn:
         """Annotate the most recently declared encoding."""
         encodings = self._encodings()
@@ -533,6 +449,7 @@ class MarkColumn(Column):
             source=source,
             text=text,
             position=position,
+            auto=auto,
             format=format,
             fmt=fmt,
             prefix=prefix,
@@ -541,6 +458,10 @@ class MarkColumn(Column):
             overflow=overflow,
             min_width=min_width,
             color=color,
+            font=font,
+            font_weight=font_weight,
+            font_style=font_style,
+            figure_style=figure_style,
         )
         if spec is None and value is not False:
             return self
@@ -921,7 +842,7 @@ def stacked_bar(
     fmt: str | None = None,
     align: str | None = None,
     colors: Sequence[Any] | None = None,
-    labels: bool | str | None = None,
+    labels: bool | str | Mapping[str, Any] | None = None,
     normalize: str | None = None,
     diverge_at: str | None = None,
     neutral: str | None = None,
@@ -937,19 +858,22 @@ def stacked_bar(
     a central origin and the categories either side grow left and right.
 
     ``labels=True`` writes each segment's value; ``labels="percent"`` writes its
-    share of the row instead. ``size`` is the stack's height fraction.
+    share of the row instead. A fluent ``label`` specification or mapping applies
+    to every segment. ``size`` is the stack's height fraction.
     """
     if not sources:
         raise TypeError("stacked_bar needs at least one segment column")
-    if labels not in (None, False, True, "percent", "share"):
-        raise ValueError("stacked_bar labels is True, False or 'percent'")
+    if not isinstance(labels, Mapping) and labels not in (None, False, True, "percent", "share"):
+        raise ValueError("stacked_bar labels is True, False, 'percent' or a label specification")
     if size is not None and not 0 < float(size) <= 1:
         raise ValueError("stacked_bar size is a fraction in (0, 1]")
     column = _factory_column(sources[0], options, title=title, fmt=format_code(format, fmt), align=align)
     height_options = {"size": size, "height": options.pop("height", None)}
     alias(height_options, "size", "height")
     size = height_options.get("size")
-    label_position = options.pop("label_position", "inside_end")
+    label_position = options.pop(
+        "label_position", labels.get("position", "inside_end") if isinstance(labels, Mapping) else "inside_end"
+    )
     label_align = options.pop("label_align", None)
     if options:
         raise TypeError(f"Unknown stacked_bar option(s): {', '.join(sorted(options))}")
@@ -966,7 +890,7 @@ def stacked_bar(
         encoding = _canonical_encoding("stacked_bar", source, **style)
         if labels:
             encoding["label"] = _label_spec(
-                True,
+                labels if isinstance(labels, Mapping) else True,
                 position=label_position,
                 align=label_align,
                 share=labels in ("percent", "share"),

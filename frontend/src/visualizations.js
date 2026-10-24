@@ -3,7 +3,7 @@ import { formatValue } from "./format.js";
 import { resolveColor } from "./color.js";
 import { numeric, observationValue } from "./mark-data.js";
 import { renderDensityBand } from "./density-band.js";
-import { markLabelText, renderMarkLabel, autoLabelColor } from "./mark-labels.js";
+import { markLabelText, renderMarkLabel, autoLabelColor, labelTextStyle } from "./mark-labels.js";
 
 /** Inline top/bottom/transform for a mark's `valign` (default centred). */
 function verticalStyle(valign, point = false) {
@@ -104,7 +104,7 @@ function stackSegment(enc, row, col, leftPct, widthPct, text = "") {
     segment.title = text;
     const label = h("span", { class: "et-mark-stack-label", "data-mark-label": "",
       "data-overflow": spec.overflow || "hide", "data-min-width": spec.min_width || 0,
-      style: spec.color ? {color: resolveColor(spec.color)} : {},
+      style: labelTextStyle(spec),
     }, h("span", {class: "et-mark-label-text"}, text));
     if (!spec.color) autoLabelColor(label, markColor(enc, row, "var(--et-accent, #2563eb)"));
     segment.append(label);

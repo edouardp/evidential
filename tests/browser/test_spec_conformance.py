@@ -10,7 +10,7 @@ from pathlib import Path
 
 import pytest
 
-from evidential import EvidentialTable, col, grouped_records
+from evidential import EvidentialTable, col, grouped_records, label
 from evidential import rows as row_builder
 
 pytestmark = pytest.mark.browser
@@ -69,6 +69,114 @@ def mount(page, live_server, cases):
 def capture(page, name):
     if path := os.environ.get("EVIDENTIAL_REVIEW_SCREENSHOT"):
         page.screenshot(path=str(Path(path).with_name(name)), full_page=True)
+
+
+def test_automatic_bar_label_preferences_signed_bars_and_resize(page, live_server):
+    positions = ["outside_end", "inside_end", "outside_start", "inside_start"]
+    data = [{"x": value} for value in (95, 60, 3, 0, None)]
+    cases = [
+        (
+            position,
+            data,
+            [
+                col.bar("x", color="#111111", format="usd0")
+                .label(True, position=position, auto=True, prefix="Revenue: ")
+                .scale(domain=(0, 100))
+            ],
+            {"width": "100%"},
+        )
+        for position in positions
+    ]
+    cases.extend(
+        [
+            (
+                "Signed",
+                [{"x": value} for value in (-95, -60, -3, 0, 3, 60, 95)],
+                [
+                    col.bar("x", color="#111111", format="usd0")
+                    .label(True, position="outside_end", auto=True)
+                    .scale(domain=(-100, 100))
+                ],
+                {"width": "100%"},
+            ),
+            (
+                "Mirrored",
+                data,
+                [
+                    col.bar("x", direction="left", color="#111111", format="usd0")
+                    .label(True, position="outside_end", auto=True)
+                    .scale(domain=(0, 100))
+                ],
+                {"width": "100%"},
+            ),
+        ]
+    )
+    mount(page, live_server, cases)
+    page.locator("section").evaluate_all("nodes => nodes.forEach(el => el.style.width = '240px')")
+    page.wait_for_function("document.querySelector('#case-0 .et-mark-label').dataset.labelPosition === 'inside_end'")
+    for index, preferred in enumerate(positions):
+        labels = page.locator(f"#case-{index} .et-mark-label")
+        assert labels.count() == 4
+        assert labels.first.get_attribute("data-label-position") == preferred.replace("outside", "inside")
+        if preferred.endswith("end"):
+            assert labels.nth(1).get_attribute("data-label-position") == preferred
+            assert labels.nth(2).get_attribute("data-label-position") == "outside_end"
+            assert labels.nth(3).get_attribute("data-label-position") == "outside_end"
+        else:
+            assert labels.nth(2).get_attribute("hidden") is not None
+            assert labels.nth(3).get_attribute("hidden") is not None
+    signed = page.locator("#case-4 .et-mark-label")
+    assert signed.first.get_attribute("data-label-position") == "inside_end"
+    assert "et-mark-label-align-begin" in signed.first.get_attribute("class")
+    assert "et-mark-label-align-end" in signed.last.get_attribute("class")
+    assert page.locator("#case-5 .et-mark-label").first.get_attribute("data-label-position") == "inside_end"
+    assert signed.first.evaluate("el => getComputedStyle(el).color") == "rgb(255, 255, 255)"
+    capture(page, "automatic-bar-labels.png")
+    # Narrow enough for neither position, then widen until the original preference fits again.
+    page.locator("section").first.evaluate("el => el.style.width = '24px'")
+    first = page.locator("#case-0 .et-mark-label").first
+    page.wait_for_function("document.querySelector('#case-0 .et-mark-label').hidden")
+    assert first.get_attribute("title") == "Revenue: $95"
+    assert first.evaluate("el => getComputedStyle(el).display") == "none"
+    page.locator("section").first.evaluate("el => el.style.width = '2000px'")
+    page.wait_for_function("document.querySelector('#case-0 .et-mark-label').dataset.labelPosition === 'outside_end'")
+    assert first.get_attribute("hidden") is None
+    assert first.evaluate("el => getComputedStyle(el).color") != "rgb(255, 255, 255)"
+
+
+def test_fluent_label_typography_and_placement_in_the_browser(page, live_server):
+    annotation = label.fmt("num0").bold().auto_position("inside end").colour("black")
+    typography = label.font("monospace").italic().figure_style("proportional").colour("purple")
+    mount(
+        page,
+        live_server,
+        [
+            (
+                "Fluent labels",
+                [{"x": 95, "y": 50}, {"x": 3, "y": 20}],
+                [
+                    col.bar("x", title="Automatic", color="#a5d9e0", label=annotation).scale(domain=(0, 100)),
+                    col.point("y", title="Point", label=typography.position("above").bold()).scale(domain=(0, 100)),
+                    col.stacked_bar("x", "y", title="Stack", labels=typography.bold(), colors=["#a5d9e0", "#d4c4e4"]),
+                ],
+                {"width": "100%"},
+            )
+        ],
+    )
+    labels = page.locator("#case-0 td:first-child .et-mark-label")
+    assert labels.first.inner_text() == "95"
+    assert labels.first.get_attribute("data-label-position") == "inside_end"
+    assert labels.nth(1).get_attribute("data-label-position") == "outside_end"
+    for node in page.locator("#case-0 [data-mark-label]").all():
+        assert node.evaluate("el => getComputedStyle(el).fontWeight") == "600"
+    for selector in ("td:nth-child(2) .et-mark-label", "td:nth-child(3) .et-mark-stack-label"):
+        node = page.locator(f"#case-0 {selector}").first
+        assert node.is_visible()
+        assert node.evaluate("el => getComputedStyle(el).fontFamily") == "monospace"
+        assert node.evaluate("el => getComputedStyle(el).fontStyle") == "italic"
+        assert node.evaluate("el => getComputedStyle(el).fontVariantNumeric") == "lining-nums proportional-nums"
+        assert node.evaluate("el => getComputedStyle(el).color") == "rgb(128, 0, 128)"
+    capture(page, "fluent-labels.png")
 
 
 @pytest.mark.parametrize(

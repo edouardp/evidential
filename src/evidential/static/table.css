@@ -743,6 +743,7 @@ tbody tr:last-child .et-bar-center .et-bar-axis { bottom: var(--et-bar-pad, 0); 
   box-sizing: border-box;
 }
 .et-mark-label-text { flex: 0 0 auto; }
+.et-mark-label[hidden] { display: none; }
 .et-mark-label-left { transform: translate(calc(-100% - 0.15rem), -50%); }
 .et-mark-label-inside.et-mark-label-align-center { justify-content: center; }
 .et-marks-tall { height: 2.8em; }

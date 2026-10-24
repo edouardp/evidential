@@ -29,8 +29,9 @@ Quick start::
     )
 """
 
-from . import col, duck, rows
+from . import col, duck, label, rows
 from ._column import CURRENCY_CODES, Column, ColumnGroup
+from ._label import Label
 from .aggregations import BUILTIN_AGGREGATIONS, apply_aggregations, resolve_aggregation
 from .client import grouped_records
 from .comparison import comparison_table
@@ -63,6 +64,8 @@ __all__ = [
     "TableOptions",
     "ColumnOptions",
     "col",
+    "label",
+    "Label",
     "Column",
     "ColumnGroup",
     "rows",

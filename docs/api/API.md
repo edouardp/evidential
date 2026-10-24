@@ -630,23 +630,55 @@ columns=[
 - **Strip input** — a list of categories (`LIST<category>`) is equal-width; a
   list of `{start, end, category}` structs is positioned on a shared x axis, and
   a list of `{position, category}` structs fills each state to the next.
-- **Labels** — `label=True` labels the mark's own value, `label="@field"` labels
-  another field, `label={source=, text=, prefix=, suffix=, format=, position=,
-  align=, overflow=, min_width=, color=}` is the mapping form, and `.label(...)`
-  the long form. Repeated `.label(...)` calls refine the latest mark's label,
-  retaining its source unless a new source/text/value is supplied. `align`
-  (`"begin"|"center"|"end"`) places text inside a bar or stack segment. Where a
-  label position is omitted, bars label `outside_end` and points `center`.
-  For bars, `position="outside_start"` places the label beside the origin on
-  the opposite side from the bar: positive bars label left of zero, negative
-  bars label right of zero. A symmetric domain gives both signs equal space
-  without reserving room for labels beyond the bar tips.
-  Labels that do not fit hide completely by default, with the original values
-  retained in the mark tooltip and accessible text; `overflow="show"` opts out.
-  `min_width` is a pixel threshold. `.range(..., cap="line", overflow="arrow")`
-  keeps endpoint caps and independently indicates out-of-domain intervals.
-  Text inside bars and stack segments defaults to white on dark fills and dark
-  text on light fills. An explicit label `color` overrides this choice.
+- **Labels** — use the immutable `label` builder to format and style a mark's
+  annotation. It shares `fmt`/`format`, `font`, `font_color`, `bold`, `italic`,
+  `font_weight`, `font_style` and `figure_style` with text columns. For labels,
+  `color` and `colour` are aliases of `font_color`.
+
+  ```python
+  from evidential import col, label
+
+  annotation = label.fmt("num0").bold().auto_position("inside end").colour("black")
+  col.bar("sales", label=annotation)
+  col.bar("sales", label=annotation.auto_position("outside start"))
+  col.point("target", label=label.fmt("num1").position("above").italic())
+  col.stacked_bar("cash", "card", labels=label.fmt("num0").bold().colour("black"))
+  ```
+
+  With no explicit binding, a label shows the mark's value. Use
+  `label.source("other_field")` (or a callable) for another value,
+  `label.text("literal")` for fixed text, and `.value()` to return to the mark's
+  value. `.prefix(...)` and `.suffix(...)` surround the formatted text.
+  `.align("begin"|"center"|"end")` aligns text within the mark; `left` and `right`
+  are aliases for `begin` and `end`. Stacks also support `.share()` to label each
+  segment with its share of the total (default format `pct0`).
+
+  `.position(...)` fixes placement and turns automatic placement off.
+  `.auto_position(...)` tries the preferred position, then swaps inside/outside
+  at the same start/end edge, omitting the label if neither fits. Every fit,
+  including resizing, retries the original preference. The four automatic
+  preferences are `inside start`, `inside end`, `outside start` and `outside end`.
+  Fixed labels also support `center`, `above` and `below`. Spaces, underscores
+  and hyphens are accepted in positions. Automatic placement applies to bars.
+
+  `label=True`, `label="@field"`, literal strings, dictionaries and
+  `.label(...)` remain supported. Repeated `.label(...)` calls refine the latest
+  mark's annotation, preserving its binding unless another is specified. The
+  mapping form accepts `source`, `text`, `value`, `prefix`, `suffix`, `format`,
+  `position`, `auto`, `align`, `overflow`, `min_width`, `color`, `font`,
+  `font_weight`, `font_style` and `figure_style`. For example,
+  `label={"format": "num0", "position": "inside_end", "auto": True}` is an
+  automatic label. With no position, bars default to `outside_end`, centered
+  bars to `outside_start`, points to `center`, and stack segments to `inside_end`.
+
+  For bars, `outside_start` places the label across the origin from the bar:
+  positive bars label left of zero, negative bars right of zero. Start/end
+  follows the numeric origin/tip for both signs and mirrored bars.
+  Labels that do not fit hide completely by default; the original values remain
+  in the mark's accessibility text. `.overflow("show")` permits overflow for
+  fixed labels; automatic labels always omit text when neither candidate fits.
+  `.min_width(pixels)` adds a minimum available width. Inside and stacked labels
+  choose light/dark text for contrast; an explicit color overrides this choice.
 - **Scale** — `.scale(domain=(lo, hi), include_zero=, unit=, transform=`
   `"linear"|"log", axis=, axis_position="top"|"bottom", gridlines=)` fixes the
   shared quantitative axis; `.reference_line(value, label=, color=)` adds a rule

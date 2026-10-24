@@ -112,7 +112,9 @@ layout without sacrificing bar length for labels at the tips. The default
 `outside_end` continues to place labels beyond the tips. Explicit `side` takes
 precedence over the value's sign when choosing the label's side.
 Labels support `overflow="hide"|"show"`, `min_width` in pixels and `color`;
-the default hides a label completely if it cannot fit. The original values
+bar labels also support opt-in `auto=True` to try the configured inside/outside
+position and its counterpart at the same edge (see [ADR-068](068-automatic-bar-label-placement.md)).
+The default hides a label completely if it cannot fit. The original values
 remain in the track's accessible text and tooltip. Ranges support
 `overflow="arrow"` independently of `cap="line"|"dot"|"none"`; the earlier
 `cap="arrow"` spelling remains compatible. Paint order follows declaration

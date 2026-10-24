@@ -116,7 +116,7 @@ def _(EvidentialTable, col, mo, monthly):
             columns=[
                 col.date("pickup_day", fmt="date", title="Day"),
                 col.text("payment"),
-                col.integer("distance").bar(),
+                col.bar("distance", format='num0', label=True),
                 col.currency("revenue", decimals=0),
                 col.integer("trips"),
             ],
@@ -164,7 +164,7 @@ def _(col, connection, grouped_table, mo):
             measure_config={
                 "trips": col.integer("trips"),
                 "distance": col.integer("distance"),
-                "revenue": col.currency("revenue", decimals=0).bar(color="#8888ff66"),
+                "revenue": col.bar("revenue", format='usd0', color="#8888ff66", label=True),
             },
         )
     )

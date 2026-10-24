@@ -3,7 +3,7 @@ from __future__ import annotations
 import duckdb
 import pytest
 
-from evidential import pivot_table
+from evidential import col, pivot_table
 from evidential.duck import connect
 
 
@@ -59,6 +59,25 @@ def test_pivot_values(sales: duckdb.DuckDBPyConnection) -> None:
     assert rows["Toys"]["sales__2022"] == 150.0
     assert rows["Gear"]["sales__2022"] == 300.0  # 250 + 50
     assert rows["Gear"]["sales__Total"] == 500.0
+
+
+def test_pivot_rebinds_labeled_measure_marks_to_each_output(sales):
+    config = col.bar("sales", format="usd0", label="@sales", color="@category")
+    table = pivot_table(
+        sales,
+        "SELECT * FROM sales",
+        dimensions=["category"],
+        pivots=["year"],
+        measures=["sum(sales) AS sales"],
+        measure_config={"sales": config},
+    )
+    for column in table.columns[1:]:
+        mark = column["encodings"][0]
+        assert mark["source"] == column["name"]
+        assert mark["label"]["source"] == column["name"]
+        assert mark["color_column"] == "category"
+        assert any(row.get(mark["source"]) is not None for row in table.rows)
+    assert config["encodings"][0]["source"] == "sales"
 
 
 def test_pivot_measures_first(sales: duckdb.DuckDBPyConnection) -> None:

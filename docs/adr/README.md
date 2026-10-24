@@ -85,6 +85,7 @@ dated, immutable record of the decisions behind them.
 | [064](064-display-only-row-layout.md) | Display-Only Row Layout | Accepted |
 | [065](065-distribution-uncertainty-bands.md) | Distribution as an Uncertainty Band | Accepted |
 | [066](066-consistent-public-api-preparation.md) | Consistent Public API Preparation | Accepted |
+| [067](067-remove-scalar-bar-decorator.md) | Remove the Scalar Bar Decorator | Accepted |
 
 ## Creating New ADRs
 

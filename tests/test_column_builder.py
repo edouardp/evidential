@@ -12,11 +12,20 @@ ROWS = [{"city": "NYC", "sales": 4200.0, "status": "ok", "change": 0.12, "trend"
 
 
 def test_column_builder_chains_are_immutable() -> None:
-    base = col.number("sales")
+    base = col.bar("sales", label=True)
     styled = base.fmt("usd0").bar(color="#93c5fd", fit_to_data=True)
-    assert dict(base) == {"name": "sales", "type": "number"}
-    assert styled["viz"] == "bar"
-    assert styled["bar_options"] == {"bar_color": "#93c5fd", "fit_to_data": True}
+    assert dict(base) == {
+        "name": "sales",
+        "type": "number",
+        "encodings": [{"kind": "bar", "source": "sales", "label": {"value": True}}],
+    }
+    assert styled["encodings"][0] == {
+        "kind": "bar",
+        "source": "sales",
+        "label": {"value": True},
+        "color": "#93c5fd",
+        "fit_to_data": True,
+    }
     assert "viz" not in base
 
 
@@ -69,18 +78,18 @@ def test_kind_factories_validate_and_chain() -> None:
         col.currency("sales", code="xyz")
     with pytest.raises(ValueError, match="percent decimals"):
         col.percent("share", decimals=9)
-    chained = col.currency("sales", code="gbp").bar(color="#111")
-    assert (chained["fmt"], chained["viz"]) == ("gbp", "bar")
+    chained = col.bar("sales", format="gbp", color="#111", label=True)
+    assert (chained["fmt"], chained["encodings"][0]["kind"]) == ("gbp", "bar")
 
 
 def test_columns_accept_the_builder() -> None:
     table = EvidentialTable(
         ROWS,
-        columns=[col.text("city"), col.number("sales").fmt("usd0").bar(color="#111")],
+        columns=[col.text("city"), col.bar("sales", color="#111", label=True).fmt("usd0")],
     )
     assert [column["name"] for column in table.columns] == ["city", "sales"]
     assert table.columns[1]["fmt"] == "usd0"
-    assert table.columns[1]["viz"] == "bar"
+    assert table.columns[1]["encodings"][0]["kind"] == "bar"
 
 
 def test_column_config_accepts_the_builder() -> None:
@@ -179,8 +188,8 @@ def test_auto_keeps_the_inferred_definition() -> None:
     assert by_name["pop"]["fmt"] == "num0"  # the inferred integer format survives
     assert by_name["city"]["type"] == "string"  # a bare name infers too
 
-    refined = EvidentialTable(rows, columns=[col.auto("pop").bar(color="#111")])
-    assert (refined.columns[0]["type"], refined.columns[0]["viz"]) == ("number", "bar")
+    refined = EvidentialTable(rows, columns=[col.auto("pop").color(scale="blue")])
+    assert (refined.columns[0]["type"], refined.columns[0]["viz"]) == ("number", "color")
 
     patched = EvidentialTable(rows, column_config={"pop": col.auto("pop").fmt("usd0")})
     pop = next(column for column in patched.columns if column["name"] == "pop")
@@ -240,25 +249,31 @@ def test_named_colour_scales_are_validated() -> None:
 
 
 def test_bar_pad_option() -> None:
-    assert col.number("x").bar(center=True, pad=4)["bar_options"]["pad"] == 4
-    assert col.number("x").bar(pad="0.25rem")["bar_options"]["pad"] == "0.25rem"
+    assert col.bar("x", center=True, pad=4, label=True)["encodings"][0]["pad"] == 4
+    assert col.bar("x", pad="0.25rem", label=True)["encodings"][0]["pad"] == "0.25rem"
 
 
 def test_bar_direction_reference_and_colour_column() -> None:
-    spec = col.currency("spend", decimals=0).bar(
+    spec = col.bar(
+        "spend",
+        format="usd0",
         direction="left",
         reference=4.3,
         reference_color="#0f766e",
         reference_label="OECD median",
+        label=True,
     )
-    assert spec["bar_options"] == {
+    assert spec["encodings"][0] == {
+        "kind": "bar",
+        "source": "spend",
+        "label": {"value": True},
         "direction": "left",
         "reference": 4.3,
         "reference_color": "#0f766e",
         "reference_label": "OECD median",
     }
     # `color="@column"` names a per-row colour column, not a literal colour.
-    assert col.number("spend").bar(color="@color")["bar_options"] == {"bar_color_column": "color"}
+    assert col.bar("spend", color="@color", label=True)["encodings"][0]["color_column"] == "color"
 
 
 def test_bar_options_in_the_dict_form() -> None:

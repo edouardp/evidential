@@ -7,7 +7,7 @@ can build a column from and nothing else::
 
     columns=[
         col.text("city"),
-        col.currency("sales", code="usd").bar(color="#93c5fd"),
+        col.bar("sales", format="usd", label=True, color="#93c5fd"),
         col.percent("share"),
         col.integer("orders"),
         col.subcolumns("Latest", [col.number("gdp"), col.text("gdp_period")]),
@@ -26,7 +26,7 @@ be built, reused and composed:
   ``.hide()``, ``.info()``, ``.footnote()``, ``.sort_by()``, ``.highlight()``
 - cell content: ``.markdown()``, ``.html()``, ``.link()``, ``.image()``,
   ``.logo()``, ``.template()``
-- visualisations: ``.viz()``, ``.bar()``, ``.color()``, ``.delta()``,
+- visualisations: ``col.bar(..., label=True)``, ``.viz()``, ``.color()``, ``.delta()``,
   ``.sparkline()``, ``.chip()``
 
 ``.fmt("…")`` is the escape hatch for a custom format code (``num0k``, date
@@ -42,7 +42,7 @@ and ``scale="@name"`` on :meth:`~evidential.Column.color` /
 
 A :class:`~evidential.Column` is a :class:`~collections.abc.Mapping`, so it is
 accepted anywhere a column definition is — including
-``column_config={"sales": col.currency("sales").bar(...)}``.
+``column_config={"sales": col.bar("sales", format="usd", label=True)}``.
 """
 
 from ._column import (

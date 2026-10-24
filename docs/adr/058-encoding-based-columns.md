@@ -78,8 +78,8 @@ The wire format gains three optional keys on a column:
 **Compatibility (updated by ADR-066).** Every `MarkColumn` serializes to
 `encodings`, including a single plain bar, so adding a scale or annotation
 cannot switch rendering implementations. Mark labels are explicit. Classic
-`viz="bar"` dictionaries and `.number(...).bar()` remain supported with their
-existing default value labels.
+`viz="bar"` dictionaries remain supported. ADR-067 removes scalar `.bar()`
+decorators; labeled bars use `col.bar(source, label=True)`.
 
 ## Consequences
 

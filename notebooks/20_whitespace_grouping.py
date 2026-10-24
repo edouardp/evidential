@@ -106,7 +106,7 @@ def _(col, connection, grouped_table, mo):
             row_lines=False,
             title="Grouped by category",
             max_height="420px",
-            measure_config={"sales": col.currency("sales", decimals=0).bar()},
+            measure_config={"sales": col.bar("sales", format='usd0', label=True)},
         )
     )
     return

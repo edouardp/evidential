@@ -10,6 +10,19 @@ from evidential._column import Column
 from evidential.rules import cells_body, cols_merge, cols_merge_n_pct, cols_merge_range, tab_format, text_transform
 
 
+@pytest.mark.parametrize("factory", [col.number, col.integer, col.currency, col.percent, col.auto])
+def test_scalar_builders_do_not_offer_the_removed_bar_decoration(factory):
+    assert not hasattr(factory("x"), "bar")
+
+
+def test_bar_marks_keep_explicit_labels_and_mark_composition():
+    column = col.bar("x", format="usd0", label=True).bar("previous", color="gray").point("target")
+    assert column["fmt"] == "usd0"
+    assert [mark["kind"] for mark in column["encodings"]] == ["bar", "bar", "point"]
+    assert column["encodings"][0]["label"] == {"value": True}
+    assert "label" not in column["encodings"][1]
+
+
 @pytest.mark.parametrize(
     "factory",
     [
@@ -78,8 +91,15 @@ def test_mutations_resolve_callables_and_options_atomically():
 
 
 def test_refinement_preserves_options_and_label_noop():
-    classic = col.number("x").bar(color="blue", center=True).bar(pad=4)
-    assert classic["bar_options"] == {"bar_color": "blue", "center": True, "pad": 4}
+    bar = col.bar("x", color="blue", center=True, label=True).bar(pad=4)
+    assert bar["encodings"][0] == {
+        "kind": "bar",
+        "source": "x",
+        "label": {"value": True},
+        "color": "blue",
+        "center": True,
+        "pad": 4,
+    }
     assert col.number("x").color(scale="blue", min=0).color(max=10)["color_options"] == {
         "color_scale": "blue",
         "min": 0,

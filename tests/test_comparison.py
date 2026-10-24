@@ -3,7 +3,7 @@ from __future__ import annotations
 import duckdb
 import pytest
 
-from evidential import comparison_table
+from evidential import col, comparison_table
 from evidential.duck import connect
 
 
@@ -67,3 +67,21 @@ def test_comparison_rejects_bad_period(orders: duckdb.DuckDBPyConnection) -> Non
             date_column="order_date",
             compare_vs="fortnightly",
         )
+
+
+def test_comparison_rebinds_prior_marks_and_keeps_change_columns_numeric(orders):
+    table = comparison_table(
+        orders,
+        "SELECT * FROM orders",
+        dimensions=["category"],
+        measures=["sum(sales) AS sales"],
+        date_column="order_date",
+        measure_config={"sales": col.bar("sales", format="usd0", label=True).scale(axis=True)},
+    )
+    columns = {column["name"]: column for column in table.columns}
+    assert columns["sales"]["encodings"][0]["source"] == "sales"
+    assert columns["sales_prior"]["encodings"][0]["source"] == "sales_prior"
+    for name in ("sales_delta", "sales_pct"):
+        assert "encodings" not in columns[name]
+        assert "scale" not in columns[name]
+    assert columns["sales_pct"]["viz"] == "delta"

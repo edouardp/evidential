@@ -141,7 +141,7 @@ def _(col, connection, grouped_table, mo):
             max_height="460px",
             dimension_config={"category": col.text("category"), "item": col.text("item")},
             measure_config={
-                "sales": col.currency("sales", decimals=0).bar().total_fmt("usd2"),
+                "sales": col.bar("sales", format='usd0', label=True).total_fmt("usd2"),
                 "orders": col.integer("orders"),
             },
         )
@@ -183,7 +183,7 @@ def _(EvidentialTable, col, connection, mo):
                 col.text("category", title="Category"),
                 col.text("item", title="Item"),
                 col.text("channel_group", title="Channel"),
-                col.currency("sales", decimals=2, title="Sales").bar(),
+                col.bar("sales", title="Sales", format='usd2', label=True),
             ],
         )
     )

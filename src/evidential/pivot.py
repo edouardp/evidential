@@ -15,6 +15,7 @@ from typing import Any
 from .aggregations import apply_aggregations
 from .data import jsonify, make_column
 from .grouped import _parse_measure, decorate_grouped_rows
+from .marks import rebind_measure
 from .table import EvidentialTable
 
 __all__ = ["pivot_table"]
@@ -206,7 +207,7 @@ def pivot_table(
         overrides.setdefault("type", "number")
         overrides.setdefault("align", "right")
         overrides.setdefault("column_group", group)
-        return make_column(name, **overrides)
+        return make_column(name, **rebind_measure(overrides, alias, name))
 
     if measures_first:
         # Group by measure: Sales > 2021 | 2022 | Total

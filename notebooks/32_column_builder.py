@@ -117,7 +117,7 @@ def _(EvidentialTable, col, connection, mo, settings, summary_sql):
                 col.text("category").group("Product").info("The product category"),
                 col.text("item").group("Product"),
                 col.chip("channel_group").group("Channel"),
-                col.currency("sales").bar(color="#93c5fd", fit_to_data=True).group("Performance"),
+                col.bar("sales", format='usd', color="#93c5fd", fit_to_data=True, label=True).group("Performance"),
                 col.integer("orders").group("Performance"),
                 col.currency("avg_sale", decimals=2)
                 .title("Avg sale")
@@ -139,8 +139,8 @@ def _(mo):
     ## A default table to play with
 
     The same data with no table settings and plain `col.*` columns. Open a new
-    cell and try chaining, e.g. `col.currency("sales").bar(color="#f97316")`,
-    add `.group("Performance")`, or swap `.bar(...)` for `.color(...)` /
+    cell and try chaining, e.g. `col.bar("sales", format="usd", color="#f97316", label=True)`,
+    add `.group("Performance")`, or try `.color(...)` /
     `.delta(...)` / `.sparkline(...)`.
     """)
     return
@@ -196,7 +196,7 @@ def _(EvidentialTable, col, connection, mo, summary_sql):
                 col.text("category"),
                 col.text("item"),
                 col.subcolumns("Volume", [
-                        col.currency("sales").bar(color="#93c5fd", fit_to_data=True),
+                        col.bar("sales", format='usd', color="#93c5fd", fit_to_data=True, label=True),
                         col.integer("orders"),
                     ],
                 ),
@@ -270,7 +270,7 @@ def _(mo):
       treats the value as an already-percent number, and a temporal kind's
       `relative=` (a unit or `True`) renders it relative to now.
     - Chain methods refine any kind: `.fmt()`, `.title()`, `.align()`, `.group()`,
-      `.info()`, `.bar()`, `.color()`, `.delta()`, `.sparkline()`, `.chip()`…
+      `.info()`, `.color()`, `.delta()`, `.sparkline()`, `.chip()`…
       Each returns a new column, so specs are reusable.
     - A `Column` is a mapping, so it works in `columns=[...]` *and* as a
       `column_config={...}` value.

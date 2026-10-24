@@ -99,7 +99,7 @@ def _(col, comparison_table, connection, mo):
             title="Sales vs prior quarter",
             page_size=10,
             row_shading=True,
-            measure_config={"sales": col.currency("sales", decimals=0).bar()},
+            measure_config={"sales": col.bar("sales", format='usd0', label=True)},
         )
     )
     qoq

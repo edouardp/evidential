@@ -71,6 +71,31 @@ def capture(page, name):
         page.screenshot(path=str(Path(path).with_name(name)), full_page=True)
 
 
+@pytest.mark.parametrize(
+    ("notebook", "definition"),
+    [
+        ("09_pivots.py", "by_channel"),
+        ("11_comparisons.py", "qoq"),
+        ("35_negatives.py", "change_table"),
+        ("43_cell_presentations.py", "presentations"),
+    ],
+)
+def test_migrated_scalar_bar_demos_render_marks_and_value_labels(page, live_server, notebook, definition):
+    path = Path(__file__).resolve().parents[2] / "notebooks" / notebook
+    _, definitions = runpy.run_path(str(path))["app"].run()
+    table = definitions[definition].widget
+    mount(page, live_server, [(definition, table, [])])
+    assert page.locator(".et-mark-bar").count() > 0
+    assert page.locator(".et-mark-label").count() > 0
+    assert page.locator(".et-bar-wrap").count() == 0
+    for column in table.columns:
+        for encoding in column.get("encodings", []):
+            if encoding["kind"] == "bar":
+                assert encoding.get("label")
+                assert any(row.get(encoding["source"]) is not None for row in table.rows)
+    capture(page, f"bar-migration-{notebook.removesuffix('.py')}.png")
+
+
 def test_consistent_api_formats_colors_and_mark_annotations(page, live_server):
     from evidential.rules import cells_body, tab_format
 

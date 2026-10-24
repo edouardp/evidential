@@ -125,7 +125,7 @@ def _(col, connection, mo, pivot_table):
             subtotal_position="top",
             title="Sales by category and channel group",
             max_height="460px",
-            measure_config={"sales": col.currency("sales", decimals=0).bar()},
+            measure_config={"sales": col.bar("sales", format='usd0', label=True)},
         )
     )
     by_channel

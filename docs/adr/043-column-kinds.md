@@ -76,10 +76,9 @@ was rejected in ADR-042.
   forced (`whole=`, `code=`).
 - Good, because an unknown currency or out-of-range `decimals` fails at the call
   with a suggestion, not at render.
-- Bad, because some kinds overlap the chain modifiers (`col.bar` is sugar for
-  `col.number(...).bar()`, `col.flag` for `.fmt("flag")`). This is deliberate:
-  the factory is the fast path, the chain is the refinement, and both produce the
-  same `Column`.
+- Note: some kinds overlap chain modifiers (`col.flag` for `.fmt("flag")`).
+  Bars use mark factories with owned labels; ADR-067 removes the former scalar
+  bar decoration so their data and annotations have one declaration path.
 - Note: the kind list is curated; adding to it is a deliberate act, not an
   automatic format-per-factory.
 - Note: `col.currency` defaults to the auto-scaling code, which the renderer

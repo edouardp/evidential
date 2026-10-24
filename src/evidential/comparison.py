@@ -12,6 +12,7 @@ from typing import Any
 
 from .data import make_column
 from .grouped import _parse_measure
+from .marks import rebind_measure
 from .table import EvidentialTable
 
 __all__ = ["comparison_table"]
@@ -146,12 +147,15 @@ def comparison_table(
         base.setdefault("align", "right")
         columns.append(make_column(alias, **base))
 
-        columns.append(make_column(alias + "_prior", **{**base, "title": "Prior"}))
+        prior = rebind_measure(base, alias, alias + "_prior")
+        columns.append(make_column(alias + "_prior", **{**prior, "title": "Prior"}))
 
         delta = {**base, "title": "Change"}
         delta.pop("viz", None)
         delta.pop("bar_options", None)
         delta.pop("color_options", None)
+        for key in ("encodings", "scale", "references"):
+            delta.pop(key, None)
         if delta_options:
             delta["delta_options"] = dict(delta_options)
         columns.append(make_column(alias + "_delta", **delta))
@@ -159,6 +163,8 @@ def comparison_table(
         pct = {**base, "title": "% change", "fmt": "pct1", "viz": "delta"}
         pct.pop("bar_options", None)
         pct.pop("color_options", None)
+        for key in ("encodings", "scale", "references"):
+            pct.pop(key, None)
         if delta_options:
             pct["delta_options"] = dict(delta_options)
         columns.append(make_column(alias + "_pct", **pct))

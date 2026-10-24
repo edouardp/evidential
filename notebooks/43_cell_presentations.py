@@ -70,8 +70,7 @@ def _(EvidentialTable, col, funds, mo, settings):
             ),
             columns=[
                 col.text("fund"),
-                col.number("return_pct", fmt="num1", title="Return")
-                .bar(color="#2563eb")
+                col.bar("return_pct", fmt="num1", title="Return", color="#2563eb", label=True)
                 .cell_style(background="@band"),
                 col.text("band").hide(),
             ],

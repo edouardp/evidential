@@ -162,7 +162,7 @@ def _(EvidentialTable, col, connection, mo):
                         col.number("Rating.imdb", fmt="num1")
                             .color(scale="rdylgn", min=0, max=10
                         ),
-                        col.number("Rating.votes").bar(fit_to_data=True, color="#93c5fd"),
+                        col.bar("Rating.votes", fit_to_data=True, color="#93c5fd", label=True),
                     ],
                     #highlight="#55006611",
                 ),
@@ -209,7 +209,7 @@ def _(EvidentialTable, col, connection, mo):
             row_shading=True,
             columns=[
                 col.text("genre"),
-                col.integer("films").bar(color="#93c5fd"),
+                col.bar("films", format='num0', color="#93c5fd", label=True),
                 col.percent("Share.films", decimals=1, title="Share"),
                 col.number("Rating.avg", fmt="num2", title="Avg rating").color(
                     scale="rdylgn", min=0, max=10
@@ -241,7 +241,7 @@ def _(col, connection, mo, pivot_table):
             title="Titles by decade and media type",
             page_size=12,
             dimension_config={"decade": col.number("decade", fmt="num", align="left")},
-            measure_config={"films": col.integer("films").bar(color="#93c5fd")},
+            measure_config={"films": col.bar("films", format='num0', color="#93c5fd", label=True)},
         )
     )
     by_decade

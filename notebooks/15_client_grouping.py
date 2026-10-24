@@ -63,7 +63,7 @@ def _(col, grouped_records, mo, sales):
             collapsible=True,
             title="Accordion groups",
             measure_config={
-                "sales": col.currency("sales", decimals=0).bar(),
+                "sales": col.bar("sales", format='usd0', label=True),
                 "orders": col.integer("orders"),
             },
         )
@@ -84,7 +84,7 @@ def _(col, grouped_records, mo, sales):
             group_type="section",
             title="Section groups (merged cells)",
             measure_config={
-                "sales": col.currency("sales", decimals=0).bar(),
+                "sales": col.bar("sales", format='usd0', label=True),
                 "orders": col.integer("orders"),
             },
         )

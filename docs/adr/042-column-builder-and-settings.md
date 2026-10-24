@@ -34,11 +34,11 @@ Chosen option: "`col` + `settings`".
 
 `col.text` / `number` / `date` / `boolean` / `array` / `sparkline` / `chip` /
 `delta` / `link` / `markdown` / `image` / `logo` return an immutable `Column`;
-chain methods (`.fmt()`, `.bar()`, `.color()`, `.delta()`, `.sparkline()`,
+chain methods (`.fmt()`, `.color()`, `.delta()`, `.sparkline()`,
 `.chip()`, `.group()`, `.info()`, …) return a **new** column, so a spec can be
 reused. A `Column` is a `Mapping`, so it is accepted anywhere a column
-definition is — `columns=[col.number("sales").bar(...)]` **and**
-`column_config={"sales": col.number("sales").bar(...)}`. Factories default the
+definition is — `columns=[col.bar("sales", label=True)]` **and**
+`column_config={"sales": col.bar("sales", label=True)}`. Factories default the
 `type` by kind (`delta` → `number`, `chip` → `string`, `sparkline` → `array`) so
 an explicit column keeps a sensible type instead of falling back to `string`.
 

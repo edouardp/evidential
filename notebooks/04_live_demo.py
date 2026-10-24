@@ -148,7 +148,7 @@ def _(LiveEvidentialTable, col, connection):
             "pickup": col.text("pickup", title="Pickup"),
             "payment": col.text("payment", title="Payment"),
             "part_of_day": col.text("part_of_day", title="Time of day"),
-            "trip_distance": col.number("trip_distance", fmt="num1", title="Distance").bar(),
+            "trip_distance": col.bar("trip_distance", fmt="num1", title="Distance", label=True),
             "fare_amount": col.currency("fare_amount", decimals=2, title="Fare"),
             "tip_amount": col.currency("tip_amount", decimals=2, title="Tip"),
             "tip_rate": col.percent("tip_rate", decimals=1, title="Tip rate").color(

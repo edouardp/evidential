@@ -67,7 +67,7 @@ def _(col, connection, mo, query_table):
             columns=[
                 col.text("category"),
                 col.date("order_datetime", fmt="shortdate", title="Ordered"),
-                col.currency("sales", decimals=2).bar(),
+                col.bar("sales", format='usd2', label=True),
             ],
         )
     )
@@ -88,7 +88,7 @@ def _(col, connection, mo, query_table):
             columns=[
                 col.auto("category"),
                 col.date("order_datetime", fmt="shortdate", title="Ordered"),
-                col.currency("sales", decimals=2).bar(),
+                col.bar("sales", format='usd2', label=True),
             ],
         )
     )
@@ -129,7 +129,7 @@ def _(LiveEvidentialTable, col, connection):
         column_config={
             "order_datetime": col.date("order_datetime", fmt="shortdate", title="Ordered"),
             "category": col.text("category"),
-            "sales": col.currency("sales", decimals=2).bar(),
+            "sales": col.bar("sales", format='usd2', label=True),
         },
     )
     live

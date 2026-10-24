@@ -15,7 +15,8 @@ A ``MarkColumn`` is still an immutable :class:`~evidential.Column` (a
 
 Every mark column serializes to the same encoding shape, independent of which
 annotations, scales or overlays are configured. Classic ``viz="bar"`` mappings
-and ``col.number(...).bar(...)`` remain supported as compatibility declarations.
+remain supported as compatibility declarations. Scalar columns do not expose
+a bar decoration; use ``col.bar(..., label=True)`` for a bar with a value label.
 Callable bindings are evaluated against prepared rows before crossing JSON.
 
 """
@@ -408,8 +409,8 @@ class MarkColumn(Column):
     ) -> MarkColumn:
         """Add a bar bound to ``source``; ``label=`` annotates this bar.
 
-        Called without a source it refines the most recently declared encoding
-        (kept for signature-compatibility with the classic ``Column.bar``).
+        Called without a source it refines the last bar; pass a source to
+        append a new bar. Scalar column builders do not have this method.
         """
         column = self._with(**_clean(title=title, fmt=format_code(format, fmt), align=align))
         aliases = {"color_negative": color_negative, "negative_color": negative_color, "size": size, "height": height}
@@ -633,6 +634,30 @@ def _factory_column(source: Any, options: dict[str, Any], **base: Any) -> MarkCo
     metadata = {**metadata, **{key: value for key, value in base.items() if value is not None}}
     alias(metadata, "fmt", "format")
     return _mark_column(source, **metadata)
+
+
+def rebind_measure(column: Mapping[str, Any], source: str, target: str) -> dict[str, Any]:
+    """Copy a measure declaration onto a projected field, retaining other bindings.
+
+    Pivot/prior-period outputs rename a measure. Only references to that measure
+    change; literal labels/colors and independent dimension bindings stay intact.
+    """
+    spec = dict(column)
+    if not spec.get("encodings"):
+        return spec
+    encodings = []
+    for original in spec["encodings"]:
+        encoding = dict(original)
+        for role in ("source", "high", "color_column", "color_negative_column", "outliers"):
+            if encoding.get(role) == source:
+                encoding[role] = target
+        if encoding.get("parts"):
+            encoding["parts"] = {key: target if value == source else value for key, value in encoding["parts"].items()}
+        if (encoding.get("label") or {}).get("source") == source:
+            encoding["label"] = {**encoding["label"], "source": target}
+        encodings.append(encoding)
+    spec["encodings"] = encodings
+    return spec
 
 
 def _resolve_column(

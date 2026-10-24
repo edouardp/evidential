@@ -32,8 +32,7 @@ Chosen option: a `cell_style` column option and a `.cell_style(...)` chain
 method, available on every column.
 
 ```python
-col.number("return_pct", fmt="num1") \
-   .bar(color="#2563eb") \
+col.bar("return_pct", fmt="num1", color="#2563eb", label=True) \
    .cell_style(background="@band", color="#111", border="1px solid #e2e8f0")
 ```
 

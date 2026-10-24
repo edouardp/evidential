@@ -35,8 +35,8 @@ def _(mo):
     A column can carry **several marks**. `col.bar(...).bar(...)` overlays two
     bars; `.point(...)` adds a target; `col.range(...)` draws an interval. Every
     mark binds its own field and they share one horizontal scale, so their
-    lengths are comparable. A plain `col.bar("x")` still behaves exactly as it
-    always did — the marks layer only engages when you use it.
+    lengths are comparable. Every `col.bar("x")` uses the marks layer; add
+    `label=True` to display its numeric value.
 
     ```python
     col.bar("current", color="navy", size=0.8).bar("previous", color="#d1d5db", size=0.2)
@@ -543,8 +543,8 @@ def _(mo):
       labels the mark's own value and `label="@field"` names another field.
     - `.scale(domain=(lo, hi))` fixes the shared axis and `.reference_line(v)`
       adds a column-wide rule.
-    - A single plain bar still serialises to the classic `viz="bar"` shape, so
-      existing notebooks are unchanged.
+    - Every bar serializes to `encodings`; use `col.bar("x", label=True)` for
+      a bar with its numeric value.
     """)
     return
 

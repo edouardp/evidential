@@ -20,6 +20,33 @@ DOCS = (
 )
 
 
+def test_notebooks_and_documentation_use_bar_marks_instead_of_scalar_decorators():
+    sources = [(str(path.relative_to(ROOT)), path.read_text()) for path in (ROOT / "notebooks").glob("*.py")]
+    for relative in DOCS:
+        blocks = re.findall(r"^```python\n(.*?)^```$", (ROOT / relative).read_text(), re.MULTILINE | re.DOTALL)
+        sources.extend((relative, block) for block in blocks)
+    for relative, source in sources:
+        for node in ast.walk(ast.parse(source)):
+            if not isinstance(node, ast.Call) or not isinstance(node.func, ast.Attribute) or node.func.attr != "bar":
+                continue
+            root = node.func.value
+            while (
+                isinstance(root, ast.Call)
+                and isinstance(root.func, ast.Attribute)
+                and isinstance(root.func.value, ast.Call)
+            ):
+                root = root.func.value
+            if (
+                isinstance(root, ast.Call)
+                and isinstance(root.func, ast.Attribute)
+                and isinstance(root.func.value, ast.Name)
+            ):
+                assert not (
+                    root.func.value.id == "col"
+                    and root.func.attr in {"number", "integer", "currency", "percent", "auto"}
+                ), f"{relative}:{node.lineno}: use col.bar(source, format=..., label=True)"
+
+
 @pytest.mark.parametrize("relative", DOCS)
 def test_python_examples_parse(relative: str) -> None:
     text = (ROOT / relative).read_text()

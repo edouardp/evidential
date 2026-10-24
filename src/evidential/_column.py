@@ -24,7 +24,6 @@ __all__ = [
     "ColumnGroup",
     "array",
     "auto",
-    "bar",
     "boolean",
     "chip",
     "color",
@@ -73,7 +72,7 @@ class Column(Mapping[str, Any]):
 
     Build one with a ``col.<kind>("name")`` factory and refine it by chaining::
 
-        col.currency("sales", code="eur").title("Revenue").bar(color="#93c5fd")
+        col.bar("sales", format="eur", label=True, color="#93c5fd").title("Revenue")
 
     Because chaining never mutates, a spec can be stored and reused::
 
@@ -582,95 +581,14 @@ class Column(Mapping[str, Any]):
     def viz(self, kind: str, **options: Any) -> Self:
         """Set a visualisation by name, passing its options.
 
-        Prefer the typed helpers (:meth:`bar`, :meth:`color`, :meth:`delta`,
+        Prefer mark factories for bars and typed helpers (:meth:`color`, :meth:`delta`,
         :meth:`sparkline`, :meth:`chip`).
 
         Example::
 
-            col.number("sales").viz("bar", color="#93c5fd")
+            col.number("sales").viz("color", color_scale="green")
         """
         return self._with(viz=kind, **{f"{kind}_options": _clean(**options)})
-
-    def bar(
-        self,
-        *,
-        color: str | None = None,
-        negative_color: str | None = None,
-        color_negative: str | None = None,
-        fit_to_data: bool | None = None,
-        hide_labels: bool | None = None,
-        background: str | None = None,
-        center: bool | None = None,
-        pad: float | str | None = None,
-        direction: Literal["left", "right"] | None = None,
-        reference: float | None = None,
-        reference_color: str | None = None,
-        reference_label: str | None = None,
-    ) -> Self:
-        """Show each value as an inline horizontal bar with its label.
-
-        :param color: bar colour (default a light blue), or ``"@column"`` to take
-            each row's colour from that column (a hex/name per row).
-        :param negative_color: bar colour for negative values.
-        :param fit_to_data: scale bars to the column's range rather than the max.
-        :param hide_labels: show only the bar, not the value.
-        :param background: track colour behind the bar.
-        :param center: draw a zero-centred "diverging" bar — the bar grows left
-            (negative) or right (positive) from a centre line by its magnitude, and
-            the value sits on the opposite side (the Economist's league-table bar).
-        :param pad: inset the bar from the top and bottom of the row (a number of
-            pixels or a CSS length), so it does not fill the cell height. The
-            centre line is **not** padded — it stays continuous down the column.
-        :param direction: which way the bar fills. ``"right"`` (the default)
-            fills from the left edge and grows right; ``"left"`` fills from the
-            right edge and grows left — the mirror image, for a back-to-back
-            ("tornado") league table. Pair it with :meth:`align` to put the value
-            at the outer tip.
-        :param reference: draw a vertical rule at this value (on the same scale
-            as the bars) — a benchmark such as a median. ``direction="left"``
-            mirrors the rule with the bars.
-        :param reference_color: the rule colour (default a muted teal).
-        :param reference_label: an optional caption beside the rule, e.g.
-            ``"OECD median"``.
-
-        Example::
-
-            col.number("sales").fmt("usd0").bar(color="#93c5fd", fit_to_data=True)
-            col.percent("gdp", decimals=1).bar(center=True, pad=4)
-            col.currency("spend", decimals=0).bar(
-                direction="left", reference=4.3, reference_label="OECD median"
-            ).align("left")
-        """
-        colors = {"negative_color": negative_color, "color_negative": color_negative}
-        alias(colors, "negative_color", "color_negative")
-        negative_color = colors.get("negative_color")
-        color_column = None
-        if isinstance(color, str) and color.startswith("@"):
-            color_column, color = color[1:], None
-        result = self._with(
-            viz="bar",
-            **_merge_options(
-                "bar_options",
-                bar_color=color,
-                bar_color_negative=negative_color,
-                bar_color_column=color_column,
-                fit_to_data=fit_to_data,
-                hide_labels=hide_labels,
-                background_color=background,
-                center=center,
-                pad=pad,
-                direction=direction,
-                reference=reference,
-                reference_color=reference_color,
-                reference_label=reference_label,
-            ),
-        )
-        bar = dict(result._spec.get("bar_options") or {})
-        if color is not None:
-            bar.pop("bar_color_column", None)
-        if color_column is not None:
-            bar.pop("bar_color", None)
-        return result._with(bar_options=bar)
 
     def color(
         self,
@@ -1049,7 +967,7 @@ def auto(name: str, **overrides: Any) -> Column:
 
         columns=[
             col.text("city"),
-            col.auto("gdp").bar(color="#93c5fd"),   # inferred number + a bar
+            col.auto("gdp").color(scale="blue"),    # inferred number + shading
             col.auto("year").group("Time"),
         ]
 
@@ -1463,19 +1381,6 @@ def logo(name: str, *, height: float | None = None, **extra: Any) -> Column:
         col.logo("team", height=20)
     """
     return _column(name, "string", logo=name, logo_options=_clean(height=height) or None, **extra)
-
-
-def bar(name: str, *, title: str | None = None, **options: Any) -> Column:
-    """A number column shown as an inline bar.
-
-    Shorthand for ``col.number(name).bar(...)``. See :meth:`Column.bar` for the
-    options.
-
-    Example::
-
-        col.bar("sales", color="#93c5fd", fit_to_data=True)
-    """
-    return number(name, title=title).bar(**options)
 
 
 def color(name: str, *, title: str | None = None, **options: Any) -> Column:

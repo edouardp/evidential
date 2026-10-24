@@ -85,9 +85,8 @@ A column is built in two moves:
 from evidential import col
 
 (
-    col.percent("growth", decimals=1)  # 1. the factory — names the kind
-    .bar(center=True)                  # 2. the chain — refines it
-    .neg(bracket=True)
+    col.bar("growth", format="pct1", center=True, label=True)  # 1. declare the mark and label
+    .neg(bracket=True)                                        # 2. refine its display
 )
 ```
 
@@ -152,7 +151,9 @@ overrides the format code. Points arrays label each observation, boxplots place
 their annotation at the median, and band/strip captions use the track center.
 Stack label positions are `inside_start`, `center` and `inside_end`, within each
 segment. Mark factories use explicit annotations (`label=True` for a value).
-Classic `.number(...).bar()` declarations retain their default value label. `label=False` or `hide_labels=True` suppresses a bar's label.
+`label=False` or `hide_labels=True` suppresses a bar's label. Scalar builders
+(`col.number`, `col.currency`, `col.percent`, etc.) do not expose `.bar()`: start
+with `col.bar(...)` and set the numeric `format` on that mark column.
 
 Constructing a table, calling `set_data()` and calling `set_column()` apply the
 same preparation: blank predicates, Python transforms, then callable mark
@@ -216,7 +217,7 @@ what makes the chain safe to store, reuse and extend.
 | `.markdown()` / `.html()` / `.link(...)` / `.image(...)` / `.logo(...)` | rich cells |
 | `.template(value, **formats)` | a fill-in-the-blanks cell |
 | `.viz(kind, **options)` | set `viz` directly |
-| `.bar(...)` / `.color(...)` / `.chip(...)` / `.delta(...)` / `.sparkline(...)` / `.symbols(...)` | visualisations |
+| `.color(...)` / `.chip(...)` / `.delta(...)` / `.sparkline(...)` / `.symbols(...)` | visualisations |
 | `.relative(value)` / `.fmt_column(column)` / `.group(label)` / `.subcolumn(label)` | dates, references, header structure |
 
 ### How a column composes
@@ -226,14 +227,15 @@ new `Column`. Options **accumulate** and the **last write wins**, so the chain
 reads top-to-bottom as "start here, then…".
 
 ```python
-col.currency("revenue", decimals=0).bar().neg(bracket=True).bold()
+col.bar("revenue", format='usd0', label=True).neg(bracket=True).bold()
 ```
 
 builds up like this:
 
 ```python
-step_1 = {"name": "revenue", "type": "number", "fmt": "usd0"}           # col.currency(...)
-step_2 = {**step_1, "viz": "bar"}                                          # .bar()
+step_1 = {"name": "revenue", "type": "number", "fmt": "usd0"}
+step_2 = {**step_1, "encodings": [{"kind": "bar", "source": "revenue",
+                                "label": {"value": True}}]}  # col.bar(..., label=True)
 step_3 = {**step_2, "red_negatives": True, "bracket_negatives": True}     # .neg(bracket=True)
 step_4 = {**step_3, "font_weight": "600"}                                  # .bold()
 ```
@@ -245,7 +247,7 @@ and `to_config()` returns the merged result:
     "name": "revenue",
     "type": "number",
     "fmt": "usd0",
-    "viz": "bar",
+    "encodings": [{"kind": "bar", "source": "revenue", "label": {"value": True}}],
     "red_negatives": True,
     "bracket_negatives": True,
     "font_weight": "600",
@@ -521,7 +523,7 @@ columns=[
 
 ![Visualisations](images/visualizations.png)
 
-- **Bar** — `.bar(color=, negative_color=, fit_to_data=, hide_labels=,
+- **Bar** — `col.bar(source, label=True, color=, negative_color=, fit_to_data=, hide_labels=,
   background=, center=, pad=, direction=, reference=, reference_color=,
   reference_label=)`. With `center=True` the bar grows from a centre line
   (positive right, negative left) — a second geometry of the same cell. With
@@ -674,8 +676,9 @@ columns=[
   static export) only ever sees field names.
 
 Every mark factory serializes to `encodings`, including a single plain bar.
-Use `col.bar("revenue", label=True)` to annotate its value. Classic `viz="bar"`
-dictionaries and `.number(...).bar()` retain their previous behavior.
+Use `col.bar("revenue", label=True)` to annotate its value. Existing raw `viz="bar"`
+dictionaries remain accepted. The scalar `.number(...).bar()` shortcut has been
+removed; use the mark factory with an explicit format and label.
 
 Display `.section(values=...)` rows use separate annotation cells, so a numeric
 column can show a literal such as `"27 products"` in a heading without applying
@@ -691,17 +694,18 @@ columns escape source strings and never interpret them as HTML.
 `direction="left"` mirrors the bar, so a leftward column and a rightward one
 either side of a label column make a back-to-back ("tornado") league table.
 `reference=N` draws a benchmark rule on the bar's own scale (mirrored with a
-leftward bar), `reference_label` captions it once on the last row, and
+leftward bar), `reference_label` captions the benchmark, and
 `color="@column"` keys both panels with one colour column:
 
 ```python
 columns=[
-    col.currency("spend", decimals=1).bar(
-        direction="left", reference=4.3, reference_label="OECD median 4.3",
-        color="@color", pad=3,
+    col.bar(
+        "spend", format="usd1", direction="left", label=True,
+        reference=4.3, reference_label="OECD median 4.3", color="@color", pad=3,
     ).align("left"),
     col.text("country"),
-    col.number("rate", fmt="num2").bar(
+    col.bar(
+        "rate", format="num2", label=True,
         reference=0.32, reference_label="OECD median 0.32", color="@color", pad=3,
     ).align("right"),
     col.auto("color").hide(),
@@ -802,7 +806,7 @@ other than `auto`, `merge`, `group` and `subcolumns` return a `Column`;
 | `col.datetime(name, *, fmt=, relative=, align=, title=)` | `yyyy-mm-dd HH:MM:SS` |
 | `col.flag(name, *, title=)` | alpha-3 country codes |
 | `col.icons(name, *, map={...}, title=)` | category → glyph / image |
-| `col.bar(source, *, title=, label=, size=, side=, color=, …)` | bar (single = classic, chained = marks) |
+| `col.bar(source, *, title=, label=, size=, side=, color=, …)` | bar mark with an optional owned label |
 | `col.point(source, *, title=, size=, color=, label=)` | point marker |
 | `col.points(source, *, size=, color=)` | one marker per array observation |
 | `col.range(low, high, *, cap=, fill=, color=, label=)` | interval / dumbbell |
@@ -852,7 +856,7 @@ other than `auto`, `merge`, `group` and `subcolumns` return a `Column`;
 | `.link(column=, *, label=, new_tab=)` / `.image(...)` / `.logo(...)` | rich cells |
 | `.template(value, **formats)` | fill-in-the-blanks cell |
 | `.viz(kind, **options)` | set `viz` directly |
-| `.bar(...)` / `.color(...)` / `.chip(...)` / `.delta(...)` / `.sparkline(...)` / `.symbols(...)` | visualisations |
+| `.color(...)` / `.chip(...)` / `.delta(...)` / `.sparkline(...)` / `.symbols(...)` | visualisations |
 | `.bar(source, …)` / `.point(source, …)` / `.range(low, high, …)` | append a mark |
 | `.label(value=True \| "@field", *, source=, text=, position=, format=)` | annotate the last mark |
 | `.scale(domain=(lo, hi), include_zero=, unit=, transform="linear"\|"log", axis=, axis_position=, gridlines=)` / `.reference_line(value, label=, color=)` / `.reference_band(low, high, …)` | shared axis / rules |

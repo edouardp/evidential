@@ -81,7 +81,7 @@ def _(EvidentialTable, col, connection, mo):
             columns=[
                 col.auto("category"),
                 col.integer("orders", title="Orders"),
-                col.currency("sales", decimals=0, title="Sales").bar(),
+                col.bar("sales", title="Sales", format='usd0', label=True),
                 col.currency("avg_sale", decimals=2, title="Avg sale"),
                 col.auto("tint").hide(),
             ],
@@ -127,7 +127,7 @@ def _(EvidentialTable, col, connection, mo):
             columns=[
                 col.auto("item"),
                 col.auto("category"),
-                col.currency("sales", decimals=0).bar(),
+                col.bar("sales", format='usd0', label=True),
                 col.link("lookup", title="Search", new_tab=True),
             ],
         )
@@ -167,7 +167,7 @@ def _(EvidentialTable, col, connection, mo):
             columns=[
                 col.auto("category"),
                 col.integer("orders"),
-                col.currency("sales", decimals=0).bar(),
+                col.bar("sales", format='usd0', label=True),
             ],
         )
     )

@@ -134,8 +134,7 @@ def _(EvidentialTable, changes, col, mo, settings):
                 col.text("month"),
                 col.currency("revenue", decimals=0, title="Revenue"),
                 col.percent("mom_pct", whole=True, decimals=1, title="Change").neg(bracket=True),
-                col.percent("mom_pct", whole=True, decimals=1, title="Change (bar)", align="center")
-                    .bar(center=True, pad=3, color="tab:blue", negative_color="tab:red"),
+                col.bar("mom_pct", title="Change (bar)", align="center", format='0.0"%"', center=True, pad=3, color="tab:blue", negative_color="tab:red", label=True),
             ],
         )
     )
@@ -152,7 +151,7 @@ def _(mo):
       (when `color` is given) and `bracket_negatives` (when `bracket`).
     - `bracket=True` strips the leading `-` and wraps the value, so a currency
       column reads `(1,234)` and stays right-aligned.
-    - It composes with `.bar(...)`, `.delta(...)`, `.color(...)` and the rest of
+    - It composes with `col.bar(..., label=True)`, `.delta(...)`, `.color(...)` and the rest of
       the chain; colours accept the matplotlib names (`tab:red`, `C3`, `k`, …).
     - `.neg()` turns marking **on**; there is not yet a "brackets only, no colour"
       spelling.

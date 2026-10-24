@@ -102,8 +102,7 @@ def _(EvidentialTable, col, connection, mo):
             row_shading=True,
             columns=[
                 col.text("name"),
-                col.number("amount", title="Amount (bar)")
-                .bar(color="#2563eb", negative_color="#dc2626", background="#f1f5f9"),
+                col.bar("amount", title="Amount (bar)", color="#2563eb", negative_color="#dc2626", background="#f1f5f9", label=True),
                 col.percent("change", decimals=1, title="Change (delta chip)")
                 .delta(chip=True, show_value=True, down_is_good=False),
                 col.number("score", title="Score (colour scale)")

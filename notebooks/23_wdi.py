@@ -214,7 +214,7 @@ def _(LiveEvidentialTable, col, connection):
             col.text("country"),
             col.text("region"),
             col.text("income_group", title="Income group"),
-            col.number("value", fmt="num").bar(),
+            col.bar("value", fmt="num", label=True),
         ],
     )
     ranking
@@ -273,7 +273,7 @@ def _(EvidentialTable, col, connection, mo, trend_country):
             row_lines=False,
             columns=[
                 col.number("year", fmt="yyyy", align="left"),
-                col.number("value", fmt="num2").bar(),
+                col.bar("value", fmt="num2", label=True),
             ],
         )
     )
@@ -491,7 +491,7 @@ def _(col, connection, grouped_table, mo):
                 "income_group": col.text("income_group", title="Income group"),
             },
             measure_config={
-                "avg_life_expectancy": col.number("avg_life_expectancy", fmt="num1").bar(),
+                "avg_life_expectancy": col.bar("avg_life_expectancy", fmt="num1", label=True),
                 "countries": col.integer("countries"),
             },
         )

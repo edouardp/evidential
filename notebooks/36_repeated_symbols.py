@@ -103,8 +103,7 @@ def _(EvidentialTable, col, mo, repeats, settings):
                     ]),
                     col.symbols("thrice", symbol="■", color="#2EC1D3", align="center"),
                 ]),
-                col.number("avg", fmt="num3", title="Average difference")
-                .bar(color="#8ECAE6", fit_to_data=False)
+                col.bar("avg", fmt="num3", title="Average difference", color="#8ECAE6", fit_to_data=False, label=True)
                 .align("left"),
             ],
         )

@@ -122,7 +122,7 @@ def revenue_table(EvidentialTable, col, filtered):
             col.text("region", title="Region"),
             col.text("city", title="City"),
             col.integer("trips", title="Trips"),
-            col.currency("revenue", decimals=0, title="Revenue").bar(),
+            col.bar("revenue", title="Revenue", format='usd0', label=True),
             col.percent("tip_rate", decimals=1, title="Tip rate").color(
                 scale=["#fee2e2", "#fef9c3", "#bbf7d0", "#15803d"], min=0, max=0.35
             ),

@@ -7,13 +7,34 @@ from collections.abc import Mapping
 import pytest
 
 from evidential import EvidentialTable, col
-from evidential.marks import MarkColumn
+from evidential.marks import MarkColumn, rebind_measure
 from evidential.marks import strip as strip_column
 
 ROWS = [
     {"city": "NYC", "current": 8, "previous": 5, "candidate": "Alpha", "target": 6, "low": 2, "high": 9},
     {"city": "LA", "current": 3, "previous": 7, "candidate": "Beta", "target": 6, "low": 4, "high": 8},
 ]
+
+
+def test_measure_rebinding_copies_bindings_without_renaming_literal_text():
+    original = {
+        "encodings": [
+            {
+                "kind": "boxplot",
+                "source": "value",
+                "parts": {"median": "value", "q1": "lower"},
+                "outliers": "value",
+                "color_column": "value",
+                "label": {"text": "value"},
+            }
+        ]
+    }
+    rebound = rebind_measure(original, "value", "projected")
+    encoding = rebound["encodings"][0]
+    assert encoding["source"] == encoding["outliers"] == encoding["color_column"] == "projected"
+    assert encoding["parts"] == {"median": "projected", "q1": "lower"}
+    assert encoding["label"] == {"text": "value"}
+    assert original["encodings"][0]["parts"]["median"] == "value"
 
 
 def test_single_plain_bar_uses_the_same_wire_shape_as_composed_marks() -> None:

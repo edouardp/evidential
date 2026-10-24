@@ -42,7 +42,7 @@ the inferred type already: `column_config={"gdp": col.auto("gdp").fmt("usd0")}`.
 
 So all of these preserve the inferred type, format, alignment and `info`::
 
-    columns=["city", col.auto("gdp").bar(color="#93c5fd"), col.auto("year")]
+    columns=["city", col.auto("gdp").color(scale="blue"), col.auto("year")]
     column_config={"gdp": col.auto("gdp").fmt("usd0")}
 
 The resolution normalizes the spec's aliases **before** merging, because the

@@ -65,8 +65,8 @@ Chosen option: **3**.
   individually; boxplots anchor at the median; band/strip captions anchor at
   the center. Stack labels honor start/center/end within their segment.
 - The marks renderer honors accepted bar compatibility options when a scale,
-  annotation or overlay is added. Mark factories always emit encodings and use explicit labels; classic
-  number/bar declarations retain their existing default value labels.
+  annotation or overlay is added. Mark factories always emit encodings and use explicit labels. ADR-067 removes
+  the scalar bar decorator; raw classic dictionaries remain accepted.
   `hide_labels` suppresses bar labels, including explicit annotations.
 - Bar direction mirrors the shared scale, overlays, axes and reference marks.
   Bars sharing a column must use the same direction. Centered bars use a
@@ -79,7 +79,7 @@ Chosen option: **3**.
 Existing short spellings and classic dictionaries remain accepted. Mark factory
 serialization no longer changes from `viz="bar"` to `encodings` when a scale or
 label is added; it always uses `encodings`. Add `label=True` to `col.bar(...)`
-when a value annotation is wanted. Classic `.number(...).bar()` remains unchanged. Unsupported
+when a value annotation is wanted. ADR-067 subsequently removes the scalar `.bar()` decorator. Unsupported
 options and contradictory aliases now fail early instead of doing nothing.
 Retaining source records uses additional memory proportional to the dataset;
 it prevents mutation paths from repeatedly transforming already prepared data.

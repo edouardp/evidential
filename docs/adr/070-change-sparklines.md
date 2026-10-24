@@ -32,7 +32,9 @@ and optional magnitude coloring, with a configurable neutral interval.
 
 Chosen option: **3**. `col.sparkline` and the fluent `.sparkline(...)` support
 `type="change"`, `steady=(low, high)`, optional `color_scale` and `color_domain`.
-The Python factory and mapping preparation use one validator. Change-only
+The Python factory and mapping preparation use one validator. The public
+`SparklineType` literal alias defines line, area, bar, points and change once,
+shared by the factory, fluent method and configuration schema. Change-only
 settings cannot silently affect another style; incompatible geometry settings
 are rejected. Palette lists and pairs are copied before storage.
 

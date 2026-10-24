@@ -36,7 +36,7 @@ from ._label import Label
 from .aggregations import BUILTIN_AGGREGATIONS, apply_aggregations, resolve_aggregation
 from .client import grouped_records
 from .comparison import comparison_table
-from .configuration import ColumnOptions, TableOptions, settings
+from .configuration import ColumnOptions, SparklineType, TableOptions, settings
 from .data import make_column
 from .grouped import grouped_table, simple_table
 from .live import LiveEvidentialTable, query_values
@@ -64,6 +64,7 @@ from .table import EvidentialTable, section_row, spacer_row
 __all__ = [
     "TableOptions",
     "ColumnOptions",
+    "SparklineType",
     "col",
     "label",
     "domain",

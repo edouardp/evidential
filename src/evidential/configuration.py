@@ -7,7 +7,19 @@ import types
 from collections.abc import Callable, Mapping, Sequence
 from difflib import get_close_matches
 from functools import cache
-from typing import Any, Literal, TypedDict, Union, Unpack, cast, get_args, get_origin, get_type_hints, is_typeddict
+from typing import (
+    Any,
+    Literal,
+    TypeAlias,
+    TypedDict,
+    Union,
+    Unpack,
+    cast,
+    get_args,
+    get_origin,
+    get_type_hints,
+    is_typeddict,
+)
 
 Length = str | float
 Palette = str | Sequence[str]
@@ -212,8 +224,12 @@ class DeltaOptions(TypedDict, total=False):
     chip: bool | None
 
 
+#: Supported sparkline styles, shared by public builders and runtime validation.
+SparklineType: TypeAlias = Literal["line", "area", "bar", "points", "change"]
+
+
 class SparklineOptions(TypedDict, total=False):
-    type: Literal["line", "area", "bar", "points", "change"] | None
+    type: SparklineType | None
     x: str | None
     y: str | None
     color: str | None

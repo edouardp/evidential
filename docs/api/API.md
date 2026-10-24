@@ -545,6 +545,9 @@ columns=[
   dot at every point and `markers="ends"` only the endpoints; a per-point
   `color` key on the data overrides `marker_color`; `signed=True` splits an area
   fill at the zero baseline.
+  The public `SparklineType` literal alias lists the five supported styles and
+  is shared by both builders and the configuration schema. Import it with
+  `from evidential import SparklineType` when annotating your own helpers.
 
   `type="change"` draws one equal rectangle per observation, with an ordinal
   position even for structured/date input. Values are changes or signed outcomes:

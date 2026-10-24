@@ -16,7 +16,7 @@ from ._column_options import _normalize_column_options
 from ._domain import domain_spec
 from ._sparkline import normalize_sparkline_options
 from ._text_style import TextStyle
-from .configuration import Relative
+from .configuration import Relative, SparklineType
 
 Align = Literal["left", "right", "center"]
 Rotation = Literal["vertical"] | float
@@ -603,7 +603,7 @@ class Column(TextStyle, Mapping[str, Any]):
     def sparkline(
         self,
         *,
-        type: Literal["line", "area", "bar", "points", "change"] | None = None,
+        type: SparklineType | None = None,
         x: str | None = None,
         y: str | None = None,
         color: str | None = None,
@@ -1339,7 +1339,7 @@ def color(name: str, *, title: str | None = None, **options: Any) -> Column:
 def sparkline(
     name: str,
     *,
-    type: Literal["line", "area", "bar", "points", "change"] = "line",
+    type: SparklineType = "line",
     x: str | None = None,
     y: str | None = None,
     color: str | None = None,

@@ -18,9 +18,9 @@ def _():
     import marimo as mo
     import duckdb
 
-    from evidential import EvidentialTable, col, grouped_table
+    from evidential import EvidentialTable, col, grouped_table, label
 
-    return EvidentialTable, col, duckdb, grouped_table, mo
+    return EvidentialTable, col, duckdb, grouped_table, label, mo
 
 
 @app.cell
@@ -129,9 +129,9 @@ def _(EvidentialTable, connection, mo, source_label):
             #    col.date("pickup", fmt="shortdate", title="Pickup"),
             #    col.text("payment"),
             #    col.integer("passenger_count", fmt="id", title="Pax"),
-            #    col.bar("trip_distance", format="num1", title="Distance", label=True),
+            #    col.bar("trip_distance", format="num1", title="Distance", label=label.value()),
             #    col.currency("fare_amount", decimals=2),
-            #    col.bar("tip_amount", format="usd2", title="Tip", label=True),
+            #    col.bar("tip_amount", format="usd2", title="Tip", label=label.value()),
             #    col.currency("total_amount", decimals=2, title="Total"),
             #    col.percent("tip_rate", decimals=1, title="Tip rate").color(
             #        scale=["#fee2e2", "#fef9c3", "#bbf7d0", "#15803d"], midpoint=0.15, min=0, max=0.4
@@ -156,7 +156,7 @@ def _(mo):
 
 
 @app.cell
-def _(col, connection, grouped_table, mo):
+def _(col, connection, grouped_table, label, mo):
     grouped = mo.ui.anywidget(
         grouped_table(
             connection,
@@ -178,7 +178,7 @@ def _(col, connection, grouped_table, mo):
             },
             measure_config={
                 "trips": col.integer("trips"),
-                "distance": col.bar("distance", format='num0', label=True),
+                "distance": col.bar("distance", format='num0', label=label.value()),
                 "revenue": col.currency("revenue", decimals=0),
                 "avg_tip_pct": col.number("avg_tip_pct", fmt="num1", title="Avg tip %"),
             },
@@ -201,7 +201,7 @@ def _(mo):
 
 
 @app.cell
-def _(EvidentialTable, col, connection, mo):
+def _(EvidentialTable, col, connection, label, mo):
     pivoted = mo.ui.anywidget(
         EvidentialTable(
             connection.sql(
@@ -228,10 +228,22 @@ def _(EvidentialTable, col, connection, mo):
                 col.group(
                     "Payment type",
                     [
-                        col.bar("credit_card", title="Credit card", format='num0', label=True),
-                        col.bar("cash", title="Cash", format='num0', label=True),
-                        col.bar("no_charge", title="No charge", format='num0', label=True),
-                        col.bar("dispute", title="Dispute", format='num0', label=True),
+                        col.bar(
+                            "credit_card", title="Credit card", format="num0",
+                            label=label.auto_position("outside end"),
+                        ),
+                        col.bar(
+                            "cash", title="Cash", format="num0",
+                            label=label.position("inside end"),
+                        ),
+                        col.bar(
+                            "no_charge", title="No charge", format="num0",
+                            label=label.position("inside end"),
+                        ),
+                        col.bar(
+                            "dispute", title="Dispute", format="num0",
+                            label=label.position("inside end"),
+                        ),
                     ],
                 ),
                 col.group(

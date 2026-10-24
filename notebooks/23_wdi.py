@@ -188,7 +188,7 @@ def _(connection, mo):
 
 
 @app.cell
-def _(LiveEvidentialTable, col, connection):
+def live_ranking(LiveEvidentialTable, col, connection):
     ranking = LiveEvidentialTable(
         connection,
         """

@@ -16,6 +16,7 @@ function fixture({position = "outside_end", left = 0, width = 90, negative = fal
   cell.getBoundingClientRect = () => ({left: 0, right: cellWidth, width: cellWidth});
   label.firstChild.getBoundingClientRect = () => ({width: textWidth});
   label.getBoundingClientRect = () => {
+    if (label.hidden) return {left: 0, right: 0, width: 0};
     const x = parseFloat(label.style.left) * cellWidth / 100;
     const inside = label.classList.contains("et-mark-label-inside");
     const boxWidth = inside ? parseFloat(label.style.width) * cellWidth / 100 : textWidth + 6;
@@ -24,6 +25,26 @@ function fixture({position = "outside_end", left = 0, width = 90, negative = fal
   };
   return {table, label, resize: width => { cellWidth = width; }, fit: () => fitMarkLabels(table)};
 }
+
+test("fixed labels that do not fit leave layout and reappear after resizing", () => {
+  const testCase = fixture({auto: false, width: 80});
+  testCase.fit();
+  assert.equal(testCase.label.style.visibility, "hidden");
+  assert.equal(testCase.label.hidden, true);
+  assert.equal(testCase.label.title, "123");
+  testCase.resize(300);
+  testCase.fit();
+  assert.equal(testCase.label.style.visibility, "");
+  assert.equal(testCase.label.hidden, false);
+  assert.equal(testCase.label.dataset.labelPosition, "outside_end");
+});
+
+test("fixed labels with explicit overflow remain visible beyond the cell", () => {
+  const testCase = fixture({auto: false, width: 100, overflow: "show"});
+  testCase.fit();
+  assert.equal(testCase.label.style.visibility, "");
+  assert.equal(testCase.label.hidden, false);
+});
 
 test("automatic labels try both sides of the requested start or end, in preferred order", () => {
   for (const position of ["outside_start", "outside_end", "inside_start", "inside_end"]) {

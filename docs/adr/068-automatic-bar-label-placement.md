@@ -61,9 +61,11 @@ neither candidate fits. Explicit color and minimum-width settings are retained.
 The renderer shares its positioning and fit checks with fixed labels. A weak
 map retains the immutable preference and geometry separately from the chosen
 DOM position. Moving outside restores inherited text color; moving inside
-applies existing contrast selection. Omitted automatic labels use `hidden` so
-their off-cell boxes cannot create scrollable overflow. They are restored for
-measurement on the next fit. Original values remain in mark accessibility text.
+applies existing contrast selection. All omitted labels use `hidden` so their
+off-cell boxes cannot create scrollable overflow, including fixed labels with
+the default `overflow="hide"`. They are restored for measurement on the next
+fit. Explicit `overflow="show"` labels retain their visible overflow. Original
+values remain in mark accessibility text.
 
 ### Consequences
 

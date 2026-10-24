@@ -128,8 +128,14 @@ export function fitMarkLabels(root) {
     if (automatic) {
       fitAutomaticLabel(label, automatic);
     } else if (label.dataset.overflow !== "show") {
+      // Restore omitted labels for measurement, then remove any off-cell box
+      // from scrollable overflow as well as hiding its text.
+      label.hidden = false;
       const fits = labelFits(label);
-      if (fits != null) label.style.visibility = fits ? "" : "hidden";
+      if (fits != null) {
+        label.style.visibility = fits ? "" : "hidden";
+        label.hidden = !fits;
+      }
     }
     if (label.dataset.autoContrast) {
       // Resolve CSS variables too, including theme accents and dark-mode fills.

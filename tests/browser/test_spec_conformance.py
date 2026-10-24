@@ -125,6 +125,43 @@ def test_stacked_bar_notebook_allocates_width_to_response_charts(page, live_serv
     capture(page, "stacked-bars-column-sizing.png")
 
 
+def test_wdi_ranking_does_not_scroll_for_omitted_outside_labels(page, live_server):
+    import duckdb
+
+    notebook = Path(__file__).resolve().parents[2] / "notebooks" / "23_wdi.py"
+    with duckdb.connect() as connection:
+        connection.execute("""
+            CREATE TABLE country AS SELECT * FROM (VALUES
+                ('JPN', 'Japan', 'East Asia & Pacific', 'High income'),
+                ('GBR', 'United Kingdom', 'Europe & Central Asia', 'High income'),
+                ('USA', 'United States', 'North America', 'High income')
+            ) AS t("Country Code", "Short Name", Region, "Income Group");
+            CREATE TABLE observations AS SELECT * FROM (VALUES
+                ('JPN', 'SP.DYN.LE00.IN', 2023, 84.04),
+                ('GBR', 'SP.DYN.LE00.IN', 2023, 81.30),
+                ('USA', 'SP.DYN.LE00.IN', 2023, 78.40)
+            ) AS t(country_code, indicator_code, year, value)
+        """)
+        _, definitions = runpy.run_path(str(notebook))["live_ranking"].run(connection=connection)
+        ranking = definitions["ranking"]
+        ranking.set_controls(indicator="SP.DYN.LE00.IN", year=2023, region="All regions")
+        mount(page, live_server, [("WDI live ranking", ranking, [])])
+        first_label = page.locator(".et-mark-label").first
+        for width in (900, 1400, 1000):
+            page.set_viewport_size({"width": width + 80, "height": 900})
+            page.locator("section").evaluate("(el, width) => el.style.width = width + 'px'", width)
+            # Fixed outside labels on the maximum bar cannot fit at any width.
+            page.wait_for_function("getComputedStyle(document.querySelector('.et-mark-label')).visibility === 'hidden'")
+            geometry = page.locator(".et-scroller").evaluate("""el => ({
+                available: el.clientWidth, scroll: el.scrollWidth,
+                table: el.querySelector('table').getBoundingClientRect().width,
+            })""")
+            assert geometry["table"] <= geometry["available"] + 1, geometry
+            assert geometry["scroll"] <= geometry["available"] + 1, geometry
+            assert first_label.get_attribute("title")
+        capture(page, "wdi-ranking-no-scrollbar.png")
+
+
 def test_automatic_bar_label_preferences_signed_bars_and_resize(page, live_server):
     positions = ["outside_end", "inside_end", "outside_start", "inside_start"]
     data = [{"x": value} for value in (95, 60, 3, 0, None)]

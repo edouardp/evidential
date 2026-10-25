@@ -13,10 +13,10 @@ def normalize_sparkline_options(options: Mapping[str, Any]) -> dict[str, Any]:
     """Validate change thresholds and palettes without changing caller-owned data."""
     spec = {key: value for key, value in options.items() if value is not None}
     validate_options(spec, SparklineOptions, "column.sparkline_options")
-    change_only = {"steady", "color_scale", "color_domain"}
+    change_only = {"delta", "steady", "color_scale", "color_domain"}
     if spec.get("type", "line") != "change":
         if change_only.intersection(spec):
-            raise ValueError("steady, color_scale and color_domain require sparkline type='change'")
+            raise ValueError("delta, steady, color_scale and color_domain require sparkline type='change'")
         return spec
     for name in ("steady", "color_domain"):
         if name not in spec:

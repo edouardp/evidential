@@ -243,6 +243,8 @@ class SparklineOptions(TypedDict, total=False):
     marker_color: str | None
     #: Split an area fill at the zero baseline into positive/negative colours.
     signed: bool | None
+    #: Change-only: compare adjacent observations instead of reading signed outcomes.
+    delta: bool | None
     #: Inclusive hold-steady range for change sparklines; defaults to (0, 0).
     steady: tuple[float, float] | None
     #: Optional continuous palette, with its midpoint anchored to the steady range.

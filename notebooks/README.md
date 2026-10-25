@@ -43,6 +43,7 @@ and without network access.
 | [`35_negatives.py`](35_negatives.py) | Negative styling with `.neg()`: red negatives, a custom colour, and accounting-style brackets (`-1,234` → `(1,234)`), alone and with a centred bar. |
 | [`36_repeated_symbols.py`](36_repeated_symbols.py) | `col.symbols` / `col.repeat` / `col.rating`: a number drawn as repeated glyphs, emoji or images — The Economist's squares, a medal table, star ratings. |
 | [`39_synthetic_rows.py`](39_synthetic_rows.py) | Display-only headings, portable counts and averages, optional group/grand summaries, and continuation headings across detail-based pages. |
+| [`40_sparklines_and_booleans.py`](40_sparklines_and_booleans.py) | Five sparkline styles, adjacent change markers with `delta=True`, signed areas, point markers, booleans and icons. |
 | [`44_spec_conformance.py`](44_spec_conformance.py) | Scale reference layouts, fixed bounds and missing marks, point outlines, shared diverging stacks, irregular sparklines and paginated section summaries. |
 | [`45_display_row_layout.py`](45_display_row_layout.py) | Display-only group headings with counts/totals, optional group and grand summaries, nested groups, centered headings, and detail-based pagination with continuation headings. |
 | [`48_dumbbell_plots.py`](48_dumbbell_plots.py) | Plain dumbbells, negative connector colors, optional direction chevrons, and equal, missing and negative-valued endpoints. |

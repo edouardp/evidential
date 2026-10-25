@@ -32,10 +32,15 @@ def _(mo):
     mo.md("""
     # Sparkline styles and booleans
 
-    An array column can be drawn four ways — `type="line"`, `"area"`, `"bar"` or
-    `"points"`. `markers=True` puts a dot at every value on a line/area, and
+    An array column can be drawn five ways — `type="line"`, `"area"`, `"bar"`,
+    `"points"` or `"change"`. `markers=True` puts a dot at every value on a line/area, and
     `signed=True` splits an area fill at the zero baseline, so gains and losses
     get different colours.
+
+    The change column uses `delta=True` to compare adjacent observations, so
+    revenue falling from 5 to 4 draws a down marker. Its first slot is blank;
+    missing values break comparisons. Without `delta=True`, change sparklines
+    expect values that already represent changes or signed outcomes.
     """)
     return
 
@@ -56,8 +61,8 @@ def _(EvidentialTable, col, mo, trends):
     styles = mo.ui.anywidget(
         EvidentialTable(
             trends,
-            title="One series, four styles",
-            subtitle="line · area · bar · points",
+            title="One series, five styles",
+            subtitle="line · area · bar · points · change from the previous observation",
             row_lines=False,
             border=False,
             stretch=False,
@@ -67,6 +72,7 @@ def _(EvidentialTable, col, mo, trends):
                 col.array("values", title="Area").sparkline(type="area", color="#0ea5e9"),
                 col.array("values", title="Bar").sparkline(type="bar", color="#6366f1"),
                 col.array("values", title="Points").sparkline(type="points", color="#db2777"),
+                col.array("values", title="Change (Δ)").sparkline(type="change", delta=True),
             ],
         )
     )

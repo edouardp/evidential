@@ -28,7 +28,11 @@ export function sparklinePoints(value, opts) {
     }
     points.push([x, y, item]);
   });
-  return points;
+  if (opts.type !== "change" || !opts.delta) return points;
+  return points.map(([x, y, source], index) => {
+    const previous = points[index - 1]?.[1];
+    return [x, y == null || previous == null ? null : numeric(y - previous), source];
+  });
 }
 
 function _isNumeric(value) {

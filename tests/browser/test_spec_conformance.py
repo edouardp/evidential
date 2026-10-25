@@ -1204,6 +1204,29 @@ def test_legacy_grouped_widget_keeps_annotations_separate_and_collapses(page, li
     assert "Brazil" not in page.locator("tbody").inner_text()
 
 
+def test_five_style_notebook_shows_adjacent_revenue_decreases(page, live_server):
+    notebook = Path(__file__).resolve().parents[2] / "notebooks" / "40_sparklines_and_booleans.py"
+    outputs, _ = runpy.run_path(str(notebook))["app"].run()
+    styles = next(
+        output.widget
+        for output in outputs
+        if hasattr(output, "widget") and output.widget.options["title"] == "One series, five styles"
+    )
+    mount(page, live_server, [("One series, five styles", styles, [])])
+    revenue = page.locator("tbody tr").first.locator(".et-sparkline-change")
+    assert revenue.locator("rect").count() == 7
+    assert revenue.get_attribute("aria-label") == "Changes: 5 up, 0 steady, 2 down, 1 missing"
+    states = revenue.locator("rect").evaluate_all("nodes => nodes.map(el => el.dataset.state)")
+    assert states == ["up", "down", "up", "up", "down", "up", "up"]
+    for index in (1, 4):
+        tooltip = revenue.locator("rect title").nth(index).text_content()
+        assert float(tooltip.split(": ")[-1].split(" ")[0]) == -1
+        assert tooltip.endswith("(down)")
+    assert page.locator("tbody tr").nth(1).locator("rect[data-state=steady]").count() == 3
+    assert page.locator("tbody tr").first.locator(".et-sparkline").count() == 5
+    capture(page, "sparkline-adjacent-deltas.png")
+
+
 def test_dumbbell_notebook_colors_changes_and_centers_direction_markers(page, live_server):
     notebook = Path(__file__).resolve().parents[2] / "notebooks" / "48_dumbbell_plots.py"
     _, definitions = runpy.run_path(str(notebook))["app"].run()

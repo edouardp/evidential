@@ -38,8 +38,14 @@ shared by the factory, fluent method and configuration schema. Change-only
 settings cannot silently affect another style; incompatible geometry settings
 are rejected. Palette lists and pairs are copied before storage.
 
-Input observations are changes or signed outcomes, not absolute measurements to
-difference. Every slot has equal width, including missing observations. The
+By default, input observations are changes or signed outcomes. Optional
+`delta=True` accepts absolute measurements instead and computes each observation
+minus its immediate predecessor. The first slot has no comparison and remains
+blank. Missing or invalid values break adjacency; comparisons never bridge a
+gap. Original observations and x bindings remain intact, while state selection,
+tooltip values, gradient inference and shared domains consume the differences.
+The option is validated as a change-only boolean on every declaration path.
+Every slot has equal width, including missing observations. The
 shared DOM-free sparkline normalizer handles scalar, pair and structured data.
 `x` labels tooltips; it does not change event spacing for this categorical
 sequence. Null and invalid values leave gaps. Rectangles have equal height;
@@ -81,3 +87,6 @@ choices follow the available local data, or the single bundled snapshot.
 - `src/evidential/_sparkline.py`, `tests/test_change_sparkline.py`.
 - `frontend/test_change_sparkline.js`, browser sparkline and live notebook tests.
 - `notebooks/46_change_sparklines.py`, `notebooks/sql/46_football_outcomes.sql`.
+- `notebooks/40_sparklines_and_booleans.py` compares absolute-series styles with
+  change sparklines using adjacent differences.
+- `tests/test_sparkline_delta.py`, `frontend/test_sparkline_delta.js`.

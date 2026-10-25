@@ -614,6 +614,7 @@ class Column(TextStyle, Mapping[str, Any]):
         markers: bool | str | None = None,
         marker_color: str | None = None,
         signed: bool | None = None,
+        delta: bool | None = None,
         steady: tuple[float, float] | None = None,
         color_scale: str | Sequence[str] | None = None,
         color_domain: tuple[float, float] | None = None,
@@ -631,6 +632,8 @@ class Column(TextStyle, Mapping[str, Any]):
         :param markers: draw a marker at every point, or ``"ends"`` for the endpoints.
         :param marker_color: marker colour; a per-point ``color`` key wins.
         :param signed: split an area fill at the zero baseline into up/down colours.
+        :param delta: for change sparklines, compare adjacent observations. The first
+            slot and comparisons beside missing observations stay blank. Default False.
         :param steady: inclusive change interval rendered at the center; defaults to (0, 0).
         :param color_scale: optional change gradient (named palette or color list).
             The whole steady interval maps to the palette midpoint.
@@ -655,6 +658,7 @@ class Column(TextStyle, Mapping[str, Any]):
                 markers=markers,
                 marker_color=marker_color,
                 signed=signed,
+                delta=delta,
                 steady=steady,
                 color_scale=color_scale,
                 color_domain=color_domain,
@@ -1350,6 +1354,7 @@ def sparkline(
     markers: bool | str | None = None,
     marker_color: str | None = None,
     signed: bool | None = None,
+    delta: bool | None = None,
     steady: tuple[float, float] | None = None,
     color_scale: str | Sequence[str] | None = None,
     color_domain: tuple[float, float] | None = None,
@@ -1369,6 +1374,7 @@ def sparkline(
     :param height: chart height (the viewBox, in pixels).
     :param markers: draw a marker at every point (line/area too).
     :param signed: split an area fill at the zero baseline into up/down colours.
+    :param delta: change-only adjacent differences; defaults to precomputed changes.
     :param steady: inclusive hold-steady interval for change rectangles (default 0..0).
     :param color_scale: named palette or color list for change magnitude.
     :param color_domain: fixed gradient endpoints; the steady interval anchors the midpoint.
@@ -1392,6 +1398,7 @@ def sparkline(
         markers=markers,
         marker_color=marker_color,
         signed=signed,
+        delta=delta,
         steady=steady,
         color_scale=color_scale,
         color_domain=color_domain,

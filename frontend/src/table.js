@@ -20,6 +20,7 @@ import { hiddenColumns, visibleRows, searchRows, sortRows, paginateRows,
   computeRowspans, shaded, sectionContinuation } from "./rows.js";
 import { renderCell } from "./cells.js";
 import { formatTitle, formatValue } from "./format.js";
+import { formattedText } from "./formatted-text.js";
 import { axisTicks, marksDomain, scalePosition } from "./visualizations.js";
 
 /** Map a `font_size` to a CSS value.
@@ -537,7 +538,7 @@ export class EvidentialTableRenderer {
           fallback: String(tick),
         }) : "";
         axis.append(h("span", { class: `et-axis-tick${major ? "" : " et-axis-tick-minor"}`,
-          "aria-hidden": major ? null : "true", style: { left: `${pct}%` } }, label));
+          "aria-hidden": major ? null : "true", style: { left: `${pct}%` } }, formattedText(label)));
       }
       cell.append(axis);
     }

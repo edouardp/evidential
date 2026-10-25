@@ -1204,6 +1204,54 @@ def test_legacy_grouped_widget_keeps_annotations_separate_and_collapses(page, li
     assert "Brazil" not in page.locator("tbody").inner_text()
 
 
+def test_scientific_notation_uses_html_exponents_across_formatted_surfaces(page, live_server):
+    notebook = Path(__file__).resolve().parents[2] / "notebooks" / "08_column_options.py"
+    _, definitions = runpy.run_path(str(notebook))["scientific_formatting"].run()
+    mount(
+        page,
+        live_server,
+        [
+            ("Scientific notation", definitions["scientific"].widget, []),
+            (
+                "Labels, chips and statistics",
+                [{"value": 123456, "small": 0.000123, "a": 123000, "b": 45600}],
+                [
+                    col.number("value").fmt("sci"),
+                    col.number("small").fmt("sci").chip(),
+                    col.bar("value", label=label.fmt("sci").position("inside end"))
+                    .fmt("sci")
+                    .scale(domain=(0, 200000), axis=True),
+                    col.stacked_bar("a", "b", labels=label.fmt("sci")),
+                ],
+                {"width": "100%", "column_stats": True},
+            ),
+        ],
+    )
+    page.locator("section").nth(1).evaluate("el => el.style.width = '1000px'")
+    scientific_cells = page.locator("#case-0 tbody tr td:nth-child(3)")
+    assert scientific_cells.nth(0).locator("sup").inner_text() == "5"
+    assert scientific_cells.nth(1).locator("sup").inner_text() == "-4"
+    assert scientific_cells.nth(2).locator("sup").inner_text() == "5"
+    assert scientific_cells.nth(3).locator("sup").inner_text() == "0"
+    assert scientific_cells.nth(4).inner_text() == "–"
+    assert page.locator("#case-0 tbody tr td:nth-child(4)").first.inner_text() == "1.235E+5"
+    heights = page.locator("#case-0 tbody tr").evaluate_all(
+        "nodes => nodes.map(el => el.getBoundingClientRect().height - parseFloat(getComputedStyle(el.cells[0]).borderTopWidth))"
+    )
+    assert max(heights) - min(heights) < 1
+    math = scientific_cells.nth(0).get_by_role("math")
+    assert math.get_attribute("aria-label") == "1.23 times 10 to the power of 5"
+    geometry = math.evaluate("""el => {
+        const base = el.getBoundingClientRect(), exponent = el.querySelector('sup').getBoundingClientRect();
+        return {baseBottom: base.bottom, exponentBottom: exponent.bottom};
+    }""")
+    assert geometry["exponentBottom"] < geometry["baseBottom"] - 1
+    for selector in (".et-chip", ".et-mark-label-text", ".et-stats-value", ".et-axis-tick", ".et-mark-stack-label"):
+        assert page.locator(f"#case-1 {selector} sup").count() > 0
+    assert page.locator("#case-1 .et-mark-label").get_attribute("title") == "1.23 × 10⁵"
+    capture(page, "scientific-formatting.png")
+
+
 def test_five_style_notebook_shows_adjacent_revenue_decreases(page, live_server):
     notebook = Path(__file__).resolve().parents[2] / "notebooks" / "40_sparklines_and_booleans.py"
     outputs, _ = runpy.run_path(str(notebook))["app"].run()

@@ -1,5 +1,6 @@
 import { alignStyle, h, optString, inlineMarkdown, withFigure, isStub } from "./dom.js";
 import { formatValue } from "./format.js";
+import { formattedText } from "./formatted-text.js";
 import { withDecimals, indentForCell } from "./rows.js";
 import { calculateColorStyles, contrastTextColor } from "./color.js";
 import { renderBar, renderDelta, renderMarks, renderSparkline, renderSymbols } from "./visualizations.js";
@@ -165,7 +166,7 @@ export function renderCell({row, col, index, ctx, rowIndex, options: opts, toggl
         fallback: optString(fieldValue),
       });
     });
-    td.append(h("span", { class: "et-cell-value" }, merged));
+    td.append(h("span", { class: "et-cell-value" }, formattedText(merged)));
     return finish();
   }
 
@@ -307,7 +308,7 @@ function renderContent(col, value, formatted, ctx, row, format) {
         loading: "lazy",
         style: logoOptions.height ? { height: `${logoOptions.height}px` } : {},
       }),
-      h("span", { class: "et-cell-media-label" }, formatted),
+      h("span", { class: "et-cell-media-label" }, formattedText(formatted)),
     ]);
   } else if (col.image && row[col.image]) {
     const imageOptions = col.image_options || {};
@@ -321,7 +322,7 @@ function renderContent(col, value, formatted, ctx, row, format) {
           ...(imageOptions.width ? { width: `${imageOptions.width}px` } : {}),
         },
       }),
-      h("span", { class: "et-cell-media-label" }, formatted),
+      h("span", { class: "et-cell-media-label" }, formattedText(formatted)),
     ]);
   } else if (col.icon_map && col.icon_map[String(value)] != null) {
     const glyph = col.icon_map[String(value)];
@@ -347,7 +348,7 @@ function renderContent(col, value, formatted, ctx, row, format) {
       chipRange || (col.color_options || {}).conditional_colors
         ? calculateColorStyles(col, row, chipRange || { min: 0, max: 0 }, (ctx.colorScales.get(col) || ctx.colorScales.get(col.name)))
         : null;
-    const chip = h("span", { class: "et-chip" }, formatted);
+    const chip = h("span", { class: "et-chip" }, formattedText(formatted));
     // An optional minimum width; the chip still grows for wider content.
     const minWidth = (col.chip_options || {}).min_width;
     if (minWidth != null) {
@@ -359,7 +360,7 @@ function renderContent(col, value, formatted, ctx, row, format) {
     }
     content = chip;
   } else {
-    content = h("span", { class: "et-cell-value" }, formatted);
+    content = h("span", { class: "et-cell-value" }, formattedText(formatted));
   }
 
   return content;

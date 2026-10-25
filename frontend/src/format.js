@@ -1,5 +1,6 @@
 // Evidence-compatible value formatting built on the `ssf` spreadsheet formatter.
 import ssf from "ssf";
+import { scientificText } from "./scientific.js";
 
 const CURRENCIES = {
   usd: "$",
@@ -306,7 +307,7 @@ export function formatValue(value, formatCode, opts = {}) {
 
     let out = ssf.format(actual, processed, { date1970: true });
     if (out == null || out === "") out = fallbackValue;
-    return out;
+    return code === "sci" ? scientificText(out) : out;
   } catch (err) {
     if (typeof value === "object") return JSON.stringify(value);
     return fallbackValue;

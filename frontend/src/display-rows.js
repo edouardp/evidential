@@ -1,6 +1,7 @@
 // Annotation cells have their own presentation; detail bindings never run here.
 import { h, isStub } from "./dom.js";
 import { formatValue } from "./format.js";
+import { formattedText } from "./formatted-text.js";
 import { shaded } from "./rows.js";
 import { decorateSubcolumn } from "./headers.js";
 
@@ -42,7 +43,7 @@ export function renderAnnotation(entry, columns, ctx, options) {
       const text = raw == null ? (col.null_text ?? options.null_text ?? "–")
         : typeof raw === "string" ? raw
           : formatValue(raw, spec.format || col.fmt, {type: col.type, fallback: String(raw)});
-      cell.append(h("span", {class: "et-display-value"}, text));
+      cell.append(h("span", {class: "et-display-value"}, formattedText(text)));
     }
     decorateSubcolumn(cell, col, index, ctx);
     applyStyle(cell);

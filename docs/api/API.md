@@ -868,6 +868,13 @@ columns=[
 The kind factories cover the common cases; `.fmt()` is the escape hatch when you
 need an exact SSF code.
 
+`.fmt("sci")` displays scientific notation as **1.23 × 10⁵**, with two decimal
+places in the mantissa. HTML cells, mark labels, statistics and axes use a real
+superscript exponent; tooltips use readable Unicode superscripts. Small values
+use negative powers, for example `0.000123` becomes **1.23 × 10⁻⁴**. Explicit SSF
+codes such as `.fmt("0.000E+0")` retain their requested `1.235E+5` notation.
+See [the formatting demo](../../notebooks/08_column_options.py).
+
 ```python
 columns=[
     col.text("item", title="Item"),

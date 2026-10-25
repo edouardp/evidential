@@ -1,11 +1,12 @@
 // One summary per displayed header; sub-column selection stays local to a widget.
 import {h, isStub} from "./dom.js";
 import {formatTitle, formatValue} from "./format.js";
+import {formattedText} from "./formatted-text.js";
 
 function statsLine(label, value) {
   return h("div", {class: "et-stats-line"}, [
     h("span", {class: "et-stats-label"}, `${label}: `),
-    h("span", {class: "et-stats-value"}, value),
+    h("span", {class: "et-stats-value"}, formattedText(value)),
   ]);
 }
 

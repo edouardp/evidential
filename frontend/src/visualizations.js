@@ -1,5 +1,6 @@
 import { h } from "./dom.js";
 import { formatValue } from "./format.js";
+import { formattedText } from "./formatted-text.js";
 import { resolveColor } from "./color.js";
 import { numeric, observationValue } from "./mark-data.js";
 import { renderDensityBand } from "./density-band.js";
@@ -114,7 +115,7 @@ function stackSegment(enc, row, col, leftPct, widthPct, text = "") {
     const label = h("span", { class: "et-mark-stack-label", "data-mark-label": "",
       "data-overflow": spec.overflow || "hide", "data-min-width": spec.min_width || 0,
       style: labelTextStyle(spec),
-    }, h("span", {class: "et-mark-label-text"}, text));
+    }, h("span", {class: "et-mark-label-text"}, formattedText(text)));
     if (!spec.color) autoLabelColor(label, markColor(enc, row, "var(--et-accent, #2563eb)"));
     segment.append(label);
   }
@@ -576,7 +577,7 @@ export function renderBar(col, value, formatted, range, row) {
   const label = h(
     "span",
     { class: `et-bar-label${opts.hide_labels ? " et-hidden" : ""}` },
-    formatted,
+    formattedText(formatted),
   );
   const background = opts.background_color ? { backgroundColor: opts.background_color } : {};
   // `pad` insets the bar — and, in centred mode, the centre line's ends on the

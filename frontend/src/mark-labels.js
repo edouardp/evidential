@@ -1,5 +1,6 @@
 import { h, withFigure } from "./dom.js";
 import { formatValue } from "./format.js";
+import { formattedText } from "./formatted-text.js";
 import { resolveColor, contrastTextColor } from "./color.js";
 
 // Retain the requested placement separately from the position chosen by fitting.
@@ -77,7 +78,7 @@ export function renderMarkLabel(col, enc, row, geometry, format) {
     title: text, "data-mark-label": "", "data-overflow": spec.overflow || "hide",
     "data-min-width": spec.min_width || 0,
     style: labelTextStyle(spec),
-  }, h("span", {class: "et-mark-label-text"}, text));
+  }, h("span", {class: "et-mark-label-text"}, formattedText(text)));
   if (geometry.leftPct != null) {
     placeBarLabel(node, spec, geometry, position);
     if (spec.auto) automaticLabels.set(node, {spec, geometry, preferred: position});

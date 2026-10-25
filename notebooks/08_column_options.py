@@ -81,6 +81,47 @@ def _(EvidentialTable, col, connection, mo):
 
 
 @app.cell
+def scientific_notation_intro(mo):
+    mo.md("""
+    ## Scientific notation
+
+    `.fmt("sci")` displays a multiplication sign and an HTML superscript, such
+    as **1.23 × 10⁵**. The mantissa keeps two decimal places. Positive powers
+    omit the redundant plus sign; small values use a negative exponent.
+    Custom SSF codes such as `.fmt("0.000E+0")` retain their explicit notation.
+    """)
+    return
+
+
+@app.cell
+def scientific_formatting(EvidentialTable, col, mo):
+    scientific = mo.ui.anywidget(
+        EvidentialTable(
+            [
+                {"case": "Large", "value": 123456},
+                {"case": "Small", "value": 0.000123},
+                {"case": "Negative", "value": -123456},
+                {"case": "Zero", "value": 0},
+                {"case": "Missing", "value": None},
+            ],
+            title="Scientific formatting",
+            search=False,
+            page_size=0,
+            border=False,
+            width=620,
+            columns=[
+                col.text("case"),
+                col.number("value", title="Decimal").fmt("#,##0.000000"),
+                col.number("value", title="Scientific").fmt("sci"),
+                col.number("value", title="Custom SSF").fmt("0.000E+0"),
+            ],
+        )
+    )
+    mo.vstack([scientific])
+    return (scientific,)
+
+
+@app.cell
 def _(mo):
     mo.md("""
     ## Conditional visualisations
@@ -102,11 +143,20 @@ def _(EvidentialTable, col, connection, mo):
             row_shading=True,
             columns=[
                 col.text("name"),
-                col.bar("amount", title="Amount (bar)", color="#2563eb", negative_color="#dc2626", background="#f1f5f9", label=True),
-                col.percent("change", decimals=1, title="Change (delta chip)")
-                .delta(chip=True, show_value=True, down_is_good=False),
-                col.number("score", title="Score (colour scale)")
-                .color(scale=["#fee2e2", "#fef9c3", "#bbf7d0", "#15803d"], min=0, max=100, midpoint=50),
+                col.bar(
+                    "amount",
+                    title="Amount (bar)",
+                    color="#2563eb",
+                    negative_color="#dc2626",
+                    background="#f1f5f9",
+                    label=True,
+                ),
+                col.percent("change", decimals=1, title="Change (delta chip)").delta(
+                    chip=True, show_value=True, down_is_good=False
+                ),
+                col.number("score", title="Score (colour scale)").color(
+                    scale=["#fee2e2", "#fef9c3", "#bbf7d0", "#15803d"], min=0, max=100, midpoint=50
+                ),
                 col.sparkline("trend", title="Trend (sparkline)", type="area", color="#53768a"),
             ],
         )

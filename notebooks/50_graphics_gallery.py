@@ -4,7 +4,7 @@
 # ///
 """One named cell per graphic example in the README gallery.
 
-Run ``make api-screenshots`` to start this notebook headlessly and capture each
+Run ``make readme`` to start this notebook headlessly and capture each
 cell's table into ``docs/img/graphics/`` with Playwright.
 """
 
@@ -16,6 +16,8 @@ app = marimo.App(width="full")
 
 @app.cell
 def _():
+    import marimo as mo
+
     from evidential import EvidentialTable, col, label, settings
 
     from scipy import stats  # For random distributions
@@ -32,7 +34,17 @@ def _():
             **options,
         )
 
-    return EvidentialTable, col, frame, label, stats
+    return EvidentialTable, col, frame, label, mo, stats
+
+
+@app.cell(hide_code=True)
+def graphic_bar_doc(mo):
+    mo.md(r"""
+    #### Bar
+
+    Labels prefer the outside end, moving inside when space is tight.
+    """)
+    return
 
 
 @app.cell
@@ -51,6 +63,16 @@ def graphic_bar(EvidentialTable, col, frame, label):
         ],
         settings=frame("Bar", 520),
     )
+    return
+
+
+@app.cell(hide_code=True)
+def graphic_bar_centered_doc(mo):
+    mo.md(r"""
+    #### Centered bar
+
+    Positive and negative values extend from zero on a shared scale.
+    """)
     return
 
 
@@ -75,6 +97,16 @@ def graphic_bar_centered(EvidentialTable, col, frame):
     return
 
 
+@app.cell(hide_code=True)
+def graphic_bar_overlay_doc(mo):
+    mo.md(r"""
+    #### Overlaid bars with a target
+
+    Layer the current value over the previous value, then mark the target.
+    """)
+    return
+
+
 @app.cell
 def graphic_bar_overlay(EvidentialTable, col, frame, label):
     _rows = [
@@ -94,6 +126,16 @@ def graphic_bar_overlay(EvidentialTable, col, frame, label):
         ],
         settings=frame("Overlaid bars + target", 560),
     )
+    return
+
+
+@app.cell(hide_code=True)
+def graphic_bar_back_to_back_doc(mo):
+    mo.md(r"""
+    #### Back-to-back bars
+
+    Mirror two measures around a shared text column.
+    """)
     return
 
 
@@ -134,6 +176,16 @@ def graphic_bar_back_to_back(EvidentialTable, col, frame, label):
     return
 
 
+@app.cell(hide_code=True)
+def graphic_dumbbell_doc(mo):
+    mo.md(r"""
+    #### Dumbbell: range plus points
+
+    Connect two values, colour decreases red and add a direction chevron.
+    """)
+    return
+
+
 @app.cell
 def graphic_dumbbell(EvidentialTable, col, frame):
     _rows = [
@@ -148,14 +200,24 @@ def graphic_dumbbell(EvidentialTable, col, frame):
         columns=[
             col.text("country"),
             col.range("before", "after", color="#222222", color_negative="#cc1111", size=2, direction_marker=True)
-            .point("before", color="#6699ee", outline="#2f5fa8", size=12)
-            .point("after", color="#ff6666", outline="#cc1111", size=12)
-            .title("Before → after")
-            .align("center")
-            .scale(domain=(0, 100), axis=True, axis_position="bottom"),
+               .point("before", color="#6699ee", outline="#2f5fa8", size=12)
+               .point("after", color="#ff6666", outline="#cc1111", size=12)
+               .title("Before → after")
+               .align("center")
+               .scale(domain=(0, 100), axis=True, axis_position="bottom"),
         ],
         settings=frame("Dumbbell: range + points", 560),
     )
+    return
+
+
+@app.cell(hide_code=True)
+def graphic_points_doc(mo):
+    mo.md(r"""
+    #### Points from an array
+
+    Plot every sample on one horizontal scale, with transparent marks for overlap.
+    """)
     return
 
 
@@ -179,6 +241,16 @@ def graphic_points(EvidentialTable, col, frame, stats):
     return
 
 
+@app.cell(hide_code=True)
+def graphic_boxplot_doc(mo):
+    mo.md(r"""
+    #### Box plot
+
+    Show quartiles, a median, whiskers and outliers.
+    """)
+    return
+
+
 @app.cell
 def graphic_boxplot(EvidentialTable, col, frame):
     _rows = [
@@ -196,6 +268,16 @@ def graphic_boxplot(EvidentialTable, col, frame):
         ],
         settings=frame("Box plot", 560),
     )
+    return
+
+
+@app.cell(hide_code=True)
+def graphic_distribution_doc(mo):
+    mo.md(r"""
+    #### Distribution band
+
+    Draw a density band with a median point.
+    """)
     return
 
 
@@ -230,6 +312,16 @@ def graphic_distribution(EvidentialTable, col, frame):
     return
 
 
+@app.cell(hide_code=True)
+def graphic_stacked_bar_doc(mo):
+    mo.md(r"""
+    #### Stacked bar
+
+    Stack components and label them within the bar.
+    """)
+    return
+
+
 @app.cell
 def graphic_stacked_bar(EvidentialTable, col, frame):
     _rows = [
@@ -255,6 +347,16 @@ def graphic_stacked_bar(EvidentialTable, col, frame):
         ],
         settings=frame("Stacked bar", 580),
     )
+    return
+
+
+@app.cell(hide_code=True)
+def graphic_stack_likert_doc(mo):
+    mo.md(r"""
+    #### Diverging Likert stack
+
+    Split neutral responses around zero and label the normalised shares.
+    """)
     return
 
 
@@ -290,6 +392,16 @@ def graphic_stack_likert(EvidentialTable, col, frame):
     return
 
 
+@app.cell(hide_code=True)
+def graphic_strip_doc(mo):
+    mo.md(r"""
+    #### Strip
+
+    Display an ordered sequence of categorical outcomes.
+    """)
+    return
+
+
 @app.cell
 def graphic_strip(EvidentialTable, col, frame):
     _rows = [
@@ -305,6 +417,16 @@ def graphic_strip(EvidentialTable, col, frame):
         ],
         settings=frame("Strip", 460),
     )
+    return
+
+
+@app.cell(hide_code=True)
+def graphic_color_doc(mo):
+    mo.md(r"""
+    #### Color scale
+
+    Encode the score as a background colour while keeping its numeric value.
+    """)
     return
 
 
@@ -324,6 +446,16 @@ def graphic_color(EvidentialTable, col, frame):
         ],
         settings=frame("Colour scale", 500),
     )
+    return
+
+
+@app.cell(hide_code=True)
+def graphic_chip_doc(mo):
+    mo.md(r"""
+    #### Chip
+
+    Use chips for categories or a numeric colour scale.
+    """)
     return
 
 
@@ -347,6 +479,16 @@ def graphic_chip(EvidentialTable, col, frame):
     return
 
 
+@app.cell(hide_code=True)
+def graphic_delta_doc(mo):
+    mo.md(r"""
+    #### Delta
+
+    Treat changes within the neutral range as steady, with optional chip backgrounds.
+    """)
+    return
+
+
 @app.cell
 def graphic_delta(EvidentialTable, col, frame):
     _rows = [
@@ -366,6 +508,16 @@ def graphic_delta(EvidentialTable, col, frame):
         ],
         settings=frame("Delta indicators", 540),
     )
+    return
+
+
+@app.cell(hide_code=True)
+def graphic_sparklines_doc(mo):
+    mo.md(r"""
+    #### Sparklines
+
+    Show a series as a line, area, bars, points or increase/steady/decrease marks.
+    """)
     return
 
 
@@ -404,6 +556,16 @@ def graphic_sparklines(EvidentialTable, col, frame):
     return
 
 
+@app.cell(hide_code=True)
+def graphic_symbols_doc(mo):
+    mo.md(r"""
+    #### Symbols and rating
+
+    Repeat glyphs or shapes for counts, or show a five-point rating.
+    """)
+    return
+
+
 @app.cell
 def graphic_symbols(EvidentialTable, col, frame):
     _rows = [
@@ -426,6 +588,16 @@ def graphic_symbols(EvidentialTable, col, frame):
     return
 
 
+@app.cell(hide_code=True)
+def graphic_boolean_icons_doc(mo):
+    mo.md(r"""
+    #### Boolean, icons and flags
+
+    Render booleans, mapped icons and country flags.
+    """)
+    return
+
+
 @app.cell
 def graphic_boolean_icons(EvidentialTable, col, frame):
     _rows = [
@@ -443,6 +615,16 @@ def graphic_boolean_icons(EvidentialTable, col, frame):
         ],
         settings=frame("Boolean, icons and flags", 540),
     )
+    return
+
+
+@app.cell(hide_code=True)
+def graphic_reference_doc(mo):
+    mo.md(r"""
+    #### Axis, reference line and band
+
+    Add an external axis, gridlines, a target line and a reference band.
+    """)
     return
 
 

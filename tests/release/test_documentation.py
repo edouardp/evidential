@@ -13,6 +13,7 @@ ROOT = Path(__file__).resolve().parents[2]
 README_ASSET_ROOT = "https://raw.githubusercontent.com/edouardp/evidential/main/"
 DOCS = (
     "README.md",
+    "docs/PYPI_README.md",
     "docs/design-and-dx.md",
     "docs/technical-architecture.md",
     "docs/marimo-studio.md",
@@ -77,9 +78,15 @@ def test_local_images_exist(relative: str) -> None:
 
 
 def test_readme_images_are_absolute_for_pypi():
-    targets = re.findall(r"!\[[^\]]*\]\(([^)]+)\)", (ROOT / "README.md").read_text())
+    targets = re.findall(r"!\[[^\]]*\]\(([^)]+)\)", (ROOT / "docs/PYPI_README.md").read_text())
     assert targets
     assert all(target.startswith("https://") for target in targets), "PyPI cannot resolve repository-relative images"
+
+
+def test_repository_readme_uses_local_documentation_images():
+    targets = re.findall(r"!\[[^\]]*\]\(([^)]+)\)", (ROOT / "README.md").read_text())
+    assert not any(target.startswith(README_ASSET_ROOT) for target in targets)
+    assert any(target.startswith("docs/") for target in targets)
 
 
 @pytest.mark.parametrize("relative", DOCS)
@@ -112,9 +119,9 @@ def test_api_images_match_the_screenshot_script() -> None:
 
 def test_screenshots_have_a_named_notebook_cell() -> None:
     """Every capture target points at a cell in its screenshot notebook."""
-    from scripts.api_screenshots import EXTRAS, GALLERY, GALLERY_NOTEBOOK, NOTEBOOK, SHOTS
+    from scripts.api_screenshots import _notebook_targets
 
-    for notebook, targets in ((NOTEBOOK, [*SHOTS, *EXTRAS]), (GALLERY_NOTEBOOK, GALLERY)):
+    for notebook, targets in _notebook_targets():
         tree = ast.parse(notebook.read_text())
         cells = {node.name for node in tree.body if isinstance(node, ast.FunctionDef)}
         names = [cell for _, cell in targets]

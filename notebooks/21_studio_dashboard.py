@@ -109,6 +109,33 @@ def kpis(filtered):
     return (kpis,)
 
 
+@app.cell(hide_code=True)
+def revenue_table_doc(mo):
+    mo.md(r"""
+    ## 10. Marimo Studio views
+
+    A [marimo Studio](https://marimo.io/blog/introducing-marimo-studio) view
+    projects named cells from a notebook, so one table can back a dashboard, report
+    or slide deck. This is the table from the Studio demo; its view projects the
+    same `revenue_table` cell alongside KPIs and a region filter.
+
+    ```html
+    <marimo-cell name="revenue_table"></marimo-cell>
+    <strong mo-value="kpis.revenue"></strong>
+    ```
+
+    ```console
+    make studio-serve
+    make studio-validate
+    ```
+
+    The interactive table uses Studio's **Server** runtime. See
+    [the Studio guide](docs/marimo-studio.md) for the full dashboard view.
+    The table's column configuration is:
+    """)
+    return
+
+
 @app.cell
 def revenue_table(EvidentialTable, col, filtered):
     # The live EvidentialTable widget is this cell's output; <marimo-cell

@@ -36,6 +36,7 @@ if TYPE_CHECKING:
 ROOT = Path(__file__).resolve().parent.parent
 NOTEBOOK = ROOT / "notebooks" / "49_api_screenshots.py"
 GALLERY_NOTEBOOK = ROOT / "notebooks" / "50_graphics_gallery.py"
+STUDIO_NOTEBOOK = ROOT / "notebooks" / "21_studio_dashboard.py"
 OUT = ROOT / "docs" / "api" / "images"
 PREVIEW = ROOT / "docs" / "preview.png"
 GALLERY_OUT = ROOT / "docs" / "img" / "graphics"
@@ -173,10 +174,11 @@ def _notebook_targets() -> list[tuple[Path, list[tuple[Path, str]]]]:
     return [
         (NOTEBOOK, [*api_targets, *EXTRAS]),
         (GALLERY_NOTEBOOK, GALLERY),
+        (STUDIO_NOTEBOOK, [(ROOT / "docs" / "img" / "studio-table.png", "revenue_table")]),
     ]
 
 
-def render() -> Iterator[Path]:
+def render(*, output_root: Path = ROOT) -> Iterator[Path]:
     from playwright.sync_api import sync_playwright
 
     with sync_playwright() as playwright:
@@ -193,7 +195,7 @@ def render() -> Iterator[Path]:
                     page.goto(url, wait_until="networkidle")
                     _wait_for_tables(page, targets)
                     for path, cell in targets:
-                        yield _capture(page, cell, path)
+                        yield _capture(page, cell, output_root / path.relative_to(ROOT))
                     context.close()
         finally:
             browser.close()

@@ -23,6 +23,7 @@ STAGES = (
     "shellcheck",
     "checkmake",
     "uvx rumdl",
+    "uv run python -m scripts.generate_readme --check",
 )
 
 
@@ -86,3 +87,11 @@ def test_dependency_audit_runs_in_precommit_even_without_python_changes() -> Non
     assert "entry: uv run pip-audit" in audit
     assert "pass_filenames: false" in audit
     assert "always_run: true" in audit
+
+
+def test_readme_provenance_runs_in_precommit_even_without_python_changes() -> None:
+    config = (ROOT / ".pre-commit-config.yaml").read_text()
+    hook = config.split("- id: readme-check\n", 1)[1].split("- id:", 1)[0]
+    assert "entry: uv run python -m scripts.generate_readme --check" in hook
+    assert "pass_filenames: false" in hook
+    assert "always_run: true" in hook

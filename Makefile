@@ -100,8 +100,15 @@ screenshot: frontend-build ## Capture the preview to /tmp/evidential_preview.png
 	@bash scripts/screenshot.sh
 
 .PHONY: api-screenshots
-api-screenshots: frontend-build ## Capture documentation screenshots from the screenshot notebooks
-	uv run python scripts/api_screenshots.py
+api-screenshots: readme ## Refresh notebook screenshots and their generated README examples
+
+.PHONY: readme
+readme: frontend-build ## Generate README examples and Playwright images from marimo notebooks
+	uv run python -m scripts.generate_readme
+
+.PHONY: readme-check
+readme-check: ## Check generated README text and screenshot provenance without a browser
+	uv run python -m scripts.generate_readme --check
 
 # ============================================================================
 # marimo Studio
@@ -243,7 +250,7 @@ clean-all: clean ## Remove caches, build artifacts, the virtualenv and node_modu
 all: validate ## Run full validation
 
 .PHONY: validate
-validate: lint check-notebooks test frontend-check test-browser build ## Run all local release checks and a build
+validate: lint check-notebooks readme-check test frontend-check test-browser build ## Run all local release checks and a build
 	@echo ""
 	@echo "Validation complete."
 

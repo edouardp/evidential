@@ -4,7 +4,7 @@
 # ///
 """Named cells for the README hero and every image in ``docs/api/images``.
 
-Run ``make api-screenshots`` to start this notebook headlessly and capture each
+Run ``make readme`` to start this notebook headlessly and capture each
 cell's table with Playwright. Keep the cell names stable: they are the image
 slugs used by ``docs/api/API.md``, ``docs/preview.png`` and
 ``scripts/api_screenshots.py``.
@@ -24,6 +24,7 @@ def _():
     from pathlib import Path
 
     import duckdb
+    import marimo as mo
 
     from evidential import (
         EvidentialTable,
@@ -68,6 +69,7 @@ def _():
         comparison_table,
         grouped_table,
         label,
+        mo,
         pivot_table,
         query_table,
         sample_orders,
@@ -76,6 +78,17 @@ def _():
         tab_style,
         text_transform,
     )
+
+
+@app.cell(hide_code=True)
+def quickstart_doc(mo):
+    mo.md(r"""
+    ## 3. Describe columns
+
+    Column descriptions are built one column at a time with `col.*`. Every factory
+    returns an immutable `Column`; every chain method returns a new one.
+    """)
+    return
 
 
 @app.cell
@@ -101,6 +114,14 @@ def quickstart(EvidentialTable, col, settings):
             width="620px",
         ),
     )
+    return
+
+
+@app.cell(hide_code=True)
+def preview_doc(mo):
+    mo.md(r"""
+    Sections, sub-columns, footnotes, bars, colour scales and sparklines in one table.
+    """)
     return
 
 
@@ -207,6 +228,30 @@ def preview(EvidentialTable, col, label, section_row, settings):
     return
 
 
+@app.cell(hide_code=True)
+def kinds_doc(mo):
+    mo.md(r"""
+    ### Kinds
+
+    The factory chooses the kind; the chain refines it.
+
+    | Kind | Factories |
+    | --- | --- |
+    | Text | `col.text`, `col.chip`, `col.icons`, `col.flag`, `col.boolean` |
+    | Numbers | `col.number`, `col.integer`, `col.currency`, `col.percent` |
+    | Time | `col.date`, `col.time`, `col.datetime` |
+    | Marks | `col.bar`, `col.point`, `col.points`, `col.range`, `col.stacked_bar`, `col.strip`, `col.boxplot`, `col.distribution` |
+    | Values as marks | `col.color`, `col.delta`, `col.sparkline`, `col.symbols`, `col.rating`, `col.repeat` |
+    | Cells | `col.link` / `col.url`, `col.image`, `col.logo`, `col.markdown`, `col.html` |
+    | Composition | `col.group`, `col.subcolumns`, `col.merge`, `col.array`, `col.auto` |
+
+    `col.number` auto-scales. `col.currency` takes `code=` (`usd`, `eur`, `gbp`, …)
+    and `decimals=`. `col.percent` treats values as proportions unless
+    `whole=True`. Dates and times accept `relative=`.
+    """)
+    return
+
+
 @app.cell
 def kinds(EvidentialTable, col, settings):
     menu = [
@@ -308,6 +353,17 @@ def symbols(EvidentialTable, col, settings):
             border=False,
         ),
     )
+    return
+
+
+@app.cell(hide_code=True)
+def visualizations_doc(mo):
+    mo.md(r"""
+    ## 5. Add visualisations
+
+    A visualisation presents the underlying value; sorting, search, statistics and
+    CSV export still use the raw value.
+    """)
     return
 
 
@@ -464,6 +520,19 @@ def groups(EvidentialTable, col, settings):
     return
 
 
+@app.cell(hide_code=True)
+def subcolumns_doc(mo):
+    mo.md(r"""
+    ## 6. Build header structures
+
+    `col.subcolumns(label, [...])` gives its members one shared leaf header.
+    `col.group(label, [...])` adds a spanner over a run of columns. Both nest.
+    A column named `"GDP Measure.GDP nominal"` groups under **GDP Measure**
+    automatically; `column_groups={...}` is the equivalent mapping form.
+    """)
+    return
+
+
 @app.cell
 def subcolumns(EvidentialTable, col, settings):
     economies = [
@@ -539,6 +608,18 @@ def merged(
     return
 
 
+@app.cell(hide_code=True)
+def grouped_totals_doc(mo):
+    mo.md(r"""
+    ### Grouped totals
+
+    Group the sample orders by category, with sales and order counts. The helper
+    adds subtotals and a grand total. `sample_orders()` opens the bundled fixture
+    in DuckDB; its definition lives in the notebook.
+    """)
+    return
+
+
 @app.cell
 def grouped_totals(col, grouped_table, sample_orders, settings):
     grouped_table(
@@ -553,6 +634,17 @@ def grouped_totals(col, grouped_table, sample_orders, settings):
         },
         settings=settings(title="Grouped totals", page_size=10, width="560px"),
     )
+    return
+
+
+@app.cell(hide_code=True)
+def pivoted_columns_doc(mo):
+    mo.md(r"""
+    ### Pivot, compare and query
+
+    Turn each year into a column group, with one row per category. This example
+    uses the same `sample_orders()` fixture connection as the grouped table.
+    """)
     return
 
 

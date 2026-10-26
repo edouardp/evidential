@@ -12,12 +12,25 @@ as an [anywidget](https://anywidget.dev) and powered by
 how to present it, and the browser renders it: sort, search, paginate, freeze
 columns, group with subtotals, download CSV and open a fullscreen view.
 
-![Global city tourism: sections, sub-columns, footnotes, bars, colour scales and sparklines](https://raw.githubusercontent.com/edouardp/evidential/main/docs/preview.png)
+<!-- notebook: notebooks/49_api_screenshots.py#preview image-only -->
 
-> **Status:** alpha (`0.1.0`), not yet published on PyPI. Install from a
-> checkout below. The API may change.
+Sections, sub-columns, footnotes, bars, colour scales and sparklines in one table.
+
+![preview](docs/preview.png)
+
+[Notebook source: `preview`](notebooks/49_api_screenshots.py)
+
+<!-- /notebook -->
+
+> **Status:** alpha (`0.1.0`). The API may change.
 
 ## Install
+
+```bash
+uv add "evidential[marimo,duckdb]"
+```
+
+To explore the demo notebooks from a checkout:
 
 ```bash
 git clone https://github.com/edouardp/evidential
@@ -101,31 +114,29 @@ col.currency("revenue").info("Net revenue in USD")
 For Amazon S3 Tables, use [`duck.connect_s3_tables`](docs/technical-architecture.md)
 or see [`notebooks/02_s3_tables.py`](notebooks/02_s3_tables.py).
 
+<!-- notebook: notebooks/49_api_screenshots.py#quickstart -->
+
 ## 3. Describe columns
 
 Column descriptions are built one column at a time with `col.*`. Every factory
 returns an immutable `Column`; every chain method returns a new one.
 
 ```python
-from evidential import EvidentialTable, col, settings
-
-EvidentialTable(
-    tips,
-    columns=[
-        col.text("city", title="City"),
-        col.integer("trips", title="Trips"),
-        col.currency("revenue", title="Revenue"),
-        col.percent("tip_rate", decimals=1, title="Tip rate"),
-    ],
-    settings=settings(
-        title="Tipping by city",
-        caption="Illustrative sample orders.",
-        width="620px",
-    ),
-)
+columns=[
+    col.text("city", title="City"),
+    col.integer("trips", title="Trips"),
+    col.currency("revenue", title="Revenue"),
+    col.percent("tip_rate", decimals=1, title="Tip rate"),
+]
 ```
 
-![The same table with explicit column kinds and a settings bundle](https://raw.githubusercontent.com/edouardp/evidential/main/docs/api/images/quickstart.png)
+![3. Describe columns](docs/api/images/quickstart.png)
+
+[Notebook source: `quickstart`](notebooks/49_api_screenshots.py)
+
+<!-- /notebook -->
+
+<!-- notebook: notebooks/49_api_screenshots.py#kinds -->
 
 ### Kinds
 
@@ -147,18 +158,21 @@ and `decimals=`. `col.percent` treats values as proportions unless
 
 ```python
 columns=[
-    col.text("city"),
-    col.currency("revenue", code="eur", decimals=0),
-    col.percent("tip_rate", decimals=1),
-    col.date("week", fmt="mmm-yy"),
-    col.time("opened_at", fmt="hms"),
-    col.datetime("updated_at", relative="hour"),
-    col.flag("country"),
-    col.boolean("active", true_symbol="✓", false_symbol="✗"),
+    col.text("item", title="Item"),
+    col.integer("count", title="Count"),
+    col.currency("price", title="Price"),
+    col.percent("share", decimals=0, title="Share"),
+    col.date("day", title="Day"),
+    col.flag("origin", title="Origin"),
+    col.boolean("active", title="Active"),
 ]
 ```
 
-![Column kinds](https://raw.githubusercontent.com/edouardp/evidential/main/docs/api/images/kinds.png)
+![Kinds](docs/api/images/kinds.png)
+
+[Notebook source: `kinds`](notebooks/49_api_screenshots.py)
+
+<!-- /notebook -->
 
 ### Refine a column
 
@@ -233,6 +247,8 @@ EvidentialTable(tips, columns=[...], settings=REPORT, title="This month")
 
 The [API reference](docs/api/API.md#table-options) lists every option and value.
 
+<!-- notebook: notebooks/49_api_screenshots.py#visualizations -->
+
 ## 5. Add visualisations
 
 A visualisation presents the underlying value; sorting, search, statistics and
@@ -241,25 +257,32 @@ CSV export still use the raw value.
 ```python
 columns=[
     col.text("region", title="Region"),
-    col.bar("revenue", format="usd0", label=True, title="Revenue"),
-    col.bar("growth", center=True, format="pct1", label=True, title="Growth"),
-    col.number("share").color(scale="Blues").title("Share"),
-    col.chip("status", min_width=80),
-    col.percent("change", decimals=1).delta(down_is_good=False, neutral_range="0.02"),
+    col.bar("revenue", title="Revenue"),
+    col.bar("growth", center=True, title="Growth"),
+    col.color("share", title="Share"),
+    col.chip("region", title="Chip"),
     col.sparkline("trend", type="area", title="Trend"),
-    col.rating("stars", max=5),
+    col.percent("growth", decimals=0, title="Δ").delta(),
 ]
 ```
 
-![Bars, colour scales, chips, sparklines and deltas](https://raw.githubusercontent.com/edouardp/evidential/main/docs/api/images/visualizations.png)
+![5. Add visualisations](docs/api/images/visualizations.png)
+
+[Notebook source: `visualizations`](notebooks/49_api_screenshots.py)
+
+<!-- /notebook -->
 
 ### Graphic gallery
 
 Every graphic type, with the Python that builds it. The images come from
 [`notebooks/50_graphics_gallery.py`](notebooks/50_graphics_gallery.py), captured
-by `make api-screenshots`.
+together with these descriptions and code excerpts by `make readme`.
+
+<!-- notebook: notebooks/50_graphics_gallery.py#graphic_bar -->
 
 #### Bar
+
+Labels prefer the outside end, moving inside when space is tight.
 
 ```python
 columns=[
@@ -268,53 +291,96 @@ columns=[
 ]
 ```
 
-![Bar](https://raw.githubusercontent.com/edouardp/evidential/main/docs/img/graphics/bar.png)
+![Bar](docs/img/graphics/bar.png)
+
+[Notebook source: `graphic_bar`](notebooks/50_graphics_gallery.py)
+
+<!-- /notebook -->
+
+<!-- notebook: notebooks/50_graphics_gallery.py#graphic_bar_centered -->
 
 #### Centered bar
+
+Positive and negative values extend from zero on a shared scale.
 
 ```python
 columns=[
     col.text("team"),
-    col.bar("change", center=True, format="pct1", label=True, title="Change")
-       .scale(domain=(-0.2, 0.2), axis=True, axis_position="bottom"),
-]
-```
-
-![Centered bar](https://raw.githubusercontent.com/edouardp/evidential/main/docs/img/graphics/bar-centered.png)
-
-#### Overlaid bars with a target
-
-```python
-columns=[
-    col.text("party"),
-    (
-        col.bar("previous", format="num0", color="#d1d5db", size=0.85)
-        .bar("current", format="num0", color="@colour", size=0.45,
-             label=label.position("inside end"), title="Current vs previous")
-        .point("target", color="#0f766e", size=7)
-        .scale(domain=(0, 45))
+    col.bar("change", center=True, format="pct1", label=True, title="Change").scale(
+        domain=(-0.2, 0.2), axis=True, axis_position="bottom"
     ),
 ]
 ```
 
-![Overlaid bars with a target](https://raw.githubusercontent.com/edouardp/evidential/main/docs/img/graphics/bar-overlay.png)
+![Centered bar](docs/img/graphics/bar-centered.png)
 
-#### Back-to-back bars
+[Notebook source: `graphic_bar_centered`](notebooks/50_graphics_gallery.py)
+
+<!-- /notebook -->
+
+<!-- notebook: notebooks/50_graphics_gallery.py#graphic_bar_overlay -->
+
+#### Overlaid bars with a target
+
+Layer the current value over the previous value, then mark the target.
 
 ```python
 columns=[
-    col.bar("spend", format="usd1", direction="left", color="@color",
-            label=label.auto_position("outside end"), pad=3).align("left"),
+    col.text("party"),
+    col.bar("previous", format="num0", color="#d1d5db", size=0.85)
+    .bar("current", format="num0", color="@colour", size=0.45, label=label.position("inside end"), title="Current vs previous")
+    .point("target", color="#0f766e", size=7)
+    .scale(domain=(0, 45)),
+]
+```
+
+![Overlaid bars with a target](docs/img/graphics/bar-overlay.png)
+
+[Notebook source: `graphic_bar_overlay`](notebooks/50_graphics_gallery.py)
+
+<!-- /notebook -->
+
+<!-- notebook: notebooks/50_graphics_gallery.py#graphic_bar_back_to_back -->
+
+#### Back-to-back bars
+
+Mirror two measures around a shared text column.
+
+```python
+columns=[
+    col.bar(
+        "spend",
+        format="usd1",
+        direction="left",
+        color="@color",
+        label=label.auto_position("outside end"),
+        pad=3,
+        title="Sales per capita",
+    ).align("left"),
     col.text("country", title=""),
-    col.bar("rate", format="num2", color="@color",
-            label=label.auto_position("outside end"), pad=3).align("right"),
+    col.bar(
+        "rate",
+        format="num2",
+        color="@color",
+        label=label.auto_position("outside end"),
+        pad=3,
+        title="Foreign-to-Canadian rate",
+    ).align("right"),
     col.auto("color").hide(),
 ]
 ```
 
-![Back-to-back bars](https://raw.githubusercontent.com/edouardp/evidential/main/docs/img/graphics/bar-back-to-back.png)
+![Back-to-back bars](docs/img/graphics/bar-back-to-back.png)
+
+[Notebook source: `graphic_bar_back_to_back`](notebooks/50_graphics_gallery.py)
+
+<!-- /notebook -->
+
+<!-- notebook: notebooks/50_graphics_gallery.py#graphic_color -->
 
 #### Color scale
+
+Encode the score as a background colour while keeping its numeric value.
 
 ```python
 columns=[
@@ -323,9 +389,17 @@ columns=[
 ]
 ```
 
-![Color scale](https://raw.githubusercontent.com/edouardp/evidential/main/docs/img/graphics/color.png)
+![Color scale](docs/img/graphics/color.png)
+
+[Notebook source: `graphic_color`](notebooks/50_graphics_gallery.py)
+
+<!-- /notebook -->
+
+<!-- notebook: notebooks/50_graphics_gallery.py#graphic_chip -->
 
 #### Chip
+
+Use chips for categories or a numeric colour scale.
 
 ```python
 columns=[
@@ -335,38 +409,62 @@ columns=[
 ]
 ```
 
-![Chip](https://raw.githubusercontent.com/edouardp/evidential/main/docs/img/graphics/chip.png)
+![Chip](docs/img/graphics/chip.png)
+
+[Notebook source: `graphic_chip`](notebooks/50_graphics_gallery.py)
+
+<!-- /notebook -->
+
+<!-- notebook: notebooks/50_graphics_gallery.py#graphic_delta -->
 
 #### Delta
+
+Treat changes within the neutral range as steady, with optional chip backgrounds.
 
 ```python
 columns=[
     col.text("metric"),
-    col.percent("change", decimals=1, title="Change")
-       .delta(down_is_good=False, neutral_range="-0.02:0.02"),
-    col.percent("change", decimals=1, title="As a chip")
-       .delta(down_is_good=False, neutral_range="-0.02:0.02", chip=True),
+    col.percent("change", decimals=1, title="Change").delta(down_is_good=False, neutral_range="-0.02:0.02"),
+    col.percent("change", decimals=1, title="As a chip").delta(
+        down_is_good=False, neutral_range="-0.02:0.02", chip=True
+    ),
 ]
 ```
 
-![Delta indicators](https://raw.githubusercontent.com/edouardp/evidential/main/docs/img/graphics/delta.png)
+![Delta](docs/img/graphics/delta.png)
+
+[Notebook source: `graphic_delta`](notebooks/50_graphics_gallery.py)
+
+<!-- /notebook -->
+
+<!-- notebook: notebooks/50_graphics_gallery.py#graphic_sparklines -->
 
 #### Sparklines
+
+Show a series as a line, area, bars, points or increase/steady/decrease marks.
 
 ```python
 columns=[
     col.text("series"),
-    col.sparkline("line", type="line", title="Line"),
-    col.sparkline("area", type="area", fit_to_data=True, title="Area"),
-    col.sparkline("bar", type="bar", title="Bar"),
-    col.sparkline("points", type="points", markers=True, title="Points"),
-    col.sparkline("change", type="change", title="Change"),
+    col.sparkline("line", type="line", width=110, height=30, title="Line"),
+    col.sparkline("area", type="area", fit_to_data=True, width=110, height=30, title="Area"),
+    col.sparkline("bar", type="bar", width=110, height=30, title="Bar"),
+    col.sparkline("points", type="points", width=110, height=30, markers=True, title="Points"),
+    col.sparkline("change", type="change", width=110, height=30, title="Change"),
 ]
 ```
 
-![Sparkline types](https://raw.githubusercontent.com/edouardp/evidential/main/docs/img/graphics/sparklines.png)
+![Sparklines](docs/img/graphics/sparklines.png)
+
+[Notebook source: `graphic_sparklines`](notebooks/50_graphics_gallery.py)
+
+<!-- /notebook -->
+
+<!-- notebook: notebooks/50_graphics_gallery.py#graphic_symbols -->
 
 #### Symbols and rating
+
+Repeat glyphs or shapes for counts, or show a five-point rating.
 
 ```python
 columns=[
@@ -377,9 +475,17 @@ columns=[
 ]
 ```
 
-![Symbols and rating](https://raw.githubusercontent.com/edouardp/evidential/main/docs/img/graphics/symbols.png)
+![Symbols and rating](docs/img/graphics/symbols.png)
+
+[Notebook source: `graphic_symbols`](notebooks/50_graphics_gallery.py)
+
+<!-- /notebook -->
+
+<!-- notebook: notebooks/50_graphics_gallery.py#graphic_boolean_icons -->
 
 #### Boolean, icons and flags
+
+Render booleans, mapped icons and country flags.
 
 ```python
 columns=[
@@ -390,122 +496,202 @@ columns=[
 ]
 ```
 
-![Boolean, icons and flags](https://raw.githubusercontent.com/edouardp/evidential/main/docs/img/graphics/boolean-icons.png)
+![Boolean, icons and flags](docs/img/graphics/boolean-icons.png)
+
+[Notebook source: `graphic_boolean_icons`](notebooks/50_graphics_gallery.py)
+
+<!-- /notebook -->
+
+<!-- notebook: notebooks/50_graphics_gallery.py#graphic_dumbbell -->
 
 #### Dumbbell: range plus points
+
+Connect two values, colour decreases red and add a direction chevron.
 
 ```python
 columns=[
     col.text("country"),
-    (
-        col.range("before", "after", color="#222222", color_negative="#cc1111",
-                  size=2, direction_marker=True)
-        .point("before", color="#6699ee", outline="#2f5fa8", size=12)
-        .point("after", color="#ff6666", outline="#cc1111", size=12)
-        .title("Before → after").align("center")
-        .scale(domain=(0, 100), axis=True, axis_position="bottom")
-    ),
+    col.range("before", "after", color="#222222", color_negative="#cc1111", size=2, direction_marker=True)
+       .point("before", color="#6699ee", outline="#2f5fa8", size=12)
+       .point("after", color="#ff6666", outline="#cc1111", size=12)
+       .title("Before → after")
+       .align("center")
+       .scale(domain=(0, 100), axis=True, axis_position="bottom"),
 ]
 ```
 
-![Dumbbell](https://raw.githubusercontent.com/edouardp/evidential/main/docs/img/graphics/dumbbell.png)
+![Dumbbell: range plus points](docs/img/graphics/dumbbell.png)
+
+[Notebook source: `graphic_dumbbell`](notebooks/50_graphics_gallery.py)
+
+<!-- /notebook -->
+
+<!-- notebook: notebooks/50_graphics_gallery.py#graphic_points -->
 
 #### Points from an array
+
+Plot every sample on one horizontal scale, with transparent marks for overlap.
 
 ```python
 columns=[
     col.text("metric"),
-    col.points("samples", color="#2563eb", outline=False, title="Samples")
-       .scale(domain=(0, 60), axis=True, axis_position="bottom"),
-]
-```
-
-![Points from an array](https://raw.githubusercontent.com/edouardp/evidential/main/docs/img/graphics/points.png)
-
-#### Box plot
-
-```python
-columns=[
-    col.text("group"),
-    col.boxplot("lo", "q1", "med", "q3", "hi", outliers="outs",
-                whisker="iqr", title="Spread")
-       .scale(domain=(0, 32), axis=True, axis_position="bottom"),
-]
-```
-
-![Box plot](https://raw.githubusercontent.com/edouardp/evidential/main/docs/img/graphics/boxplot.png)
-
-#### Distribution band
-
-```python
-columns=[
-    col.text("name"),
-    (
-        col.distribution("curve", x="x", y="pdf", color="@ink")
-        .point("median", color="#111111", outline=False)
-        .title("Density").align("center")
-        .scale(domain=(0, 100), axis=True, axis_position="bottom")
+    col.points("samples", color="#2563eb30", size=9, outline=False, title="Samples").scale(
+        domain=(0, 60), axis=True, axis_position="bottom"
     ),
 ]
 ```
 
-![Distribution band](https://raw.githubusercontent.com/edouardp/evidential/main/docs/img/graphics/distribution.png)
+![Points from an array](docs/img/graphics/points.png)
+
+[Notebook source: `graphic_points`](notebooks/50_graphics_gallery.py)
+
+<!-- /notebook -->
+
+<!-- notebook: notebooks/50_graphics_gallery.py#graphic_boxplot -->
+
+#### Box plot
+
+Show quartiles, a median, whiskers and outliers.
+
+```python
+columns=[
+    col.text("group"),
+    col.boxplot("lo", "q1", "med", "q3", "hi", outliers="outs", whisker="iqr", title="Spread").scale(
+        domain=(0, 32), axis=True, axis_position="bottom"
+    ),
+]
+```
+
+![Box plot](docs/img/graphics/boxplot.png)
+
+[Notebook source: `graphic_boxplot`](notebooks/50_graphics_gallery.py)
+
+<!-- /notebook -->
+
+<!-- notebook: notebooks/50_graphics_gallery.py#graphic_distribution -->
+
+#### Distribution band
+
+Draw a density band with a median point.
+
+```python
+columns=[
+    col.text("name"),
+    col.distribution("curve", x="x", y="pdf", color="@ink")
+    .point("median", color="#111111", outline=False)
+    .title("Density")
+    .align("center")
+    .scale(domain=(0, 100), axis=True, axis_position="bottom"),
+]
+```
+
+![Distribution band](docs/img/graphics/distribution.png)
+
+[Notebook source: `graphic_distribution`](notebooks/50_graphics_gallery.py)
+
+<!-- /notebook -->
+
+<!-- notebook: notebooks/50_graphics_gallery.py#graphic_stacked_bar -->
 
 #### Stacked bar
+
+Stack components and label them within the bar.
 
 ```python
 columns=[
     col.text("region"),
-    col.stacked_bar("new", "renewal", "expansion",
-                    colors=["#2563eb", "#60a5fa", "#bfdbfe"],
-                    labels=True, format="num0", size=0.6,
-                    title="New · Renewal · Expansion"),
+    col.stacked_bar(
+        "new",
+        "renewal",
+        "expansion",
+        colors=["#2563eb", "#60a5fa", "#bfdbfe"],
+        labels=True,
+        format="num0",
+        size=0.6,
+        title="New · Renewal · Expansion",
+    ),
 ]
 ```
 
-![Stacked bar](https://raw.githubusercontent.com/edouardp/evidential/main/docs/img/graphics/stacked-bar.png)
+![Stacked bar](docs/img/graphics/stacked-bar.png)
+
+[Notebook source: `graphic_stacked_bar`](notebooks/50_graphics_gallery.py)
+
+<!-- /notebook -->
+
+<!-- notebook: notebooks/50_graphics_gallery.py#graphic_stack_likert -->
 
 #### Diverging Likert stack
+
+Split neutral responses around zero and label the normalised shares.
 
 ```python
 columns=[
     col.text("question"),
-    col.stacked_bar("sd", "d", "n", "a", "sa",
-                    colors=["#b91c1c", "#fca5a5", "#e5e7eb", "#86efac", "#16a34a"],
-                    labels="percent", label_align="begin",
-                    diverge_at="n", neutral="split", normalize="percent",
-                    size=1, title="Response"),
+    col.stacked_bar(
+        "sd",
+        "d",
+        "n",
+        "a",
+        "sa",
+        colors=["#b91c1c", "#fca5a5", "#e5e7eb", "#86efac", "#16a34a"],
+        labels="percent",
+        label_align="begin",
+        diverge_at="n",
+        neutral="split",
+        normalize="percent",
+        size=1,
+        title="Response",
+    ),
 ]
 ```
 
-![Diverging Likert stack](https://raw.githubusercontent.com/edouardp/evidential/main/docs/img/graphics/stack-likert.png)
+![Diverging Likert stack](docs/img/graphics/stack-likert.png)
+
+[Notebook source: `graphic_stack_likert`](notebooks/50_graphics_gallery.py)
+
+<!-- /notebook -->
+
+<!-- notebook: notebooks/50_graphics_gallery.py#graphic_strip -->
 
 #### Strip
 
+Display an ordered sequence of categorical outcomes.
+
 ```python
 columns=[
     col.text("team"),
-    col.strip("form", colors={"W": "#16a34a", "D": "#9ca3af", "L": "#dc2626"},
-              labels=True).title("Form"),
+    col.strip("form", colors={"W": "#16a34a", "D": "#9ca3af", "L": "#dc2626"}, labels=True).title("Form"),
 ]
 ```
 
-![Strip](https://raw.githubusercontent.com/edouardp/evidential/main/docs/img/graphics/strip.png)
+![Strip](docs/img/graphics/strip.png)
+
+[Notebook source: `graphic_strip`](notebooks/50_graphics_gallery.py)
+
+<!-- /notebook -->
+
+<!-- notebook: notebooks/50_graphics_gallery.py#graphic_reference -->
 
 #### Axis, reference line and band
 
+Add an external axis, gridlines, a target line and a reference band.
+
 ```python
 columns=[
     col.text("team"),
-    col.bar("score", format="num0", label=label.auto_position("outside end"),
-            title="Score")
-       .scale(domain=(0, 100), axis=True, axis_position="bottom", gridlines=True)
-       .reference_band(60, 80, color="#fef3c7")
-       .reference_line(70, color="#dc2626"),
+    col.bar("score", format="num0", label=label.auto_position("outside end"), title="Score")
+    .scale(domain=(0, 100), axis=True, axis_position="bottom", gridlines=True)
+    .reference_band(60, 80, color="#fef3c7")
+    .reference_line(70, color="#dc2626"),
 ]
 ```
 
-![Axis, reference line and band](https://raw.githubusercontent.com/edouardp/evidential/main/docs/img/graphics/reference.png)
+![Axis, reference line and band](docs/img/graphics/reference.png)
+
+[Notebook source: `graphic_reference`](notebooks/50_graphics_gallery.py)
+
+<!-- /notebook -->
 
 ### Labels and shared domains
 
@@ -527,28 +713,51 @@ text. A named domain pools values across columns so bars, heatmaps and
 sparklines share one scale and palette. See
 [`notebooks/47_shared_domains.py`](notebooks/47_shared_domains.py).
 
+<!-- notebook: notebooks/49_api_screenshots.py#subcolumns -->
+
 ## 6. Build header structures
-
-```python
-columns=[
-    col.text("country"),
-    col.subcolumns("Latest", [
-        col.number("gdp", fmt="num1", align="right").neg(),
-        col.auto("quarter").align("left").font_color("#94a3b8"),
-    ]),
-    col.group("Forecast", [
-        col.number("next_year", fmt="num1", title="Next year"),
-        col.number("long_run", fmt="num1", title="Long run"),
-    ]),
-]
-```
-
-![Shared leaf headers and a spanner group](https://raw.githubusercontent.com/edouardp/evidential/main/docs/api/images/subcolumns.png)
 
 `col.subcolumns(label, [...])` gives its members one shared leaf header.
 `col.group(label, [...])` adds a spanner over a run of columns. Both nest.
 A column named `"GDP Measure.GDP nominal"` groups under **GDP Measure**
 automatically; `column_groups={...}` is the equivalent mapping form.
+
+```python
+columns=[
+    col.text("country", title="Country"),
+    col.group(
+        "Gross domestic product",
+        [
+            col.subcolumns(
+                "Latest",
+                [
+                    col.number("gdp", fmt="num1", align="right").neg(),
+                    col.auto("quarter").align("left").font_color("#94a3b8"),
+                ],
+            ),
+            col.number("forecast", fmt="num1", align="right", title="Annual forecast"),
+        ],
+    ),
+    col.group(
+        "Consumer prices",
+        [
+            col.subcolumns(
+                "Latest",
+                [
+                    col.number("cpi", fmt="num1", align="right").neg(),
+                    col.auto("month").align("left").font_color("#94a3b8"),
+                ],
+            )
+        ],
+    ),
+]
+```
+
+![6. Build header structures](docs/api/images/subcolumns.png)
+
+[Notebook source: `subcolumns`](notebooks/49_api_screenshots.py)
+
+<!-- /notebook -->
 
 The `stub` setting marks row-label columns, and `stub_head` labels the stub:
 
@@ -610,24 +819,34 @@ A table also has a frame, notes and optional dividers:
 The aggregate helpers accept the same `col.*` builders, run their aggregation
 in DuckDB, and return a normal `EvidentialTable`.
 
-```python
-from evidential import col, grouped_table, settings
+<!-- notebook: notebooks/49_api_screenshots.py#grouped_totals -->
 
+### Grouped totals
+
+Group the sample orders by category, with sales and order counts. The helper
+adds subtotals and a grand total. `sample_orders()` opens the bundled fixture
+in DuckDB; its definition lives in the notebook.
+
+```python
 grouped_table(
-    con,
-    "SELECT category, payment, sales FROM orders",
-    dimensions=["category", "payment"],
-    measures=["sum(sales) AS sales", "count(*) AS orders"],
+    sample_orders(),
+    "SELECT category AS category, sales FROM needful_things.orders",
+    dimensions=["category"],
+    measures=["round(sum(sales), 0) AS sales", "count(*) AS orders"],
     dimension_config={"category": col.text("category")},
     measure_config={
-        "sales": col.bar("sales", format="usd0", label=True),
+        "sales": col.currency("sales", decimals=0),
         "orders": col.integer("orders"),
     },
-    settings=settings(title="Sales by category and payment", page_size=12),
+    settings=settings(title="Grouped totals", page_size=10, width="560px"),
 )
 ```
 
-![Grouped rows with subtotals and a grand total](https://raw.githubusercontent.com/edouardp/evidential/main/docs/api/images/grouped-table.png)
+![Grouped totals](docs/api/images/grouped-table.png)
+
+[Notebook source: `grouped_totals`](notebooks/49_api_screenshots.py)
+
+<!-- /notebook -->
 
 ### Aggregations for subtotals/totals
 
@@ -635,20 +854,34 @@ grouped_table(
 built-in name or a Python callable. Use `weight_columns={"sales": "weight"}`
 for weighted means.
 
+<!-- notebook: notebooks/49_api_screenshots.py#pivoted_columns -->
+
 ### Pivot, compare and query
 
-```python
-from evidential import comparison_table, pivot_table, query_table
+Turn each year into a column group, with one row per category. This example
+uses the same `sample_orders()` fixture connection as the grouped table.
 
-# One column per pivot value, grouped under shared headers.
+```python
 pivot_table(
-    con,
-    "SELECT category, year, sales FROM orders",
+    sample_orders(),
+    "SELECT category, year(order_datetime) AS year, sales FROM needful_things.orders",
     dimensions=["category"],
     pivots=["year"],
-    measures=["sum(sales) AS sales"],
+    measures=["round(sum(sales), 0) AS sales"],
+    dimension_config={"category": col.text("category")},
     measure_config={"sales": col.currency("sales", decimals=0)},
+    settings=settings(title="Pivoted columns", page_size=10, width="640px"),
 )
+```
+
+![Pivot, compare and query](docs/api/images/pivot-table.png)
+
+[Notebook source: `pivoted_columns`](notebooks/49_api_screenshots.py)
+
+<!-- /notebook -->
+
+```python
+from evidential import comparison_table, query_table
 
 # Adds <measure>_prior, <measure>_delta and <measure>_pct columns.
 comparison_table(
@@ -671,8 +904,6 @@ query_table(
     date_column="order_date",
 )
 ```
-
-![Pivoted columns](https://raw.githubusercontent.com/edouardp/evidential/main/docs/api/images/pivot-table.png)
 
 For rows already in Python, `grouped_records(rows, group_by=..., measures=...)`
 does the same grouping without a database.
@@ -762,17 +993,14 @@ detail.widget.set_data(con.sql(detail_sql, params={"code": selected or ""}))
 `set_data` keeps the widget and its layout in place; `update_options` and
 `set_column` change presentation without rebuilding it.
 
+<!-- notebook: notebooks/21_studio_dashboard.py#revenue_table -->
+
 ## 10. Marimo Studio views
 
 A [marimo Studio](https://marimo.io/blog/introducing-marimo-studio) view
 projects named cells from a notebook, so one table can back a dashboard, report
-or slide deck.
-
-```python
-@app.cell
-def revenue_table(EvidentialTable, col, filtered):
-    EvidentialTable(filtered, columns=[col.bar("revenue", format="usd0", label=True)])
-```
+or slide deck. This is the table from the Studio demo; its view projects the
+same `revenue_table` cell alongside KPIs and a region filter.
 
 ```html
 <marimo-cell name="revenue_table"></marimo-cell>
@@ -780,16 +1008,31 @@ def revenue_table(EvidentialTable, col, filtered):
 ```
 
 ```console
-uv run --with "marimo-studio[deno]" marimo-studio view create dashboard --target analysis.py
 make studio-serve
 make studio-validate
 ```
 
-![A Studio dashboard with a live table, KPIs and a filter](https://raw.githubusercontent.com/edouardp/evidential/main/docs/img/studio-view.png)
+The interactive table uses Studio's **Server** runtime. See
+[the Studio guide](docs/marimo-studio.md) for the full dashboard view.
+The table's column configuration is:
 
-The interactive table needs Studio's **Server** runtime. See
-[`docs/marimo-studio.md`](docs/marimo-studio.md) and
-[`notebooks/21_studio_dashboard.py`](notebooks/21_studio_dashboard.py).
+```python
+columns=[
+    col.text("region", title="Region"),
+    col.text("city", title="City"),
+    col.integer("trips", title="Trips"),
+    col.bar("revenue", title="Revenue", format='usd0', label=True),
+    col.percent("tip_rate", decimals=1, title="Tip rate").color(
+        scale=["#fee2e2", "#fef9c3", "#bbf7d0", "#15803d"], min=0, max=0.35
+    ),
+]
+```
+
+![10. Marimo Studio views](docs/img/studio-table.png)
+
+[Notebook source: `revenue_table`](notebooks/21_studio_dashboard.py)
+
+<!-- /notebook -->
 
 ## 11. Amazon S3 Tables
 
@@ -853,7 +1096,8 @@ make test-browser       # Playwright functional tests
 make check-notebooks    # marimo check on every notebook
 make check-artifact     # build a wheel/sdist and verify their contents
 make validate           # lint + notebook checks + tests + bundle check + build
-make api-screenshots    # capture docs images from the screenshot notebooks
+make readme             # generate README examples and capture notebook tables
+make readme-check       # detect stale text/images without launching a browser
 make frontend-build     # rebuild static/table.js and static/table.css
 ```
 
@@ -861,6 +1105,10 @@ The gates are mirrored in [`.pre-commit-config.yaml`](.pre-commit-config.yaml)
 (on commit) and [`scripts/lint.sh`](scripts/lint.sh) (local validation).
 `tests/release/` checks the repository workflow itself, including that the wheel
 contains the committed renderer assets.
+
+Descriptions, column snippets and images in the illustrated table examples
+come from the same named notebook cells. Edit those notebooks rather than the
+generated README regions. See [the authoring guide](docs/notebook-documentation.md).
 
 ## Relationship to Evidence
 

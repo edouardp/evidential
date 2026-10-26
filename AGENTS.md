@@ -10,7 +10,8 @@ Every check is defined twice, and the two must stay in sync:
   `make lint` (or `make format` to auto-fix).
 
 The gates are: **ruff** (lint + format), **bandit**, **pip-audit**, **pyrefly**
-(types), **shellcheck**, **checkmake** (Makefile) and **rumdl** (markdown).
+(types), **shellcheck**, **checkmake** (Makefile), **rumdl** (markdown) and
+**readme-check** (notebook documentation and screenshot provenance).
 `make validate` runs the gates plus `marimo check`, the test suites and a build.
 
 ## Tests
@@ -64,6 +65,11 @@ script and local gates in place — in particular, the `version` in `pyproject.t
 have a matching `CHANGELOG.md` section.
 
 ## Marimo notebooks
+
+- Illustrated README examples are generated from named Markdown/table cells
+  in notebooks 21, 49 and 50. Edit those cells, run `make readme`, inspect the PNGs
+  and commit the generated outputs. `make readme-check` detects drift without
+  a browser. See [docs/notebook-documentation.md](docs/notebook-documentation.md).
 
 - The cell that creates a widget must **not** reference controls; a separate
   reactive cell should call `set_controls(...)`. Referencing a control makes

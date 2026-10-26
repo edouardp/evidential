@@ -60,3 +60,10 @@ repos:
         language: system
         types: [markdown]
         pass_filenames: false
+
+      - id: readme-check
+        name: readme-check (notebook text and screenshot provenance)
+        entry: uv run python -m scripts.generate_readme --check
+        language: system
+        pass_filenames: false
+        always_run: true

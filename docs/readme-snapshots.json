@@ -1,0 +1,220 @@
+{
+  "version": 1,
+  "inputs": {
+    "notebooks/21_studio_dashboard.py": "956a876c4c77e59679602a29738b7be6bbf71bee49b6238f62b5ee3d6cccb883",
+    "notebooks/49_api_screenshots.py": "c4cacaf9a1c98a3e6b484194744f38a03fd86425012ff1de07ffda6ae4f99825",
+    "notebooks/50_graphics_gallery.py": "4ba0c3e37eef9fad8c8b43e488884bd3d4d598c4feb44375a91c31ba1151707d",
+    "notebooks/sample_data/needful_things/orders.parquet": "b373511b4f7a0547b704022b055655b6d3bafc2505a2a573292b206417fe3eb4",
+    "pyproject.toml": "1feac8451d38953603c3d274c818d315fafc2b78ee5306117aeeb82d7622367d",
+    "scripts/api_screenshots.py": "a587af22f6ef5a6866c465a8dbbc2215f47369f72879764d90577035bc45abc1",
+    "scripts/generate_readme.py": "e58a8320e9437584416780f1cfbbfd09307350be4b28e30beae114126ead7a92",
+    "src/evidential/__init__.py": "f5bac40f585c749cd06c40f4498c7de868a382a30abaed198ce08634ab7adbc7",
+    "src/evidential/_aliases.py": "5e207c4a862754e1ca9f7ea309a0e489bf158a7e380876f8edcf20eeee1438f1",
+    "src/evidential/_column.py": "7f6c3cc86dfdbc103e27dfb6a89b73e2b18116faf7b50a1d58604380cf478b47",
+    "src/evidential/_column_options.py": "aaeeb03f8e46048691099fb9a0b50ffbcb26bc8b754f171a72fe9a6b12555892",
+    "src/evidential/_compat.py": "f51d6c0013acf8eb4a16bbab18adafc24846825073beeb3df9dea3ca3c6cce7c",
+    "src/evidential/_distribution.py": "16278a133e89b66addd282a3209ff3c34a1bb59baff0e3fb17f2ffaacb5f4992",
+    "src/evidential/_domain.py": "a0d1e3b1989cdfe2c7ce41b94b58a84113ef6c33375947f6983adc17a63a3102",
+    "src/evidential/_label.py": "dc5e285f2a3f8ed85a0c36ed107986205b4e75df04ba3e812cf348d5db46b83d",
+    "src/evidential/_row_layout.py": "da35fc68f39c8d6223a6d027cbe41d957fdd0452cd8b3be288799e903a55ee21",
+    "src/evidential/_sparkline.py": "c4a18a514e70a95b09250a672dca81e1f39891bfa9db4a8c8bdd07ec6018de96",
+    "src/evidential/_text_style.py": "99f38816be21786b8d72e4f19ed1a2a63ee5e4db15f536774ed29f9f9482d005",
+    "src/evidential/aggregations.py": "649223990959cba7a9606025e83d2634d9f7a3ac185b4561097c87489bb52f9e",
+    "src/evidential/client.py": "6ce1f9e0b9e5e99b1bcc94fd040a290792885b80de89260ad35c8aa72f8c5c3e",
+    "src/evidential/col.py": "1d827527ab6319f5590f1dfef787eabe23a28ab8b2dd37ff4e5257fea16f456d",
+    "src/evidential/comparison.py": "5389757b27d9cd42f796599792f9555efcd577d0d1b9c32437f98a0593c77ee9",
+    "src/evidential/configuration.py": "36460648504c4cb9f71681c8469b1ac81085e8b6dbb0e15f4949132ad2f8e5ce",
+    "src/evidential/data.py": "009c8807ece3c5d244f81ac37439f167ba174d440b905a568803b5b0ae63fdad",
+    "src/evidential/domain.py": "9e607e105122cffb1a6cc4de27adb15bdc3f73af1184b3506302cb908bf34ba9",
+    "src/evidential/duck.py": "fed7bbdc25492a8457ca7b1ba4903dacacf9cb2643a789f2c66d018b8449c8b3",
+    "src/evidential/grouped.py": "58013c3f6dfccf46c644e8d2724b76c895d84ebe50e044e3a246bac195537807",
+    "src/evidential/label.py": "7ca27ed5d2fbfa06b417b05825836f593194b3cc30042be956d5a1c9f61ecb10",
+    "src/evidential/live.py": "410dd195bb4bd1bd8a205002067a633d70607e6640310dadc946b7e3b2130a67",
+    "src/evidential/marks.py": "7702e35564752a6cfc55408cfa079a5cff9d47a41d5c2da956d00e10d0155d99",
+    "src/evidential/pivot.py": "3a06e3adf3d0c25e88efe95c391daf89780bbbfc16eac300b73df7488747e445",
+    "src/evidential/query.py": "1474b03ca11f438611b59a911221cf34625621b12af3c2871ed94710d5808049",
+    "src/evidential/rows.py": "d0011886124d330e596627f9c9c39202346cd5bab6e35a0056e779f6fb3af948",
+    "src/evidential/rules.py": "eb0142d511b63a5b4d0725f70599084784ddb82130655c72e8ff36ce816ed104",
+    "src/evidential/static/table.css": "7fcd3db47695bd2de2d79321c10fe3dc56cf765eb112e0912d23258ffcb1c612",
+    "src/evidential/static/table.js": "7418e33d4adb8b844f61fbcb96746d257f1e5592ba50e9ec22620e6b39121a0d",
+    "src/evidential/table.py": "62157359d1828ce91d74b6c5c32e9e100422585b399797d21ed7bce500415907",
+    "uv.lock": "c88da418da7e42b93076f23560f1146f0cabea11e5e2d5f01513d26003b2185d"
+  },
+  "images": {
+    "docs/api/images/quickstart.png": {
+      "notebook": "notebooks/49_api_screenshots.py",
+      "cell": "quickstart",
+      "sha256": "53e81cd516ce4df550080e089183bd8ac41c566b42e9333fe400a1201d2d795d"
+    },
+    "docs/api/images/kinds.png": {
+      "notebook": "notebooks/49_api_screenshots.py",
+      "cell": "kinds",
+      "sha256": "de62eb4e83f524641b46c684f7f19e2c73e41bde313253be3ed5a90500f5114b"
+    },
+    "docs/api/images/relative-time.png": {
+      "notebook": "notebooks/49_api_screenshots.py",
+      "cell": "relative_time",
+      "sha256": "e28701dd086bc9fba1b17fe98dab6d9cee3850e95f28c819fba05a3842c66e9c"
+    },
+    "docs/api/images/symbols.png": {
+      "notebook": "notebooks/49_api_screenshots.py",
+      "cell": "symbols",
+      "sha256": "b25197ab900f0722186c6a830a0baccd105fd4446d215a19e643883d9eca5091"
+    },
+    "docs/api/images/visualizations.png": {
+      "notebook": "notebooks/49_api_screenshots.py",
+      "cell": "visualizations",
+      "sha256": "7b099713fead18c49cc66d76800c03c0b72920c941799255f20419be4224620d"
+    },
+    "docs/api/images/back-to-back.png": {
+      "notebook": "notebooks/49_api_screenshots.py",
+      "cell": "back_to_back",
+      "sha256": "1345cc9e407360229e6028c4f20dd0299863ad9457ec3879516ea8d2682becab"
+    },
+    "docs/api/images/styling.png": {
+      "notebook": "notebooks/49_api_screenshots.py",
+      "cell": "styling",
+      "sha256": "79bd683b57f8160fd762d0d52e3de006688cc98062bc99814d0578dd98f43bbc"
+    },
+    "docs/api/images/groups.png": {
+      "notebook": "notebooks/49_api_screenshots.py",
+      "cell": "groups",
+      "sha256": "933b19e29a526d1d08dccc3f86d22247f36959aeb11c421553f1ef7306d76d10"
+    },
+    "docs/api/images/subcolumns.png": {
+      "notebook": "notebooks/49_api_screenshots.py",
+      "cell": "subcolumns",
+      "sha256": "a158d1dee1be8acca5c9dd350c7055b5550fa6046cefbd35759f80421ef9b659"
+    },
+    "docs/api/images/merged.png": {
+      "notebook": "notebooks/49_api_screenshots.py",
+      "cell": "merged",
+      "sha256": "77184ed11f5fb6368d3b5fbf741af9fe664377690f3c544c6f0188d5a2a621bf"
+    },
+    "docs/api/images/grouped-table.png": {
+      "notebook": "notebooks/49_api_screenshots.py",
+      "cell": "grouped_totals",
+      "sha256": "6af97d52c561f060bc214bf3c16d7aa2688879d1a010ec16202b5402094cca85"
+    },
+    "docs/api/images/pivot-table.png": {
+      "notebook": "notebooks/49_api_screenshots.py",
+      "cell": "pivoted_columns",
+      "sha256": "c343af93e5ec17c5c03f1f7057104981a1b332c0e3d756f6c4af752a74354552"
+    },
+    "docs/api/images/comparison-table.png": {
+      "notebook": "notebooks/49_api_screenshots.py",
+      "cell": "prior_comparison",
+      "sha256": "cbf1d3b5c4adf007f7fd90c16d6c777c32cf99a7845531465ec580caf338cf6b"
+    },
+    "docs/api/images/rules.png": {
+      "notebook": "notebooks/49_api_screenshots.py",
+      "cell": "rules",
+      "sha256": "b847982dd5ddf3c2d8d1e65c317031daf1013bc8c5250f81727fefac18080c71"
+    },
+    "docs/api/images/query-table.png": {
+      "notebook": "notebooks/49_api_screenshots.py",
+      "cell": "ad_hoc_query",
+      "sha256": "5f211359dd9a8e05dd96a38471927c7973fcb46cd29ec151649c97c0008fe44d"
+    },
+    "docs/preview.png": {
+      "notebook": "notebooks/49_api_screenshots.py",
+      "cell": "preview",
+      "sha256": "fe184685a08ff348d1cdd7cb8eb705e8c1b139311aff487dabe9bdbd0f156d16"
+    },
+    "docs/img/graphics/bar.png": {
+      "notebook": "notebooks/50_graphics_gallery.py",
+      "cell": "graphic_bar",
+      "sha256": "4c1e46146a67f7759468428f6d0b39b5efdae4dabf6699ae20a487c5107f19d4"
+    },
+    "docs/img/graphics/bar-centered.png": {
+      "notebook": "notebooks/50_graphics_gallery.py",
+      "cell": "graphic_bar_centered",
+      "sha256": "d22d2e210c1f12714bc1baf8108318f663677ebb78158fd0f95157055b0d1dc6"
+    },
+    "docs/img/graphics/bar-overlay.png": {
+      "notebook": "notebooks/50_graphics_gallery.py",
+      "cell": "graphic_bar_overlay",
+      "sha256": "fa254bd8b296ea9df4d8c389c757f1d99bc0a0b70fd81d31aec995ec0343c025"
+    },
+    "docs/img/graphics/bar-back-to-back.png": {
+      "notebook": "notebooks/50_graphics_gallery.py",
+      "cell": "graphic_bar_back_to_back",
+      "sha256": "ed9eb9f448c06ffc2de96f0a84da792931b3499162bab6a377e9e39c35a43de8"
+    },
+    "docs/img/graphics/dumbbell.png": {
+      "notebook": "notebooks/50_graphics_gallery.py",
+      "cell": "graphic_dumbbell",
+      "sha256": "4c036777356c81888bc92fb021356c6c34dd08d8c8576660922f0cf99e61074e"
+    },
+    "docs/img/graphics/points.png": {
+      "notebook": "notebooks/50_graphics_gallery.py",
+      "cell": "graphic_points",
+      "sha256": "d8339ae959362027547c7bf2025881fae93e2a89fc9fe0934207f8b7d58ba53f"
+    },
+    "docs/img/graphics/boxplot.png": {
+      "notebook": "notebooks/50_graphics_gallery.py",
+      "cell": "graphic_boxplot",
+      "sha256": "f88b4f613e67ce54b9eae8b70f184cb95cafc66f86414ac286f4a07a15e10b10"
+    },
+    "docs/img/graphics/distribution.png": {
+      "notebook": "notebooks/50_graphics_gallery.py",
+      "cell": "graphic_distribution",
+      "sha256": "4ea9e35eb961d6a3ff58618e033fa4430a0be1cedbbf58e9fb2682ec20a30f56"
+    },
+    "docs/img/graphics/stacked-bar.png": {
+      "notebook": "notebooks/50_graphics_gallery.py",
+      "cell": "graphic_stacked_bar",
+      "sha256": "8bf2f3c0b85d97fd5694e3dfa60e40f16dc70275accd0d4998ee3187fad40d22"
+    },
+    "docs/img/graphics/stack-likert.png": {
+      "notebook": "notebooks/50_graphics_gallery.py",
+      "cell": "graphic_stack_likert",
+      "sha256": "7a10a6a45a27b738f014c4533da61e2eae7adc2c29209bdd7f64071ce1cdf977"
+    },
+    "docs/img/graphics/strip.png": {
+      "notebook": "notebooks/50_graphics_gallery.py",
+      "cell": "graphic_strip",
+      "sha256": "ee950a76a124fb95ff0e999e8ec4d76c340aa05f9bd3d5ef098c61cbea9218c0"
+    },
+    "docs/img/graphics/color.png": {
+      "notebook": "notebooks/50_graphics_gallery.py",
+      "cell": "graphic_color",
+      "sha256": "d0ac200bf9f38c727fb5321046461058fed8ff3ae33698bc15e6cfa0d48e6c08"
+    },
+    "docs/img/graphics/chip.png": {
+      "notebook": "notebooks/50_graphics_gallery.py",
+      "cell": "graphic_chip",
+      "sha256": "21954950a49308d6335467081afa113f669f3b5e3c4a4c423d75eb027c80a01c"
+    },
+    "docs/img/graphics/delta.png": {
+      "notebook": "notebooks/50_graphics_gallery.py",
+      "cell": "graphic_delta",
+      "sha256": "21e0e4a8550c6788433cdf837800e2ac19091ea7494c7ba9fdcb79e6a55648af"
+    },
+    "docs/img/graphics/sparklines.png": {
+      "notebook": "notebooks/50_graphics_gallery.py",
+      "cell": "graphic_sparklines",
+      "sha256": "f4d4322923565888ccaf6976690b1bf32af9ce9a7a89334764fda388f47c9357"
+    },
+    "docs/img/graphics/symbols.png": {
+      "notebook": "notebooks/50_graphics_gallery.py",
+      "cell": "graphic_symbols",
+      "sha256": "915b586a07c25760cafe1f9c4619f0b6e610400f1801d00a8f5b291571d1e669"
+    },
+    "docs/img/graphics/boolean-icons.png": {
+      "notebook": "notebooks/50_graphics_gallery.py",
+      "cell": "graphic_boolean_icons",
+      "sha256": "ddb1b387739a2ff11910ff05f35539431673e83f21af58212543076bcc9eb195"
+    },
+    "docs/img/graphics/reference.png": {
+      "notebook": "notebooks/50_graphics_gallery.py",
+      "cell": "graphic_reference",
+      "sha256": "9901ca6e72845d6dd20eba4c29a24ae18cc873c0002308c0bb7d4144665db621"
+    },
+    "docs/img/studio-table.png": {
+      "notebook": "notebooks/21_studio_dashboard.py",
+      "cell": "revenue_table",
+      "sha256": "1d269998d99c39bc3d80073d31381feef04f2b4a0a481804c0ba268d898a4fc5"
+    }
+  }
+}

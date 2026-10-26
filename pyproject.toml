@@ -2,7 +2,7 @@
 name = "evidential"
 version = "0.1.0"
 description = "Evidence.dev-style interactive data tables for Marimo, powered by anywidget and DuckDB."
-readme = "README.md"
+readme = "docs/PYPI_README.md"
 authors = [{ name = "Edouard Poor", email = "git@edouard.info" }]
 requires-python = ">=3.11"
 license = "MIT"

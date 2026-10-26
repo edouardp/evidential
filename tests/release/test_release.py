@@ -16,6 +16,7 @@ def test_pyproject_declares_release_metadata() -> None:
     assert PROJECT["name"] == "evidential"
     assert PROJECT["license"] == "MIT"
     assert PROJECT["license-files"] == ["LICENSE"]
+    assert PROJECT["readme"] == "docs/PYPI_README.md"
     assert (ROOT / "LICENSE").exists()
 
     classifiers = PROJECT["classifiers"]
@@ -64,7 +65,7 @@ def test_releases_use_complete_local_gates_without_github_actions() -> None:
     assert not [*workflows.glob("*.yml"), *workflows.glob("*.yaml")]
     makefile = (ROOT / "Makefile").read_text()
     validation = next(line for line in makefile.splitlines() if line.startswith("validate:")).split("##", 1)[0]
-    for gate in ("lint", "check-notebooks", "test", "frontend-check", "test-browser", "build"):
+    for gate in ("lint", "check-notebooks", "readme-check", "test", "frontend-check", "test-browser", "build"):
         assert gate in validation.split(), f"make validate must run {gate} locally"
     assert "EVIDENTIAL_REQUIRE_BROWSER=1 uv run pytest -m browser" in makefile
     release_doc = (ROOT / "docs" / "RELEASE_PROCESS.md").read_text()

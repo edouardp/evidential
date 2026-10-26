@@ -97,6 +97,7 @@ dated, immutable record of the decisions behind them.
 | [076](076-sparkline-reference-origins.md) | Sparkline Reference Origins | Accepted |
 | [077](077-unformatted-source-snapshots.md) | Unformatted Source Snapshots | Accepted |
 | [078](078-local-release-validation.md) | Local Release Validation | Accepted |
+| [079](079-notebook-generated-readme.md) | Notebook-Generated README Examples | Accepted |
 
 ## Creating New ADRs
 

@@ -90,6 +90,7 @@ make validate
 
 This runs `make lint` (ruff, bandit, pip-audit, pyrefly, shellcheck, checkmake,
 rumdl), `marimo check` on every notebook, the Python and frontend test suites,
+`readme-check` (notebook text and screenshot provenance are current),
 `frontend-check` (the committed bundle matches a fresh build), required
 Playwright browser tests, and a build.
 

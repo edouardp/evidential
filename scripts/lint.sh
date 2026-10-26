@@ -43,4 +43,7 @@ else
     uvx rumdl check README.md CHANGELOG.md docs notebooks
 fi
 
+echo "=== readme-check ==="
+uv run python -m scripts.generate_readme --check
+
 echo "All lints passed"

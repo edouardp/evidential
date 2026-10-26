@@ -16,6 +16,9 @@ app = marimo.App(width="full")
 
 @app.cell
 def _():
+    import json
+    from pathlib import Path
+
     import marimo as mo
 
     from evidential import EvidentialTable, col, label, settings
@@ -34,7 +37,7 @@ def _():
             **options,
         )
 
-    return EvidentialTable, col, frame, label, mo, stats
+    return EvidentialTable, Path, col, frame, json, label, mo, stats
 
 
 @app.cell(hide_code=True)
@@ -59,7 +62,7 @@ def graphic_bar(EvidentialTable, col, frame, label):
         _rows,
         columns=[
             col.text("region"),
-            col.bar("sales", format="usd0", label=label.auto_position("outside end"), title="Sales"),
+            col.bar("sales", format="usd0", label=label.auto_position("outside end")),
         ],
         settings=frame("Bar", 520),
     )
@@ -89,7 +92,7 @@ def graphic_bar_centered(EvidentialTable, col, frame):
         _rows,
         columns=[
             col.text("team"),
-            col.bar("change", center=True, color_negative="red", format="pct1", label=True, title="Change").scale(
+            col.bar("change", center=True, color_negative="red", format="pct1", label=True).scale(
                 domain=(-0.2, 0.2), axis=True, axis_position="bottom"
             ),
         ],
@@ -135,44 +138,43 @@ def graphic_bar_back_to_back_doc(mo):
     mo.md(r"""
     #### Back-to-back bars
 
-    Mirror two measures around a shared text column.
+    Compare imports and exports of goods and services in current US dollars for
+    the six largest European traders in 2024, including the UK. Countries are
+    ranked by imports plus exports. Both sides use the same scale; labels use
+    compact units (B = billion, T = trillion).
+
+    Source: World Bank WDI (`NE.IMP.GNFS.CD` and `NE.EXP.GNFS.CD`).
     """)
     return
 
 
 @app.cell
-def graphic_bar_back_to_back(EvidentialTable, col, frame, label):
-    _rows = [
-        {"country": "Switzerland", "spend": 26.0, "rate": 1.52, "color": "#d9a01c"},
-        {"country": "Australia", "spend": 18.2, "rate": 1.38, "color": "#3a9b9b"},
-        {"country": "France", "spend": 12.5, "rate": 0.98, "color": "#d9a01c"},
-        {"country": "Germany", "spend": 10.0, "rate": 0.55, "color": "#d9a01c"},
-        {"country": "Ireland", "spend": 6.5, "rate": 0.40, "color": "#3a9b9b"},
-    ]
+def graphic_bar_back_to_back(EvidentialTable, Path, col, frame, json, label):
+    _rows = json.loads(
+        (Path(__file__).parent / "data/50_europe_trade_2024.json").read_text()
+    )
     EvidentialTable(
         _rows,
         columns=[
             col.bar(
-                "spend",
-                format="usd1",
+                "imports",
+                format="compact",
                 direction="left",
-                color="@color",
+                color="#2563eb",
                 label=label.auto_position("outside end"),
                 pad=3,
-                title="Sales per capita",
-            ).align("left"),
-            col.text("country", title=""),
+            ).domain("trade").align("left"),
+            col.text("country", title="").align("center"),
             col.bar(
-                "rate",
-                format="num2",
-                color="@color",
+                "exports",
+                format="compact",
+                color="#0f766e",
                 label=label.auto_position("outside end"),
                 pad=3,
-                title="Foreign-to-Canadian rate",
-            ).align("right"),
-            col.auto("color").hide(),
+            ).domain("trade"),
         ],
-        settings=frame("Back-to-back bars", 620),
+        settings=frame("Imports and exports · 2024", 720,
+            caption="Source: World Bank WDI · Goods and services, current US$ · B = billion, T = trillion"),
     )
     return
 
@@ -233,7 +235,7 @@ def graphic_points(EvidentialTable, col, frame, stats):
         _rows,
         columns=[
             col.text("metric"),
-            col.points("samples", color="#2563eb30", size=9, outline=False, title="Samples").scale(
+            col.points("samples", color="#2563eb30", size=9, outline=False).scale(
                 domain=(0, 60), axis=True, axis_position="bottom"
             ),
         ],
@@ -414,7 +416,7 @@ def graphic_strip(EvidentialTable, col, frame):
         _rows,
         columns=[
             col.text("team"),
-            col.strip("form", colors={"W": "#16a34a", "D": "#9ca3af", "L": "#dc2626"}, labels=True).title("Form"),
+            col.strip("form", colors={"W": "#16a34a", "D": "#9ca3af", "L": "#dc2626"}, labels=True),
         ],
         settings=frame("Strip", 460),
     )
@@ -443,7 +445,7 @@ def graphic_color(EvidentialTable, col, frame):
         _rows,
         columns=[
             col.text("region"),
-            col.number("score", fmt="num0").color(scale="Blues", min=0, max=100).title("Score"),
+            col.number("score", fmt="num0").color(scale="Blues", min=0, max=100),
         ],
         settings=frame("Colour scale", 500),
     )
@@ -472,7 +474,7 @@ def graphic_chip(EvidentialTable, col, frame):
         _rows,
         columns=[
             col.text("service"),
-            col.chip("status", min_width=84, title="Status"),
+            col.chip("status", min_width=84),
             col.number("latency", fmt="num0").chip(scale="red", min=0, max=500).title("Latency (ms)"),
         ],
         settings=frame("Chips", 540),
@@ -502,7 +504,7 @@ def graphic_delta(EvidentialTable, col, frame):
         _rows,
         columns=[
             col.text("metric"),
-            col.percent("change", decimals=1, title="Change").delta(down_is_good=False, neutral_range="-0.02:0.02"),
+            col.percent("change", decimals=1).delta(down_is_good=False, neutral_range="-0.02:0.02"),
             col.percent("change", decimals=1, title="As a chip").delta(
                 down_is_good=False, neutral_range="-0.02:0.02", chip=True
             ),
@@ -546,13 +548,76 @@ def graphic_sparklines(EvidentialTable, col, frame):
         _rows,
         columns=[
             col.text("series"),
-            col.sparkline("line", type="line", width=110, height=30, title="Line"),
-            col.sparkline("area", type="area", fit_to_data=True, width=110, height=30, title="Area"),
-            col.sparkline("bar", type="bar", width=110, height=30, title="Bar"),
-            col.sparkline("points", type="points", width=110, height=30, markers=True, title="Points"),
-            col.sparkline("change", type="change", width=110, height=30, title="Change"),
+            col.sparkline("line", type="line", width=110, height=30),
+            col.sparkline("area", type="area", fit_to_data=True, width=110, height=30),
+            col.sparkline("bar", type="bar", width=110, height=30),
+            col.sparkline("points", type="points", width=110, height=30, markers=True),
+            col.sparkline("change", type="change", width=110, height=30),
         ],
         settings=frame("Sparkline types", 900),
+    )
+    return
+
+
+@app.cell(hide_code=True)
+def graphic_football_form_doc(mo):
+    mo.md(r"""
+    #### Change sparkline: Premier League form
+
+    A change sparkline can show match results: blue/up is a win, gray/centered
+    is a draw, and red/down is a loss. Each rectangle has the same size;
+    a larger winning margin does not make it taller. The sequence runs from
+    oldest to newest across each team's last 12 league matches.
+
+    These are the top six teams by league points earned in **calendar year
+    2024**, with wins, draws and losses for that year—not season standings.
+    The data comes from the football explorer in notebook 46, filtered to
+    Premier League matches; international matches are excluded.
+    """)
+    return
+
+
+@app.cell
+def graphic_football_form(EvidentialTable, Path, col, frame, json):
+    form_snapshot = json.loads(
+        (Path(__file__).parent / "data/46_football_england_2024.json").read_text()
+    )
+    form_matches = [
+        match for match in form_snapshot["matches"]
+        if match["competition"] == "england" and match["level"] == "national"
+    ]
+    form_rows = []
+    for form_team in sorted({match["team"] for match in form_matches}):
+        form_games = sorted(
+            (match for match in form_matches if match["team"] == form_team),
+            key=lambda match: match["match_date"],
+        )
+        form_wins = sum(game["result"] == "Win" for game in form_games)
+        form_draws = sum(game["result"] == "Draw" for game in form_games)
+        form_rows.append({
+            "team": form_team,
+            "wins": form_wins,
+            "draws": form_draws,
+            "losses": sum(game["result"] == "Loss" for game in form_games),
+            "points": 3 * form_wins + form_draws,
+            "form": [
+                {"date": f"{game['match_date']} · {game['opponent']}", "value": game["goal_margin"]}
+                for game in form_games[-12:]
+            ],
+        })
+    form_rows = sorted(form_rows, key=lambda team: (-team["points"], team["team"]))[:6]
+    EvidentialTable(
+        form_rows,
+        columns=[
+            col.text("team"),
+            col.integer("wins"),
+            col.integer("draws"),
+            col.integer("losses"),
+            col.sparkline("form", type="change", width=156, height=22, y_fmt="num0")
+                .title("Last 12 matches"),
+        ],
+        settings=frame("Premier League form · 2024", 640,
+            caption="Source: football-data / worldclubratings.com · Up = win, centered = draw, down = loss · Oldest → newest"),
     )
     return
 
@@ -580,7 +645,7 @@ def graphic_symbols(EvidentialTable, col, frame):
         _rows,
         columns=[
             col.text("country"),
-            col.symbols("gold", symbol="■", color="#d97706", title="Glyph"),
+            col.symbols("gold", symbol="●", color="#d97706", title="Circles"),
             col.symbols("gold", shape="square", color="#d97706", title="Squares").align("center"),
             col.rating("score", title="Rating"),
         ],
@@ -610,9 +675,9 @@ def graphic_boolean_icons(EvidentialTable, col, frame):
         _rows,
         columns=[
             col.text("feature"),
-            col.boolean("active", true_symbol="✓", false_symbol="✗", title="Active"),
-            col.icons("signal", map={"up": "▲", "flat": "●", "down": "▼"}, title="Signal"),
-            col.flag("country", title="Country"),
+            col.boolean("active", true_symbol="✓", false_symbol="✗"),
+            col.icons("signal", map={"up": "▲", "flat": "●", "down": "▼"}),
+            col.flag("country"),
         ],
         settings=frame("Boolean, icons and flags", 540),
     )
@@ -641,7 +706,7 @@ def graphic_reference(EvidentialTable, col, frame, label):
         _rows,
         columns=[
             col.text("team"),
-            col.bar("score", format="num0", label=label.auto_position("outside end"), title="Score")
+            col.bar("score", format="num0", label=label.auto_position("outside end"))
             .scale(domain=(0, 100), axis=True, axis_position="bottom", gridlines=True)
             .reference_band(60, 80, color="#fef3c7")
             .reference_line(70, color="#dc2626"),

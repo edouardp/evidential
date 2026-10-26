@@ -184,10 +184,10 @@ def team_list(EvidentialTable, col, mo):
             freeze_columns=1,
             columns=[
                 col.text("team").bold(),
-                col.integer("played", title="Played"),
-                col.integer("wins", title="Wins"),
-                col.integer("draws", title="Draws"),
-                col.integer("losses", title="Losses"),
+                col.integer("played"),
+                col.integer("wins"),
+                col.integer("draws"),
+                col.integer("losses"),
                 col.sparkline("outcomes", title="Outcomes · oldest → newest", type="change", width=184, y_fmt="num0"),
             ],
         )
@@ -248,11 +248,11 @@ def match_list(EvidentialTable, col, label, mo):
             row_shading=False,
             columns=[
                 col.date("match_date", title="Date"),
-                col.text("opponent", title="Opponent"),
-                col.text("competition", title="Competition"),
-                col.text("venue", title="Venue"),
+                col.text("opponent"),
+                col.text("competition"),
+                col.text("venue"),
                 col.text("score", title="Score · team first").align("center"),
-                col.chip("result", title="Result", scale="@result_color"),
+                col.chip("result", scale="@result_color"),
                 col.bar(
                     "goal_margin",
                     title="Goal margin",

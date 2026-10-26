@@ -146,10 +146,10 @@ def revenue_table(EvidentialTable, col, filtered):
         subtitle="Bars, colour scales and deltas",
         row_shading=True,
         columns=[
-            col.text("region", title="Region"),
-            col.text("city", title="City"),
-            col.integer("trips", title="Trips"),
-            col.bar("revenue", title="Revenue", format='usd0', label=True),
+            col.text("region"),
+            col.text("city"),
+            col.integer("trips"),
+            col.bar("revenue", format='usd0', label=True),
             col.percent("tip_rate", decimals=1, title="Tip rate").color(
                 scale=["#fee2e2", "#fef9c3", "#bbf7d0", "#15803d"], min=0, max=0.35
             ),

@@ -121,7 +121,7 @@ def _(EvidentialTable, col, connection, mo):
             page_size=10,
             row_shading=True,
             columns=[
-                col.text("category", title="Category"),
+                col.text("category"),
                 col.integer("total_trips", title="Total trips"),
                 col.currency("total_revenue", decimals=0, title="Revenue"),
                 col.sparkline("trip_trend", title="Orders", x="date", y="trips", type="line"),

@@ -117,8 +117,8 @@ def _(EvidentialTable, col, mo, sales, section_row):
             subtitle="Page forward: a section that spans pages repeats as “(cont.)”",
             row_lines=False,
             columns=[
-                col.text("region", title="Region"),
-                col.text("country", title="Country"),
+                col.text("region"),
+                col.text("country"),
                 col.currency("arr", decimals=1),
                 col.integer("accounts"),
             ],
@@ -213,8 +213,8 @@ def _(EvidentialTable, col, mo, sales):
             stub=["region", "country"],
             stretch=False,
             columns=[
-                col.text("region", title="Region"),
-                col.text("country", title="Country"),
+                col.text("region"),
+                col.text("country"),
                 col.currency("arr", decimals=1),
                 col.integer("accounts"),
             ],

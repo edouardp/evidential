@@ -125,9 +125,9 @@ returns an immutable `Column`; every chain method returns a new one.
 
 ```python
 columns=[
-    col.text("city", title="City"),
-    col.integer("trips", title="Trips"),
-    col.currency("revenue", title="Revenue"),
+    col.text("city"),
+    col.integer("trips"),
+    col.currency("revenue"),
     col.percent("tip_rate", decimals=1, title="Tip rate"),
 ]
 ```
@@ -160,13 +160,13 @@ and `decimals=`. `col.percent` treats values as proportions unless
 
 ```python
 columns=[
-    col.text("item", title="Item"),
-    col.integer("count", title="Count"),
-    col.currency("price", title="Price"),
-    col.percent("share", decimals=0, title="Share"),
-    col.date("day", title="Day"),
-    col.flag("origin", title="Origin"),
-    col.boolean("active", title="Active"),
+    col.text("item"),
+    col.integer("count"),
+    col.currency("price"),
+    col.percent("share", decimals=0),
+    col.date("day"),
+    col.flag("origin"),
+    col.boolean("active"),
 ]
 ```
 
@@ -311,9 +311,9 @@ superscript symbols and their notes appear below the table.
 EvidentialTable(
     con.sql("SELECT product, units, sales, note FROM orders"),
     columns=[
-        col.text("product", title="Product").footnote("note"),
-        col.integer("units", title="Units"),
-        col.currency("sales", decimals=0, title="Sales"),
+        col.text("product").footnote("note"),
+        col.integer("units"),
+        col.currency("sales", decimals=0),
     ],
     settings=...,
 )
@@ -524,10 +524,10 @@ heading or summary; filtering and sorting use the full values.
 EvidentialTable(
     con.sql("SELECT region, product, units, sales FROM orders"),
     columns=[
-        col.text("region", title="Region").bold().repeat_values(False),
-        col.text("product", title="Product"),
-        col.integer("units", title="Units"),
-        col.currency("sales", decimals=0, title="Sales"),
+        col.text("region").bold().repeat_values(False),
+        col.text("product"),
+        col.integer("units"),
+        col.currency("sales", decimals=0),
     ],
     settings=...,
     border=False,
@@ -695,14 +695,14 @@ EvidentialTable(
     con.sql("SELECT product, units, target_units, sales, cost FROM orders"),
     settings=...,
     columns=[
-        col.text("product", title="Product"),
+        col.text("product"),
         col.group("Volume", [
             col.integer("units", title="Actual"),
             col.integer("target_units", title="Target"),
         ]),
         col.group("Money", [
-            col.currency("sales", decimals=0, title="Sales"),
-            col.currency("cost", decimals=0, title="Cost"),
+            col.currency("sales", decimals=0),
+            col.currency("cost", decimals=0),
         ]),
     ],
     border=False,
@@ -728,15 +728,15 @@ EvidentialTable(
     con.sql("SELECT product, units, target_units, sales, cost FROM orders"),
     settings=...,
     columns=[
-        col.text("product", title="Product"),
+        col.text("product"),
         col.group("Operations", [
             col.group("Volume", [
                 col.integer("units", title="Actual"),
                 col.integer("target_units", title="Target"),
             ]),
             col.group("Money", [
-                col.currency("sales", decimals=0, title="Sales"),
-                col.currency("cost", decimals=0, title="Cost"),
+                col.currency("sales", decimals=0),
+                col.currency("cost", decimals=0),
             ]),
         ]),
     ],
@@ -760,12 +760,12 @@ CSV export still use the raw value.
 
 ```python
 columns=[
-    col.text("region", title="Region"),
-    col.bar("revenue", title="Revenue"),
-    col.bar("growth", center=True, title="Growth"),
-    col.color("share", title="Share"),
+    col.text("region"),
+    col.bar("revenue"),
+    col.bar("growth", center=True),
+    col.color("share"),
     col.chip("region", title="Chip"),
-    col.sparkline("trend", type="area", title="Trend"),
+    col.sparkline("trend", type="area"),
     col.percent("growth", decimals=0, title="Δ").delta(),
 ]
 ```
@@ -791,7 +791,7 @@ Labels prefer the outside end, moving inside when space is tight.
 ```python
 columns=[
     col.text("region"),
-    col.bar("sales", format="usd0", label=label.auto_position("outside end"), title="Sales"),
+    col.bar("sales", format="usd0", label=label.auto_position("outside end")),
 ]
 ```
 
@@ -811,7 +811,7 @@ bars are red.
 ```python
 columns=[
     col.text("team"),
-    col.bar("change", center=True, color_negative="red", format="pct1", label=True, title="Change").scale(
+    col.bar("change", center=True, color_negative="red", format="pct1", label=True).scale(
         domain=(-0.2, 0.2), axis=True, axis_position="bottom"
     ),
 ]
@@ -849,29 +849,31 @@ columns=[
 
 #### Back-to-back bars
 
-Mirror two measures around a shared text column.
+Compare imports and exports of goods and services in current US dollars for
+the six largest European traders in 2024, including the UK. Countries are
+ranked by imports plus exports. Both sides use the same scale; labels use
+compact units (B = billion, T = trillion).
+
+Source: World Bank WDI (`NE.IMP.GNFS.CD` and `NE.EXP.GNFS.CD`).
 
 ```python
 columns=[
     col.bar(
-        "spend",
-        format="usd1",
+        "imports",
+        format="compact",
         direction="left",
-        color="@color",
+        color="#2563eb",
         label=label.auto_position("outside end"),
         pad=3,
-        title="Sales per capita",
-    ).align("left"),
-    col.text("country", title=""),
+    ).domain("trade").align("left"),
+    col.text("country", title="").align("center"),
     col.bar(
-        "rate",
-        format="num2",
-        color="@color",
+        "exports",
+        format="compact",
+        color="#0f766e",
         label=label.auto_position("outside end"),
         pad=3,
-        title="Foreign-to-Canadian rate",
-    ).align("right"),
-    col.auto("color").hide(),
+    ).domain("trade"),
 ]
 ```
 
@@ -890,7 +892,7 @@ Encode the score as a background colour while keeping its numeric value.
 ```python
 columns=[
     col.text("region"),
-    col.number("score", fmt="num0").color(scale="Blues", min=0, max=100).title("Score"),
+    col.number("score", fmt="num0").color(scale="Blues", min=0, max=100),
 ]
 ```
 
@@ -909,7 +911,7 @@ Use chips for categories or a numeric colour scale.
 ```python
 columns=[
     col.text("service"),
-    col.chip("status", min_width=84, title="Status"),
+    col.chip("status", min_width=84),
     col.number("latency", fmt="num0").chip(scale="red", min=0, max=500).title("Latency (ms)"),
 ]
 ```
@@ -929,7 +931,7 @@ Treat changes within the neutral range as steady, with optional chip backgrounds
 ```python
 columns=[
     col.text("metric"),
-    col.percent("change", decimals=1, title="Change").delta(down_is_good=False, neutral_range="-0.02:0.02"),
+    col.percent("change", decimals=1).delta(down_is_good=False, neutral_range="-0.02:0.02"),
     col.percent("change", decimals=1, title="As a chip").delta(
         down_is_good=False, neutral_range="-0.02:0.02", chip=True
     ),
@@ -951,17 +953,48 @@ Show a series as a line, area, bars, points or increase/steady/decrease marks.
 ```python
 columns=[
     col.text("series"),
-    col.sparkline("line", type="line", width=110, height=30, title="Line"),
-    col.sparkline("area", type="area", fit_to_data=True, width=110, height=30, title="Area"),
-    col.sparkline("bar", type="bar", width=110, height=30, title="Bar"),
-    col.sparkline("points", type="points", width=110, height=30, markers=True, title="Points"),
-    col.sparkline("change", type="change", width=110, height=30, title="Change"),
+    col.sparkline("line", type="line", width=110, height=30),
+    col.sparkline("area", type="area", fit_to_data=True, width=110, height=30),
+    col.sparkline("bar", type="bar", width=110, height=30),
+    col.sparkline("points", type="points", width=110, height=30, markers=True),
+    col.sparkline("change", type="change", width=110, height=30),
 ]
 ```
 
 ![Sparklines](https://raw.githubusercontent.com/edouardp/evidential/main/docs/img/graphics/sparklines.png)
 
 [Notebook source: `graphic_sparklines`](https://github.com/edouardp/evidential/blob/main/notebooks/50_graphics_gallery.py)
+
+<!-- /notebook -->
+
+<!-- notebook: notebooks/50_graphics_gallery.py#graphic_football_form -->
+
+#### Change sparkline: Premier League form
+
+A change sparkline can show match results: blue/up is a win, gray/centered
+is a draw, and red/down is a loss. Each rectangle has the same size;
+a larger winning margin does not make it taller. The sequence runs from
+oldest to newest across each team's last 12 league matches.
+
+These are the top six teams by league points earned in **calendar year
+2024**, with wins, draws and losses for that year—not season standings.
+The data comes from the football explorer in notebook 46, filtered to
+Premier League matches; international matches are excluded.
+
+```python
+columns=[
+    col.text("team"),
+    col.integer("wins"),
+    col.integer("draws"),
+    col.integer("losses"),
+    col.sparkline("form", type="change", width=156, height=22, y_fmt="num0")
+        .title("Last 12 matches"),
+]
+```
+
+![Change sparkline: Premier League form](https://raw.githubusercontent.com/edouardp/evidential/main/docs/img/graphics/football-form.png)
+
+[Notebook source: `graphic_football_form`](https://github.com/edouardp/evidential/blob/main/notebooks/50_graphics_gallery.py)
 
 <!-- /notebook -->
 
@@ -974,7 +1007,7 @@ Repeat glyphs or shapes for counts, or show a five-point rating.
 ```python
 columns=[
     col.text("country"),
-    col.symbols("gold", symbol="■", color="#d97706", title="Glyph"),
+    col.symbols("gold", symbol="●", color="#d97706", title="Circles"),
     col.symbols("gold", shape="square", color="#d97706", title="Squares").align("center"),
     col.rating("score", title="Rating"),
 ]
@@ -995,9 +1028,9 @@ Render booleans, mapped icons and country flags.
 ```python
 columns=[
     col.text("feature"),
-    col.boolean("active", true_symbol="✓", false_symbol="✗", title="Active"),
-    col.icons("signal", map={"up": "▲", "flat": "●", "down": "▼"}, title="Signal"),
-    col.flag("country", title="Country"),
+    col.boolean("active", true_symbol="✓", false_symbol="✗"),
+    col.icons("signal", map={"up": "▲", "flat": "●", "down": "▼"}),
+    col.flag("country"),
 ]
 ```
 
@@ -1040,7 +1073,7 @@ Plot every sample on one horizontal scale, with transparent marks for overlap.
 ```python
 columns=[
     col.text("metric"),
-    col.points("samples", color="#2563eb30", size=9, outline=False, title="Samples").scale(
+    col.points("samples", color="#2563eb30", size=9, outline=False).scale(
         domain=(0, 60), axis=True, axis_position="bottom"
     ),
 ]
@@ -1166,7 +1199,7 @@ Display an ordered sequence of categorical outcomes.
 ```python
 columns=[
     col.text("team"),
-    col.strip("form", colors={"W": "#16a34a", "D": "#9ca3af", "L": "#dc2626"}, labels=True).title("Form"),
+    col.strip("form", colors={"W": "#16a34a", "D": "#9ca3af", "L": "#dc2626"}, labels=True),
 ]
 ```
 
@@ -1185,7 +1218,7 @@ Add an external axis, gridlines, a target line and a reference band.
 ```python
 columns=[
     col.text("team"),
-    col.bar("score", format="num0", label=label.auto_position("outside end"), title="Score")
+    col.bar("score", format="num0", label=label.auto_position("outside end"))
     .scale(domain=(0, 100), axis=True, axis_position="bottom", gridlines=True)
     .reference_band(60, 80, color="#fef3c7")
     .reference_line(70, color="#dc2626"),
@@ -1229,7 +1262,7 @@ automatically; `column_groups={...}` is the equivalent mapping form.
 
 ```python
 columns=[
-    col.text("country", title="Country"),
+    col.text("country"),
     col.group(
         "Gross domestic product",
         [
@@ -1523,10 +1556,10 @@ The table's column configuration is:
 
 ```python
 columns=[
-    col.text("region", title="Region"),
-    col.text("city", title="City"),
-    col.integer("trips", title="Trips"),
-    col.bar("revenue", title="Revenue", format='usd0', label=True),
+    col.text("region"),
+    col.text("city"),
+    col.integer("trips"),
+    col.bar("revenue", format='usd0', label=True),
     col.percent("tip_rate", decimals=1, title="Tip rate").color(
         scale=["#fee2e2", "#fef9c3", "#bbf7d0", "#15803d"], min=0, max=0.35
     ),

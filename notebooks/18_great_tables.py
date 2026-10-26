@@ -149,7 +149,7 @@ def _(
             columns=[
                 col.text("sensor"),
                 col.number("amount", fmt="num1", title="Reading"),
-                col.markdown("status", title="Status"),
+                col.markdown("status"),
             ],
             rules=[
                 sub_missing(columns="amount", missing_text="n/a"),

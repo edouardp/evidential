@@ -166,7 +166,7 @@ def _(EvidentialTable, col, connection, mo):
                     ],
                     #highlight="#55006611",
                 ),
-                col.integer("Buzz.popularity", title="Popularity"),
+                col.integer("Buzz.popularity"),
                 col.auto("imdb").hide(),
             ],
         )

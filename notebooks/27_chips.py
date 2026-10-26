@@ -113,7 +113,7 @@ def _(EvidentialTable, col, mo, records):
             columns=[
                 col.text("rank", title="#"),
                 col.text("city", title="Major city"),
-                col.chip("status", title="Status", scale="@status_color"),
+                col.chip("status", scale="@status_color"),
                 col.auto("aqi").hide(),
                 col.auto("status_color").hide(),
             ],
@@ -157,7 +157,7 @@ def _(EvidentialTable, col, mo, records):
                 col.number("aqi", title="AQI (US)").chip(
                     min_width=72, scale="ylorrd", min=0, max=250
                 ),
-                col.chip("status", title="Status", min_width=72, scale="@status_color"),
+                col.chip("status", min_width=72, scale="@status_color"),
             ],
         )
     )

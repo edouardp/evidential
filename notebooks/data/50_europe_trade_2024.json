@@ -1,0 +1,44 @@
+[
+  {
+    "country_code": "DEU",
+    "country": "Germany",
+    "imports": 1764438191610.9373,
+    "exports": 1941431210621.8745,
+    "total_trade": 3705869402232.8115
+  },
+  {
+    "country_code": "GBR",
+    "country": "United Kingdom",
+    "imports": 1174549941083.1353,
+    "exports": 1147692057154.7566,
+    "total_trade": 2322241998237.8916
+  },
+  {
+    "country_code": "FRA",
+    "country": "France",
+    "imports": 1081453951068.7498,
+    "exports": 1071066237472.1091,
+    "total_trade": 2152520188540.859
+  },
+  {
+    "country_code": "NLD",
+    "country": "Netherlands",
+    "imports": 867461920494.5311,
+    "exports": 1001469281569.531,
+    "total_trade": 1868931202064.062
+  },
+  {
+    "country_code": "IRL",
+    "country": "Ireland",
+    "imports": 622469214438.7499,
+    "exports": 877092941905.4686,
+    "total_trade": 1499562156344.2185
+  },
+  {
+    "country_code": "ITA",
+    "country": "Italy",
+    "imports": 721169108147.0311,
+    "exports": 770685525117.2655,
+    "total_trade": 1491854633264.2966
+  }
+]

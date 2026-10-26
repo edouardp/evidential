@@ -94,8 +94,8 @@ def _(EvidentialTable, col, detail, mo, rows):
             download=True,
             section_indent=1,
             columns=[
-                col.text("region", title="Region"),
-                col.text("country", title="Country"),
+                col.text("region"),
+                col.text("country"),
                 col.currency("arr", decimals=1),
                 col.integer("accounts"),
             ],
@@ -139,8 +139,8 @@ def _(EvidentialTable, col, detail, mo, rows):
             row_shading=True,
             section_indent=1,
             columns=[
-                col.text("region", title="Region"),
-                col.text("country", title="Country"),
+                col.text("region"),
+                col.text("country"),
                 col.currency("arr", decimals=1),
                 col.integer("accounts"),
             ],

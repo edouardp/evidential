@@ -203,10 +203,9 @@ def _(EvidentialTable, col, mo, services):
             border=False,
             stretch=False,
             columns=[
-                col.text("service", title="Service"),
+                col.text("service"),
                 col.boolean(
                     "healthy",
-                    title="Healthy",
                     true_symbol="✓",
                     false_symbol="✗",
                     true_text="Active",
@@ -214,7 +213,6 @@ def _(EvidentialTable, col, mo, services):
                 ),
                 col.boolean(
                     "replicated",
-                    title="Replicated",
                     true_symbol="●",
                     false_symbol="○",
                     true_text="Yes",
@@ -260,7 +258,7 @@ def _(EvidentialTable, col, mo, signals):
             stretch=False,
             columns=[
                 col.text("asset"),
-                col.icons("signal", map={"buy": "▲", "sell": "▼", "hold": "●"}, title="Signal"),
+                col.icons("signal", map={"buy": "▲", "sell": "▼", "hold": "●"}),
                 col.text("signal", title="Meaning"),
                 col.text("note"),
             ],

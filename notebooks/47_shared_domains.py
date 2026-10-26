@@ -63,10 +63,10 @@ def count_example(EvidentialTable, col, label, mo, observations, payments):
                 col.group(
                     "Payment type",
                     [
-                        col.bar("card", title="Card", format="num0", label=label.auto_position("inside end"))
+                        col.bar("card", format="num0", label=label.auto_position("inside end"))
                            .domain(payments)
                            .scale(axis=True),
-                        col.bar("cash", title="Cash", format="num0", label=label.auto_position("inside end"))
+                        col.bar("cash", format="num0", label=label.auto_position("inside end"))
                            .domain("payments")
                            .scale(axis=True),
                     ],

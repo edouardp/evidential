@@ -467,7 +467,7 @@ def _(EvidentialTable, attitudes, cells_body, col, mo, settings, tab_style):
                 .label(source="tolerance", format="pct0")
                 .scale(domain=(-1, 0))
                 .reference_line(0, color="#94a3b8"),
-                col.bar("intolerance", title="Intolerance", color="#1374a8", size=0.65)
+                col.bar("intolerance", color="#1374a8", size=0.65)
                 .label(value=True, format="pct0")
                 .scale(domain=(0, 1))
                 .reference_line(0, color="#94a3b8"),

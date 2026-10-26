@@ -145,8 +145,8 @@ def _(LiveEvidentialTable, col, connection):
         row_shading=True,
         freeze_columns=1,
         column_config={
-            "pickup": col.text("pickup", title="Pickup"),
-            "payment": col.text("payment", title="Payment"),
+            "pickup": col.text("pickup"),
+            "payment": col.text("payment"),
             "part_of_day": col.text("part_of_day", title="Time of day"),
             "trip_distance": col.bar("trip_distance", fmt="num1", title="Distance", label=True),
             "fare_amount": col.currency("fare_amount", decimals=2, title="Fare"),

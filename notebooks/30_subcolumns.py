@@ -61,7 +61,7 @@ def economic_table(EvidentialTable, col, mo, records):
             title="Economic data",
             subtitle="Value + reporting period under Latest; independent annual forecast",
             columns=[
-                col.text("country", title="Country"),
+                col.text("country"),
                 col.group("Gross domestic product", [
                     col.subcolumns("Latest", [
                         col.number("gdp", fmt="num1", align="right").neg(),
@@ -114,7 +114,7 @@ def three_part_table(EvidentialTable, col, mo, records):
             records,
             title="GDP observations",
             columns=[
-                col.text("country", title="Country"),
+                col.text("country"),
                 col.subcolumns("Latest observation", [
                         col.number("gdp", fmt="num1", align="right"),
                         col.auto("quarter").align("left").font_color("#808080"),

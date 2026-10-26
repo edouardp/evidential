@@ -88,7 +88,7 @@ def _(EvidentialTable, col, connection, mo):
             row_lines=False,
             columns=[
                 col.text("label", title="Row"),
-                col.number("value", fmt="num0", title="Value"),
+                col.number("value", fmt="num0"),
                 # default two-colour scale
                 col.number("default_scale", fmt="num0", title="Default").color(),
                 # explicit list of colours

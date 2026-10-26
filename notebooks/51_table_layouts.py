@@ -43,9 +43,9 @@ def _(duckdb):
 @app.cell
 def _(col, settings):
     layout_columns = [
-        col.text("product", title="Product"),
-        col.integer("units", title="Units"),
-        col.currency("sales", decimals=0, title="Sales"),
+        col.text("product"),
+        col.integer("units"),
+        col.currency("sales", decimals=0),
     ]
     layout_frame = settings(width="640px", search=False, sortable=False, page_size=0)
     return layout_columns, layout_frame
@@ -118,9 +118,9 @@ def layout_footnotes(EvidentialTable, con, layout_frame, col):
     EvidentialTable(
         con.sql("SELECT product, units, sales, note FROM orders"),
         columns=[
-            col.text("product", title="Product").footnote("note"),
-            col.integer("units", title="Units"),
-            col.currency("sales", decimals=0, title="Sales"),
+            col.text("product").footnote("note"),
+            col.integer("units"),
+            col.currency("sales", decimals=0),
         ],
         settings=layout_frame,
     )
@@ -331,10 +331,10 @@ def layout_headings_column(EvidentialTable, con, layout_frame, col, rows):
     EvidentialTable(
         con.sql("SELECT region, product, units, sales FROM orders"),
         columns=[
-            col.text("region", title="Region").bold().repeat_values(False),
-            col.text("product", title="Product"),
-            col.integer("units", title="Units"),
-            col.currency("sales", decimals=0, title="Sales"),
+            col.text("region").bold().repeat_values(False),
+            col.text("product"),
+            col.integer("units"),
+            col.currency("sales", decimals=0),
         ],
         settings=layout_frame,
         border=False,
@@ -502,14 +502,14 @@ def layout_groups_one(EvidentialTable, con, layout_frame, col):
         con.sql("SELECT product, units, target_units, sales, cost FROM orders"),
         settings=layout_frame,
         columns=[
-            col.text("product", title="Product"),
+            col.text("product"),
             col.group("Volume", [
                 col.integer("units", title="Actual"),
                 col.integer("target_units", title="Target"),
             ]),
             col.group("Money", [
-                col.currency("sales", decimals=0, title="Sales"),
-                col.currency("cost", decimals=0, title="Cost"),
+                col.currency("sales", decimals=0),
+                col.currency("cost", decimals=0),
             ]),
         ],
         border=False,
@@ -535,15 +535,15 @@ def layout_groups_two(EvidentialTable, con, layout_frame, col):
         con.sql("SELECT product, units, target_units, sales, cost FROM orders"),
         settings=layout_frame,
         columns=[
-            col.text("product", title="Product"),
+            col.text("product"),
             col.group("Operations", [
                 col.group("Volume", [
                     col.integer("units", title="Actual"),
                     col.integer("target_units", title="Target"),
                 ]),
                 col.group("Money", [
-                    col.currency("sales", decimals=0, title="Sales"),
-                    col.currency("cost", decimals=0, title="Cost"),
+                    col.currency("sales", decimals=0),
+                    col.currency("cost", decimals=0),
                 ]),
             ]),
         ],

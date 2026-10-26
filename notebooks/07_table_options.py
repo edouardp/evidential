@@ -80,8 +80,8 @@ def _(EvidentialTable, col, connection, mo):
             total_row_color="#e2e8f0",
             columns=[
                 col.auto("category"),
-                col.integer("orders", title="Orders"),
-                col.bar("sales", title="Sales", format='usd0', label=True),
+                col.integer("orders"),
+                col.bar("sales", format='usd0', label=True),
                 col.currency("avg_sale", decimals=2, title="Avg sale"),
                 col.auto("tint").hide(),
             ],

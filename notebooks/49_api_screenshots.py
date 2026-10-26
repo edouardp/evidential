@@ -103,9 +103,9 @@ def quickstart(EvidentialTable, col, settings):
     EvidentialTable(
         tips,
         columns=[
-            col.text("city", title="City"),
-            col.integer("trips", title="Trips"),
-            col.currency("revenue", title="Revenue"),
+            col.text("city"),
+            col.integer("trips"),
+            col.currency("revenue"),
             col.percent("tip_rate", decimals=1, title="Tip rate"),
         ],
         settings=settings(
@@ -192,7 +192,7 @@ def preview(EvidentialTable, col, label, section_row, settings):
     preview_table = EvidentialTable(
         cities,
         columns=[
-            col.text("city", title="City"),
+            col.text("city"),
             col.number("visitors", fmt="num1", title="Visitors (m)"),
             col.subcolumns("Revenue (US$m) · latest / prior", [
                 col.bar("revenue", format="usd1", label=label.auto_position("outside end")),
@@ -200,12 +200,12 @@ def preview(EvidentialTable, col, label, section_row, settings):
                    .font_color("#94a3b8")
                    .footnote("revenue_note"),
             ]),
-            col.percent("occupancy", decimals=0, title="Occupancy")
+            col.percent("occupancy", decimals=0)
                .color(scale=["#fee2e2", "#fef9c3", "#bbf7d0", "#15803d"],
                       min=0.6, max=0.9)
                .footnote("occupancy_note"),
             col.sparkline("trend", type="area", fit_to_data=True, width=120, height=30, title="Visitors trend"),
-            col.percent("change", decimals=0, title="Change")
+            col.percent("change", decimals=0)
                .delta(down_is_good=False, neutral_range="-0.02:0.02"),
             col.auto("revenue_note").hide(),
             col.auto("occupancy_note").hide(),
@@ -295,13 +295,13 @@ def kinds(EvidentialTable, col, settings):
     EvidentialTable(
         menu,
         columns=[
-            col.text("item", title="Item"),
-            col.integer("count", title="Count"),
-            col.currency("price", title="Price"),
-            col.percent("share", decimals=0, title="Share"),
-            col.date("day", title="Day"),
-            col.flag("origin", title="Origin"),
-            col.boolean("active", title="Active"),
+            col.text("item"),
+            col.integer("count"),
+            col.currency("price"),
+            col.percent("share", decimals=0),
+            col.date("day"),
+            col.flag("origin"),
+            col.boolean("active"),
         ],
         settings=settings(title="Column kinds", width="760px"),
     )
@@ -320,7 +320,7 @@ def relative_time(EvidentialTable, ago, col, settings):
     EvidentialTable(
         events,
         columns=[
-            col.text("event", title="Event"),
+            col.text("event"),
             col.datetime("at", relative=True, title="When"),
         ],
         settings=settings(title="Relative time", width="420px"),
@@ -340,7 +340,7 @@ def symbols(EvidentialTable, col, settings):
     EvidentialTable(
         medals,
         columns=[
-            col.text("country", title="Country"),
+            col.text("country"),
             col.symbols("gold", symbol="■", color="#d97706", title="Glyph"),
             col.symbols("gold", shape="square", color="#d97706", title="Squares"),
             col.symbols("gold", shape="circle", color="#d97706", title="Circles"),
@@ -402,12 +402,12 @@ def visualizations(EvidentialTable, col, settings):
     EvidentialTable(
         regions,
         columns=[
-            col.text("region", title="Region"),
-            col.bar("revenue", title="Revenue"),
-            col.bar("growth", center=True, title="Growth"),
-            col.color("share", title="Share"),
+            col.text("region"),
+            col.bar("revenue"),
+            col.bar("growth", center=True),
+            col.color("share"),
             col.chip("region", title="Chip"),
-            col.sparkline("trend", type="area", title="Trend"),
+            col.sparkline("trend", type="area"),
             col.percent("growth", decimals=0, title="Δ").delta(),
         ],
         settings=settings(title="Visualisations", width="860px"),
@@ -478,10 +478,10 @@ def styling(EvidentialTable, col, settings):
     EvidentialTable(
         metrics,
         columns=[
-            col.text("metric", title="Metric").bold(),
-            col.currency("q1", decimals=0, title="Q1").neg(),
-            col.currency("q2", decimals=0, title="Q2").neg(bracket=True),
-            col.percent("change", decimals=1, title="Change").neg().italic(),
+            col.text("metric").bold(),
+            col.currency("q1", decimals=0).neg(),
+            col.currency("q2", decimals=0).neg(bracket=True),
+            col.percent("change", decimals=1).neg().italic(),
             col.percent("change", decimals=1, title="Δ %").bold().highlight("#fef3c7"),
         ],
         settings=settings(
@@ -505,13 +505,13 @@ def groups(EvidentialTable, col, settings):
     EvidentialTable(
         financials,
         columns=[
-            col.text("region", title="Region"),
+            col.text("region"),
             col.group(
                 "Financials",
                 [
-                    col.currency("revenue", title="Revenue"),
-                    col.currency("cost", title="Cost"),
-                    col.currency("profit", title="Profit"),
+                    col.currency("revenue"),
+                    col.currency("cost"),
+                    col.currency("profit"),
                 ],
             ),
         ],
@@ -544,7 +544,7 @@ def subcolumns(EvidentialTable, col, settings):
     EvidentialTable(
         economies,
         columns=[
-            col.text("country", title="Country"),
+            col.text("country"),
             col.group(
                 "Gross domestic product",
                 [
@@ -595,7 +595,7 @@ def merged(
     EvidentialTable(
         sites,
         columns=[
-            col.text("site", title="Site"),
+            col.text("site"),
             col.merge("range", cols_merge_range("low", "high", fmt="num0", title="Range")),
             col.merge(
                 "measurement",
@@ -696,8 +696,8 @@ def rules(
     EvidentialTable(
         categories,
         columns=[
-            col.text("category", title="Category"),
-            col.bar("sales", format="usd0", title="Sales", label=True),
+            col.text("category"),
+            col.bar("sales", format="usd0", label=True),
         ],
         rules=[
             text_transform(cells_body("category"), str.upper),

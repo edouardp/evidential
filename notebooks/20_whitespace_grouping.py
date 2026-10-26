@@ -174,8 +174,8 @@ def _(EvidentialTable, col, mo):
             title="Income statement (illustrative)",
             columns=[
                 col.text("metric", title=""),
-                col.currency("q1", decimals=0, title="Q1"),
-                col.currency("q2", decimals=0, title="Q2"),
+                col.currency("q1", decimals=0),
+                col.currency("q2", decimals=0),
             ],
         )
     )

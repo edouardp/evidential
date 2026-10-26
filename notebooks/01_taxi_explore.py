@@ -224,7 +224,7 @@ def _(EvidentialTable, col, connection, label, mo):
             search=True,
             row_shading=3,
             columns=[
-                col.date("day", fmt="yyyy-mm-dd", title="Day"),
+                col.date("day", fmt="yyyy-mm-dd"),
                 col.group(
                     "Payment type",
                     [
@@ -233,7 +233,7 @@ def _(EvidentialTable, col, connection, label, mo):
                             label=label.auto_position("outside end").fmt("num0"),
                         ),
                         col.bar(
-                            "cash", title="Cash", format="num0",
+                            "cash", format="num0",
                             label=label.position("inside end"), color="tab:purple",
                         ),
                         col.bar(
@@ -241,7 +241,7 @@ def _(EvidentialTable, col, connection, label, mo):
                             label=label.position("inside end"), color="tab:green",
                         ),
                         col.bar(
-                            "dispute", title="Dispute", format="num0",
+                            "dispute", format="num0",
                             label=label.position("inside end"), color="tab:red",
                         ),
                     ],

@@ -55,9 +55,9 @@ rows = [
 EvidentialTable(
     rows,
     columns=[
-        col.text("city", title="City"),
-        col.integer("trips", title="Trips"),
-        col.currency("revenue", title="Revenue"),
+        col.text("city"),
+        col.integer("trips"),
+        col.currency("revenue"),
         col.percent("tip_rate", decimals=1, title="Tip rate"),
     ],
     settings=settings(
@@ -331,9 +331,9 @@ run of columns:
 
 ```python
 col.group("Financials", [
-    col.currency("revenue", title="Revenue"),
-    col.currency("cost", title="Cost"),
-    col.currency("profit", title="Profit"),
+    col.currency("revenue"),
+    col.currency("cost"),
+    col.currency("profit"),
 ])
 ```
 
@@ -400,7 +400,7 @@ helpers describe the value; `col.merge(name, spec)` names the derived column:
 from evidential import col, cols_merge_n_pct, cols_merge_range, cols_merge_uncert
 
 columns=[
-    col.text("site", title="Site"),
+    col.text("site"),
     col.merge("range", cols_merge_range("low", "high", fmt="num0", title="Range")),
     col.merge("measurement", cols_merge_uncert("value", "uncert", fmt="num1", title="Value")),
     col.merge("share", cols_merge_n_pct("n", "pct", title="Share")),
@@ -557,12 +557,12 @@ search, statistics and CSV export keep using the underlying number.
 
 ```python
 columns=[
-    col.text("region", title="Region"),
-    col.bar("revenue", title="Revenue", label=True),                    # a bar
-    col.bar("growth", center=True, title="Growth", label=True),         # a centred (diverging) bar
-    col.color("share", title="Share"),                      # a shaded cell
+    col.text("region"),
+    col.bar("revenue", label=True),                    # a bar
+    col.bar("growth", center=True, label=True),         # a centred (diverging) bar
+    col.color("share"),                      # a shaded cell
     col.chip("region", title="Chip"),                       # a pill
-    col.sparkline("trend", type="area", title="Trend"),     # a trend
+    col.sparkline("trend", type="area"),     # a trend
     col.boolean("active", true_symbol="✓", false_symbol="✗"),  # ✓/✗
     col.percent("growth", decimals=0, title="Δ").delta(),   # a change indicator
 ]
@@ -938,13 +938,13 @@ See [the formatting demo](../../notebooks/08_column_options.py).
 
 ```python
 columns=[
-    col.text("item", title="Item"),
-    col.integer("count", title="Count"),
-    col.currency("price", title="Price"),
-    col.percent("share", decimals=0, title="Share"),
-    col.date("day", title="Day"),
-    col.flag("origin", title="Origin"),
-    col.boolean("active", title="Active"),
+    col.text("item"),
+    col.integer("count"),
+    col.currency("price"),
+    col.percent("share", decimals=0),
+    col.date("day"),
+    col.flag("origin"),
+    col.boolean("active"),
 ]
 ```
 
@@ -965,10 +965,10 @@ chain:
 
 ```python
 columns=[
-    col.text("metric", title="Metric").bold(),
-    col.currency("q1", decimals=0, title="Q1").neg(),
-    col.currency("q2", decimals=0, title="Q2").neg(bracket=True),
-    col.percent("change", decimals=1, title="Change").neg().italic(),
+    col.text("metric").bold(),
+    col.currency("q1", decimals=0).neg(),
+    col.currency("q2", decimals=0).neg(bracket=True),
+    col.percent("change", decimals=1).neg().italic(),
     col.percent("change", decimals=1, title="Δ %").bold().highlight("#fef3c7"),
 ]
 ```

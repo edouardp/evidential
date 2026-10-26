@@ -68,7 +68,7 @@ def _(EvidentialTable, col, connection, mo):
                 # name links to the url column
                 col.text("name").align("left").link("url", new_tab=True).info("Click to open the search result"),
                 # per-row format pulled from the row_fmt column (fmtColumn)
-                col.number("amount", title="Amount").fmt_column("row_fmt").neg(bracket=True),
+                col.number("amount").fmt_column("row_fmt").neg(bracket=True),
                 col.text("row_fmt", title="Format code"),
                 col.auto("url").hide(),
                 # raw HTML cell (contentType=html)

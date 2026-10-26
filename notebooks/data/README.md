@@ -1,5 +1,21 @@
 # Notebook data snapshots
 
+## European trade
+
+`50_europe_trade_2024.json` is the result of
+[`50_europe_trade.sql`](../sql/50_europe_trade.sql), queried from the local WDI
+bundle on 26 October 2026. It contains imports and exports of goods and services
+in current US dollars for 2024 (`NE.IMP.GNFS.CD`, `NE.EXP.GNFS.CD`). Both measures
+must be present. Ranking by their sum across the WDI Europe & Central Asia
+region produces six European economies: Germany, United Kingdom, France,
+Netherlands, Ireland and Italy. This is total trade, not trade per person.
+Notebook 50 uses this fixed snapshot so its README example works without a
+local WDI installation. The query uses the same country and observation views
+as notebook 23. Source: [World Bank WDI](https://datacatalog.worldbank.org/search/dataset/0037712/world-development-indicators),
+subject to its [dataset terms](https://www.worldbank.org/en/about/legal/terms-of-use-for-datasets).
+
+## WDI league table
+
 `34_wdi_league_2019_2021.json` is the result of
 [`34_wdi_league.sql`](../sql/34_wdi_league.sql), queried from the local
 `WDI_CSV_2026_10_01/parquet` World Development Indicators bundle on 21 October

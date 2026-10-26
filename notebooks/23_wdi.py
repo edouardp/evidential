@@ -686,7 +686,7 @@ def _(EvidentialTable, col, connection, mo):
             columns=[
                 col.text("code"),
                 col.text("name"),
-                col.text("Region", title="Region"),
+                col.text("Region"),
                 col.text("income_group"),
                 col.text("currency"),
             ],

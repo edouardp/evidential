@@ -79,7 +79,7 @@ def _(EvidentialTable, col, mo, polling, settings):
             ),
             columns=[
                 col.text("party"),
-                col.bar("previous", color="#cc77ee", size=0.9, title="Previous")
+                col.bar("previous", color="#cc77ee", size=0.9)
                 .bar("votes", color="@colour", size=0.42, label={"value": True, "suffix": "%"}, label_position="outside_end")
                 .point("target", color="#0f766e", size=7)
                 .scale(domain=(0, 45)),
@@ -220,7 +220,7 @@ def _(EvidentialTable, col, form, mo, settings):
                     "form",
                     colors={"W": "#16a34a", "D": "#9ca3af", "L": "#dc2626"},
                     labels=True,
-                ).title("Form"),
+                ),
             ],
         )
     )
@@ -337,8 +337,7 @@ def _(EvidentialTable, col, curves, mo, settings):
                 col.text("party"),
                 col.distribution("density", x="x", y="y", color="@ink", height=0.5)
                 .point("median", color="#111111", size=8, outline="white")
-                .scale(domain=(28, 68), axis=True)
-                .title("Density").align("center"),
+                .scale(domain=(28, 68), axis=True).align("center"),
             ],
         )
     )
@@ -351,8 +350,7 @@ def _(EvidentialTable, col, curves, mo, settings):
                 col.text("party"),
                 col.distribution("density", x="x", y="y", color="@ink")
                    .point("median", color="#111111", size=8, outline="white")
-                   .scale(domain=(28, 68))
-                   .title("Density").align("center"),
+                   .scale(domain=(28, 68)).align("center"),
             ],
             width=300, search=False, page_size=0, border=False, row_lines=False,
         )
@@ -435,9 +433,8 @@ def _(EvidentialTable, col, mo, settings, wards):
             ),
             columns=[
                 col.text("ward"),
-                col.bar("mean", color="#bfdbfe", title="Mean")
+                col.bar("mean", color="#bfdbfe")
                    .points("observations", size=8, color="#1d4ed860", outline=False)
-                   .title("Mean")
                    .align("center"),
             ],
         )

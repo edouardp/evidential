@@ -103,7 +103,7 @@ def _(EvidentialTable, col, connection, mo):
             page_size=10,
             row_shading=True,
             columns=[
-                col.text("category", title="Category"),
+                col.text("category"),
                 col.currency("total_sales", decimals=0, title="Total sales"),
                 col.sparkline("orders_trend", title="Orders", x="date", y="v", type="line"),
                 col.sparkline("sales_trend", title="Sales", x="date", y="v", type="area", color="#53768a"),
@@ -180,10 +180,10 @@ def _(EvidentialTable, col, connection, mo):
             columns=[
                 col.number("id", fmt="id", title="Order"),
                 col.date("order_datetime", fmt="shortdate", title="Ordered"),
-                col.text("category", title="Category"),
-                col.text("item", title="Item"),
+                col.text("category"),
+                col.text("item"),
                 col.text("channel_group", title="Channel"),
-                col.bar("sales", title="Sales", format='usd2', label=True),
+                col.bar("sales", format='usd2', label=True),
             ],
         )
     )

@@ -3,8 +3,8 @@
   "inputs": {
     "notebooks/21_studio_dashboard.py": "956a876c4c77e59679602a29738b7be6bbf71bee49b6238f62b5ee3d6cccb883",
     "notebooks/49_api_screenshots.py": "c4cacaf9a1c98a3e6b484194744f38a03fd86425012ff1de07ffda6ae4f99825",
-    "notebooks/50_graphics_gallery.py": "51f639f72066aadc5b43c321e9e664a04b9640873cdff3d46ebb6ead841179a8",
-    "notebooks/51_table_layouts.py": "d346a2ecc89d21efb63892e4134929734d27d65a0a5f5e36241c9cfa3fcf597a",
+    "notebooks/50_graphics_gallery.py": "3bbf914ce60500fd6099512968feffe1c9b3f9a881e1549800f63ab5e0b02c90",
+    "notebooks/51_table_layouts.py": "dc9bdd30853716e0033e9f5285c31ada472ff42a2aefdcf1a5146cf42085200c",
     "notebooks/sample_data/needful_things/orders.parquet": "b373511b4f7a0547b704022b055655b6d3bafc2505a2a573292b206417fe3eb4",
     "pyproject.toml": "3952351abcc07313af282773adaed5abebc718275879d186f7fe5368c1b16705",
     "scripts/api_screenshots.py": "b4e5045738ef1351f32492d106ff3b934c85a0be57a0924d72f720be4fdd519a",
@@ -131,7 +131,7 @@
     "docs/img/graphics/bar-centered.png": {
       "notebook": "notebooks/50_graphics_gallery.py",
       "cell": "graphic_bar_centered",
-      "sha256": "d22d2e210c1f12714bc1baf8108318f663677ebb78158fd0f95157055b0d1dc6"
+      "sha256": "6ab1677b85a2e1c985f72f0df19371fdeeae2dbb5c70e26808bf4ec14dfc5404"
     },
     "docs/img/graphics/bar-overlay.png": {
       "notebook": "notebooks/50_graphics_gallery.py",
@@ -276,7 +276,7 @@
     "docs/img/layouts/headings-column.png": {
       "notebook": "notebooks/51_table_layouts.py",
       "cell": "layout_headings_column",
-      "sha256": "0b6ff8ccc522d21ec2594c0a45f30b92a5b3e728863790adc9aa6e1fc8506432"
+      "sha256": "936a8bf4c5d749bcb4613e66e94b99bc2d51a60894f042425c10125fb5826bb3"
     },
     "docs/img/layouts/heading-values.png": {
       "notebook": "notebooks/51_table_layouts.py",

@@ -39,8 +39,11 @@ remain visible, and the running notebook still uses the original arguments. Mark
 statically read literal. Missing/ambiguous cells and unknown modes fail.
 
 Notebook 51 owns nineteen layout examples and their paired Markdown cells.
-They share six records and a small width/interaction settings bundle, while
-the excerpt shows every example's actual layout call. Playwright captures
+They query six records from a local DuckDB `orders` table created in the setup
+cell and share a small width/interaction settings bundle. Every excerpt keeps
+its actual inline `con.sql("SELECT ... FROM orders")` call, listing the needed
+display, grouping and footnote fields so the data shape is clear without
+chasing a variable definition. Playwright captures
 those same named cells, including indented group details, centered headings
 and a non-repeating group-label column, into `docs/img/layouts`. The gallery appears in the
 presentation section before the cell graphics section. The existing manifest

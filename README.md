@@ -252,8 +252,11 @@ The [API reference](docs/api/API.md#table-options) lists every option and value.
 ### Table layout gallery
 
 The frame, rules, notes and summaries are independent of cell graphics. These
-examples share six product records, the same basic columns, and a settings
-bundle for width and disabled search, sorting and pagination. Excerpts use
+examples query an illustrative DuckDB `orders` table with six product records.
+Each query lists the fields it needs, including fields used only for grouping
+or footnotes. The notebook creates `con` and the table before the examples.
+They share basic columns and a settings bundle for width and disabled search,
+sorting and pagination. Excerpts use
 `...` for those shared column/settings references; follow a source link for
 the complete runnable setup. Inline definitions and layout options stay visible.
 
@@ -262,7 +265,7 @@ the complete runnable setup. Inline definitions and layout options stay visible.
 Start with the standard frame, header and row rules.
 
 ```python
-EvidentialTable(layout_data, columns=..., settings=...)
+EvidentialTable(con.sql("SELECT product, units, sales FROM orders"), columns=..., settings=...)
 ```
 
 ![Table layout gallery](docs/img/layouts/simple.png)
@@ -280,7 +283,7 @@ a source or explanatory note.
 
 ```python
 EvidentialTable(
-    layout_data,
+    con.sql("SELECT product, units, sales FROM orders"),
     columns=...,
     settings=...,
     title="Products by region",
@@ -304,7 +307,7 @@ superscript symbols and their notes appear below the table.
 
 ```python
 EvidentialTable(
-    layout_data,
+    con.sql("SELECT product, units, sales, note FROM orders"),
     columns=[
         col.text("product", title="Product").footnote("note"),
         col.integer("units", title="Units"),
@@ -329,7 +332,7 @@ separately with `border`.
 
 ```python
 EvidentialTable(
-    layout_data,
+    con.sql("SELECT product, units, sales FROM orders"),
     columns=...,
     settings=...,
     border=False,
@@ -351,7 +354,7 @@ Keep the header and final table rules while removing the lines between rows.
 
 ```python
 EvidentialTable(
-    layout_data,
+    con.sql("SELECT product, units, sales FROM orders"),
     columns=...,
     settings=...,
     border=False,
@@ -373,7 +376,7 @@ An outer border can enclose the table even when internal row lines are off.
 
 ```python
 EvidentialTable(
-    layout_data,
+    con.sql("SELECT product, units, sales FROM orders"),
     columns=...,
     settings=...,
     border=True,
@@ -395,7 +398,7 @@ Use a plain background without row lines or an outer frame.
 
 ```python
 EvidentialTable(
-    layout_data,
+    con.sql("SELECT product, units, sales FROM orders"),
     columns=...,
     settings=...,
     border=False,
@@ -418,7 +421,7 @@ EvidentialTable(
 
 ```python
 EvidentialTable(
-    layout_data,
+    con.sql("SELECT product, units, sales FROM orders"),
     columns=...,
     settings=...,
     border=False,
@@ -441,7 +444,7 @@ EvidentialTable(
 
 ```python
 EvidentialTable(
-    layout_data,
+    con.sql("SELECT product, units, sales FROM orders"),
     columns=...,
     settings=...,
     border=False,
@@ -466,7 +469,7 @@ detail data.
 
 ```python
 EvidentialTable(
-    layout_data,
+    con.sql("SELECT region, product, units, sales FROM orders"),
     columns=...,
     settings=...,
     border=False,
@@ -491,7 +494,7 @@ This style keeps the detail labels flush left and has no heading value cells.
 
 ```python
 EvidentialTable(
-    layout_data,
+    con.sql("SELECT region, product, units, sales FROM orders"),
     columns=...,
     settings=...,
     border=False,
@@ -510,15 +513,20 @@ EvidentialTable(
 
 #### Group labels in their own column
 
-Keep the region beside its products, showing it only on the first detail row
-of each run. `.repeat_values(False)` blanks repeated display values without
-changing the data. Labels reappear at the start of each page and after a
+Keep the region in bold beside its products, showing it only on the first
+detail row of each run. `.repeat_values(False)` blanks repeated display
+values without changing the data. Labels reappear at the start of each page and after a
 heading or summary; filtering and sorting use the full values.
 
 ```python
 EvidentialTable(
-    layout_data,
-    columns=[col.text("region", title="Region").repeat_values(False), *layout_columns],
+    con.sql("SELECT region, product, units, sales FROM orders"),
+    columns=[
+        col.text("region", title="Region").bold().repeat_values(False),
+        col.text("product", title="Product"),
+        col.integer("units", title="Units"),
+        col.currency("sales", decimals=0, title="Sales"),
+    ],
     settings=...,
     border=False,
     row_lines=False,
@@ -542,7 +550,7 @@ indented product names underneath.
 
 ```python
 EvidentialTable(
-    layout_data,
+    con.sql("SELECT region, product, units, sales FROM orders"),
     columns=...,
     settings=...,
     border=False,
@@ -572,7 +580,7 @@ that summary with `section_indent=1`.
 
 ```python
 EvidentialTable(
-    layout_data,
+    con.sql("SELECT region, product, units, sales FROM orders"),
     columns=...,
     settings=...,
     border=False,
@@ -602,7 +610,7 @@ Headings and subtotal labels stay aligned at the left edge.
 
 ```python
 EvidentialTable(
-    layout_data,
+    con.sql("SELECT region, product, units, sales FROM orders"),
     columns=...,
     settings=...,
     border=False,
@@ -629,7 +637,7 @@ subtotals.
 
 ```python
 EvidentialTable(
-    layout_data,
+    con.sql("SELECT product, units, sales FROM orders"),
     columns=...,
     settings=...,
     border=False,
@@ -654,7 +662,7 @@ twice.
 
 ```python
 EvidentialTable(
-    layout_data,
+    con.sql("SELECT region, product, units, sales FROM orders"),
     columns=...,
     settings=...,
     border=False,
@@ -682,7 +690,7 @@ independent row label.
 
 ```python
 EvidentialTable(
-    layout_data,
+    con.sql("SELECT product, units, target_units, sales, cost FROM orders"),
     settings=...,
     columns=[
         col.text("product", title="Product"),
@@ -715,7 +723,7 @@ and **Money**, each with two leaf columns.
 
 ```python
 EvidentialTable(
-    layout_data,
+    con.sql("SELECT product, units, target_units, sales, cost FROM orders"),
     settings=...,
     columns=[
         col.text("product", title="Product"),
@@ -795,12 +803,13 @@ columns=[
 
 #### Centered bar
 
-Positive and negative values extend from zero on a shared scale.
+Positive and negative values extend from zero on a shared scale. Negative
+bars are red.
 
 ```python
 columns=[
     col.text("team"),
-    col.bar("change", center=True, format="pct1", label=True, title="Change").scale(
+    col.bar("change", center=True, color_negative="red", format="pct1", label=True, title="Change").scale(
         domain=(-0.2, 0.2), axis=True, axis_position="bottom"
     ),
 ]

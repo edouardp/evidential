@@ -71,7 +71,8 @@ def graphic_bar_centered_doc(mo):
     mo.md(r"""
     #### Centered bar
 
-    Positive and negative values extend from zero on a shared scale.
+    Positive and negative values extend from zero on a shared scale. Negative
+    bars are red.
     """)
     return
 
@@ -88,7 +89,7 @@ def graphic_bar_centered(EvidentialTable, col, frame):
         _rows,
         columns=[
             col.text("team"),
-            col.bar("change", center=True, format="pct1", label=True, title="Change").scale(
+            col.bar("change", center=True, color_negative="red", format="pct1", label=True, title="Change").scale(
                 domain=(-0.2, 0.2), axis=True, axis_position="bottom"
             ),
         ],

@@ -86,7 +86,11 @@ definitions, other options and comments are preserved by a LibCST transform:
 The call is copied from the same named cell that Playwright captures. Data
 preparation and shared column/settings definitions stay in the runnable
 notebook; there is no independently maintained example call. The ellipses are
-documentation placeholders, not values passed to the running table. Markdown strings
+documentation placeholders, not values passed to the running table. For layout
+examples, keep an inline SQL query as the data argument so its selected fields
+are visible in the excerpt. Notebook 51 creates a local DuckDB `orders` table
+in a setup cell and queries it in each table call, including hidden fields
+needed for grouping or footnotes. Markdown strings
 are still read statically as literals without executing notebook code.
 Missing cells, ambiguous table calls, dynamic
 Markdown and malformed markers fail the build instead of silently keeping

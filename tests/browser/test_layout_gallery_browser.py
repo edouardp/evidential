@@ -61,6 +61,11 @@ def test_layout_notebook_renders_notes_shading_summaries_and_nested_headers(page
             "",
             "",
         ]
+        assert (
+            table("headings_column")
+            .locator("tbody tr td:first-child")
+            .evaluate_all("els => els.every(el => Number(getComputedStyle(el).fontWeight) >= 600)")
+        )
         one = table("groups_one").locator("thead .et-header-groups")
         nested = table("groups_two").locator("thead .et-header-groups")
         assert one.count() == 1

@@ -1,50 +1,40 @@
 #!/usr/bin/env bash
-#
-# Release evidential: bump the version, update the changelog, run the full
-# validation gate, build, publish to PyPI, and tag the release.
-#
-# Usage:
-#   ./scripts/release.sh patch   # bug fixes
-#   ./scripts/release.sh minor   # new features
-#   ./scripts/release.sh major   # breaking changes
-#
-# `make release` runs the interactive chooser and then calls this.
+# Release with the same chooser, version requests, keyring and GitHub flow as Galaga.
 set -euo pipefail
 
-ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+if [[ $# -eq 0 ]]; then
+    echo "Usage: $0 <patch|minor|major>" >&2
+    echo "       $0 --version <X.Y.Z|X.Y.ZaN|X.Y.ZbN|X.Y.ZrcN>" >&2
+    exit 2
+fi
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+source "$SCRIPT_DIR/publish-guard.sh"
 cd "$ROOT"
 
-# --- Guard: clean working tree on main ---
-BRANCH=$(git branch --show-current)
-if [[ "$BRANCH" != "main" ]]; then
-    echo "ERROR: Must be on main branch (currently on '$BRANCH')" >&2
-    exit 1
-fi
-if [[ -n "$(git status --porcelain)" ]]; then
-    echo "ERROR: Working tree is not clean. Commit or stash changes." >&2
-    exit 1
-fi
-
-BUMP_TYPE="${1:?Usage: $0 <patch|minor|major>}"
-
-# --- Read current version ---
 CURRENT=$(grep '^version' pyproject.toml | head -1 | sed 's/.*"\(.*\)"/\1/')
-IFS='.' read -r MAJOR MINOR PATCH <<< "$CURRENT"
+RESOLVED=$(python3 "$SCRIPT_DIR/release_version.py" "$CURRENT" "$@")
+read -r NEW RELEASE_KIND <<< "$RESOLVED"
 
-case "$BUMP_TYPE" in
-    patch) NEW="$MAJOR.$MINOR.$((PATCH + 1))" ;;
-    minor) NEW="$MAJOR.$((MINOR + 1)).0" ;;
-    major) NEW="$((MAJOR + 1)).0.0" ;;
-    *) echo "ERROR: bump type must be patch, minor, or major" >&2; exit 1 ;;
-esac
+if git show-ref --verify --quiet "refs/tags/v$NEW"; then
+    echo "ERROR: Tag v$NEW already exists." >&2
+    exit 1
+fi
+
+# Fail before changing the version, opening an editor or creating a commit.
+echo "==> Checking notebook-generated README and images"
+make readme-check
 
 echo "==> Bumping $CURRENT -> $NEW"
+python3 - "$CURRENT" "$NEW" <<'PY'
+import sys
+from pathlib import Path
 
-# --- Update version ---
-sed -i '' "s/^version = \"$CURRENT\"/version = \"$NEW\"/" pyproject.toml
+path = Path("pyproject.toml")
+path.write_text(path.read_text().replace(f'version = "{sys.argv[1]}"', f'version = "{sys.argv[2]}"', 1))
+PY
 uv lock
 
-# --- Update CHANGELOG ---
 DATE=$(date +%Y-%m-%d)
 TMPFILE=$(mktemp)
 cat > "$TMPFILE" <<EOF
@@ -60,38 +50,33 @@ cp "$TMPFILE" CHANGELOG.md
 rm "$TMPFILE"
 
 ${EDITOR:-vim} CHANGELOG.md
-
 if grep -q '<!-- Fill in release notes' CHANGELOG.md; then
-    echo "ERROR: Changelog not edited. Aborting." >&2
-    git checkout pyproject.toml uv.lock CHANGELOG.md
+    echo "ERROR: Changelog not edited. No release was committed or published." >&2
+    echo "Review the version and changelog edits before retrying." >&2
     exit 1
 fi
-
-# Keep the changelog in the house markdown style.
 uvx rumdl fmt CHANGELOG.md
 
-# --- Commit ---
-git add -A
+git add -- pyproject.toml uv.lock CHANGELOG.md
 git commit -m "Release v$NEW"
 
-# --- Tests ---
-echo "==> Running the full validation gate"
+echo "==> Running the full local validation gate"
 make validate
 
-# --- Build + metadata check ---
-echo "==> Building"
-rm -rf dist/
-make build
-uvx twine check dist/*
+# Guard the committed state again, rebuild clean artifacts, check metadata and
+# retrieve the token through the same explicit keyring command as Galaga.
+make pypi
 
-# --- Publish ---
-echo "==> Publishing to PyPI"
-uv publish --keyring-provider subprocess --username __token__
-
-# --- Tag + push ---
 echo "==> Tagging v$NEW"
 git push
 git tag "v$NEW"
 git push origin "v$NEW"
 
-echo "==> Released evidential v$NEW 🎉"
+echo "==> Creating GitHub release"
+GH_RELEASE_ARGS=(release create "v$NEW" --title "v$NEW" --notes-file CHANGELOG.md)
+if [[ "$RELEASE_KIND" == "prerelease" ]]; then
+    GH_RELEASE_ARGS+=(--prerelease)
+fi
+gh "${GH_RELEASE_ARGS[@]}"
+
+echo "==> Released evidential v$NEW"

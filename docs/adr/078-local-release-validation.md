@@ -35,9 +35,10 @@ and a build. `make check` verifies runtime artifact contents and PyPI metadata.
 Run both from a clean tracked checkout of the release commit.
 
 The initial release publishes the existing 0.1.0 version after merging to
-`main`. Later releases use the local release script. Publishing uses
-`uv publish --keyring-provider subprocess --username __token__`, followed by
-Git pushes, a version tag and GitHub release notes. GitHub hosts the source and
+`main`. Later releases use the local release script. Following
+[ADR-080](080-house-release-commands.md), publishing retrieves the token via
+`keyring get`, exports `UV_PUBLISH_TOKEN` and runs `uv publish`, followed by
+Git pushes, a version tag and automatic GitHub release notes. GitHub hosts the source and
 release metadata; it does not build or publish the package.
 
 No CI/CD pipeline is required for release. If automation is requested later,

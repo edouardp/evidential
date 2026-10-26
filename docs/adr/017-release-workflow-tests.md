@@ -36,10 +36,11 @@ Chosen option: "Release-workflow tests". `tests/release/` asserts that:
 - the README and docs keep valid-looking Python examples, existing local images
   and balanced code fences.
 
-The direct `make pypi` target uses the same `uv publish` subprocess keyring
-provider as the release script. README images use absolute GitHub raw URLs so
-the published PyPI description can display them; tests resolve those URLs back
-to repository files and reject repository-relative README image targets.
+The direct `make pypi` target and release script share the explicit keyring
+publication path in [ADR-080](080-house-release-commands.md). Following
+[ADR-079](079-notebook-generated-readme.md), the repository README uses local
+image paths and its generated PyPI copy uses absolute URLs. Tests check both
+forms and resolve the published image URLs back to repository files.
 
 ### Consequences
 

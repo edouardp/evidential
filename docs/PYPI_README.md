@@ -24,7 +24,7 @@ Sections, sub-columns, footnotes, bars, colour scales and sparklines in one tabl
 
 <!-- /notebook -->
 
-> **Status:** alpha (`0.1.0`). The API may change.
+> **Status:** alpha. The API may change.
 
 ## Install
 
@@ -1111,6 +1111,13 @@ contains the committed renderer assets.
 Descriptions, column snippets and images in the illustrated table examples
 come from the same named notebook cells. Edit those notebooks rather than the
 generated README regions. See [the authoring guide](https://github.com/edouardp/evidential/blob/main/docs/notebook-documentation.md).
+
+For a release, run `make release` to choose patch, minor or major, or use
+`make release-minor` (and the corresponding patch/major targets).
+`make release VERSION=0.2.0rc1` selects an exact version. The release checks
+README/image freshness before changing the version, opens `CHANGELOG.md` in
+`$EDITOR`, validates locally, publishes through the keyring, and creates the
+GitHub release. See [the release process](https://github.com/edouardp/evidential/blob/main/docs/RELEASE_PROCESS.md).
 
 ## Relationship to Evidence
 

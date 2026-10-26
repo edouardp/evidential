@@ -194,6 +194,7 @@ update-deps: ## Update dependencies (7-day publication lag) and re-audit
 
 .PHONY: build
 build: frontend-build ## Build a wheel/sdist (bundling the latest frontend)
+	rm -rf dist/
 	uv build
 
 .PHONY: check-artifact
@@ -209,13 +210,17 @@ check: check-artifact ## Check the built distributions pass `twine check`
 	uvx twine check dist/*
 
 .PHONY: pypi
-pypi: check ## Publish the built distributions to PyPI using the keyring
-	uv publish --keyring-provider subprocess --username __token__
+pypi: ## Validate and publish the current version using the house keyring flow
+	./scripts/publish.sh
 
 .PHONY: release
-release: ## Release interactively (choose patch, minor or major)
+release: ## Release interactively, or release exact VERSION=X.Y.Z[aN|bN|rcN]
+ifdef VERSION
+	./scripts/release.sh --version "$(VERSION)"
+else
 	@CHOICE=$$(uv run scripts/chooser.py --title "Release type?" patch minor major 3>&1 1>&2) || exit 1; \
 	./scripts/release.sh $$CHOICE
+endif
 
 .PHONY: release-patch
 release-patch: ## Release a patch version (bug fixes)

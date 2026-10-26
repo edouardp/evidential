@@ -43,7 +43,14 @@ def test_release_script_bumps_checks_and_publishes() -> None:
     assert script.exists()
     assert os.access(script, os.X_OK)
     text = script.read_text()
-    for token in ("pyproject.toml", "CHANGELOG.md", "make validate", "make build", "twine check", "uv publish"):
+    for token in (
+        "pyproject.toml",
+        "CHANGELOG.md",
+        "make readme-check",
+        "make validate",
+        "make pypi",
+        "release create",
+    ):
         assert token in text, token
     assert (ROOT / "scripts" / "chooser.py").exists()
 
@@ -54,10 +61,16 @@ def test_makefile_exposes_the_release_targets() -> None:
         assert re.search(rf"^{re.escape(target)}", makefile, re.MULTILINE), target
 
 
-def test_direct_publish_uses_the_same_keyring_provider_as_the_release_script() -> None:
+def test_direct_publish_and_release_share_the_house_keyring_flow() -> None:
     makefile = (ROOT / "Makefile").read_text()
-    publish = makefile.split("pypi: check", 1)[1].split("\n\n", 1)[0]
-    assert "uv publish --keyring-provider subprocess --username __token__" in publish
+    publish = (ROOT / "scripts/publish.sh").read_text()
+    assert "./scripts/publish.sh" in makefile
+    assert "make pypi" in (ROOT / "scripts/release.sh").read_text()
+    assert "UV_PUBLISH_TOKEN=$(keyring get https://upload.pypi.org/legacy/ __token__)" in publish
+    assert "export UV_PUBLISH_TOKEN" in publish
+    assert "uv publish dist/*" in publish
+    assert publish.index("make readme-check") < publish.index("keyring get")
+    assert publish.index("make check") < publish.index("keyring get")
 
 
 def test_releases_use_complete_local_gates_without_github_actions() -> None:

@@ -49,12 +49,14 @@ wheel and sdist and verifies they contain every runtime module plus
 Releases follow the house flow (`../galaga`, `../gamr`); the full process is
 documented in [docs/RELEASE_PROCESS.md](docs/RELEASE_PROCESS.md). In short:
 
-- The **first** release is already at `0.1.0` with its changelog entry, so it
-  publishes directly (no bump): `make validate`, `make check`, `make pypi`, then
-  tag `v0.1.0` and create the GitHub release.
-- Later releases use `make release` (or `release-patch` / `release-minor` /
-  `release-major`), which bumps the version, writes the changelog, validates,
-  publishes and tags.
+- The first release (`0.1.0`) has shipped. Use `make release` (or
+  `release-patch` / `release-minor` / `release-major`), which bumps the version,
+  opens the changelog in `$EDITOR`, validates, publishes, tags and creates the
+  GitHub release. `make release VERSION=X.Y.ZrcN` supports exact versions.
+- Releases require a clean attached branch with an upstream, and run
+  `make readme-check` before changing anything. If stale, run `make readme`,
+  inspect and commit the outputs. Publishing retrieves the token through the
+  same explicit `keyring get` command as Galaga; never print credentials.
 - Releases are validated, built and published locally, following `../galaga`
   and `../gamr`. Run `make validate` and `make check` from a clean tracked
   checkout before publishing. GitHub Actions is not used. If CI/CD is added,

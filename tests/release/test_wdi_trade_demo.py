@@ -28,8 +28,19 @@ def trade_connection():
                 ('NUL', 'NE.IMP.GNFS.CD', 2023, NULL),
                 ('GDP', 'NY.GDP.MKTP.CD', 2023, 500e9),
                 ('WLD', 'NE.IMP.GNFS.CD', 2023, 900e9),
+                ('AAA', 'NE.IMP.GNFS.CD', 2003, 50e9),
+                ('AAA', 'NE.EXP.GNFS.CD', 2003, 200e9),
+                ('AAA', 'NE.IMP.GNFS.CD', 2004, 50e9),
+                ('AAA', 'NE.EXP.GNFS.CD', 2004, 100e9),
+                ('AAA', 'NE.IMP.GNFS.CD', 2006, 0),
+                ('AAA', 'NE.EXP.GNFS.CD', 2006, 100e9),
+                ('AAA', 'NE.IMP.GNFS.CD', 2007, 50e9),
+                ('AAA', 'NE.IMP.GNFS.CD', 2008, 50e9),
+                ('AAA', 'NE.EXP.GNFS.CD', 2008, 0),
                 ('AAA', 'NE.IMP.GNFS.CD', 2022, 90e9),
-                ('AAA', 'NE.EXP.GNFS.CD', 2022, 80e9)
+                ('AAA', 'NE.EXP.GNFS.CD', 2022, 80e9),
+                ('AAA', 'NE.IMP.GNFS.CD', 2024, 10e9),
+                ('AAA', 'NE.EXP.GNFS.CD', 2024, 200e9)
             ) AS t(country_code, indicator_code, year, value)
         """)
         yield connection
@@ -66,6 +77,31 @@ def test_trade_chart_reads_both_measures_and_retains_partial_data(trade_connecti
     assert columns["total_trade"]["fmt"] == "compact"
 
 
+def test_trade_history_covers_twenty_calendar_years_without_bridging_missing_values(trade_connection):
+    _, definitions = runpy.run_path(str(NOTEBOOK))["trade_comparison"].run(connection=trade_connection)
+    table = definitions["trade_balance"]
+    table.set_controls(year=2023, region="North")
+    row = next(row for row in table.rows if row["country"] == "Alpha")
+    history = row["trade_history"]
+    assert [point["year"] for point in history] == list(range(2004, 2024))
+    by_year = {point["year"]: point["ratio"] for point in history}
+    assert by_year[2004] == 2
+    assert by_year[2005] is None  # Neither measure reported.
+    assert by_year[2006] is None  # Zero denominator.
+    assert by_year[2007] is None  # Missing exports.
+    assert by_year[2008] == 0  # Zero exports is a valid ratio.
+    assert by_year[2022] == pytest.approx(80 / 90)
+    assert by_year[2023] == row["exports_imports_ratio"]
+    assert all(point["ratio"] is None for point in table.rows[1]["trade_history"])
+    sparkline = next(column for column in table.columns if column["name"] == "trade_history")
+    assert sparkline["sparkline_options"]["x"] == "year"
+    assert sparkline["sparkline_options"]["y"] == "ratio"
+    assert sparkline["sparkline_options"]["y_fmt"] == "pct1"
+    assert sparkline["sparkline_options"]["type"] == "area"
+    assert sparkline["sparkline_options"]["signed"] is True
+    assert sparkline["sparkline_options"]["reference"] == 1
+
+
 def test_trade_filters_requery_the_same_widget_using_the_selected_year_and_region(trade_connection):
     namespace = runpy.run_path(str(NOTEBOOK))
     _, definitions = namespace["trade_comparison"].run(connection=trade_connection)
@@ -81,6 +117,9 @@ def test_trade_filters_requery_the_same_widget_using_the_selected_year_and_regio
     assert table.model_id == model_id
     assert len(table.rows) == 1
     assert table.rows[0]["imports"] == 90e9 and table.rows[0]["exports"] == 80e9
+    assert [point["year"] for point in table.rows[0]["trade_history"]] == list(range(2003, 2023))
+    assert table.rows[0]["trade_history"][0]["ratio"] == 4
+    assert table.rows[0]["trade_history"][-1]["ratio"] == pytest.approx(80 / 90)
     assert table.options["title"] == "Imports versus exports · 2022"
     table.set_controls(year=2021, region="All regions")
     assert table.rows == []

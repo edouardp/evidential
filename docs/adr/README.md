@@ -94,6 +94,7 @@ dated, immutable record of the decisions behind them.
 | [073](073-directional-ranges.md) | Directional Ranges for Dumbbell Plots | Accepted |
 | [074](074-readable-scientific-formatting.md) | Readable Scientific Formatting | Accepted |
 | [075](075-per-value-compact-formatting.md) | Per-Value Compact Formatting | Accepted |
+| [076](076-sparkline-reference-origins.md) | Sparkline Reference Origins | Accepted |
 
 ## Creating New ADRs
 

@@ -608,6 +608,8 @@ class Column(TextStyle, Mapping[str, Any]):
         y: str | None = None,
         color: str | None = None,
         fit_to_data: bool | None = None,
+        reference: float | None = None,
+        reference_color: str | None = None,
         y_fmt: str | None = None,
         width: float | None = None,
         height: float | None = None,
@@ -626,6 +628,8 @@ class Column(TextStyle, Mapping[str, Any]):
         :param y: field for the y values.
         :param color: stroke/fill colour.
         :param fit_to_data: scale to the data's range rather than zero.
+        :param reference: horizontal reference and area/bar origin (e.g. 1 for 100%).
+        :param reference_color: reference line colour.
         :param y_fmt: format code for the tooltip y value.
         :param width: chart width (the viewBox, in pixels).
         :param height: chart height (the viewBox, in pixels).
@@ -652,6 +656,8 @@ class Column(TextStyle, Mapping[str, Any]):
                 y=y,
                 color=color,
                 fit_to_data=fit_to_data,
+                reference=reference,
+                reference_color=reference_color,
                 y_fmt=y_fmt,
                 width=width,
                 height=height,
@@ -1348,6 +1354,8 @@ def sparkline(
     y: str | None = None,
     color: str | None = None,
     fit_to_data: bool | None = None,
+    reference: float | None = None,
+    reference_color: str | None = None,
     y_fmt: str | None = None,
     width: float | None = None,
     height: float | None = None,
@@ -1369,6 +1377,8 @@ def sparkline(
     :param y: field for the y values.
     :param color: stroke/fill colour.
     :param fit_to_data: scale to the data's range rather than zero.
+    :param reference: horizontal reference and area/bar origin (e.g. 1 for 100%).
+    :param reference_color: reference line colour.
     :param y_fmt: format code for the tooltip y value.
     :param width: chart width (the viewBox, in pixels).
     :param height: chart height (the viewBox, in pixels).
@@ -1392,6 +1402,8 @@ def sparkline(
         y=y,
         color=color,
         fit_to_data=fit_to_data,
+        reference=reference,
+        reference_color=reference_color,
         y_fmt=y_fmt,
         width=width,
         height=height,

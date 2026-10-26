@@ -20,6 +20,11 @@ export function renderSparkline(col, value, changeColor, sharedRange) {
   const ys = present.map((point) => point[1]);
   let min = Math.min(...ys);
   let max = Math.max(...ys);
+  const reference = numeric(opts.reference);
+  if (reference != null) {
+    min = Math.min(min, reference);
+    max = Math.max(max, reference);
+  }
   if (!opts.fit_to_data) {
     min = Math.min(0, min);
     max = Math.max(0, max);
@@ -33,7 +38,8 @@ export function renderSparkline(col, value, changeColor, sharedRange) {
   const quantitativeX = xs.every(Number.isFinite);
   const xmin = quantitativeX ? Math.min(...xs) : 0;
   const xmax = quantitativeX ? Math.max(...xs) : points.length - 1;
-  const baseline = pad + (height - pad * 2) * (1 - (Math.max(0, min) - min) / span);
+  const origin = Math.max(min, Math.min(max, reference ?? 0));
+  const baseline = pad + (height - pad * 2) * (1 - (origin - min) / span);
   const scaled = points.map(([x, y, source], index) => ({
     x: xmax > xmin ? pad + ((quantitativeX ? xs[index] : index) - xmin) / (xmax - xmin) * (width - pad * 2) : width / 2,
     y: y == null ? null : pad + (height - pad * 2) * (1 - (y - min) / span),
@@ -56,15 +62,21 @@ export function renderSparkline(col, value, changeColor, sharedRange) {
     return title;
   };
 
-  // Zero baseline when the scale crosses zero (matching Evidence's defaults).
-  if (!opts.fit_to_data && min < 0 && max > 0) {
+  // Explicit references are visible even for a one-sided series.
+  if ((reference != null && reference >= min && reference <= max)
+    || (reference == null && !opts.fit_to_data && min < 0 && max > 0)) {
     const zero = document.createElementNS(svgNS, "line");
     zero.setAttribute("x1", "0");
     zero.setAttribute("x2", String(width));
     zero.setAttribute("y1", String(baseline));
     zero.setAttribute("y2", String(baseline));
-    zero.setAttribute("stroke", "color-mix(in srgb, CanvasText 20%, transparent)");
+    zero.setAttribute("class", "et-sparkline-reference");
+    zero.setAttribute("stroke", opts.reference_color || "color-mix(in srgb, CanvasText 20%, transparent)");
     zero.setAttribute("stroke-width", "1");
+    if (reference != null) {
+      zero.setAttribute("stroke-dasharray", "2 2");
+      zero.append(tooltip([null, reference]));
+    }
     svg.append(zero);
   }
 
@@ -101,9 +113,10 @@ export function renderSparkline(col, value, changeColor, sharedRange) {
       const linePoints = run.map((point) => `${point.x},${point.y}`).join(" ");
       if (type === "area") {
         if (opts.signed) {
-          // Split the fill at the zero baseline: up and down get their own colour.
-          addArea(svgNS, svg, run, baseline, (point) => Math.min(point.y, baseline), color);
-          addArea(svgNS, svg, run, baseline, (point) => Math.max(point.y, baseline), "var(--et-negative, #dc2626)");
+          // Split the fill at the reference (zero by default).
+          const split = baselineCrossings(run, baseline);
+          addArea(svgNS, svg, split, baseline, (point) => Math.min(point.y, baseline), color);
+          addArea(svgNS, svg, split, baseline, (point) => Math.max(point.y, baseline), "var(--et-negative, #dc2626)");
         } else {
           addArea(svgNS, svg, run, baseline, (point) => point.y, color);
         }
@@ -132,6 +145,20 @@ export function renderSparkline(col, value, changeColor, sharedRange) {
     svg.append(dot);
   });
   return svg;
+}
+
+/** Insert exact intersections so signed fills change color where the line crosses. */
+function baselineCrossings(points, baseline) {
+  const split = [];
+  for (const point of points) {
+    const previous = split.at(-1);
+    if (previous && (previous.y - baseline) * (point.y - baseline) < 0) {
+      const fraction = (baseline - previous.y) / (point.y - previous.y);
+      split.push({x: previous.x + fraction * (point.x - previous.x), y: baseline});
+    }
+    split.push(point);
+  }
+  return split;
 }
 
 /** Add an area polygon under a sparkline, following a per-point baseline clip. */

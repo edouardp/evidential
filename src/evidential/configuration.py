@@ -234,6 +234,9 @@ class SparklineOptions(TypedDict, total=False):
     y: str | None
     color: str | None
     fit_to_data: bool | None
+    #: Horizontal reference and area/bar origin; included in inferred bounds.
+    reference: float | None
+    reference_color: str | None
     y_fmt: str | None
     width: float | None
     height: float | None

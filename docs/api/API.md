@@ -548,11 +548,24 @@ columns=[
   inside `neutral_range`.
 - **Sparkline** — `.sparkline(type="line"|"area"|"bar"|"points"|"change", x=, y=,
   color=, fit_to_data=, y_fmt=, width=, height=, markers=, marker_color=, signed=,
-  delta=, steady=, color_scale=, color_domain=)`
+  reference=, reference_color=, delta=, steady=, color_scale=, color_domain=)`
   over an array column. `type="points"` draws only markers; `markers=True` adds a
   dot at every point and `markers="ends"` only the endpoints; a per-point
   `color` key on the data overrides `marker_color`; `signed=True` splits an area
-  fill at the zero baseline.
+  fill at the zero baseline. For ordinary sparklines, `reference=1` draws a
+  dashed 100% line (with `y_fmt="pct1"`) and anchors the area/bar origin there.
+  `signed=True` then fills above it with `color` and below it with the negative
+  theme color. `reference_color=` styles the rule. Inferred scales include the
+  reference, including when `fit_to_data=True`; explicit shared domain bounds
+  take precedence. Missing values leave gaps. For example:
+
+  ```python
+  col.sparkline(
+      "trade_history", type="area", x="year", y="ratio", y_fmt="pct1",
+      reference=1, signed=True, fit_to_data=True, color="#0f766e",
+  )
+  ```
+
   The public `SparklineType` literal alias lists the five supported styles and
   is shared by both builders and the configuration schema. Import it with
   `from evidential import SparklineType` when annotating your own helpers.
@@ -980,7 +993,7 @@ other than `auto`, `merge`, `group` and `subcolumns` return a `Column`;
 | `col.color(name, *, title=, **options)` | colour scale |
 | `col.chip(name, *, min_width=, conditional_colors=, scale=, min=, max=, midpoint=, **extra)` | pill |
 | `col.delta(name, *, down_is_good=, neutral_range=, chip=)` | change indicator |
-| `col.sparkline(name, *, type="line"\|"area"\|"bar"\|"points"\|"change", x=, y=, color=, fit_to_data=, y_fmt=, width=, height=, markers=, marker_color=, signed=, delta=, steady=, color_scale=, color_domain=, title=)` | trend |
+| `col.sparkline(name, *, type="line"\|"area"\|"bar"\|"points"\|"change", x=, y=, color=, fit_to_data=, reference=, reference_color=, y_fmt=, width=, height=, markers=, marker_color=, signed=, delta=, steady=, color_scale=, color_domain=, title=)` | trend |
 | `col.symbols(name, *, symbol=, shape=, empty=, max=, image=, color=, empty_color=, size=, gap=, align=, title=)` | repeated symbols |
 | `col.rating(name, *, max=5, symbol="★", empty="☆", color="#f59e0b")` | star rating |
 | `col.repeat(name, **options)` | alias for `symbols` |

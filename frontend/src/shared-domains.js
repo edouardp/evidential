@@ -17,6 +17,7 @@ function memberRange(column, rows) {
       for (const [, value] of sparklinePoints(row[column.name], column.sparkline_options || {})) add(value);
     } else add(row[column.color_options?.scale_column || column.name]);
   }
+  if (column.viz === "sparkline" && min !== Infinity) add(column.sparkline_options?.reference);
   return min === Infinity ? null : {min, max};
 }
 

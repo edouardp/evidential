@@ -552,6 +552,10 @@ def trade_introduction(mo):
     Amounts use compact units (234.5B, 1.7T). Exports/imports is neutral at 100%;
     net exports is exports minus imports, with deficits red and surpluses green.
     Reported trade sums the available measures; ratios and balances require both.
+    The area sparkline shows exports/imports over the 20 calendar years ending
+    in the selected year, filled green above 100% and red below the dashed
+    100% reference. Missing years and zero imports leave gaps; each sparkline
+    fits its own range, including 100%, to show the trend.
     """)
     return
 
@@ -561,27 +565,42 @@ def trade_comparison(LiveEvidentialTable, col, connection, label, mo):
     trade_balance = LiveEvidentialTable(
         connection,
         """
-        WITH trade AS (
+        WITH annual_trade AS (
             SELECT
                 c."Country Code" AS country_code,
                 c."Short Name" AS country,
                 c.Region AS region,
+                o.year,
                 max(o.value) FILTER (WHERE o.indicator_code = 'NE.IMP.GNFS.CD') AS imports,
                 max(o.value) FILTER (WHERE o.indicator_code = 'NE.EXP.GNFS.CD') AS exports
             FROM observations o
             JOIN country c ON c."Country Code" = o.country_code
             WHERE o.indicator_code IN ('NE.IMP.GNFS.CD', 'NE.EXP.GNFS.CD')
-              AND o.year = {year}
+              AND o.year BETWEEN {year} - 19 AND {year}
               AND c.Region IS NOT NULL
               AND ({region} = 'All regions' OR c.Region = {region})
-            GROUP BY c."Country Code", c."Short Name", c.Region
+            GROUP BY c."Country Code", c."Short Name", c.Region, o.year
+        ), trade AS (
+            SELECT *,
+                exports / nullif(imports, 0) AS exports_imports_ratio,
+                exports - imports AS net_exports,
+                coalesce(imports, 0) + coalesce(exports, 0) AS total_trade
+            FROM annual_trade
+            WHERE year = {year} AND (imports IS NOT NULL OR exports IS NOT NULL)
+        ), history AS (
+            SELECT t.country_code,
+                list(struct_pack(
+                    year := years.year,
+                    ratio := past.exports / nullif(past.imports, 0)
+                ) ORDER BY years.year) AS trade_history
+            FROM trade t
+            CROSS JOIN range(CAST({year} AS BIGINT) - 19, CAST({year} AS BIGINT) + 1) AS years(year)
+            LEFT JOIN annual_trade past
+                ON past.country_code = t.country_code AND past.year = years.year
+            GROUP BY t.country_code
         )
-        SELECT *,
-            exports / nullif(imports, 0) AS exports_imports_ratio,
-            exports - imports AS net_exports,
-            coalesce(imports, 0) + coalesce(exports, 0) AS total_trade
-        FROM trade
-        WHERE imports IS NOT NULL OR exports IS NOT NULL
+        SELECT trade.*, history.trade_history
+        FROM trade JOIN history USING (country_code)
         ORDER BY total_trade DESC, country
         """,
         auto_run=False,
@@ -614,6 +633,12 @@ def trade_comparison(LiveEvidentialTable, col, connection, label, mo):
             col.number("net_exports", title="Balance\n(US$)", format="compact")
             .color(scale=["#fee2e280", "#ffffff20", "#bbf7d0"], midpoint=0),
             col.number("total_trade", title="Reported trade\n(US$)", format="compact"),
+            col.sparkline(
+                "trade_history", title="Exports/imports\n20-year trend", type="area",
+                x="year", y="ratio", y_fmt="pct1", color="#0f766e",
+                width=130, height=26, fit_to_data=True, markers="ends",
+                signed=True, reference=1, reference_color="#94a3b8",
+            ).align("center").sort_by("exports_imports_ratio"),
         ],
     )
     mo.vstack([trade_balance])

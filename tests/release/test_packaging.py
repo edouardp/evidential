@@ -3,8 +3,11 @@
 from __future__ import annotations
 
 import re
+import subprocess
 import tomllib
 from pathlib import Path
+
+from packaging.requirements import Requirement
 
 from scripts import check_artifact as gate
 
@@ -19,6 +22,14 @@ def test_build_system_is_uv_build_with_a_bounded_pin() -> None:
     # uv_build ships in lockstep with uv, so the pin is a bounded range.
     assert re.fullmatch(r"uv_build>=[\d.]+,<[\d.]+", requirement), requirement
     assert pyproject["tool"]["uv"]["package"] is True
+
+
+def test_build_backend_range_includes_the_running_uv_version() -> None:
+    pyproject = tomllib.loads((ROOT / "pyproject.toml").read_text())
+    requirement = Requirement(pyproject["build-system"]["requires"][0])
+    result = subprocess.run(["uv", "--version"], check=True, capture_output=True, text=True)
+    version = result.stdout.split()[1]
+    assert version in requirement.specifier, f"Update uv_build's bounded range for uv {version} (ADR-034)"
 
 
 def test_inspect_flags_missing_runtime_files() -> None:

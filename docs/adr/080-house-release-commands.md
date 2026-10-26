@@ -39,8 +39,13 @@ the gate uses source/image hashes rather than modification times.
 The script updates the version and lockfile, opens a new changelog section in
 `$EDITOR`, commits only the release files and runs `make validate`. Shared
 `make pypi` publication rechecks the committed state and README, builds clean
-distributions, checks artifacts/metadata, retrieves the token with the same
-`keyring get` command as Galaga and exports it for `uv publish`. The release
+distributions, checks artifacts/metadata, retrieves the token through keyring
+and exports it for `uv publish`. Keyring is a locked development dependency,
+invoked with `uv run --frozen python -m keyring` rather than a global wrapper.
+A Homebrew Python upgrade left the global wrapper pointing at a removed
+interpreter and broke the first patch upload. A credential-free `--help`
+preflight now verifies the managed CLI starts before version edits or builds;
+it does not read credentials or validate the stored token. The release
 then pushes the branch, tags and pushes the version to origin, and creates a
 GitHub release, marked as a prerelease when appropriate.
 
@@ -48,7 +53,9 @@ GitHub release, marked as a prerelease when appropriate.
 
 Maintainers can release using familiar commands without manual GitHub release
 creation. Dirty state and stale documentation fail before release edits or
-credentials. Version-only bumps preserve screenshot provenance. Aborting the
+credentials. CLI startup is independent of the global executable's shebang;
+the managed interpreter may require a fresh Keychain access approval.
+Version-only bumps preserve screenshot provenance. Aborting the
 changelog editor leaves edits available for review rather than discarding
 them. Temporary-repository tests use fake publishing tools, proving the script
 order and failure behavior without performing a release. Publishing remains

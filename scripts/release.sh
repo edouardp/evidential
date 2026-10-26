@@ -24,6 +24,7 @@ fi
 # Fail before changing the version, opening an editor or creating a commit.
 echo "==> Checking notebook-generated README and images"
 make readme-check
+"$SCRIPT_DIR/check-keyring.sh"
 
 echo "==> Bumping $CURRENT -> $NEW"
 python3 - "$CURRENT" "$NEW" <<'PY'
@@ -64,7 +65,7 @@ echo "==> Running the full local validation gate"
 make validate
 
 # Guard the committed state again, rebuild clean artifacts, check metadata and
-# retrieve the token through the same explicit keyring command as Galaga.
+# retrieve the token through the project-managed keyring CLI.
 make pypi
 
 echo "==> Tagging v$NEW"

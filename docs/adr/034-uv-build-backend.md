@@ -40,8 +40,10 @@ which is what the artifact gate asserts, with no `exclude` rules to maintain.
 milliseconds with no throwaway environment. `[tool.uv] package = true` marks the
 project as a package for `uv sync`/editable installs.
 
-The `uv_build` build requirement is a bounded range (`>=0.11.7,<0.12.0`) because
+The `uv_build` build requirement is a bounded range (`>=0.13.4,<0.14.0`) because
 the backend versions in lockstep with `uv`; keep it in step when bumping `uv`.
+The packaging tests verify the installed `uv` version is inside that range,
+catching the mismatch before a release emits a backend-version warning.
 Local release validation uses locked installs rather than resolving
 dependencies during validation (see [ADR-078](078-local-release-validation.md)).
 

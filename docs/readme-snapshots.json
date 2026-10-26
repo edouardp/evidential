@@ -5,7 +5,7 @@
     "notebooks/49_api_screenshots.py": "c4cacaf9a1c98a3e6b484194744f38a03fd86425012ff1de07ffda6ae4f99825",
     "notebooks/50_graphics_gallery.py": "4ba0c3e37eef9fad8c8b43e488884bd3d4d598c4feb44375a91c31ba1151707d",
     "notebooks/sample_data/needful_things/orders.parquet": "b373511b4f7a0547b704022b055655b6d3bafc2505a2a573292b206417fe3eb4",
-    "pyproject.toml": "1feac8451d38953603c3d274c818d315fafc2b78ee5306117aeeb82d7622367d",
+    "pyproject.toml": "318b1be46ebf4011c173b214f218ce1625df65d4918799e79f8689f543ba871c",
     "scripts/api_screenshots.py": "a587af22f6ef5a6866c465a8dbbc2215f47369f72879764d90577035bc45abc1",
     "scripts/generate_readme.py": "e58a8320e9437584416780f1cfbbfd09307350be4b28e30beae114126ead7a92",
     "src/evidential/__init__.py": "f5bac40f585c749cd06c40f4498c7de868a382a30abaed198ce08634ab7adbc7",
@@ -39,7 +39,7 @@
     "src/evidential/static/table.css": "7fcd3db47695bd2de2d79321c10fe3dc56cf765eb112e0912d23258ffcb1c612",
     "src/evidential/static/table.js": "7418e33d4adb8b844f61fbcb96746d257f1e5592ba50e9ec22620e6b39121a0d",
     "src/evidential/table.py": "3f635ffd925ec907c71a3b675d2ffaf17f9fc61e21acb46e3bbc6573bd9cb9b6",
-    "uv.lock": "c88da418da7e42b93076f23560f1146f0cabea11e5e2d5f01513d26003b2185d"
+    "uv.lock": "19c43ba92c19c33544443d1c5c34c6c8a89cf1fbc858f4b00af92dd2048c6ee7"
   },
   "images": {
     "docs/api/images/quickstart.png": {

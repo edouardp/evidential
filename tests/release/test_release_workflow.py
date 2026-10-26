@@ -22,7 +22,7 @@ def release_repo(tmp_path):
     repository = tmp_path / "repo"
     scripts = repository / "scripts"
     scripts.mkdir(parents=True)
-    for name in ("release.sh", "release_version.py", "publish.sh", "publish-guard.sh"):
+    for name in ("release.sh", "release_version.py", "publish.sh", "publish-guard.sh", "check-keyring.sh"):
         shutil.copy2(ROOT / "scripts" / name, scripts / name)
     (repository / "pyproject.toml").write_text('[project]\nname = "evidential"\nversion = "0.1.0"\n')
     (repository / "uv.lock").write_text('version = "0.1.0"\n')
@@ -71,15 +71,18 @@ elif name == "make" and args == ["check"]:
     Path("dist").mkdir(exist_ok=True)
     Path(f"dist/evidential-{version}.tar.gz").touch()
     Path(f"dist/evidential-{version}-py3-none-any.whl").touch()
-elif name == "keyring":
+elif name == "uv" and args[:5] == ["run", "--frozen", "python", "-m", "keyring"] and args[5:6] == ["get"]:
     print("" if os.environ.get("RELEASE_TEST_EMPTY_TOKEN") else "fake-release-test-token")
 elif name == "uv" and args[:1] == ["publish"]:
     assert os.environ.get("UV_PUBLISH_TOKEN") == "fake-release-test-token"
 """
-    for name in ("make", "uv", "uvx", "keyring", "gh", "editor"):
+    for name in ("make", "uv", "uvx", "gh", "editor"):
         executable = bin_dir / name
         executable.write_text(fake)
         executable.chmod(0o755)
+    # A dangling global wrapper reproduces the Homebrew interpreter failure.
+    (bin_dir / "keyring").write_text("#!/missing/python3.14\n")
+    (bin_dir / "keyring").chmod(0o755)
     trace = tmp_path / "trace.jsonl"
     env = {
         **os.environ,
@@ -117,8 +120,18 @@ def test_release_bumps_changelog_validates_publishes_tags_and_creates_github_rel
     assert f'version = "{version}"' in (repository / "pyproject.toml").read_text()
     assert f"## {version} (" in (repository / "CHANGELOG.md").read_text()
     assert "Release notes." in (repository / "CHANGELOG.md").read_text()
-    assert ["keyring", "get", "https://upload.pypi.org/legacy/", "__token__"] in calls
-    assert sum(call[0] == "keyring" for call in calls) == 1
+    assert [
+        "uv",
+        "run",
+        "--frozen",
+        "python",
+        "-m",
+        "keyring",
+        "get",
+        "https://upload.pypi.org/legacy/",
+        "__token__",
+    ] in calls
+    assert sum("get" in call and "keyring" in call for call in calls) == 1
     assert calls.index(["make", "readme-check"]) < calls.index(["uv", "lock"])
     assert calls.index(["make", "validate"]) < calls.index(["make", "check"])
     upload = next(call for call in calls if call[:2] == ["uv", "publish"])
@@ -142,15 +155,44 @@ def test_stale_readme_stops_before_any_version_change_editor_or_commit(release_r
     assert git(repository, "status", "--porcelain") == ""
 
 
-@pytest.mark.parametrize("stage", ["editor", "make validate", "make check", "keyring get", "uv publish"])
+def test_broken_managed_keyring_stops_before_version_edits_or_builds(release_repo):
+    repository, _, _ = release_repo
+    original = git(repository, "rev-parse", "HEAD")
+    result, calls = run_release(release_repo, "minor", fail="uv run --frozen python -m keyring --help")
+    assert result.returncode != 0 and "keyring CLI cannot start" in result.stderr
+    assert calls == [["make", "readme-check"], ["uv", "run", "--frozen", "python", "-m", "keyring", "--help"]]
+    assert git(repository, "rev-parse", "HEAD") == original
+    assert git(repository, "status", "--porcelain") == ""
+
+
+def test_direct_publish_checks_cli_startup_before_building_or_credentials(release_repo):
+    repository, trace, env = release_repo
+    result = subprocess.run(
+        ["bash", "scripts/publish.sh"],
+        cwd=repository,
+        env={**env, "RELEASE_TEST_FAIL": "uv run --frozen python -m keyring --help"},
+        check=False,
+        text=True,
+        capture_output=True,
+    )
+    assert result.returncode != 0 and "keyring CLI cannot start" in result.stderr
+    assert [json.loads(line) for line in trace.read_text().splitlines()] == [
+        ["uv", "run", "--frozen", "python", "-m", "keyring", "--help"]
+    ]
+    assert git(repository, "status", "--porcelain") == ""
+
+
+@pytest.mark.parametrize(
+    "stage", ["editor", "make validate", "make check", "uv run --frozen python -m keyring get", "uv publish"]
+)
 def test_failure_never_tags_or_creates_a_github_release(release_repo, stage):
     repository, _, _ = release_repo
     result, calls = run_release(release_repo, "patch", fail=stage)
     assert result.returncode != 0
     assert git(repository, "tag", "--list") == ""
     assert not any(call[0] == "gh" for call in calls)
-    if stage not in {"keyring get", "uv publish"}:
-        assert not any(call[0] == "keyring" for call in calls)
+    if stage not in {"uv run --frozen python -m keyring get", "uv publish"}:
+        assert not any("get" in call and "keyring" in call for call in calls)
     if stage != "uv publish":
         assert not any(call[:2] == ["uv", "publish"] for call in calls)
 
@@ -179,7 +221,7 @@ def test_untouched_changelog_stops_before_commit_or_credentials(release_repo):
     result, calls = run_release(release_repo, "minor")
     assert result.returncode != 0 and "Changelog not edited" in result.stderr
     assert git(repository, "rev-parse", "HEAD") == before
-    assert not any(call[0] in {"keyring", "gh"} for call in calls)
+    assert not any(call[0] == "gh" or ("get" in call and "keyring" in call) for call in calls)
     assert 'version = "0.2.0"' in (repository / "pyproject.toml").read_text()
 
 

@@ -26,6 +26,11 @@ project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+- Run the keyring CLI through the locked project interpreter, avoiding broken
+  global wrappers after Homebrew Python upgrades. Check CLI startup before
+  release edits or builds without retrieving credentials.
+- Align the `uv_build` requirement with `uv 0.13.4` to remove the build-backend
+  version warning, and remove empty notebook cells reported by `marimo check`.
 - Stop releases with stale README examples or screenshots before changing
   the version or opening the changelog editor.
 - Remove old distributions before building, preventing stale artifacts from

@@ -43,18 +43,22 @@ print(version)
   the required Playwright tests. Chrome, Edge or Playwright Chromium works.
 - Have the GitHub CLI (`gh`) installed and authenticated.
 - Set `$EDITOR` to your preferred editor; it defaults to `vim`.
-- Configure the production token with the same `keyring` executable/environment
-  used when releasing Galaga:
+- Keyring is installed as a locked development dependency by `uv sync`.
+  If setting up a production token for the first time, use the project CLI:
 
   ```bash
-  keyring set https://upload.pypi.org/legacy/ __token__
+  uv run --frozen python -m keyring set https://upload.pypi.org/legacy/ __token__
   ```
 
-The release invokes `keyring get https://upload.pypi.org/legacy/ __token__`
-once, exports its result as `UV_PUBLISH_TOKEN`, and runs `uv publish dist/*`.
-This is the explicit Galaga credential path. macOS may ask you to approve
+The release invokes `uv run --frozen python -m keyring get
+https://upload.pypi.org/legacy/ __token__` once, exports its result as
+`UV_PUBLISH_TOKEN`, and runs `uv publish dist/*`. This uses Galaga's explicit
+token retrieval flow with a managed interpreter instead of a global wrapper.
+macOS may ask you to approve
 access according to the keychain item's access policy. The script does not
-print the token. No credentials are needed for validation or dry-run tests.
+print the token. A `--help` preflight checks the CLI starts before release
+edits or builds, without retrieving credentials. No credentials are needed
+for validation or dry-run tests.
 
 ## Notebook and README gate
 
@@ -82,7 +86,8 @@ and `make validate`. A version-only bump does not invalidate screenshot hashes.
 
 1. Checks the branch, upstream and clean worktree; validates the version request
    and rejects an existing local version tag.
-2. Checks the README and images, stopping before any release edits if stale.
+2. Checks the README, images and keyring CLI startup, stopping before any
+   release edits if stale or broken.
 3. Bumps `pyproject.toml`, refreshes `uv.lock`, and prepends a dated changelog
    section. Opens `$EDITOR` for your notes and rejects the untouched placeholder.
 4. Formats the changelog and commits the three release files as `Release vX.Y.Z`.
@@ -90,7 +95,8 @@ and `make validate`. A version-only bump does not invalidate screenshot hashes.
    Python/frontend tests, renderer freshness, required Playwright tests and build.
 6. Runs `make pypi`, which rechecks the committed state and README, cleans old
    distributions, builds the wheel/sdist and checks their contents and metadata.
-7. Retrieves the production token via `keyring`, then uploads the wheel and sdist.
+7. Retrieves the production token via the managed keyring CLI, then uploads
+   the wheel and sdist.
 8. Pushes the branch to its configured upstream, creates `vX.Y.Z`, pushes the tag
    to `origin` and creates the GitHub release using `CHANGELOG.md` as its notes.
 
@@ -116,6 +122,25 @@ to skip files already present; do not replace a published file.
 A dirty worktree or missing upstream must be resolved before release. Commit
 or stash intended work, including untracked files, and check `git status`.
 The release script stages only `pyproject.toml`, `uv.lock` and `CHANGELOG.md`.
+
+If the version commit exists but upload never started, do not rerun the bump
+command: that would increment the version again. After fixing and committing
+the issue, use `make pypi` to publish the current version, then finish the
+branch push, version tag and GitHub release manually. For the failed stable
+`0.1.1` attempt, those final steps are:
+
+```bash
+make pypi
+git push
+git tag v0.1.1
+git push origin v0.1.1
+gh release create v0.1.1 --title v0.1.1 --notes-file CHANGELOG.md
+```
+
+An error such as `keyring: ...python3.14: bad interpreter` means a global
+wrapper points at a removed Python, not that the stored token was rejected.
+The project-managed CLI avoids that wrapper. The preflight only checks startup;
+the maintainer's actual upload is what exercises Keychain access and authentication.
 
 ## Local validation
 

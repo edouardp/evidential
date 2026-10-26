@@ -55,8 +55,9 @@ documented in [docs/RELEASE_PROCESS.md](docs/RELEASE_PROCESS.md). In short:
   GitHub release. `make release VERSION=X.Y.ZrcN` supports exact versions.
 - Releases require a clean attached branch with an upstream, and run
   `make readme-check` before changing anything. If stale, run `make readme`,
-  inspect and commit the outputs. Publishing retrieves the token through the
-  same explicit `keyring get` command as Galaga; never print credentials.
+  inspect and commit the outputs. A credential-free preflight checks the locked
+  project keyring CLI starts before version edits or builds. Publishing uses
+  `uv run --frozen python -m keyring get`; never print credentials.
 - Releases are validated, built and published locally, following `../galaga`
   and `../gamr`. Run `make validate` and `make check` from a clean tracked
   checkout before publishing. GitHub Actions is not used. If CI/CD is added,

@@ -66,11 +66,13 @@ def test_direct_publish_and_release_share_the_house_keyring_flow() -> None:
     publish = (ROOT / "scripts/publish.sh").read_text()
     assert "./scripts/publish.sh" in makefile
     assert "make pypi" in (ROOT / "scripts/release.sh").read_text()
-    assert "UV_PUBLISH_TOKEN=$(keyring get https://upload.pypi.org/legacy/ __token__)" in publish
+    assert (
+        "UV_PUBLISH_TOKEN=$(uv run --frozen python -m keyring get https://upload.pypi.org/legacy/ __token__)" in publish
+    )
     assert "export UV_PUBLISH_TOKEN" in publish
     assert "uv publish dist/*" in publish
-    assert publish.index("make readme-check") < publish.index("keyring get")
-    assert publish.index("make check") < publish.index("keyring get")
+    assert publish.index("make readme-check") < publish.index("-m keyring get")
+    assert publish.index("make check") < publish.index("-m keyring get")
 
 
 def test_releases_use_complete_local_gates_without_github_actions() -> None:

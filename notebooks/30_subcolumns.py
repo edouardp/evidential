@@ -320,10 +320,5 @@ def economist_recreation(EvidentialTable, col, economist_records, mo):
     return
 
 
-@app.cell
-def _():
-    return
-
-
 if __name__ == "__main__":
     app.run()

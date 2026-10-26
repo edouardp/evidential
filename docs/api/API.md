@@ -77,6 +77,44 @@ The cell that *creates* the widget must not read any control values — see
 can also pass `columns=` as an ordered list of names, or omit `columns` entirely
 and let the renderer infer a column set from the data.
 
+### Inspecting unformatted data
+
+`table.raw` returns a detached `list[dict[str, Any]]` snapshot of all source
+records, including hidden source fields. It precedes blank predicates, text
+transforms and generated mark helpers, and excludes synthetic section/summary
+rows. Browser search, sorting and pagination do not change the snapshot or its
+source order. Editing a snapshot does not change the table.
+
+For a standard Marimo data grid, pass the records directly to
+[`mo.ui.table`](https://docs.marimo.io/api/inputs/table/):
+
+```python
+mo.ui.table(table.raw, selection=None, pagination=True)
+```
+
+For a table wrapped with `mo.ui.anywidget(...)`, use `table.widget.raw`.
+If you prefer Marimo's automatic dataframe viewer, `pd.DataFrame(table.raw)`
+works when pandas is installed. The property itself needs no dataframe library.
+
+`LiveEvidentialTable.raw` exposes the latest successful query result without
+running SQL. `set_data()` and successful live refreshes replace the snapshot;
+failed updates preserve it. Pivot, grouping, comparison and query helpers share
+the same property on their returned tables: it exposes their resulting detail
+records, rather than rerunning or reversing their SQL transformations.
+
+To refresh a raw grid with live controls, display it in the reactive cell that
+updates the persistent table:
+
+```python
+live.set_controls(year=year)
+mo.ui.table(live.raw, selection=None, pagination=True)
+```
+
+Values use the table's existing input normalization: numbers remain numbers,
+dates/times are ISO strings, decimals become floats, and nonfinite values
+become `None`. `.raw` returns data without table formatting, rather than the
+original dataframe object or its native schema.
+
 ## The fluent column builder
 
 A column is built in two moves:

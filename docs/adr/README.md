@@ -95,6 +95,7 @@ dated, immutable record of the decisions behind them.
 | [074](074-readable-scientific-formatting.md) | Readable Scientific Formatting | Accepted |
 | [075](075-per-value-compact-formatting.md) | Per-Value Compact Formatting | Accepted |
 | [076](076-sparkline-reference-origins.md) | Sparkline Reference Origins | Accepted |
+| [077](077-unformatted-source-snapshots.md) | Unformatted Source Snapshots | Accepted |
 
 ## Creating New ADRs
 

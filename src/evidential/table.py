@@ -342,6 +342,19 @@ class EvidentialTable(anywidget.AnyWidget):
 
     # ------------------------------------------------------------- helpers ---
     @property
+    def raw(self) -> list[dict[str, Any]]:
+        """Return a detached snapshot of the unformatted source records.
+
+        Includes hidden source fields, before blank predicates, text transforms
+        and generated mark bindings. Synthetic display rows are excluded.
+        Values retain the table's input normalization (e.g. ISO date strings).
+        Live tables expose the latest successful result without running SQL.
+
+        In Marimo, display with ``mo.ui.table(table.raw, selection=None)``.
+        """
+        return copy.deepcopy(self._source_rows)
+
+    @property
     def display_rows(self) -> list[dict[str, Any]]:
         """Unfiltered display snapshot for inspection; ``rows`` is detail data."""
         return display_records(self.rows, self.row_layout)

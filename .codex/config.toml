@@ -1,5 +1,0 @@
-[mcp_servers.vim_context]
-command = "/Users/edouard/source/vim-q-connect/main/mcp-server/run-mcp.sh"
-args = []
-cwd = "/Users/edouard/Desktop"
-startup_timeout_sec = 120

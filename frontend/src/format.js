@@ -34,6 +34,9 @@ export const BASE_AUTO_FORMATS = [
 
 const UNITS = { k: ',"k"', m: ',,"M"', b: ',,,"B"', t: ',,,,"T"' };
 const DECIMALS = ["0", "0.0", "0.00", "0.000", "0.0000"];
+const COMPACT_NUMBER = new Intl.NumberFormat("en", {
+  notation: "compact", minimumFractionDigits: 1, maximumFractionDigits: 1,
+});
 
 function buildPresets() {
   const presets = {
@@ -278,6 +281,11 @@ export function formatValue(value, formatCode, opts = {}) {
     }
     // Numeric columns can also contain textual missing-value labels.
     if (typeof processed === "number" && !Number.isFinite(processed)) return fallbackValue;
+    if (code === "compact") {
+      return typeof processed === "number"
+        ? processed === 0 ? "0" : COMPACT_NUMBER.format(processed)
+        : fallbackValue;
+    }
 
     let actual = code;
     if ((processed === 0 || processed === "0") && code.length === 3 && BASE_AUTO_FORMATS.includes(code)) {

@@ -37,6 +37,7 @@ def _():
         col,
         comparison_table,
         grouped_table,
+        label,
         pivot_table,
     )
 
@@ -48,6 +49,7 @@ def _():
         comparison_table,
         duckdb,
         grouped_table,
+        label,
         mo,
         os,
         pivot_table,
@@ -535,6 +537,94 @@ def _(col, comparison_table, connection, mo):
         )
     )
     changes
+    return
+
+
+@app.cell
+def trade_introduction(mo):
+    mo.md("""
+    ## Imports versus exports
+
+    Goods and services trade in **current US dollars**, using the year and
+    region selected above. Imports extend left from zero; exports extend right.
+    Both sides use the same scale, and labels show positive amounts. Countries
+    with only one reported measure remain visible; missing values stay missing.
+    Amounts use compact units (234.5B, 1.7T). Exports/imports is neutral at 100%;
+    net exports is exports minus imports, with deficits red and surpluses green.
+    Reported trade sums the available measures; ratios and balances require both.
+    """)
+    return
+
+
+@app.cell
+def trade_comparison(LiveEvidentialTable, col, connection, label, mo):
+    trade_balance = LiveEvidentialTable(
+        connection,
+        """
+        WITH trade AS (
+            SELECT
+                c."Country Code" AS country_code,
+                c."Short Name" AS country,
+                c.Region AS region,
+                max(o.value) FILTER (WHERE o.indicator_code = 'NE.IMP.GNFS.CD') AS imports,
+                max(o.value) FILTER (WHERE o.indicator_code = 'NE.EXP.GNFS.CD') AS exports
+            FROM observations o
+            JOIN country c ON c."Country Code" = o.country_code
+            WHERE o.indicator_code IN ('NE.IMP.GNFS.CD', 'NE.EXP.GNFS.CD')
+              AND o.year = {year}
+              AND c.Region IS NOT NULL
+              AND ({region} = 'All regions' OR c.Region = {region})
+            GROUP BY c."Country Code", c."Short Name", c.Region
+        )
+        SELECT *,
+            exports / nullif(imports, 0) AS exports_imports_ratio,
+            exports - imports AS net_exports,
+            coalesce(imports, 0) + coalesce(exports, 0) AS total_trade
+        FROM trade
+        WHERE imports IS NOT NULL OR exports IS NOT NULL
+        ORDER BY total_trade DESC, country
+        """,
+        auto_run=False,
+        title="Imports versus exports",
+        subtitle="Imports ← 0 → Exports · current US$ · B = billion, T = trillion",
+        caption="Source: World Bank WDI, NE.IMP.GNFS.CD and NE.EXP.GNFS.CD. Goods and services; regional and income-group aggregates excluded.",
+        search=True,
+        page_size=15,
+        row_shading=True,
+        border=False,
+        row_lines=False,
+        columns=[
+            col.text("country"),
+            col.bar(
+                "imports", side="left", size=0.7, color="#2563eb",
+                label=label.fmt("compact").auto_position("outside end"),
+            )
+            .bar(
+                "exports", side="right", size=0.7, color="#0f766e",
+                label=label.fmt("compact").auto_position("outside end"),
+            )
+            .title("Imports ← Trade (US$) → Exports")
+            .align("center")
+            .fmt("compact")
+            .sort_by("total_trade")
+            .scale(axis=True, gridlines=True)
+            .reference_line(0, color="#64748b"),
+            col.percent("exports_imports_ratio", title="Exports/imports", decimals=1)
+            .color(scale=["#fee2e280", "#ffffff20", "#bbf7d0"], min=0.5, max=1.5, midpoint=1),
+            col.number("net_exports", title="Balance\n(US$)", format="compact")
+            .color(scale=["#fee2e280", "#ffffff20", "#bbf7d0"], midpoint=0),
+            col.number("total_trade", title="Reported trade\n(US$)", format="compact"),
+        ],
+    )
+    mo.vstack([trade_balance])
+    return (trade_balance,)
+
+
+@app.cell
+def update_trade(region, trade_balance, year):
+    with trade_balance.hold_sync():
+        trade_balance.set_controls(year=year, region=region)
+        trade_balance.update_options(title=f"Imports versus exports · {year.value}")
     return
 
 

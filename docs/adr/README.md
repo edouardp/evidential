@@ -93,6 +93,7 @@ dated, immutable record of the decisions behind them.
 | [072](072-chart-column-sizing.md) | Chart Column Sizing | Accepted |
 | [073](073-directional-ranges.md) | Directional Ranges for Dumbbell Plots | Accepted |
 | [074](074-readable-scientific-formatting.md) | Readable Scientific Formatting | Accepted |
+| [075](075-per-value-compact-formatting.md) | Per-Value Compact Formatting | Accepted |
 
 ## Creating New ADRs
 

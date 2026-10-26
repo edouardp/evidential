@@ -16,6 +16,19 @@ test("auto-scaled base formats", () => {
   assert.equal(formatValue(0, "usd"), "$0");
 });
 
+test("compact numbers choose a unit per value, independently of the column range", () => {
+  const options = {type: "number", range: {min: -2e12, max: 4e12}};
+  for (const [value, expected] of [
+    [234.5e9, "234.5B"], [1.7e12, "1.7T"], [-234.5e9, "-234.5B"],
+    [1.2e6, "1.2M"], [1500, "1.5K"], [999_950, "1.0M"], [123.4, "123.4"], [0, "0"],
+  ]) assert.equal(formatValue(value, "compact", options), expected);
+  assert.equal(formatValue("1700000000000", "compact", options), "1.7T");
+  assert.equal(formatValue(null, "compact"), "–");
+  assert.equal(formatValue(NaN, "compact", {fallback: "Missing"}), "Missing");
+  assert.equal(formatValue(Infinity, "compact", {fallback: "Missing"}), "Missing");
+  assert.equal(formatValue("n/a", "compact", options), "n/a");
+});
+
 test("date formats", () => {
   const d = new Date(2024, 2, 15);
   assert.equal(formatValue(d, "date"), "2024-03-15");

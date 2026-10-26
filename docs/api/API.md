@@ -868,6 +868,12 @@ columns=[
 The kind factories cover the common cases; `.fmt()` is the escape hatch when you
 need an exact SSF code.
 
+`.fmt("compact")` chooses a unit for each value: **234.5B**, **1.7T**,
+**1.2M** or **1.5K**, with one decimal place (zero displays as `0`). It works
+with `label.fmt("compact")` and scale axes too. Values keep their signs and
+remain numeric for sorting, statistics and export. The existing `num` preset
+continues to choose one unit from the column's range.
+
 `.fmt("sci")` displays scientific notation as **1.23 × 10⁵**, with two decimal
 places in the mantissa. HTML cells, mark labels, statistics and axes use a real
 superscript exponent; tooltips use readable Unicode superscripts. Small values

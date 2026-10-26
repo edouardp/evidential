@@ -983,6 +983,63 @@ def test_gridlines_do_not_add_scroll_overflow_to_the_row_area(page, live_server,
         assert guides["width"] == pytest.approx(marks["width"], abs=0.1)
 
 
+@pytest.mark.parametrize(
+    ("color", "background", "alpha"),
+    [
+        ("#fef3c7", "rgb(254, 243, 199)", 255),
+        ("rgba(254, 243, 199, 0.4)", "rgba(254, 243, 199, 0.4)", 102),
+        (None, None, 36),
+    ],
+)
+def test_reference_bands_fill_the_cell_and_preserve_explicit_color(page, live_server, color, background, alpha):
+    mount(
+        page,
+        live_server,
+        [
+            (
+                "Reference band visibility",
+                [{"team": "Alpha", "score": 64}, {"team": "Beta", "score": 91}],
+                [
+                    col.text("team"),
+                    col.bar("score", label=True)
+                    .scale(domain=(0, 100), axis=True, axis_position="bottom", gridlines=True)
+                    .reference_band(60, 80, color=color)
+                    .reference_line(70, color="#dc2626"),
+                ],
+            )
+        ],
+    )
+    assert page.locator(".et-mark-band").count() == 2
+    for band in page.locator(".et-mark-band").all():
+        styles = band.evaluate(
+            "el => ({opacity: getComputedStyle(el).opacity, color: getComputedStyle(el).backgroundColor})"
+        )
+        assert styles["opacity"] == "1"
+        if background is not None:
+            assert styles["color"] == background
+        # Resolve modern CSS colors through the browser's paint implementation.
+        painted_alpha = band.evaluate("""el => {
+            const canvas = document.createElement('canvas');
+            canvas.width = canvas.height = 1;
+            const context = canvas.getContext('2d');
+            context.fillStyle = getComputedStyle(el).backgroundColor;
+            context.fillRect(0, 0, 1, 1);
+            return context.getImageData(0, 0, 1, 1).data[3];
+        }""")
+        assert painted_alpha == alpha
+        parent = band.locator("xpath=ancestor::td")
+        cell = parent.bounding_box()
+        bounds = band.bounding_box()
+        marks = parent.locator(".et-marks").bounding_box()
+        assert bounds["y"] == pytest.approx(cell["y"], abs=1)
+        assert bounds["height"] == pytest.approx(cell["height"], abs=1)
+        assert bounds["x"] == pytest.approx(marks["x"] + 0.6 * marks["width"], abs=0.5)
+        assert bounds["width"] == pytest.approx(0.2 * marks["width"], abs=0.5)
+        assert parent.locator(".et-cell-guides .et-mark-band").count() == 1
+        assert parent.locator(".et-marks .et-mark-band").count() == 0
+    capture(page, "reference-band.png")
+
+
 def test_axes_align_inside_nested_headers_and_subcolumns(page, live_server):
     mount(
         page,

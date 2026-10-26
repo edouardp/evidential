@@ -2218,8 +2218,8 @@ test("reference bands shade a column-wide zone", () => {
   const rows = [{ est: 1 }];
   const columns = [{
     name: "est", type: "number",
-    scale: { domain: [0, 2] },
-    references: [{ value: 0.8, high: 1.25, label: "equivalence" }],
+    scale: { domain: [0, 2], gridlines: true },
+    references: [{ value: 0.8, high: 1.25, label: "equivalence" }, {value: 1}],
     encodings: [{ kind: "point", source: "est" }],
   }];
   const renderer = new EvidentialTableRenderer(makeModel(rows, columns, { page_size: 10 }, el), el);
@@ -2228,6 +2228,11 @@ test("reference bands shade a column-wide zone", () => {
   // 0.8..1.25 of a 0..2 domain.
   assert.match(band.style.left, /40%/);
   assert.match(band.style.width, /22\.5%/);
+  assert.equal(band.parentElement.className, "et-cell-guide-track");
+  assert.equal(band.parentElement.firstElementChild, band);
+  assert.ok(band.parentElement.querySelector(".et-mark-gridline"));
+  assert.ok(band.parentElement.querySelector(".et-mark-reference"));
+  assert.equal(el.querySelectorAll(".et-marks .et-mark-band").length, 0);
   renderer.destroy();
 });
 

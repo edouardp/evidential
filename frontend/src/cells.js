@@ -248,7 +248,7 @@ export function renderCell({row, col, index, ctx, rowIndex, options: opts, toggl
   // Column guides span the cell, not an over-sized region around the glyph
   // track. Isolating their clipping preserves overflow labels and end arrows.
   if (content.classList?.contains("et-marks")) {
-    const guides = content.querySelectorAll(":scope > .et-mark-gridline, :scope > .et-mark-reference");
+    const guides = content.querySelectorAll(":scope > .et-mark-band, :scope > .et-mark-gridline, :scope > .et-mark-reference");
     if (guides.length) {
       td.classList.add("et-has-guides");
       const guideTrack = h("div", {class: "et-cell-guide-track"});

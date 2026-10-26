@@ -55,10 +55,14 @@ col.bar("share").scale(domain=(0, 40), axis=True, gridlines=True, axis_position=
   includes both tick text and the tick itself; top and bottom cells have no
   vertical padding that could create a gap at the horizontal boundary.
 - `axis` and `gridlines` are independent: either may be used alone.
-- Gridlines and reference lines use a cell-sized guide layer with inherited
+- Gridlines, reference lines and reference bands use a cell-sized guide layer with inherited
   horizontal padding. The layer clips its own paint to the cell, eliminating
   fractional-pixel overflow from extending guides beyond the glyph track.
   Marks, labels and endpoint arrows retain their independent overflow behavior.
+- Bands fill the cell height behind gridlines, reference rules and marks.
+  Explicit band colors, including alpha, are used as supplied; only the default
+  theme band mixes its color to 14% opacity. A pale user-supplied fill must not
+  receive an additional fade that makes it disappear.
 - Axis positions are independent per column; top and bottom scales can coexist.
   Axis and mark tracks share the same padded horizontal area, leaving room for
   endpoint tick text. Gridlines and reference rules join across adjacent data

@@ -734,7 +734,7 @@ tbody tr:last-child .et-bar-center .et-bar-axis { bottom: var(--et-bar-pad, 0); 
   position: absolute;
   top: 0;
   bottom: 0;
-  opacity: 0.14;
+  background: color-mix(in srgb, var(--et-reference, #0f766e) 14%, transparent);
 }
 .et-mark-reference-label {
   position: absolute;

@@ -354,6 +354,7 @@ export function renderMarks(col, row, range, format) {
     .map(enc => ({value: enc.reference, color: enc.reference_color, label: enc.reference_label}));
   const hasCenter = encodings.some(enc => enc.center);
   const references = [...(hasCenter ? [{value: 0}] : []), ...(col.references || []), ...barReferences];
+  const referenceBands = document.createDocumentFragment();
   for (const ref of references) {
     if (ref.value == null || !isFinite(Number(ref.value))) continue;
     const raw = pos(Number(ref.value));
@@ -365,13 +366,13 @@ export function renderMarks(col, row, range, format) {
       const left = Math.max(0, Math.min(100, Math.min(pct, rawHigh)));
       const right = Math.max(0, Math.min(100, Math.max(pct, rawHigh)));
       if (right <= left) continue;
-      track.append(
+      referenceBands.append(
         h("div", {
           class: "et-mark-band",
           style: {
             left: `${left}%`,
             width: `${right - left}%`,
-            backgroundColor: resolveColor(ref.color) || "var(--et-reference, #0f766e)",
+            backgroundColor: resolveColor(ref.color),
           },
         }),
       );
@@ -399,6 +400,8 @@ export function renderMarks(col, row, range, format) {
     }
   }
 
+  // Bands form the background; even opaque fills must leave guides visible.
+  track.prepend(referenceBands);
   const barCount = encodings.filter((enc) => enc.kind === "bar").length;
   const stack = encodings.filter((enc) => enc.kind === "stacked_bar");
   let barIndex = 0;

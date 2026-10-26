@@ -855,7 +855,9 @@ columns=[
   `"linear"|"log", axis=, axis_position="top"|"bottom", gridlines=)` fixes the
   shared quantitative axis; `.reference_line(value, label=, color=)` adds a rule
   and `.reference_band(low, high, label=, color=)` shades a zone (a target or
-  equivalence range). `axis=True` draws tick labels for the column, and
+  equivalence range) through the cell height behind guides and marks. An explicit
+  band color is used as supplied; use an alpha color for transparency. The
+  default band remains subtle. `axis=True` draws tick labels for the column, and
   `gridlines=True` faint vertical lines through the cells. A top axis sits below
   its column label and above the first horizontal line of the row area, pushing
   the label upward; unscaled labels stay by that line. A bottom axis sits below

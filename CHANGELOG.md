@@ -4,6 +4,40 @@ All notable changes to this project are documented in this file. The format is
 based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this
 project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.1.2 (2026-10-26)
+
+### Added
+
+- **Table layout gallery** — 19 runnable examples in notebook 51, with
+  notebook-generated README descriptions, code and Playwright screenshots.
+  Covers titles, captions, footnotes, frames, rules, row shading, group-heading
+  styles, indented details, summaries, grand totals and nested column groups.
+- **Real-data graphics examples** — WDI imports and exports for six European
+  economies on one shared scale, plus Premier League wins, draws, losses and
+  recent-form change sparklines. Committed snapshots keep both examples
+  runnable without local datasets.
+
+### Changed
+
+- **README excerpts** — LibCST extracts complete table calls for layout
+  examples. Inline SQL makes the selected fields visible; shared column and
+  settings references become `...`, while inline definitions stay explicit.
+- **Example clarity** — remove redundant automatic column titles, use filled
+  circles alongside square symbols, and improve trade-table alignment.
+
+### Fixed
+
+- Nested `col.group(...)` builders preserve child header paths and highlights
+  instead of replacing them with the parent group's settings.
+- `.repeat_values(False)` now suppresses adjacent duplicate display values,
+  restarting on each page and after headings or summaries. Raw data, sorting,
+  filtering and exports retain the original values.
+- `section_indent` also indents detail labels beneath top summaries when no
+  separate section heading is present.
+- Reference bands fill the cell height behind gridlines and marks. Explicit
+  colors and alpha are preserved instead of receiving an additional fade;
+  the default theme band remains subtle.
+
 ## 0.1.1 (2026-10-26)
 
 ### Added

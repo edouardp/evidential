@@ -1,6 +1,6 @@
 [project]
 name = "evidential"
-version = "0.1.1"
+version = "0.1.2"
 description = "Evidence.dev-style interactive data tables for Marimo, powered by anywidget and DuckDB."
 readme = "docs/PYPI_README.md"
 authors = [{ name = "Edouard Poor", email = "git@edouard.info" }]

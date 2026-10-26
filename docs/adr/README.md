@@ -99,6 +99,7 @@ dated, immutable record of the decisions behind them.
 | [078](078-local-release-validation.md) | Local Release Validation | Accepted |
 | [079](079-notebook-generated-readme.md) | Notebook-Generated README Examples | Accepted |
 | [080](080-house-release-commands.md) | House Release Commands | Accepted |
+| [081](081-notebook-layout-excerpts.md) | Notebook Layout Excerpts | Accepted |
 
 ## Creating New ADRs
 

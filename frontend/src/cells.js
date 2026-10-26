@@ -151,7 +151,10 @@ export function renderCell({row, col, index, ctx, rowIndex, options: opts, toggl
     });
   }
 
-  if (hidden[col.name]) {
+  // Compare detail records in rendered order, keeping the raw data intact.
+  const repeated = col.repeat_values === false && !isSubtotal && !isTotal && ctx.previousDetailRow &&
+    Object.is(row[col.name], ctx.previousDetailRow[col.name]);
+  if (hidden[col.name] || repeated) {
     return finish(false);
   }
 

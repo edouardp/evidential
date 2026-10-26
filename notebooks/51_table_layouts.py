@@ -1,0 +1,545 @@
+# /// script
+# requires-python = ">=3.12"
+# dependencies = ["marimo", "evidential"]
+# ///
+"""The README's table layout gallery: descriptions, real calls and screenshots.
+
+Run ``make readme`` to extract the named cells and capture their widget output.
+"""
+
+import marimo
+
+__generated_with = "0.25.1"
+app = marimo.App(width="full")
+
+
+@app.cell
+def _():
+    import marimo as mo
+
+    from evidential import EvidentialTable, Rows, col, rows, settings
+
+    return EvidentialTable, Rows, col, mo, rows, settings
+
+
+@app.cell
+def _(col, settings):
+    layout_data = [
+        {"region": "North", "product": "Aster lamp", "units": 12, "target_units": 15,
+         "sales": 1200, "cost": 720, "note": "Includes the October launch order."},
+        {"region": "North", "product": "Cove lamp", "units": 18, "target_units": 20,
+         "sales": 1800, "cost": 990, "note": None},
+        {"region": "North", "product": "Horizon lamp", "units": 9, "target_units": 10,
+         "sales": 900, "cost": 540, "note": None},
+        {"region": "South", "product": "Reed chair", "units": 8, "target_units": 12,
+         "sales": 1600, "cost": 880, "note": "Stock was limited during the month."},
+        {"region": "South", "product": "Studio chair", "units": 14, "target_units": 15,
+         "sales": 2800, "cost": 1680, "note": None},
+        {"region": "South", "product": "Field chair", "units": 11, "target_units": 12,
+         "sales": 2200, "cost": 1210, "note": None},
+    ]
+    layout_columns = [
+        col.text("product", title="Product"),
+        col.integer("units", title="Units"),
+        col.currency("sales", decimals=0, title="Sales"),
+    ]
+    layout_frame = settings(width="640px", search=False, sortable=False, page_size=0)
+    return layout_columns, layout_data, layout_frame
+
+
+@app.cell(hide_code=True)
+def layout_simple_doc(mo):
+    mo.md(r"""
+    ### Table layout gallery
+
+    The frame, rules, notes and summaries are independent of cell graphics. These
+    examples share six product records, the same basic columns, and a settings
+    bundle for width and disabled search, sorting and pagination. Excerpts use
+    `...` for those shared column/settings references; follow a source link for
+    the complete runnable setup. Inline definitions and layout options stay visible.
+
+    #### Simple table
+
+    Start with the standard frame, header and row rules.
+    """)
+    return
+
+
+@app.cell
+def layout_simple(EvidentialTable, layout_data, layout_frame, layout_columns):
+    EvidentialTable(layout_data, columns=layout_columns, settings=layout_frame)
+    return
+
+
+@app.cell(hide_code=True)
+def layout_titles_doc(mo):
+    mo.md(r"""
+    #### Title, subtitle and caption
+
+    Use the title for the subject, the subtitle for context, and the caption for
+    a source or explanatory note.
+    """)
+    return
+
+
+@app.cell
+def layout_titles(EvidentialTable, layout_data, layout_frame, layout_columns):
+    EvidentialTable(
+        layout_data,
+        columns=layout_columns,
+        settings=layout_frame,
+        title="Products by region",
+        subtitle="Six products · October 2026",
+        caption="Source: illustrative product sales. Amounts in US dollars.",
+    )
+    return
+
+
+@app.cell(hide_code=True)
+def layout_footnotes_doc(mo):
+    mo.md(r"""
+    #### Footnotes
+
+    Attach notes to source fields with `.footnote(...)`. Matching cells receive
+    superscript symbols and their notes appear below the table.
+    """)
+    return
+
+
+@app.cell
+def layout_footnotes(EvidentialTable, layout_data, layout_frame, col):
+    EvidentialTable(
+        layout_data,
+        columns=[
+            col.text("product", title="Product").footnote("note"),
+            col.integer("units", title="Units"),
+            col.currency("sales", decimals=0, title="Sales"),
+        ],
+        settings=layout_frame,
+    )
+    return
+
+
+@app.cell(hide_code=True)
+def layout_lines_on_doc(mo):
+    mo.md(r"""
+    #### Row lines on
+
+    Horizontal rules separate each detail row. The outer frame is controlled
+    separately with `border`.
+    """)
+    return
+
+
+@app.cell
+def layout_lines_on(EvidentialTable, layout_data, layout_frame, layout_columns):
+    EvidentialTable(
+        layout_data,
+        columns=layout_columns,
+        settings=layout_frame,
+        border=False,
+        row_lines=True,
+    )
+    return
+
+
+@app.cell(hide_code=True)
+def layout_lines_off_doc(mo):
+    mo.md(r"""
+    #### Row lines off
+
+    Keep the header and final table rules while removing the lines between rows.
+    """)
+    return
+
+
+@app.cell
+def layout_lines_off(EvidentialTable, layout_data, layout_frame, layout_columns):
+    EvidentialTable(
+        layout_data,
+        columns=layout_columns,
+        settings=layout_frame,
+        border=False,
+        row_lines=False,
+    )
+    return
+
+
+@app.cell(hide_code=True)
+def layout_frame_doc(mo):
+    mo.md(r"""
+    #### Outer frame
+
+    An outer border can enclose the table even when internal row lines are off.
+    """)
+    return
+
+
+@app.cell
+def layout_frame(EvidentialTable, layout_data, layout_frame, layout_columns):
+    EvidentialTable(
+        layout_data,
+        columns=layout_columns,
+        settings=layout_frame,
+        border=True,
+        row_lines=False,
+    )
+    return
+
+
+@app.cell(hide_code=True)
+def layout_shading_off_doc(mo):
+    mo.md(r"""
+    #### Row shading off
+
+    Use a plain background without row lines or an outer frame.
+    """)
+    return
+
+
+@app.cell
+def layout_shading_off(EvidentialTable, layout_data, layout_frame, layout_columns):
+    EvidentialTable(
+        layout_data,
+        columns=layout_columns,
+        settings=layout_frame,
+        border=False,
+        row_lines=False,
+        row_shading=False,
+    )
+    return
+
+
+@app.cell(hide_code=True)
+def layout_shading_one_doc(mo):
+    mo.md(r"""
+    #### Shade alternate rows
+
+    `row_shading=1` alternates one shaded row with one unshaded row.
+    """)
+    return
+
+
+@app.cell
+def layout_shading_one(EvidentialTable, layout_data, layout_frame, layout_columns):
+    EvidentialTable(
+        layout_data,
+        columns=layout_columns,
+        settings=layout_frame,
+        border=False,
+        row_lines=False,
+        row_shading=1,
+    )
+    return
+
+
+@app.cell(hide_code=True)
+def layout_shading_three_doc(mo):
+    mo.md(r"""
+    #### Shade blocks of three
+
+    `row_shading=3` alternates three shaded rows with three unshaded rows.
+    """)
+    return
+
+
+@app.cell
+def layout_shading_three(EvidentialTable, layout_data, layout_frame, layout_columns):
+    EvidentialTable(
+        layout_data,
+        columns=layout_columns,
+        settings=layout_frame,
+        border=False,
+        row_lines=False,
+        row_shading=3,
+    )
+    return
+
+
+@app.cell(hide_code=True)
+def layout_headings_doc(mo):
+    mo.md(r"""
+    #### Group headings
+
+    Introduce each region with a display-only heading. `section_indent=1` insets
+    the product names by one rem beneath it. The six source records remain the
+    detail data.
+    """)
+    return
+
+
+@app.cell
+def layout_headings(EvidentialTable, layout_data, layout_frame, layout_columns, rows):
+    EvidentialTable(
+        layout_data,
+        columns=layout_columns,
+        settings=layout_frame,
+        border=False,
+        row_lines=False,
+        section_indent=1,
+        row_layout=rows.group_by("region").section(rule="below"),
+    )
+    return
+
+
+@app.cell(hide_code=True)
+def layout_headings_centered_doc(mo):
+    mo.md(r"""
+    #### Centered group headings
+
+    Center a heading across the full table width, with a rule above and below.
+    This style keeps the detail labels flush left and has no heading value cells.
+    """)
+    return
+
+
+@app.cell
+def layout_headings_centered(EvidentialTable, layout_data, layout_frame, layout_columns, rows):
+    EvidentialTable(
+        layout_data,
+        columns=layout_columns,
+        settings=layout_frame,
+        border=False,
+        row_lines=False,
+        row_layout=rows.group_by("region").section(align="center", rule="both"),
+    )
+    return
+
+
+@app.cell(hide_code=True)
+def layout_headings_column_doc(mo):
+    mo.md(r"""
+    #### Group labels in their own column
+
+    Keep the region beside its products, showing it only on the first detail row
+    of each run. `.repeat_values(False)` blanks repeated display values without
+    changing the data. Labels reappear at the start of each page and after a
+    heading or summary; filtering and sorting use the full values.
+    """)
+    return
+
+
+@app.cell
+def layout_headings_column(EvidentialTable, layout_data, layout_frame, layout_columns, col, rows):
+    EvidentialTable(
+        layout_data,
+        columns=[col.text("region", title="Region").repeat_values(False), *layout_columns],
+        settings=layout_frame,
+        border=False,
+        row_lines=False,
+        row_layout=rows.group_by("region"),
+    )
+    return
+
+
+@app.cell(hide_code=True)
+def layout_heading_values_doc(mo):
+    mo.md(r"""
+    #### Headings with counts and totals
+
+    A heading can combine a formatted label with aggregate values in the other
+    columns. Here it shows the product count, total units and total sales, with
+    indented product names underneath.
+    """)
+    return
+
+
+@app.cell
+def layout_heading_values(EvidentialTable, layout_data, layout_frame, layout_columns, rows):
+    EvidentialTable(
+        layout_data,
+        columns=layout_columns,
+        settings=layout_frame,
+        border=False,
+        row_lines=False,
+        section_indent=1,
+        row_layout=rows.group_by("region").section(
+            label=lambda group: f"{group[0]['region']} · {len(group)} products",
+            values={"units": "sum", "sales": "sum"},
+            rule="below",
+        ),
+    )
+    return
+
+
+@app.cell(hide_code=True)
+def layout_summary_top_doc(mo):
+    mo.md(r"""
+    #### Summaries before each group
+
+    Place the region total above its detail rows. A summary can act as the group
+    heading without an additional section row. Indent the product names beneath
+    that summary with `section_indent=1`.
+    """)
+    return
+
+
+@app.cell
+def layout_summary_top(EvidentialTable, layout_data, layout_frame, layout_columns, rows):
+    EvidentialTable(
+        layout_data,
+        columns=layout_columns,
+        settings=layout_frame,
+        border=False,
+        row_lines=False,
+        section_indent=1,
+        row_layout=rows.group_by("region").summary(
+            label=lambda group: f"{group[0]['region']} total",
+            values={"units": "sum", "sales": "sum"},
+            position="top",
+            rule="below",
+        ),
+    )
+    return
+
+
+@app.cell(hide_code=True)
+def layout_summary_bottom_doc(mo):
+    mo.md(r"""
+    #### Summary footers and subtotals
+
+    Put a subtotal after each region, with a heading before the indented details.
+    Headings and subtotal labels stay aligned at the left edge.
+    """)
+    return
+
+
+@app.cell
+def layout_summary_bottom(EvidentialTable, layout_data, layout_frame, layout_columns, rows):
+    EvidentialTable(
+        layout_data,
+        columns=layout_columns,
+        settings=layout_frame,
+        border=False,
+        row_lines=False,
+        section_indent=1,
+        row_layout=rows.group_by("region")
+        .section()
+        .summary("Region total", values={"units": "sum", "sales": "sum"}),
+    )
+    return
+
+
+@app.cell(hide_code=True)
+def layout_grand_total_doc(mo):
+    mo.md(r"""
+    #### Grand total
+
+    Add one final summary across all source records, without group headings or
+    subtotals.
+    """)
+    return
+
+
+@app.cell
+def layout_grand_total(EvidentialTable, layout_data, layout_frame, layout_columns, Rows):
+    EvidentialTable(
+        layout_data,
+        columns=layout_columns,
+        settings=layout_frame,
+        border=False,
+        row_lines=False,
+        row_layout=Rows().grand_summary("Grand total", values={"units": "sum", "sales": "sum"}),
+    )
+    return
+
+
+@app.cell(hide_code=True)
+def layout_combined_totals_doc(mo):
+    mo.md(r"""
+    #### Group summaries and a grand total
+
+    Combine headings, indented details, region subtotals and a final grand total.
+    Summaries read the detail records, so the grand total never counts subtotals
+    twice.
+    """)
+    return
+
+
+@app.cell
+def layout_combined_totals(EvidentialTable, layout_data, layout_frame, layout_columns, rows):
+    EvidentialTable(
+        layout_data,
+        columns=layout_columns,
+        settings=layout_frame,
+        border=False,
+        row_lines=False,
+        section_indent=1,
+        row_layout=rows.group_by("region")
+        .section()
+        .summary("Region total", values={"units": "sum", "sales": "sum"})
+        .grand_summary("Grand total", values={"units": "sum", "sales": "sum"}),
+    )
+    return
+
+
+@app.cell(hide_code=True)
+def layout_groups_one_doc(mo):
+    mo.md(r"""
+    #### Column groups: one level
+
+    Place related columns under shared spanners. The product column remains an
+    independent row label.
+    """)
+    return
+
+
+@app.cell
+def layout_groups_one(EvidentialTable, layout_data, layout_frame, col):
+    EvidentialTable(
+        layout_data,
+        settings=layout_frame,
+        columns=[
+            col.text("product", title="Product"),
+            col.group("Volume", [
+                col.integer("units", title="Actual"),
+                col.integer("target_units", title="Target"),
+            ]),
+            col.group("Money", [
+                col.currency("sales", decimals=0, title="Sales"),
+                col.currency("cost", decimals=0, title="Cost"),
+            ]),
+        ],
+        border=False,
+        row_lines=False,
+    )
+    return
+
+
+@app.cell(hide_code=True)
+def layout_groups_two_doc(mo):
+    mo.md(r"""
+    #### Column groups: two levels
+
+    Nest spanners to describe a hierarchy. Here **Operations** contains **Volume**
+    and **Money**, each with two leaf columns.
+    """)
+    return
+
+
+@app.cell
+def layout_groups_two(EvidentialTable, layout_data, layout_frame, col):
+    EvidentialTable(
+        layout_data,
+        settings=layout_frame,
+        columns=[
+            col.text("product", title="Product"),
+            col.group("Operations", [
+                col.group("Volume", [
+                    col.integer("units", title="Actual"),
+                    col.integer("target_units", title="Target"),
+                ]),
+                col.group("Money", [
+                    col.currency("sales", decimals=0, title="Sales"),
+                    col.currency("cost", decimals=0, title="Cost"),
+                ]),
+            ]),
+        ],
+        border=False,
+        row_lines=False,
+    )
+    return
+
+
+if __name__ == "__main__":
+    app.run()

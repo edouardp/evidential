@@ -77,7 +77,7 @@ export function projectLayout(layout, allRows, sortedRows, pageSize, pageIndex) 
       if (group.summary?.position === "top" && first >= start) {
         entries.push(annotationEntry("summary", `${group.id}:summary`, group.summary, members, group.depth));
       }
-      const indent = inset || (group.section && group.section.align !== "center");
+      const indent = inset || (group.section && group.section.align !== "center") || group.summary?.position === "top";
       if (group.children.length) visit(group.children, indent);
       else for (const row of members) addData(row, group.depth + 1, indent);
       if (group.summary?.position === "bottom" && last < end) {

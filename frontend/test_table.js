@@ -22,6 +22,47 @@ if (!dom.window.HTMLDialogElement.prototype.showModal) {
 
 const { EvidentialTableRenderer, render, fontSizeValue } = await import("./src/table.js");
 
+test("repeat_values false suppresses adjacent display values and restarts on every page", () => {
+  const rows = [{region: "North", product: "A"}, {region: "North", product: "B"},
+    {region: "South", product: "C"}, {region: "North", product: "D"}];
+  const model = makeModel(rows, [{name: "region", repeat_values: false}, {name: "product"}], {page_size: 2}, el);
+  const renderer = new EvidentialTableRenderer(model, el);
+  const labels = () => [...el.querySelectorAll("tbody tr")].map(row => row.cells[0].textContent);
+  assert.deepEqual(labels(), ["North", ""]);
+  renderer._gotoPage(1);
+  assert.deepEqual(labels(), ["South", "North"]);
+  model.data.options = {page_size: 1};
+  renderer._gotoPage(1);
+  assert.deepEqual(labels(), ["North"]);
+  model.data.options = {page_size: 0};
+  renderer._state.search = "B";
+  renderer.render();
+  assert.deepEqual(labels(), ["North"]);
+  renderer._state.search = "";
+  for (const repeat of [true, undefined]) {
+    model.data.columns = [{name: "region", repeat_values: repeat}, {name: "product"}];
+    renderer.render();
+    assert.deepEqual(labels(), ["North", "North", "South", "North"]);
+  }
+  assert.deepEqual(rows.map(row => row.region), ["North", "North", "South", "North"]);
+  renderer.destroy();
+});
+
+test("display annotations break repeated-value runs without hiding summaries", () => {
+  const model = makeModel([{region: "Same"}, {region: "Same"}, {region: "Same"}],
+    [{name: "region", repeat_values: false}], {}, el);
+  model.data.row_layout = {version: 1, groups: [
+    {id: "a", members: [0, 1], depth: 0, children: [],
+      summary: {label: "Same", cells: {}, position: "bottom"}},
+    {id: "b", members: [2], depth: 0, children: [],
+      section: {label: "Heading", cells: {}, align: "left"}},
+  ]};
+  const renderer = new EvidentialTableRenderer(model, el);
+  assert.deepEqual([...el.querySelectorAll("tbody tr")].map(row => row.textContent),
+    ["Same", "", "Same", "Heading", "Same"]);
+  renderer.destroy();
+});
+
 test("numeric color and chip scales use inferred ranges", () => {
   for (const viz of ["color", "chip"]) {
     const renderer = new EvidentialTableRenderer(

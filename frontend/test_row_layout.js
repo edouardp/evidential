@@ -68,6 +68,13 @@ test("top summaries appear on the group's first page and optional annotations st
   assert.ok(projectLayout(plain, source, source, 0, 0).entries.every(entry => entry.kind === "data"));
 });
 
+test("top summaries indent detail labels even without a separate section heading", () => {
+  const top = {version: 1, groups: [{...layout.groups[0], section: undefined,
+    summary: {...summary, position: "top"}}]};
+  const page = projectLayout(top, source, source, 0, 0);
+  assert.ok(page.entries.filter(entry => entry.kind === "data").every(entry => entry.inset && entry.depth === 1));
+});
+
 test("reducers distinguish missing observations, empty sets, counts and formatted strings", () => {
   const data = [{x: null}, {x: 0}, {x: 2}, {x: 2}];
   assert.equal(summaryValue({operation: "count", source: "x"}, data), 3);

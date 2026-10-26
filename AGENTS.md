@@ -70,7 +70,7 @@ have a matching `CHANGELOG.md` section.
 ## Marimo notebooks
 
 - Illustrated README examples are generated from named Markdown/table cells
-  in notebooks 21, 49 and 50. Edit those cells, run `make readme`, inspect the PNGs
+  in notebooks 21, 49, 50 and 51. Edit those cells, run `make readme`, inspect the PNGs
   and commit the generated outputs. `make readme-check` detects drift without
   a browser. See [docs/notebook-documentation.md](docs/notebook-documentation.md).
 

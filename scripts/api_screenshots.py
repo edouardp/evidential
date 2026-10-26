@@ -2,7 +2,9 @@
 """Capture the documentation screenshots from a marimo notebook.
 
 ``notebooks/49_api_screenshots.py`` owns the API examples and README hero;
-``notebooks/50_graphics_gallery.py`` owns the README graphic gallery. Each table
+``notebooks/50_graphics_gallery.py`` owns the README graphic gallery and
+``notebooks/51_table_layouts.py`` owns the layout gallery. The Studio table
+comes from ``notebooks/21_studio_dashboard.py``. Each table
 lives in a named cell, and the cell name is the image slug. This script starts
 each notebook with ``marimo run --headless`` and uses Playwright to screenshot
 the ``.et-root`` output of every target cell.
@@ -37,9 +39,11 @@ ROOT = Path(__file__).resolve().parent.parent
 NOTEBOOK = ROOT / "notebooks" / "49_api_screenshots.py"
 GALLERY_NOTEBOOK = ROOT / "notebooks" / "50_graphics_gallery.py"
 STUDIO_NOTEBOOK = ROOT / "notebooks" / "21_studio_dashboard.py"
+LAYOUT_NOTEBOOK = ROOT / "notebooks" / "51_table_layouts.py"
 OUT = ROOT / "docs" / "api" / "images"
 PREVIEW = ROOT / "docs" / "preview.png"
 GALLERY_OUT = ROOT / "docs" / "img" / "graphics"
+LAYOUT_OUT = ROOT / "docs" / "img" / "layouts"
 
 #: (image slug, marimo cell name), in API.md order.
 SHOTS: list[tuple[str, str]] = [
@@ -85,6 +89,32 @@ GALLERY: list[tuple[Path, str]] = [
     (GALLERY_OUT / "symbols.png", "graphic_symbols"),
     (GALLERY_OUT / "boolean-icons.png", "graphic_boolean_icons"),
     (GALLERY_OUT / "reference.png", "graphic_reference"),
+]
+
+#: Named layout examples, in README order. Prose/call excerpts live in notebook 51.
+LAYOUTS: list[tuple[Path, str]] = [
+    (LAYOUT_OUT / f"{name.replace('_', '-')}.png", f"layout_{name}")
+    for name in (
+        "simple",
+        "titles",
+        "footnotes",
+        "lines_on",
+        "lines_off",
+        "frame",
+        "shading_off",
+        "shading_one",
+        "shading_three",
+        "headings",
+        "headings_centered",
+        "headings_column",
+        "heading_values",
+        "summary_top",
+        "summary_bottom",
+        "grand_total",
+        "combined_totals",
+        "groups_one",
+        "groups_two",
+    )
 ]
 
 
@@ -175,6 +205,7 @@ def _notebook_targets() -> list[tuple[Path, list[tuple[Path, str]]]]:
         (NOTEBOOK, [*api_targets, *EXTRAS]),
         (GALLERY_NOTEBOOK, GALLERY),
         (STUDIO_NOTEBOOK, [(ROOT / "docs" / "img" / "studio-table.png", "revenue_table")]),
+        (LAYOUT_NOTEBOOK, LAYOUTS),
     ]
 
 

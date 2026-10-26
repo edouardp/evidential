@@ -148,6 +148,21 @@ def test_gallery_images_match_readme_and_capture_targets() -> None:
     )
 
 
+def test_layout_gallery_is_complete_and_precedes_cell_graphics() -> None:
+    from scripts.api_screenshots import LAYOUTS
+
+    text = (ROOT / "README.md").read_text()
+    referenced = {
+        target for target in re.findall(r"!\[[^\]]*\]\(([^)]+)\)", text) if target.startswith("docs/img/layouts/")
+    }
+    expected = {str(path.relative_to(ROOT)) for path, _ in LAYOUTS}
+    committed = {str(path.relative_to(ROOT)) for path in (ROOT / "docs/img/layouts").glob("*.png")}
+    assert referenced == expected == committed
+    graphics = text.index("## 5. Add visualisations")
+    assert text.index("### Table layout gallery") < graphics
+    assert all(text.index(f"]({path})") < graphics for path in expected)
+
+
 @pytest.mark.parametrize(
     "name",
     [f"{style}-{index}" for style in ("line", "area", "bar") for index in range(1, 6)],

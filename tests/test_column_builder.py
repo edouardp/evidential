@@ -149,6 +149,23 @@ def test_groups_nest_and_accept_names_and_mappings() -> None:
     assert group[0]["column_group"] == "Economy"
 
 
+@pytest.mark.parametrize("parent", ["Operations", ["Company", "Operations"]])
+def test_nested_group_builders_preserve_child_paths_and_shared_leaf_headers(parent) -> None:
+    child = col.group(
+        "Volume",
+        [col.subcolumns("Latest", [col.integer("units"), col.text("period")])],
+        highlight="#eef2ff",
+    )
+    group = col.group(parent, [child, col.number("sales").group(["Money", "Actual"])])
+    prefix = [parent] if isinstance(parent, str) else parent
+    assert group[0]["column_group"] == [*prefix, "Volume"]
+    assert group[1]["column_group"] == [*prefix, "Volume"]
+    assert group[0]["subcolumn_group"] == "Latest"
+    assert group[0]["highlight"] == "#eef2ff"
+    assert group[2]["column_group"] == [*prefix, "Money", "Actual"]
+    assert child[0]["column_group"] == "Volume"
+
+
 def test_group_members_cannot_lose_the_label() -> None:
     table = EvidentialTable(
         ROWS,

@@ -324,7 +324,11 @@ class Column(TextStyle, Mapping[str, Any]):
         return self._with(subcolumn_group=value)
 
     def repeat_values(self, value: bool = True) -> Self:
-        """Repeat a grouped value on every row instead of only the first.
+        """Repeat values on every row (the default).
+
+        Set False to show an adjacent run of equal values only once. Runs restart
+        on every page and after headings or summaries, in display order. This
+        affects presentation only; search, sorting and raw values stay intact.
 
         Example::
 
@@ -1602,7 +1606,7 @@ def group(
 
     The builder counterpart of ``column_groups={label: [...]}``: each member gets
     ``column_group=label``, so the group is named once and is contiguous by
-    construction.
+    construction. Existing member groups are nested below this label.
 
     :param label: the spanner text; a sequence nests (``["Root", "Sub"]``).
     :param columns: the members (``col.*`` columns, names or mappings).
@@ -1615,5 +1619,10 @@ def group(
             col.number("unemployment"),
         ], highlight="#eef2ff")
     """
-    members = [column._with(column_group=label, highlight=highlight) for column in _members(columns)]
+    prefix = [label] if isinstance(label, str) else list(label)
+    members = []
+    for column in _members(columns):
+        child = column.get("column_group")
+        path = [*prefix, *([child] if isinstance(child, str) else list(child or []))]
+        members.append(column._with(column_group=path[0] if len(path) == 1 else path, **_clean(highlight=highlight)))
     return ColumnGroup("group", label, members)

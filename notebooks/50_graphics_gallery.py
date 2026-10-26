@@ -580,7 +580,7 @@ def graphic_symbols(EvidentialTable, col, frame):
         columns=[
             col.text("country"),
             col.symbols("gold", symbol="■", color="#d97706", title="Glyph"),
-            col.symbols("gold", shape="square", color="#d97706", title="Squares"),
+            col.symbols("gold", shape="square", color="#d97706", title="Squares").align("center"),
             col.rating("score", title="Rating"),
         ],
         settings=frame("Symbols and rating", 600),

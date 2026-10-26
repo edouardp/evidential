@@ -73,8 +73,14 @@ EvidentialTable(
   heading label. Centered headings span the table and reject value cells.
 - Annotation rows participate in alternating shading. `rule` controls their
   horizontal rules independently; page boundary rules remain. `section_indent`
-  insets details under left-aligned headings. CSV exports matching details in
+  insets details under left-aligned headings or top summaries. Centered headings
+  leave detail labels flush left. CSV exports matching details in
   display order across every page, excluding annotations.
+- A dedicated group-label column can use `.repeat_values(False)` to blank
+  adjacent equal values in the rendered detail order. The default and explicit
+  `True` repeat values. Runs restart on every page and after annotations, so a
+  continued group retains its label. Summaries are never suppressed. This only
+  affects cell content; raw data, search, sorting and export retain full values.
 - `set_data` preserves the layout declaration unless replaced or cleared with
   `row_layout=None`; it rebinds membership and summaries atomically with data.
 - Legacy flattened inputs from `grouped_records`, SQL helpers, `section_row`

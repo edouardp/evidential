@@ -249,6 +249,500 @@ EvidentialTable(tips, columns=[...], settings=REPORT, title="This month")
 
 The [API reference](https://github.com/edouardp/evidential/blob/main/docs/api/API.md#table-options) lists every option and value.
 
+<!-- notebook: notebooks/51_table_layouts.py#layout_simple call -->
+
+### Table layout gallery
+
+The frame, rules, notes and summaries are independent of cell graphics. These
+examples share six product records, the same basic columns, and a settings
+bundle for width and disabled search, sorting and pagination. Excerpts use
+`...` for those shared column/settings references; follow a source link for
+the complete runnable setup. Inline definitions and layout options stay visible.
+
+#### Simple table
+
+Start with the standard frame, header and row rules.
+
+```python
+EvidentialTable(layout_data, columns=..., settings=...)
+```
+
+![Table layout gallery](https://raw.githubusercontent.com/edouardp/evidential/main/docs/img/layouts/simple.png)
+
+[Notebook source: `layout_simple`](https://github.com/edouardp/evidential/blob/main/notebooks/51_table_layouts.py)
+
+<!-- /notebook -->
+
+<!-- notebook: notebooks/51_table_layouts.py#layout_titles call -->
+
+#### Title, subtitle and caption
+
+Use the title for the subject, the subtitle for context, and the caption for
+a source or explanatory note.
+
+```python
+EvidentialTable(
+    layout_data,
+    columns=...,
+    settings=...,
+    title="Products by region",
+    subtitle="Six products · October 2026",
+    caption="Source: illustrative product sales. Amounts in US dollars.",
+)
+```
+
+![Title, subtitle and caption](https://raw.githubusercontent.com/edouardp/evidential/main/docs/img/layouts/titles.png)
+
+[Notebook source: `layout_titles`](https://github.com/edouardp/evidential/blob/main/notebooks/51_table_layouts.py)
+
+<!-- /notebook -->
+
+<!-- notebook: notebooks/51_table_layouts.py#layout_footnotes call -->
+
+#### Footnotes
+
+Attach notes to source fields with `.footnote(...)`. Matching cells receive
+superscript symbols and their notes appear below the table.
+
+```python
+EvidentialTable(
+    layout_data,
+    columns=[
+        col.text("product", title="Product").footnote("note"),
+        col.integer("units", title="Units"),
+        col.currency("sales", decimals=0, title="Sales"),
+    ],
+    settings=...,
+)
+```
+
+![Footnotes](https://raw.githubusercontent.com/edouardp/evidential/main/docs/img/layouts/footnotes.png)
+
+[Notebook source: `layout_footnotes`](https://github.com/edouardp/evidential/blob/main/notebooks/51_table_layouts.py)
+
+<!-- /notebook -->
+
+<!-- notebook: notebooks/51_table_layouts.py#layout_lines_on call -->
+
+#### Row lines on
+
+Horizontal rules separate each detail row. The outer frame is controlled
+separately with `border`.
+
+```python
+EvidentialTable(
+    layout_data,
+    columns=...,
+    settings=...,
+    border=False,
+    row_lines=True,
+)
+```
+
+![Row lines on](https://raw.githubusercontent.com/edouardp/evidential/main/docs/img/layouts/lines-on.png)
+
+[Notebook source: `layout_lines_on`](https://github.com/edouardp/evidential/blob/main/notebooks/51_table_layouts.py)
+
+<!-- /notebook -->
+
+<!-- notebook: notebooks/51_table_layouts.py#layout_lines_off call -->
+
+#### Row lines off
+
+Keep the header and final table rules while removing the lines between rows.
+
+```python
+EvidentialTable(
+    layout_data,
+    columns=...,
+    settings=...,
+    border=False,
+    row_lines=False,
+)
+```
+
+![Row lines off](https://raw.githubusercontent.com/edouardp/evidential/main/docs/img/layouts/lines-off.png)
+
+[Notebook source: `layout_lines_off`](https://github.com/edouardp/evidential/blob/main/notebooks/51_table_layouts.py)
+
+<!-- /notebook -->
+
+<!-- notebook: notebooks/51_table_layouts.py#layout_frame call -->
+
+#### Outer frame
+
+An outer border can enclose the table even when internal row lines are off.
+
+```python
+EvidentialTable(
+    layout_data,
+    columns=...,
+    settings=...,
+    border=True,
+    row_lines=False,
+)
+```
+
+![Outer frame](https://raw.githubusercontent.com/edouardp/evidential/main/docs/img/layouts/frame.png)
+
+[Notebook source: `layout_frame`](https://github.com/edouardp/evidential/blob/main/notebooks/51_table_layouts.py)
+
+<!-- /notebook -->
+
+<!-- notebook: notebooks/51_table_layouts.py#layout_shading_off call -->
+
+#### Row shading off
+
+Use a plain background without row lines or an outer frame.
+
+```python
+EvidentialTable(
+    layout_data,
+    columns=...,
+    settings=...,
+    border=False,
+    row_lines=False,
+    row_shading=False,
+)
+```
+
+![Row shading off](https://raw.githubusercontent.com/edouardp/evidential/main/docs/img/layouts/shading-off.png)
+
+[Notebook source: `layout_shading_off`](https://github.com/edouardp/evidential/blob/main/notebooks/51_table_layouts.py)
+
+<!-- /notebook -->
+
+<!-- notebook: notebooks/51_table_layouts.py#layout_shading_one call -->
+
+#### Shade alternate rows
+
+`row_shading=1` alternates one shaded row with one unshaded row.
+
+```python
+EvidentialTable(
+    layout_data,
+    columns=...,
+    settings=...,
+    border=False,
+    row_lines=False,
+    row_shading=1,
+)
+```
+
+![Shade alternate rows](https://raw.githubusercontent.com/edouardp/evidential/main/docs/img/layouts/shading-one.png)
+
+[Notebook source: `layout_shading_one`](https://github.com/edouardp/evidential/blob/main/notebooks/51_table_layouts.py)
+
+<!-- /notebook -->
+
+<!-- notebook: notebooks/51_table_layouts.py#layout_shading_three call -->
+
+#### Shade blocks of three
+
+`row_shading=3` alternates three shaded rows with three unshaded rows.
+
+```python
+EvidentialTable(
+    layout_data,
+    columns=...,
+    settings=...,
+    border=False,
+    row_lines=False,
+    row_shading=3,
+)
+```
+
+![Shade blocks of three](https://raw.githubusercontent.com/edouardp/evidential/main/docs/img/layouts/shading-three.png)
+
+[Notebook source: `layout_shading_three`](https://github.com/edouardp/evidential/blob/main/notebooks/51_table_layouts.py)
+
+<!-- /notebook -->
+
+<!-- notebook: notebooks/51_table_layouts.py#layout_headings call -->
+
+#### Group headings
+
+Introduce each region with a display-only heading. `section_indent=1` insets
+the product names by one rem beneath it. The six source records remain the
+detail data.
+
+```python
+EvidentialTable(
+    layout_data,
+    columns=...,
+    settings=...,
+    border=False,
+    row_lines=False,
+    section_indent=1,
+    row_layout=rows.group_by("region").section(rule="below"),
+)
+```
+
+![Group headings](https://raw.githubusercontent.com/edouardp/evidential/main/docs/img/layouts/headings.png)
+
+[Notebook source: `layout_headings`](https://github.com/edouardp/evidential/blob/main/notebooks/51_table_layouts.py)
+
+<!-- /notebook -->
+
+<!-- notebook: notebooks/51_table_layouts.py#layout_headings_centered call -->
+
+#### Centered group headings
+
+Center a heading across the full table width, with a rule above and below.
+This style keeps the detail labels flush left and has no heading value cells.
+
+```python
+EvidentialTable(
+    layout_data,
+    columns=...,
+    settings=...,
+    border=False,
+    row_lines=False,
+    row_layout=rows.group_by("region").section(align="center", rule="both"),
+)
+```
+
+![Centered group headings](https://raw.githubusercontent.com/edouardp/evidential/main/docs/img/layouts/headings-centered.png)
+
+[Notebook source: `layout_headings_centered`](https://github.com/edouardp/evidential/blob/main/notebooks/51_table_layouts.py)
+
+<!-- /notebook -->
+
+<!-- notebook: notebooks/51_table_layouts.py#layout_headings_column call -->
+
+#### Group labels in their own column
+
+Keep the region beside its products, showing it only on the first detail row
+of each run. `.repeat_values(False)` blanks repeated display values without
+changing the data. Labels reappear at the start of each page and after a
+heading or summary; filtering and sorting use the full values.
+
+```python
+EvidentialTable(
+    layout_data,
+    columns=[col.text("region", title="Region").repeat_values(False), *layout_columns],
+    settings=...,
+    border=False,
+    row_lines=False,
+    row_layout=rows.group_by("region"),
+)
+```
+
+![Group labels in their own column](https://raw.githubusercontent.com/edouardp/evidential/main/docs/img/layouts/headings-column.png)
+
+[Notebook source: `layout_headings_column`](https://github.com/edouardp/evidential/blob/main/notebooks/51_table_layouts.py)
+
+<!-- /notebook -->
+
+<!-- notebook: notebooks/51_table_layouts.py#layout_heading_values call -->
+
+#### Headings with counts and totals
+
+A heading can combine a formatted label with aggregate values in the other
+columns. Here it shows the product count, total units and total sales, with
+indented product names underneath.
+
+```python
+EvidentialTable(
+    layout_data,
+    columns=...,
+    settings=...,
+    border=False,
+    row_lines=False,
+    section_indent=1,
+    row_layout=rows.group_by("region").section(
+        label=lambda group: f"{group[0]['region']} · {len(group)} products",
+        values={"units": "sum", "sales": "sum"},
+        rule="below",
+    ),
+)
+```
+
+![Headings with counts and totals](https://raw.githubusercontent.com/edouardp/evidential/main/docs/img/layouts/heading-values.png)
+
+[Notebook source: `layout_heading_values`](https://github.com/edouardp/evidential/blob/main/notebooks/51_table_layouts.py)
+
+<!-- /notebook -->
+
+<!-- notebook: notebooks/51_table_layouts.py#layout_summary_top call -->
+
+#### Summaries before each group
+
+Place the region total above its detail rows. A summary can act as the group
+heading without an additional section row. Indent the product names beneath
+that summary with `section_indent=1`.
+
+```python
+EvidentialTable(
+    layout_data,
+    columns=...,
+    settings=...,
+    border=False,
+    row_lines=False,
+    section_indent=1,
+    row_layout=rows.group_by("region").summary(
+        label=lambda group: f"{group[0]['region']} total",
+        values={"units": "sum", "sales": "sum"},
+        position="top",
+        rule="below",
+    ),
+)
+```
+
+![Summaries before each group](https://raw.githubusercontent.com/edouardp/evidential/main/docs/img/layouts/summary-top.png)
+
+[Notebook source: `layout_summary_top`](https://github.com/edouardp/evidential/blob/main/notebooks/51_table_layouts.py)
+
+<!-- /notebook -->
+
+<!-- notebook: notebooks/51_table_layouts.py#layout_summary_bottom call -->
+
+#### Summary footers and subtotals
+
+Put a subtotal after each region, with a heading before the indented details.
+Headings and subtotal labels stay aligned at the left edge.
+
+```python
+EvidentialTable(
+    layout_data,
+    columns=...,
+    settings=...,
+    border=False,
+    row_lines=False,
+    section_indent=1,
+    row_layout=rows.group_by("region")
+    .section()
+    .summary("Region total", values={"units": "sum", "sales": "sum"}),
+)
+```
+
+![Summary footers and subtotals](https://raw.githubusercontent.com/edouardp/evidential/main/docs/img/layouts/summary-bottom.png)
+
+[Notebook source: `layout_summary_bottom`](https://github.com/edouardp/evidential/blob/main/notebooks/51_table_layouts.py)
+
+<!-- /notebook -->
+
+<!-- notebook: notebooks/51_table_layouts.py#layout_grand_total call -->
+
+#### Grand total
+
+Add one final summary across all source records, without group headings or
+subtotals.
+
+```python
+EvidentialTable(
+    layout_data,
+    columns=...,
+    settings=...,
+    border=False,
+    row_lines=False,
+    row_layout=Rows().grand_summary("Grand total", values={"units": "sum", "sales": "sum"}),
+)
+```
+
+![Grand total](https://raw.githubusercontent.com/edouardp/evidential/main/docs/img/layouts/grand-total.png)
+
+[Notebook source: `layout_grand_total`](https://github.com/edouardp/evidential/blob/main/notebooks/51_table_layouts.py)
+
+<!-- /notebook -->
+
+<!-- notebook: notebooks/51_table_layouts.py#layout_combined_totals call -->
+
+#### Group summaries and a grand total
+
+Combine headings, indented details, region subtotals and a final grand total.
+Summaries read the detail records, so the grand total never counts subtotals
+twice.
+
+```python
+EvidentialTable(
+    layout_data,
+    columns=...,
+    settings=...,
+    border=False,
+    row_lines=False,
+    section_indent=1,
+    row_layout=rows.group_by("region")
+    .section()
+    .summary("Region total", values={"units": "sum", "sales": "sum"})
+    .grand_summary("Grand total", values={"units": "sum", "sales": "sum"}),
+)
+```
+
+![Group summaries and a grand total](https://raw.githubusercontent.com/edouardp/evidential/main/docs/img/layouts/combined-totals.png)
+
+[Notebook source: `layout_combined_totals`](https://github.com/edouardp/evidential/blob/main/notebooks/51_table_layouts.py)
+
+<!-- /notebook -->
+
+<!-- notebook: notebooks/51_table_layouts.py#layout_groups_one call -->
+
+#### Column groups: one level
+
+Place related columns under shared spanners. The product column remains an
+independent row label.
+
+```python
+EvidentialTable(
+    layout_data,
+    settings=...,
+    columns=[
+        col.text("product", title="Product"),
+        col.group("Volume", [
+            col.integer("units", title="Actual"),
+            col.integer("target_units", title="Target"),
+        ]),
+        col.group("Money", [
+            col.currency("sales", decimals=0, title="Sales"),
+            col.currency("cost", decimals=0, title="Cost"),
+        ]),
+    ],
+    border=False,
+    row_lines=False,
+)
+```
+
+![Column groups: one level](https://raw.githubusercontent.com/edouardp/evidential/main/docs/img/layouts/groups-one.png)
+
+[Notebook source: `layout_groups_one`](https://github.com/edouardp/evidential/blob/main/notebooks/51_table_layouts.py)
+
+<!-- /notebook -->
+
+<!-- notebook: notebooks/51_table_layouts.py#layout_groups_two call -->
+
+#### Column groups: two levels
+
+Nest spanners to describe a hierarchy. Here **Operations** contains **Volume**
+and **Money**, each with two leaf columns.
+
+```python
+EvidentialTable(
+    layout_data,
+    settings=...,
+    columns=[
+        col.text("product", title="Product"),
+        col.group("Operations", [
+            col.group("Volume", [
+                col.integer("units", title="Actual"),
+                col.integer("target_units", title="Target"),
+            ]),
+            col.group("Money", [
+                col.currency("sales", decimals=0, title="Sales"),
+                col.currency("cost", decimals=0, title="Cost"),
+            ]),
+        ]),
+    ],
+    border=False,
+    row_lines=False,
+)
+```
+
+![Column groups: two levels](https://raw.githubusercontent.com/edouardp/evidential/main/docs/img/layouts/groups-two.png)
+
+[Notebook source: `layout_groups_two`](https://github.com/edouardp/evidential/blob/main/notebooks/51_table_layouts.py)
+
+<!-- /notebook -->
+
 <!-- notebook: notebooks/49_api_screenshots.py#visualizations -->
 
 ## 5. Add visualisations
@@ -472,7 +966,7 @@ Repeat glyphs or shapes for counts, or show a five-point rating.
 columns=[
     col.text("country"),
     col.symbols("gold", symbol="■", color="#d97706", title="Glyph"),
-    col.symbols("gold", shape="square", color="#d97706", title="Squares"),
+    col.symbols("gold", shape="square", color="#d97706", title="Squares").align("center"),
     col.rating("score", title="Rating"),
 ]
 ```

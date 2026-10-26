@@ -18,6 +18,10 @@ import tempfile
 import textwrap
 import tomllib
 from pathlib import Path
+from typing import Literal
+
+import libcst as cst
+from libcst.metadata import CodeRange, MetadataWrapper, PositionProvider
 
 from scripts.api_screenshots import ROOT, _notebook_targets, render
 
@@ -26,7 +30,7 @@ MANIFEST = ROOT / "docs" / "readme-snapshots.json"
 PYPI_README = ROOT / "docs" / "PYPI_README.md"
 ASSET_ROOT = "https://raw.githubusercontent.com/edouardp/evidential/main/"
 REPO_ROOT = "https://github.com/edouardp/evidential/blob/main/"
-START = re.compile(r"^<!-- notebook: ([\w/.-]+\.py)#(\w+)( image-only)? -->$", re.MULTILINE)
+START = re.compile(r"^<!-- notebook: ([\w/.-]+\.py)#(\w+)(?: (image-only|call))? -->$", re.MULTILINE)
 END = "<!-- /notebook -->"
 TABLES = {"EvidentialTable", "grouped_table", "pivot_table", "comparison_table", "query_table"}
 
@@ -59,32 +63,69 @@ def markdown(source: str, cell: str) -> str:
     return inspect.cleandoc(value.value)
 
 
-def _fragment(source: str, node: ast.AST) -> str:
-    # AST offsets select the original source, preserving comments, parentheses,
-    # quotes and fluent chains. Dedent the enclosing cell, not the inner list.
-    segment = ast.get_source_segment(source, node)
-    assert segment is not None
-    return textwrap.dedent(" " * node.col_offset + segment).strip()
+def _fragment(source: str, position: CodeRange) -> str:
+    """Copy a concrete-syntax span, preserving comments, quoting and fluent chains."""
+    start, end = position.start, position.end
+    lines = source.splitlines(keepends=True)[start.line - 1 : end.line]
+    lines[-1] = lines[-1][: end.column]
+    lines[0] = lines[0][start.column :]
+    return textwrap.dedent(" " * start.column + "".join(lines)).strip()
 
 
-def column_code(source: str, cell: str) -> str:
-    """Extract columns=[...] or the aggregate helper call that configures them."""
-    calls = [
-        node
-        for node in ast.walk(_cell(source, cell))
-        if isinstance(node, ast.Call) and isinstance(node.func, ast.Name) and node.func.id in TABLES
-    ]
-    if len(calls) != 1:
-        raise ValueError(f"{cell}: expected one table call; found {len(calls)}")
-    call = calls[0]
-    columns = next((keyword for keyword in call.keywords if keyword.arg == "columns"), None)
+class _TableCalls(cst.CSTVisitor):
+    def __init__(self) -> None:
+        self.calls: list[cst.Call] = []
+
+    def visit_Call(self, node: cst.Call) -> None:
+        if isinstance(node.func, cst.Name) and node.func.value in TABLES:
+            self.calls.append(node)
+
+
+class _SharedReferences(cst.CSTTransformer):
+    """Elide shared setup references while keeping demonstrated options intact."""
+
+    def leave_Arg(self, original_node: cst.Arg, updated_node: cst.Arg) -> cst.Arg:
+        if (
+            updated_node.keyword is not None
+            and updated_node.keyword.value in {"columns", "settings"}
+            and isinstance(updated_node.value, cst.Name)
+            and updated_node.value.value not in {"None", "True", "False"}
+        ):
+            value = updated_node.value
+            return updated_node.with_changes(value=cst.Ellipsis(lpar=value.lpar, rpar=value.rpar))
+        return updated_node
+
+
+def _call_excerpt(source: str) -> str:
+    expression = cst.parse_expression(source).visit(_SharedReferences())
+    return cst.Module(body=[]).code_for_node(expression)
+
+
+def example_code(source: str, cell: str, *, mode: Literal["columns", "call"] = "columns") -> str:
+    """Extract a column list or the complete table call from the named cell."""
+    if mode not in {"columns", "call"}:
+        raise ValueError(f"Unknown code extraction mode: {mode}")
+    _cell(source, cell)  # Validate the named marimo cell before CST selection.
+    wrapper = MetadataWrapper(cst.parse_module(source))
+    function = next(
+        node for node in wrapper.module.body if isinstance(node, cst.FunctionDef) and node.name.value == cell
+    )
+    visitor = _TableCalls()
+    function.visit(visitor)
+    if len(visitor.calls) != 1:
+        raise ValueError(f"{cell}: expected one table call; found {len(visitor.calls)}")
+    positions = wrapper.resolve(PositionProvider)
+    call = visitor.calls[0]
+    if mode == "call":
+        return _call_excerpt(_fragment(source, positions[call]))
+    columns = next((arg for arg in call.args if arg.keyword is not None and arg.keyword.value == "columns"), None)
     if columns is not None:
-        if not isinstance(columns.value, ast.List):
+        if not isinstance(columns.value, cst.List):
             raise ValueError(f"{cell}: inline the columns=[...] list so the excerpt is self-contained")
-        return _fragment(source, columns)
-    if call.func.id == "EvidentialTable":
+        return _fragment(source, positions[columns])
+    if isinstance(call.func, cst.Name) and call.func.value == "EvidentialTable":
         raise ValueError(f"{cell}: provide columns=[...] for the documented table")
-    return _fragment(source, call)
+    return _fragment(source, positions[call])
 
 
 def generate(text: str, root: Path = ROOT) -> str:
@@ -113,7 +154,8 @@ def generate(text: str, root: Path = ROOT) -> str:
             raise ValueError(f"Register a screenshot target for {key} in scripts/api_screenshots.py")
         source = (root / match[1]).read_text()
         description = markdown(source, match[2])
-        code = "" if match[3] else f"```python\n{column_code(source, match[2])}\n```\n\n"
+        mode = match[3] or "columns"
+        code = "" if mode == "image-only" else f"```python\n{example_code(source, match[2], mode=mode)}\n```\n\n"
         heading = next((line.lstrip("# ") for line in description.splitlines() if line.startswith("#")), match[2])
         alt = heading.replace("[", "").replace("]", "")
         body = f"{description}\n\n{code}![{alt}]({images[key]})\n\n[Notebook source: `{match[2]}`]({match[1]})\n"

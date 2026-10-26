@@ -459,6 +459,7 @@ export class EvidentialTableRenderer {
     table.append(thead);
     const tbody = h("tbody");
     ctx.shadingCounter = { value: 0 };
+    ctx.previousDetailRow = null;
     if (ctx.isEmpty) {
       // A placeholder body: the message overlay is a `::after` on the tbody, so
       // it covers the rows but not the header.
@@ -482,7 +483,10 @@ export class EvidentialTableRenderer {
           if (entry.kind === "data") {
             ctx.displayInset = entry.inset ? entry.depth : 0;
             tbody.append(this._renderRow(entry.row, columns, ctx, entry.ordinal - ctx.rowNumberBase));
-          } else tbody.append(renderAnnotation(entry, columns, ctx, opts));
+          } else {
+            ctx.previousDetailRow = null;
+            tbody.append(renderAnnotation(entry, columns, ctx, opts));
+          }
         }
         ctx.displayInset = false;
       } else rows.forEach((row, index) => tbody.append(this._renderRow(row, columns, ctx, index)));
@@ -607,6 +611,7 @@ export class EvidentialTableRenderer {
       row = {...row, [columns[0].name]: row.__label};
     }
     const renderType = row.render_type || "cell_data";
+    if (renderType !== "cell_data") ctx.previousDetailRow = null;
     if (renderType === "row_section") {
       const colSpan = columns.length + (ctx.rowNumbers ? 1 : 0) + (opts.link ? 1 : 0);
       const label = row.__label ?? (columns[0] ? row[columns[0].name] : "");
@@ -680,6 +685,7 @@ export class EvidentialTableRenderer {
       if (hasLink) chevTd.append(h("span", { class: "et-row-chevron" }, "›"));
       tr.append(chevTd);
     }
+    ctx.previousDetailRow = renderType === "cell_data" ? row : null;
     return tr;
   }
 

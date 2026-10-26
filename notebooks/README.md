@@ -49,6 +49,7 @@ and without network access.
 | [`48_dumbbell_plots.py`](48_dumbbell_plots.py) | Plain dumbbells, negative connector colors, optional direction chevrons, and equal, missing and negative-valued endpoints. |
 | [`49_api_screenshots.py`](49_api_screenshots.py) | Named table examples captured into `docs/api/images` and `docs/preview.png` by `make api-screenshots`. |
 | [`50_graphics_gallery.py`](50_graphics_gallery.py) | Named examples of every graphic type, captured into `docs/img/graphics` for the README gallery. |
+| [`51_table_layouts.py`](51_table_layouts.py) | Notebook-backed README layout gallery: frames, titles/notes, rules, row shading, headings, summaries, grand totals and nested column groups. |
 
 `sample_data/needful_things/orders.parquet` is Evidence's demo dataset, copied
 from the published docs site.

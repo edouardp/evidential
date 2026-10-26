@@ -34,10 +34,11 @@ dependency and configuration changes still invalidate it.
 ## Adding an example
 
 1. Add a named table cell to `notebooks/49_api_screenshots.py` (API examples),
-   `notebooks/50_graphics_gallery.py` (graphic examples) or another notebook
+   `notebooks/50_graphics_gallery.py` (graphic examples),
+   `notebooks/51_table_layouts.py` (layout examples) or another notebook
    registered in the capture script, such as `notebooks/21_studio_dashboard.py`.
-   Keep a single table
-   call and an inline `columns=[...]` list in that cell.
+   Keep a single table call in that cell. Use an inline `columns=[...]` list
+   for column excerpts; complete-call excerpts can reference shared columns.
 2. Immediately above it, add a Markdown cell named `<table_cell>_doc`, with
    one literal `mo.md(r"""...""")` call. Include the README heading and
    description there. Both display in the notebook and copy into the README.
@@ -61,8 +62,8 @@ from notebook 21; the full dashboard view is shown in the [Studio guide](marimo-
 
 ## Extraction rules
 
-The generator parses Python with the standard-library AST, then uses node
-source locations to copy the original `columns=[...]` keyword. It preserves
+The generator selects code with LibCST and copies the original source span
+for `columns=[...]`. It preserves
 comments, quoting, parentheses and fluent chains, removing only the cell's
 outer indentation. There is no second, shortened copy of the column code.
 The snippet is a configuration excerpt; follow its notebook source link for
@@ -71,7 +72,23 @@ imports, data preparation, settings and a complete runnable example.
 Aggregate helpers such as `grouped_table` and `pivot_table` configure columns
 through dimension/measure mappings. Their complete call is extracted instead.
 An `image-only` suffix on the opening marker suppresses the code excerpt, as
-used by the introductory hero. Missing cells, ambiguous table calls, dynamic
+used by the introductory hero. A `call` suffix selects the complete table call,
+including its table settings and inline `row_layout`, for layout examples.
+Shared `columns` and `settings` variable references become `...`; inline
+definitions, other options and comments are preserved by a LibCST transform:
+
+```html
+<!-- notebook: notebooks/51_table_layouts.py#layout_titles call -->
+
+<!-- /notebook -->
+```
+
+The call is copied from the same named cell that Playwright captures. Data
+preparation and shared column/settings definitions stay in the runnable
+notebook; there is no independently maintained example call. The ellipses are
+documentation placeholders, not values passed to the running table. Markdown strings
+are still read statically as literals without executing notebook code.
+Missing cells, ambiguous table calls, dynamic
 Markdown and malformed markers fail the build instead of silently keeping
 old content.
 

@@ -34,7 +34,7 @@ to extract documentation.
 Chosen option: **3**. Each documented table has a named cell and a paired
 `<cell>_doc` cell containing literal Markdown. README comment markers select
 the notebook and table cell. The generator extracts `columns=[...]` using
-Python AST source locations, preserving the original source rather than
+LibCST source locations, preserving the original source rather than
 unparsing it. Aggregate helpers contribute their complete call when columns
 are configured through measure/dimension mappings. Dynamic Markdown and
 ambiguous table calls fail explicitly.
@@ -55,9 +55,9 @@ there is still only one source README.
 Descriptions, code and table images have one notebook source. Manual README
 sections remain editable. Changes to implementation, fixtures, rendering or
 the locked environment conservatively require refreshing all snapshots.
-The manifest detects drift but does not replace visual review. Standard AST
-source locations cover the deliberately small extraction contract without
-adding LibCST as a dependency. The Studio section uses its demo notebook's
+The manifest detects drift but does not replace visual review. The original
+AST extractor was extended to LibCST for selectable column/full-call excerpts
+in [ADR-081](081-notebook-layout-excerpts.md). The Studio section uses its demo notebook's
 actual table; full Studio view documentation remains in its separate guide.
 
 ## More Information
@@ -66,4 +66,5 @@ actual table; full Studio view documentation remains in its separate guide.
 - `scripts/generate_readme.py`, `scripts/api_screenshots.py`.
 - `notebooks/49_api_screenshots.py`, `notebooks/50_graphics_gallery.py`.
 - `notebooks/21_studio_dashboard.py`.
+- `notebooks/51_table_layouts.py`.
 - [ADR-078: Local Release Validation](078-local-release-validation.md).

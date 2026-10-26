@@ -3,14 +3,15 @@
   "inputs": {
     "notebooks/21_studio_dashboard.py": "956a876c4c77e59679602a29738b7be6bbf71bee49b6238f62b5ee3d6cccb883",
     "notebooks/49_api_screenshots.py": "c4cacaf9a1c98a3e6b484194744f38a03fd86425012ff1de07ffda6ae4f99825",
-    "notebooks/50_graphics_gallery.py": "4ba0c3e37eef9fad8c8b43e488884bd3d4d598c4feb44375a91c31ba1151707d",
+    "notebooks/50_graphics_gallery.py": "51f639f72066aadc5b43c321e9e664a04b9640873cdff3d46ebb6ead841179a8",
+    "notebooks/51_table_layouts.py": "d346a2ecc89d21efb63892e4134929734d27d65a0a5f5e36241c9cfa3fcf597a",
     "notebooks/sample_data/needful_things/orders.parquet": "b373511b4f7a0547b704022b055655b6d3bafc2505a2a573292b206417fe3eb4",
-    "pyproject.toml": "318b1be46ebf4011c173b214f218ce1625df65d4918799e79f8689f543ba871c",
-    "scripts/api_screenshots.py": "a587af22f6ef5a6866c465a8dbbc2215f47369f72879764d90577035bc45abc1",
-    "scripts/generate_readme.py": "e58a8320e9437584416780f1cfbbfd09307350be4b28e30beae114126ead7a92",
+    "pyproject.toml": "3952351abcc07313af282773adaed5abebc718275879d186f7fe5368c1b16705",
+    "scripts/api_screenshots.py": "b4e5045738ef1351f32492d106ff3b934c85a0be57a0924d72f720be4fdd519a",
+    "scripts/generate_readme.py": "1ab57e8226efd3589f6aabaed3bf940644f33cf1781b1f246865483f2b4380df",
     "src/evidential/__init__.py": "f5bac40f585c749cd06c40f4498c7de868a382a30abaed198ce08634ab7adbc7",
     "src/evidential/_aliases.py": "5e207c4a862754e1ca9f7ea309a0e489bf158a7e380876f8edcf20eeee1438f1",
-    "src/evidential/_column.py": "7f6c3cc86dfdbc103e27dfb6a89b73e2b18116faf7b50a1d58604380cf478b47",
+    "src/evidential/_column.py": "d59de30199cee7517ec86986a822ff2142fea995178ba4fefaa6d0fbebe5f11f",
     "src/evidential/_column_options.py": "aaeeb03f8e46048691099fb9a0b50ffbcb26bc8b754f171a72fe9a6b12555892",
     "src/evidential/_compat.py": "f51d6c0013acf8eb4a16bbab18adafc24846825073beeb3df9dea3ca3c6cce7c",
     "src/evidential/_distribution.py": "16278a133e89b66addd282a3209ff3c34a1bb59baff0e3fb17f2ffaacb5f4992",
@@ -37,9 +38,9 @@
     "src/evidential/rows.py": "d0011886124d330e596627f9c9c39202346cd5bab6e35a0056e779f6fb3af948",
     "src/evidential/rules.py": "eb0142d511b63a5b4d0725f70599084784ddb82130655c72e8ff36ce816ed104",
     "src/evidential/static/table.css": "7fcd3db47695bd2de2d79321c10fe3dc56cf765eb112e0912d23258ffcb1c612",
-    "src/evidential/static/table.js": "7418e33d4adb8b844f61fbcb96746d257f1e5592ba50e9ec22620e6b39121a0d",
+    "src/evidential/static/table.js": "b4ebfb9ac9a202d256a014a04cbb1ce9f234ec0855867164a305244b548064fa",
     "src/evidential/table.py": "3f635ffd925ec907c71a3b675d2ffaf17f9fc61e21acb46e3bbc6573bd9cb9b6",
-    "uv.lock": "19c43ba92c19c33544443d1c5c34c6c8a89cf1fbc858f4b00af92dd2048c6ee7"
+    "uv.lock": "da72481fe29cbd2cc1636b6603f296a6567e0997e95032d2bce2f0fc2dfebfcd"
   },
   "images": {
     "docs/api/images/quickstart.png": {
@@ -200,7 +201,7 @@
     "docs/img/graphics/symbols.png": {
       "notebook": "notebooks/50_graphics_gallery.py",
       "cell": "graphic_symbols",
-      "sha256": "915b586a07c25760cafe1f9c4619f0b6e610400f1801d00a8f5b291571d1e669"
+      "sha256": "b43a5997e8e7c1941d5c15193b76ebae49c44d79c0631973be9d98bb4694ad30"
     },
     "docs/img/graphics/boolean-icons.png": {
       "notebook": "notebooks/50_graphics_gallery.py",
@@ -216,6 +217,101 @@
       "notebook": "notebooks/21_studio_dashboard.py",
       "cell": "revenue_table",
       "sha256": "1d269998d99c39bc3d80073d31381feef04f2b4a0a481804c0ba268d898a4fc5"
+    },
+    "docs/img/layouts/simple.png": {
+      "notebook": "notebooks/51_table_layouts.py",
+      "cell": "layout_simple",
+      "sha256": "4b566198429ccd7e496d4ba510e1bc49a7abe61567b0c0d32d4f5e5062e06352"
+    },
+    "docs/img/layouts/titles.png": {
+      "notebook": "notebooks/51_table_layouts.py",
+      "cell": "layout_titles",
+      "sha256": "f2ed41d6ce002162c933a5586bddb621c86290172420c698f4a9d91635bb5674"
+    },
+    "docs/img/layouts/footnotes.png": {
+      "notebook": "notebooks/51_table_layouts.py",
+      "cell": "layout_footnotes",
+      "sha256": "e31e8e5f2411abdc5e1ea0b9470ea12beae29cf0f08c4285aa99eede2b2ff04a"
+    },
+    "docs/img/layouts/lines-on.png": {
+      "notebook": "notebooks/51_table_layouts.py",
+      "cell": "layout_lines_on",
+      "sha256": "f8c02268edd45dd43b0a02caff607fa2ffa72c2d31c7799ee4ca7ed9fd240171"
+    },
+    "docs/img/layouts/lines-off.png": {
+      "notebook": "notebooks/51_table_layouts.py",
+      "cell": "layout_lines_off",
+      "sha256": "ec9bf99d39400852feecbf6fb63267bdd58d5dee49b5d24fd3b4f0b836af41c5"
+    },
+    "docs/img/layouts/frame.png": {
+      "notebook": "notebooks/51_table_layouts.py",
+      "cell": "layout_frame",
+      "sha256": "23322c345d00971e30c7b99cfa87a53dcc3a47373369bbc823d717e1be08b85e"
+    },
+    "docs/img/layouts/shading-off.png": {
+      "notebook": "notebooks/51_table_layouts.py",
+      "cell": "layout_shading_off",
+      "sha256": "7ab5aaa64673ca38a2bece7825d106ee0de533401de4b245265fe91830ad7673"
+    },
+    "docs/img/layouts/shading-one.png": {
+      "notebook": "notebooks/51_table_layouts.py",
+      "cell": "layout_shading_one",
+      "sha256": "e66cb3e8c365f1446453632fed51eb9a1e593ad89c1841bf0f2a159cc8058a7b"
+    },
+    "docs/img/layouts/shading-three.png": {
+      "notebook": "notebooks/51_table_layouts.py",
+      "cell": "layout_shading_three",
+      "sha256": "bc8b0dbabed00ae5c4a58c32ce3dc31762d7abca7bf3ea24518ac792a9f9fcaf"
+    },
+    "docs/img/layouts/headings.png": {
+      "notebook": "notebooks/51_table_layouts.py",
+      "cell": "layout_headings",
+      "sha256": "f899e9ca3c28781824844e1c44793f02f94af12bf6c6f5d321b41ff0f7f96286"
+    },
+    "docs/img/layouts/headings-centered.png": {
+      "notebook": "notebooks/51_table_layouts.py",
+      "cell": "layout_headings_centered",
+      "sha256": "5996295f5b63a9b02d32ec4bb2352273943ccb854e37fd730800441bff4bdbc1"
+    },
+    "docs/img/layouts/headings-column.png": {
+      "notebook": "notebooks/51_table_layouts.py",
+      "cell": "layout_headings_column",
+      "sha256": "0b6ff8ccc522d21ec2594c0a45f30b92a5b3e728863790adc9aa6e1fc8506432"
+    },
+    "docs/img/layouts/heading-values.png": {
+      "notebook": "notebooks/51_table_layouts.py",
+      "cell": "layout_heading_values",
+      "sha256": "0b30461ce2200e75ec0e7174fe85a9b12ce66e9e2ec250d38173361ef507555f"
+    },
+    "docs/img/layouts/summary-top.png": {
+      "notebook": "notebooks/51_table_layouts.py",
+      "cell": "layout_summary_top",
+      "sha256": "a308a27467b9a6377a1987f88703ab851fd3e95681c9393c219c7cb4512ba22c"
+    },
+    "docs/img/layouts/summary-bottom.png": {
+      "notebook": "notebooks/51_table_layouts.py",
+      "cell": "layout_summary_bottom",
+      "sha256": "662b9dc39cdf5daa3fb05809a69c89c76c970db43c7e87cb735dc0575790ff12"
+    },
+    "docs/img/layouts/grand-total.png": {
+      "notebook": "notebooks/51_table_layouts.py",
+      "cell": "layout_grand_total",
+      "sha256": "049cdb96369d191e4d0b20584cdb50c0cb03eb8b8047277082a7ab49ed759515"
+    },
+    "docs/img/layouts/combined-totals.png": {
+      "notebook": "notebooks/51_table_layouts.py",
+      "cell": "layout_combined_totals",
+      "sha256": "47e6d9cbc11f1450f28e76ca341f1e47a4c01e15cfa620cae89f75147c61bfd9"
+    },
+    "docs/img/layouts/groups-one.png": {
+      "notebook": "notebooks/51_table_layouts.py",
+      "cell": "layout_groups_one",
+      "sha256": "d245463f9b18687e88ce7d66aac9e4d7b70841e8567c45737383e070efa2bf42"
+    },
+    "docs/img/layouts/groups-two.png": {
+      "notebook": "notebooks/51_table_layouts.py",
+      "cell": "layout_groups_two",
+      "sha256": "406b772934e3149ac9fb0e7a25128a1f11ebd46b8ccc4d1853905e28e64f4a53"
     }
   }
 }

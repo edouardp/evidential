@@ -59,7 +59,12 @@ splatted (`*col.subcolumns(...)`) and reads back as
     ])
 
 Members may be `col.*` columns, bare names or mappings, and may themselves be
-groups. The renderer is unchanged: it already clusters equal `subcolumn_group`
+groups. An enclosing `col.group` prefixes its path to each member's existing
+`column_group` path rather than replacing it. For example, nesting a `Volume`
+group inside `Operations` produces `["Operations", "Volume"]`; a sequence
+label can add multiple ancestor levels. Child highlights are preserved unless
+the enclosing group explicitly supplies a highlight. Inputs remain immutable.
+The renderer is unchanged: it already clusters equal `subcolumn_group`
 labels and `column_group` paths (ADR-040), so this is purely a construction
 shortcut. A `Column` is a `Mapping` and a name is a `str`, so neither is
 mistaken for a group.

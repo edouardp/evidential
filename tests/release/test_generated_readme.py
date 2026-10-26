@@ -48,7 +48,7 @@ def example(tmp_path):
 
 
 def test_columns_preserve_source_comments_quotes_and_fluent_chains():
-    code = docs.column_code(SOURCE, "graphic_bar")
+    code = docs.example_code(SOURCE, "graphic_bar")
     assert code == textwrap.dedent("""\
         columns=[
             col.text("region"),  # Preserve this comment.
@@ -83,7 +83,7 @@ def test_dynamic_or_ambiguous_markdown_is_rejected_without_execution(argument):
 )
 def test_invalid_code_fails_instead_of_silently_keeping_an_old_excerpt(source, message):
     with pytest.raises(ValueError, match=message):
-        docs.column_code(source, "demo")
+        docs.example_code(source, "demo")
 
 
 def test_aggregate_helpers_extract_the_actual_call():
@@ -96,10 +96,90 @@ def totals(grouped_table, col):
     )
     return
 """
-    code = docs.column_code(source, "totals")
+    code = docs.example_code(source, "totals")
     assert code.startswith("grouped_table(\n")
     assert 'measure_config={"sales": col.currency("sales")}' in code
     ast.parse(code)
+
+
+def test_call_mode_extracts_real_layout_options_without_data_preparation():
+    source = """@app.cell
+def layout_demo(EvidentialTable, rows):
+    data = [{"region": "North", "sales": 12}]
+    EvidentialTable(
+        data,
+        columns=shared_columns,
+        # This comment belongs with the layout example.
+        title="Résumé",
+        row_lines=False,
+        row_layout=rows.group_by("region")
+        .section()
+        .summary("Total", values={"sales": "sum"}),
+    )
+    return
+"""
+    code = docs.example_code(source, "layout_demo", mode="call")
+    assert code == textwrap.dedent("""\
+        EvidentialTable(
+            data,
+            columns=...,
+            # This comment belongs with the layout example.
+            title="Résumé",
+            row_lines=False,
+            row_layout=rows.group_by("region")
+            .section()
+            .summary("Total", values={"sales": "sum"}),
+        )""")
+    assert "data = [" not in code
+    ast.parse(code)
+
+
+def test_cst_spans_handle_unicode_before_a_call_on_the_same_line():
+    source = """@app.cell
+def demo():
+    note = "é"; EvidentialTable(data, columns=[col.text('name')], title="Café")
+"""
+    assert docs.example_code(source, "demo") == "columns=[col.text('name')]"
+    assert docs.example_code(source, "demo", mode="call") == (
+        "EvidentialTable(data, columns=[col.text('name')], title=\"Café\")"
+    )
+
+
+def test_call_excerpt_elides_only_shared_setup_and_preserves_inline_definitions_and_comments():
+    source = """@app.cell
+def demo():
+    EvidentialTable(
+        layout_data,
+        columns=layout_columns,  # These are shared.
+        settings=(layout_frame),
+        title="Products by region",
+        row_layout=rows.group_by("region").section(),
+    )
+"""
+    code = docs.example_code(source, "demo", mode="call")
+    assert "columns=...,  # These are shared." in code
+    assert "settings=(...)" in code
+    assert 'title="Products by region"' in code
+    assert 'row_layout=rows.group_by("region").section()' in code
+    inline = source.replace("columns=layout_columns", 'columns=[col.text("product")]').replace(
+        "settings=(layout_frame)", "settings=settings(border=False)"
+    )
+    code = docs.example_code(inline, "demo", mode="call")
+    assert 'columns=[col.text("product")]' in code
+    assert "settings=settings(border=False)" in code
+    assert "settings=None" in docs.example_code(
+        source.replace("settings=(layout_frame)", "settings=None"), "demo", mode="call"
+    )
+
+
+def test_call_marker_selects_the_table_call_and_invalid_modes_are_rejected(example):
+    marker = MARKER.replace(" -->", " call -->")
+    result = docs.generate(marker + "\n" + docs.END, example)
+    assert docs.example_code(SOURCE, "graphic_bar", mode="call") in result
+    assert "data = [{" not in result
+    assert docs.generate(result, example) == result
+    with pytest.raises(ValueError, match="Unknown code extraction mode"):
+        docs.example_code(SOURCE, "graphic_bar", mode="unrecognised")
 
 
 def test_only_generated_contents_change_and_generation_is_idempotent(example):
@@ -109,7 +189,7 @@ def test_only_generated_contents_change_and_generation_is_idempotent(example):
     assert result.startswith(before + MARKER)
     assert result.endswith(docs.END + after)
     assert docs.markdown(SOURCE, "graphic_bar") in result
-    assert docs.column_code(SOURCE, "graphic_bar") in result
+    assert docs.example_code(SOURCE, "graphic_bar") in result
     assert "](docs/img/graphics/bar.png)" in result
     assert "old code" not in result
     assert docs.generate(result, example) == result

@@ -51,6 +51,7 @@ explorers can require a local data bundle; their introduction describes its loca
 | [`50_graphics_gallery.py`](50_graphics_gallery.py) | Named examples of every graphic type, captured into `docs/img/graphics` for the README gallery. |
 | [`51_table_layouts.py`](51_table_layouts.py) | Notebook-backed README layout gallery: frames, titles/notes, rules, row shading, headings, summaries, grand totals and nested column groups. |
 | [`52_sra_historical_statistics.py`](52_sra_historical_statistics.py) | Philippine SRA dbt product: six series, measure filters, crop-year sparklines, monthly bars and prior-year comparisons, source-conflict metadata and printed totals/averages. Requires the built product in `~/datasets/sra-historical-statistics` or `SRA_DATASET`. |
+| [`53_nba_shooting.py`](53_nba_shooting.py) | Local NBA shot-detail archives: season/phase/team filters, weighted player shooting leaders, shot-mix stacks and fixed-scale sparklines, linked shot-zone benchmarks and game logs. Requires `~/datasets/nba_data` or `NBA_DATASET`. |
 
 `sample_data/needful_things/orders.parquet` is Evidence's demo dataset, copied
 from the published docs site.

@@ -40,7 +40,7 @@ def test_back_to_back_gallery_compares_six_european_traders_on_one_domain():
     assert imports["encodings"][0]["direction"] == "left"
     assert imports["align"] == "left"
     assert country["align"] == "center"
-    assert imports["fmt"] == exports["fmt"] == "compact"
+    assert imports["fmt"] == exports["fmt"] == "compact4"
     assert country["title"] == ""
 
 

@@ -19,9 +19,9 @@ def _():
     import marimo as mo
     import duckdb
 
-    from evidential import EvidentialTable, col
+    from evidential import EvidentialTable, col, label
 
-    return EvidentialTable, col, duckdb, mo
+    return EvidentialTable, col, duckdb, label, mo
 
 
 @app.cell
@@ -66,7 +66,10 @@ def _(EvidentialTable, col, connection, mo):
             row_shading=True,
             columns=[
                 # name links to the url column
-                col.text("name").align("left").link("url", new_tab=True).info("Click to open the search result"),
+                col.text("name")
+                .align("left")
+                .link("url", new_tab=True)
+                .info("Click to open the search result"),
                 # per-row format pulled from the row_fmt column (fmtColumn)
                 col.number("amount").fmt_column("row_fmt").neg(bracket=True),
                 col.text("row_fmt", title="Format code"),
@@ -122,6 +125,57 @@ def scientific_formatting(EvidentialTable, col, mo):
 
 
 @app.cell
+def compact_notation_intro(mo):
+    mo.md("""
+    ## Compact numbers and significant figures
+
+    `.fmt("compact")` chooses K/M/B/T per value with one decimal place.
+    `.fmt("compact4")` keeps **up to four significant figures**: `1.148T` and
+    `877.1B`. Use `compact1` through `compact21` to adjust precision; unnecessary
+    trailing zeros are omitted. The same format works on fluent mark labels.
+    Small values retain their significant figures, and missing values stay blank.
+    """)
+    return
+
+
+@app.cell
+def compact_formatting(EvidentialTable, col, label, mo):
+    compact = mo.ui.anywidget(
+        EvidentialTable(
+            [
+                {"case": "Trillions", "value": 1147650000000},
+                {"case": "Billions", "value": 877123400000},
+                {"case": "No extra zeros", "value": 1100000000000},
+                {"case": "Negative", "value": -1147650000000},
+                {"case": "Rounding into M", "value": 999950},
+                {"case": "Small", "value": 0.000123456},
+                {"case": "Zero", "value": 0},
+                {"case": "Missing", "value": None},
+            ],
+            title="Compact formatting",
+            search=False,
+            page_size=0,
+            border=False,
+            width=1100,
+            columns=[
+                col.text("case"),
+                col.number("value", title="Default").fmt("compact"),
+                col.number("value", title="4 significant figures").fmt("compact4"),
+                col.number("value", title="6 significant figures").fmt("compact6"),
+                col.bar(
+                    "value",
+                    title="Fluent label",
+                    format="compact4",
+                    label=label.fmt("compact4").auto_position("outside end"),
+                ),
+            ],
+        )
+    )
+    compact
+    return (compact,)
+
+
+@app.cell
 def _(mo):
     mo.md("""
     ## Conditional visualisations
@@ -155,9 +209,14 @@ def _(EvidentialTable, col, connection, mo):
                     chip=True, show_value=True, down_is_good=False
                 ),
                 col.number("score", title="Score (colour scale)").color(
-                    scale=["#fee2e2", "#fef9c3", "#bbf7d0", "#15803d"], min=0, max=100, midpoint=50
+                    scale=["#fee2e2", "#fef9c3", "#bbf7d0", "#15803d"],
+                    min=0,
+                    max=100,
+                    midpoint=50,
                 ),
-                col.sparkline("trend", title="Trend (sparkline)", type="area", color="#53768a"),
+                col.sparkline(
+                    "trend", title="Trend (sparkline)", type="area", color="#53768a"
+                ),
             ],
         )
     )

@@ -13,7 +13,7 @@ explorers can require a local data bundle; their introduction describes its loca
 | [`05_sparklines.py`](05_sparklines.py) | Line/area/bar sparklines from `ARRAY_AGG({'date','value'})`. |
 | [`06_evidence_sample_data.py`](06_evidence_sample_data.py) | Evidence's own `needful_things.orders` sample: sparklines, grouped subtotals, raw orders. |
 | [`07_table_options.py`](07_table_options.py) | Table-level options: row numbers, compact, default sort, row colours, theming, links, empty state. |
-| [`08_column_options.py`](08_column_options.py) | Column formatting, readable scientific notation with superscript exponents, `fmt_column`, links, HTML, `contentType` shorthands, bar/colour/delta/sparkline. |
+| [`08_column_options.py`](08_column_options.py) | Column formatting, compact numbers with significant-figure precision, readable scientific notation with superscript exponents, `fmt_column`, links, HTML, `contentType` shorthands, bar/colour/delta/sparkline. |
 | [`09_pivots.py`](09_pivots.py) | `pivot_table`: pivoted columns, `measures_first`, subtotal rows. |
 | [`10_query_options.py`](10_query_options.py) | `query_table` with `where`/`order`/`limit`/`date_range`, live date-range selector, `page_size="all"`. |
 | [`11_comparisons.py`](11_comparisons.py) | `comparison_table`: prior year / prior quarter with delta and % columns. |

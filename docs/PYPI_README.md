@@ -858,22 +858,15 @@ Source: World Bank WDI (`NE.IMP.GNFS.CD` and `NE.EXP.GNFS.CD`).
 
 ```python
 columns=[
-    col.bar(
-        "imports",
-        format="compact",
-        direction="left",
-        color="#2563eb",
-        label=label.auto_position("outside end"),
-        pad=3,
-    ).domain("trade").align("left"),
-    col.text("country", title="").align("center"),
-    col.bar(
-        "exports",
-        format="compact",
-        color="#0f766e",
-        label=label.auto_position("outside end"),
-        pad=3,
-    ).domain("trade"),
+    col.bar("imports", fmt="compact4", direction="left", color="#2563eb",
+            label=label.auto_position("outside end"))
+       .domain("trade")
+       .align("left"),
+    col.text("country", title="")
+       .align("center"),
+    col.bar("exports", fmt="compact4", color="#0f766e",
+            label=label.auto_position("outside end"))
+       .domain("trade"),
 ]
 ```
 
@@ -1116,7 +1109,7 @@ Draw a density band with a median point.
 columns=[
     col.text("name"),
     col.distribution("curve", x="x", y="pdf", color="@ink")
-    .point("median", color="#111111", outline=False)
+    .point("median", color="#111111", outline=True, size=10)
     .title("Density")
     .align("center")
     .scale(domain=(0, 100), axis=True, axis_position="bottom"),
@@ -1144,9 +1137,11 @@ columns=[
         "expansion",
         colors=["#2563eb", "#60a5fa", "#bfdbfe"],
         labels=True,
+        label_align="center",
         format="num0",
         size=0.6,
         title="New · Renewal · Expansion",
+        align="left"
     ),
 ]
 ```

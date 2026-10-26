@@ -34,9 +34,23 @@ export const BASE_AUTO_FORMATS = [
 
 const UNITS = { k: ',"k"', m: ',,"M"', b: ',,,"B"', t: ',,,,"T"' };
 const DECIMALS = ["0", "0.0", "0.00", "0.000", "0.0000"];
-const COMPACT_NUMBER = new Intl.NumberFormat("en", {
-  notation: "compact", minimumFractionDigits: 1, maximumFractionDigits: 1,
-});
+const COMPACT_FORMATTERS = new Map([
+  ["compact", new Intl.NumberFormat("en", {
+    notation: "compact", minimumFractionDigits: 1, maximumFractionDigits: 1,
+  })],
+]);
+
+function compactFormatter(code) {
+  if (COMPACT_FORMATTERS.has(code)) return COMPACT_FORMATTERS.get(code);
+  // Intl supports 1–21 significant digits. Keep the cache bounded to those presets.
+  const match = /^compact([1-9]|1\d|2[01])$/.exec(code);
+  if (!match) return null;
+  const formatter = new Intl.NumberFormat("en", {
+    notation: "compact", minimumSignificantDigits: 1, maximumSignificantDigits: Number(match[1]),
+  });
+  COMPACT_FORMATTERS.set(code, formatter);
+  return formatter;
+}
 
 function buildPresets() {
   const presets = {
@@ -281,9 +295,10 @@ export function formatValue(value, formatCode, opts = {}) {
     }
     // Numeric columns can also contain textual missing-value labels.
     if (typeof processed === "number" && !Number.isFinite(processed)) return fallbackValue;
-    if (code === "compact") {
-      return typeof processed === "number"
-        ? processed === 0 ? "0" : COMPACT_NUMBER.format(processed)
+    if (code.startsWith("compact")) {
+      const compact = compactFormatter(code);
+      return compact && typeof processed === "number"
+        ? processed === 0 ? "0" : compact.format(processed)
         : fallbackValue;
     }
 

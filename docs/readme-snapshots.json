@@ -3,7 +3,7 @@
   "inputs": {
     "notebooks/21_studio_dashboard.py": "8f4e85940544eac38b95c21f952659d3da97375dc584616347b24814281dc48b",
     "notebooks/49_api_screenshots.py": "219de292a242152427ca2e62163eb787c5c7355f974909eff90bd0c76ac5606b",
-    "notebooks/50_graphics_gallery.py": "58cd3aaf67f2594c70b6ca7cbee60273c5ce8b27770194f7f7b002ffd3fad466",
+    "notebooks/50_graphics_gallery.py": "c6bae21898e31145c26fa6ee5b6ac1d8ceb47914606809b545db5da2527231cf",
     "notebooks/51_table_layouts.py": "fc2b54717875601b8006e79bb0a5d4c1725d62453e53d2115c1ac19a745d9c95",
     "notebooks/data/46_football_england_2024.json": "aa8d550e7bb3e776dfd2dbfee5dd2cd57ab14a66c5c036dd393001055b55ff03",
     "notebooks/data/50_europe_trade_2024.json": "04a22223c3b1a958255b27b41ad83ff47ca528f3f985f7db579c2e75f05f525e",
@@ -41,7 +41,7 @@
     "src/evidential/rows.py": "d0011886124d330e596627f9c9c39202346cd5bab6e35a0056e779f6fb3af948",
     "src/evidential/rules.py": "eb0142d511b63a5b4d0725f70599084784ddb82130655c72e8ff36ce816ed104",
     "src/evidential/static/table.css": "5f0bec44d143d060e45ea07e2fe60483ead70817630c16863469f70f3ff49860",
-    "src/evidential/static/table.js": "83db4597bde9aef57d9175988a63e894c9466b67930212d61134eca2fb5130c5",
+    "src/evidential/static/table.js": "c63b2410d84922440549271d6b4dc69aba6e5161284df34258d8b0750227f308",
     "src/evidential/table.py": "3f635ffd925ec907c71a3b675d2ffaf17f9fc61e21acb46e3bbc6573bd9cb9b6",
     "uv.lock": "da72481fe29cbd2cc1636b6603f296a6567e0997e95032d2bce2f0fc2dfebfcd"
   },
@@ -144,7 +144,7 @@
     "docs/img/graphics/bar-back-to-back.png": {
       "notebook": "notebooks/50_graphics_gallery.py",
       "cell": "graphic_bar_back_to_back",
-      "sha256": "ffabe7302aa4700c3bcff83d2d610580de44cc82d26c07a91d4936387890c3b3"
+      "sha256": "0aeed45848f329727672c34b921e5e493a02db15679532e82b2202ef63dcb0d3"
     },
     "docs/img/graphics/dumbbell.png": {
       "notebook": "notebooks/50_graphics_gallery.py",
@@ -164,12 +164,12 @@
     "docs/img/graphics/distribution.png": {
       "notebook": "notebooks/50_graphics_gallery.py",
       "cell": "graphic_distribution",
-      "sha256": "4ea9e35eb961d6a3ff58618e033fa4430a0be1cedbbf58e9fb2682ec20a30f56"
+      "sha256": "0f6c44f4ab5f7abec1974a61bc609577cc149581d4a3f3148f81ba0ed509a856"
     },
     "docs/img/graphics/stacked-bar.png": {
       "notebook": "notebooks/50_graphics_gallery.py",
       "cell": "graphic_stacked_bar",
-      "sha256": "8bf2f3c0b85d97fd5694e3dfa60e40f16dc70275accd0d4998ee3187fad40d22"
+      "sha256": "b569caeebb69f9d8582ab84db413319f6ce346f3738045fbbd35dee987028c6f"
     },
     "docs/img/graphics/stack-likert.png": {
       "notebook": "notebooks/50_graphics_gallery.py",

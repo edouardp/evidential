@@ -29,6 +29,27 @@ test("compact numbers choose a unit per value, independently of the column range
   assert.equal(formatValue("n/a", "compact", options), "n/a");
 });
 
+test("compact precision counts significant figures rather than decimal places", () => {
+  const options = {type: "number", range: {min: -2e12, max: 4e12}};
+  for (const [value, expected] of [
+    [1.14765e12, "1.148T"], [877.1234e9, "877.1B"], [-1.14765e12, "-1.148T"],
+    [1.1e12, "1.1T"], [123.456, "123.5"], [0.000123456, "0.0001235"],
+    [999_950, "1M"], [999.95, "1K"], [0, "0"], [-0, "0"],
+  ]) assert.equal(formatValue(value, "compact4", options), expected);
+  assert.equal(formatValue("1147650000000", "compact4", options), "1.148T");
+  assert.equal(formatValue(1.14765e12, "compact2"), "1.1T");
+  assert.equal(formatValue(877.1234e9, "compact1"), "900B");
+  assert.equal(formatValue(1.14765e12, "compact6"), "1.14765T");
+  assert.equal(formatValue(1.14765e12, "compact21"), "1.14765T");
+  assert.equal(formatValue(null, "compact4"), "–");
+  assert.equal(formatValue(NaN, "compact4", {fallback: "Missing"}), "Missing");
+  assert.equal(formatValue(Infinity, "compact4", {fallback: "Missing"}), "Missing");
+  assert.equal(formatValue("n/a", "compact4", options), "n/a");
+  for (const code of ["compact0", "compact22", "compact04", "compact-1", "compact4.5"]) {
+    assert.equal(formatValue(1234, code, {fallback: "Invalid"}), "Invalid");
+  }
+});
+
 test("date formats", () => {
   const d = new Date(2024, 2, 15);
   assert.equal(formatValue(d, "date"), "2024-03-15");

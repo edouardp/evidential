@@ -931,6 +931,13 @@ with `label.fmt("compact")` and scale axes too. Values keep their signs and
 remain numeric for sorting, statistics and export. The existing `num` preset
 continues to choose one unit from the column's range.
 
+Use `compactN` for **up to N significant figures**, from `compact1` through
+`compact21`. For example, `.fmt("compact4")` displays `1147650000000` as
+**1.148T** and `877123400000` as **877.1B**. The suffix controls significant
+figures, not decimal places; unnecessary trailing zeros are omitted.
+`label.fmt("compact4")`, statistics, sparkline tooltips and scale axes use the
+same formatter. Plain `compact` retains its one-decimal behavior.
+
 `.fmt("sci")` displays scientific notation as **1.23 × 10⁵**, with two decimal
 places in the mantissa. HTML cells, mark labels, statistics and axes use a real
 superscript exponent; tooltips use readable Unicode superscripts. Small values

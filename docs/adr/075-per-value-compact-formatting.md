@@ -18,6 +18,7 @@ cells and axes need the same formatting while retaining numeric source values.
 - Select units independently for each value.
 - Retain one decimal place, signed amounts and existing missing-value behavior.
 - Reuse the shared formatter across display surfaces.
+- Allow explicit significant-figure precision without changing the default.
 - Preserve existing `num` behavior and explicit SSF formats.
 
 ## Considered Options
@@ -38,6 +39,20 @@ The preset applies equally to columns, fluent labels and axes. Values remain
 numeric for sorting, statistics and CSV export. The `num` preset and explicit
 SSF codes retain their existing behavior.
 
+`compact1` through `compact21` select a maximum number of significant figures,
+using the range supported by `Intl.NumberFormat`. For example, `compact4`
+renders 1,147,650,000,000 as `1.148T` and 877,123,400,000 as `877.1B`.
+These suffixes specify significant figures rather than decimal places. The
+minimum is one significant figure, so unnecessary trailing zeros are omitted;
+rounding can promote the unit (`999950` becomes `1M` with `compact4`). Small
+values below one retain their significant figures without gaining a suffix.
+Zero, including negative zero, displays as `0`.
+
+Formatters are cached by preset, bounded to the default plus 21 precision
+variants. Unsupported `compact` suffixes use the shared fallback rather than
+being interpreted as spreadsheet date/number patterns. This extends only the
+format string vocabulary; the Python API and wire format remain unchanged.
+
 ### Consequences
 
 Mixed-magnitude amounts remain readable without SQL presentation logic or
@@ -49,3 +64,5 @@ currency in the heading or label as appropriate.
 
 - `frontend/src/format.js` and `frontend/test_format.js`.
 - `notebooks/23_wdi.py` demonstrates trade amounts and balances.
+- `notebooks/08_column_options.py` compares default and significant-figure
+  compact formatting; the README trade gallery uses `compact4`.

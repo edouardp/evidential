@@ -77,3 +77,4 @@ def test_ci_workflow_runs_the_gates() -> None:
     assert "uv sync --locked" in workflow
     assert "pip install --upgrade uv" not in workflow
     assert "checkmake@latest" not in workflow
+    assert "go install github.com/checkmake/checkmake/cmd/checkmake@v0.3.2" in workflow

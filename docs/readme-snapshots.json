@@ -16,6 +16,7 @@
     "src/evidential/_distribution.py": "16278a133e89b66addd282a3209ff3c34a1bb59baff0e3fb17f2ffaacb5f4992",
     "src/evidential/_domain.py": "a0d1e3b1989cdfe2c7ce41b94b58a84113ef6c33375947f6983adc17a63a3102",
     "src/evidential/_label.py": "dc5e285f2a3f8ed85a0c36ed107986205b4e75df04ba3e812cf348d5db46b83d",
+    "src/evidential/_netscape.py": "4f02d582fa4f80567ea60b3c569a9734246a0de6fd923a5f8a1a10a02e1e7152",
     "src/evidential/_row_layout.py": "da35fc68f39c8d6223a6d027cbe41d957fdd0452cd8b3be288799e903a55ee21",
     "src/evidential/_sparkline.py": "c4a18a514e70a95b09250a672dca81e1f39891bfa9db4a8c8bdd07ec6018de96",
     "src/evidential/_text_style.py": "99f38816be21786b8d72e4f19ed1a2a63ee5e4db15f536774ed29f9f9482d005",
@@ -37,7 +38,7 @@
     "src/evidential/rules.py": "eb0142d511b63a5b4d0725f70599084784ddb82130655c72e8ff36ce816ed104",
     "src/evidential/static/table.css": "7fcd3db47695bd2de2d79321c10fe3dc56cf765eb112e0912d23258ffcb1c612",
     "src/evidential/static/table.js": "7418e33d4adb8b844f61fbcb96746d257f1e5592ba50e9ec22620e6b39121a0d",
-    "src/evidential/table.py": "62157359d1828ce91d74b6c5c32e9e100422585b399797d21ed7bce500415907",
+    "src/evidential/table.py": "3f635ffd925ec907c71a3b675d2ffaf17f9fc61e21acb46e3bbc6573bd9cb9b6",
     "uv.lock": "c88da418da7e42b93076f23560f1146f0cabea11e5e2d5f01513d26003b2185d"
   },
   "images": {

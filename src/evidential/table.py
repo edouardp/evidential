@@ -12,6 +12,8 @@ import traitlets
 
 from ._column_options import _normalize_column_options
 from ._domain import resolve_domains
+from ._netscape import _NetscapeHTML
+from ._netscape import render as _netscape_html
 from ._row_layout import display_records, split_legacy, unwrap_view
 from .configuration import TABLE_DEFAULTS, TableOptions, unknown_option, validate_options
 from .data import _merge_column_config, apply_blank_predicates, infer_columns, jsonify, make_column, normalize_data
@@ -353,6 +355,10 @@ class EvidentialTable(anywidget.AnyWidget):
         In Marimo, display with ``mo.ui.table(table.raw, selection=None)``.
         """
         return copy.deepcopy(self._source_rows)
+
+    def netscape_navigator_96(self) -> _NetscapeHTML:
+        """Where we're going, we don't need conditional formatting."""
+        return _netscape_html(self.raw)
 
     @property
     def display_rows(self) -> list[dict[str, Any]]:

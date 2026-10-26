@@ -45,6 +45,15 @@ a committed provenance manifest. Images are staged until all captures
 succeed. `make readme-check` verifies text and hashes without a browser and
 is included in local release validation. No hosted build service is added.
 
+Real-data README examples use committed snapshots rather than requiring the
+maintainer's local datasets during generation. Snapshot provenance, source
+attribution and extraction SQL live alongside the notebooks. The graphics
+gallery reuses the England 2024 football snapshot and a fixed WDI trade
+snapshot; their bytes and the trade selection SQL are freshness-check inputs.
+Changing those inputs requires regenerating the illustrated examples, just as
+changing their notebook code does. This keeps captures reproducible offline
+while retaining the queries used to obtain the data.
+
 Repository README images use relative paths. The generator also writes
 `docs/PYPI_README.md`, resolving local image and documentation links to GitHub
 URLs for package metadata. `pyproject.toml` points to this generated copy;
@@ -67,4 +76,5 @@ actual table; full Studio view documentation remains in its separate guide.
 - `notebooks/49_api_screenshots.py`, `notebooks/50_graphics_gallery.py`.
 - `notebooks/21_studio_dashboard.py`.
 - `notebooks/51_table_layouts.py`.
+- [Snapshot provenance and attribution](../../notebooks/data/README.md).
 - [ADR-078: Local Release Validation](078-local-release-validation.md).

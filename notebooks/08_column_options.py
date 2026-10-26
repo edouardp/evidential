@@ -10,7 +10,7 @@
 
 import marimo
 
-__generated_with = "0.20.0"
+__generated_with = "0.25.1"
 app = marimo.App(width="full")
 
 
@@ -118,7 +118,7 @@ def scientific_formatting(EvidentialTable, col, mo):
         )
     )
     mo.vstack([scientific])
-    return (scientific,)
+    return
 
 
 @app.cell

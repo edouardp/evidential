@@ -53,6 +53,12 @@ def test_makefile_exposes_the_release_targets() -> None:
         assert re.search(rf"^{re.escape(target)}", makefile, re.MULTILINE), target
 
 
+def test_direct_publish_uses_the_same_keyring_provider_as_the_release_script() -> None:
+    makefile = (ROOT / "Makefile").read_text()
+    publish = makefile.split("pypi: check", 1)[1].split("\n\n", 1)[0]
+    assert "uv publish --keyring-provider subprocess --username __token__" in publish
+
+
 def test_ci_workflow_runs_the_gates() -> None:
     workflow = (ROOT / ".github" / "workflows" / "tests.yml").read_text()
     assert "make lint" in workflow

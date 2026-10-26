@@ -1,9 +1,8 @@
 # Release Process
 
 How `evidential` reaches PyPI: the one-time setup, the first release, and the
-ongoing flow. The repository is currently at **0.1.0, ready for its first public
-release** — the version and its changelog entry already exist, so the first
-release *publishes* rather than *bumps*.
+ongoing flow. The first public release is **0.1.0**. Its version and changelog entry
+already exist, so the first release *publishes* rather than *bumps*.
 
 The house flow lives in the sibling repositories (`../galaga`,
 `docs/RELEASE_PROCESS.md` there is the most mature; `../gamr` uses the same
@@ -14,12 +13,12 @@ targets.
 
 | | |
 | --- | --- |
-| Distribution | `evidential` — unclaimed on PyPI (the first upload takes the name) |
+| Distribution | [`evidential`](https://pypi.org/project/evidential/) |
 | Import package | `evidential` |
 | Version | `0.1.0` (`pyproject.toml`) |
 | Changelog | `CHANGELOG.md` has the `## 0.1.0` section |
 | Branch | `main` |
-| Remote | **not configured yet** |
+| Remote | <https://github.com/edouardp/evidential> |
 | Build backend | `uv_build` ([ADR-034](adr/034-uv-build-backend.md)) |
 | Python | ≥ 3.11 |
 | Licence | MIT |
@@ -49,7 +48,8 @@ keyring set https://test.pypi.org/legacy/    __token__   # Test PyPI
 keyring get https://upload.pypi.org/legacy/  __token__   # verify
 ```
 
-`uv publish` does not read the keyring by default, so the release script passes
+`uv publish` does not read the keyring by default, so both `make pypi` and the
+release script pass
 `--keyring-provider subprocess --username __token__`, or you supply the token via
 `UV_PUBLISH_TOKEN=$(keyring get https://upload.pypi.org/legacy/ __token__)`.
 
@@ -100,8 +100,8 @@ release scripts). It exercises the whole upload with throwaway credentials.
 ```bash
 rm -rf dist
 make check                                   # builds + artifact check + twine check
-UV_PUBLISH_TOKEN=$(keyring get https://test.pypi.org/legacy/ __token__) \
-  uv publish --publish-url https://test.pypi.org/legacy/ dist/*
+uv publish --publish-url https://test.pypi.org/legacy/ \
+  --keyring-provider subprocess --username __token__ dist/*
 ```
 
 Then install from Test PyPI in a throwaway environment and import it:
@@ -129,9 +129,7 @@ no `tests/`, `notebooks/` or `frontend/` files leak), and `twine check`.
 ### 5. Publish
 
 ```bash
-make pypi        # = make check + uv publish
-# or with the keyring token explicitly:
-UV_PUBLISH_TOKEN=$(keyring get https://upload.pypi.org/legacy/ __token__) make pypi
+make pypi        # = make check + uv publish with the subprocess keyring provider
 ```
 
 `uv publish` uploads **both** the wheel and the sdist. If it fails partway,
@@ -151,7 +149,7 @@ gh release create v0.1.0 --title v0.1.0 --notes-file CHANGELOG.md
 
 ```bash
 python -m pip install "evidential==0.1.0"    # or: uv add evidential
-python -c "import evidential; print(evidential.__version__)"
+python -c "import evidential; print(evidential.__file__)"
 ```
 
 Check <https://pypi.org/project/evidential/0.1.0/> renders (long description,

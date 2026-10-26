@@ -90,7 +90,9 @@ export function resolveColor(value) {
 }
 
 function resolvePalette(palette) {
-  if (typeof palette !== "string") return palette;
+  if (typeof palette !== "string") {
+    return Array.isArray(palette) ? palette.map(resolveColor) : palette;
+  }
   return COLOR_SCALES[palette.toLowerCase()];
 }
 
@@ -107,7 +109,7 @@ function normalizeColorStops(stops) {
   if (!Array.isArray(stops) || stops.length < 2) return null;
   const valid = stops.filter(
     (s) => s && typeof s.value === "number" && isFinite(s.value) &&
-      typeof s.color === "string" && isValidColor(s.color)
+      typeof s.color === "string" && isValidColor(resolveColor(s.color))
   );
   if (valid.length < 2) return null;
   const sorted = [...valid].sort((a, b) => a.value - b.value);
@@ -235,7 +237,7 @@ export function getColorForValue(value, scaleResult) {
 
 export function colorStylesFromHex(colorValue) {
   try {
-    const bg = chroma(colorValue);
+    const bg = chroma(resolveColor(colorValue));
     const color = chroma.contrast(bg, "#000000") > chroma.contrast(bg, "#ffffff") ? "#000000" : "#ffffff";
     const isCellDark = bg.luminance() < 0.5;
     const borderBottomColor = (isCellDark ? bg.brighten(0.5) : bg.darken(0.5)).hex();
@@ -254,7 +256,7 @@ export function colorStylesFromHex(colorValue) {
  *  backgrounds, black on lighter ones. */
 export function contrastTextColor(colorValue) {
   try {
-    return chroma(colorValue).luminance() < 0.5 ? "#ffffff" : "#000000";
+    return chroma(resolveColor(colorValue)).luminance() < 0.5 ? "#ffffff" : "#000000";
   } catch {
     return "inherit";
   }

@@ -41,7 +41,7 @@ def _():
 @app.cell
 def _(Path, duckdb, mo, os):
     parquet = Path(
-        os.environ.get("WDI_PARQUET", "~/Downloads/WDI_CSV_2026_10_01/parquet")
+        os.environ.get("WDI_PARQUET", "~/datasets/WDI_CSV_2026_10_01/parquet")
     ).expanduser()
     if not (parquet / "wdi_observations").is_dir():
         mo.stop(

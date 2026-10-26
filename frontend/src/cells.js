@@ -2,7 +2,7 @@ import { alignStyle, h, optString, inlineMarkdown, withFigure, isStub } from "./
 import { formatValue } from "./format.js";
 import { formattedText } from "./formatted-text.js";
 import { withDecimals, indentForCell } from "./rows.js";
-import { calculateColorStyles, contrastTextColor } from "./color.js";
+import { calculateColorStyles, contrastTextColor, resolveColor } from "./color.js";
 import { renderBar, renderDelta, renderMarks, renderSparkline, renderSymbols } from "./visualizations.js";
 
 /** Return the first matching substitution text, or null. */
@@ -46,7 +46,7 @@ export function matchingRules(col, row, options) {
 
 /** Apply effects shared by ordinary, null, substituted and template cells. */
 export function decorateCell(td, col, row, ctx, rowIndex, style, includeFootnote, options) {
-  if (col.font_color) td.style.color = col.font_color;
+  if (col.font_color) td.style.color = resolveColor(col.font_color);
   if (col.font_weight) td.style.fontWeight = col.font_weight;
   if (col.font_style) td.style.fontStyle = col.font_style;
   const footnoteColumn = col.footnote || options.footnote_column;
@@ -118,15 +118,15 @@ export function renderCell({row, col, index, ctx, rowIndex, options: opts, toggl
     td.style.color = rowColorStyles.color;
   }
   // A column highlight is a vertical band: it wins over row colours.
-  if (col.highlight) td.style.backgroundColor = col.highlight;
+  if (col.highlight) td.style.backgroundColor = resolveColor(col.highlight);
   // Cell chrome (`cell_style=`): independent of the marks that sit on it.
   const cellStyle = col.cell_style || {};
   if (cellStyle.background_column && row[cellStyle.background_column] != null) {
-    td.style.backgroundColor = String(row[cellStyle.background_column]);
+    td.style.backgroundColor = resolveColor(String(row[cellStyle.background_column]));
   } else if (cellStyle.background) {
-    td.style.backgroundColor = cellStyle.background;
+    td.style.backgroundColor = resolveColor(cellStyle.background);
   }
-  if (cellStyle.color) td.style.color = cellStyle.color;
+  if (cellStyle.color) td.style.color = resolveColor(cellStyle.color);
   if (cellStyle.border) td.style.border = cellStyle.border;
   if (cellStyle.padding) td.style.padding = cellStyle.padding;
   if (col.viz_include_subtotals === false && isSubtotal && col.viz) td.classList.add("et-no-viz");
@@ -256,7 +256,7 @@ export function renderCell({row, col, index, ctx, rowIndex, options: opts, toggl
 
   if (negative) {
     content.classList?.add("et-negative");
-    if (col.negative_color) content.style.color = col.negative_color;
+    if (col.negative_color) content.style.color = resolveColor(col.negative_color);
   }
 
   const link = col.link ? row[col.link] : null;

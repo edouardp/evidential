@@ -132,7 +132,7 @@ def _(EvidentialTable, changes, col, mo, settings):
             ),
             columns=[
                 col.text("month"),
-                col.currency("revenue", decimals=0, title="Revenue"),
+                col.currency("revenue", decimals=0),
                 col.percent("mom_pct", whole=True, decimals=1, title="Change").neg(bracket=True),
                 col.bar("mom_pct", title="Change (bar)", align="center", format='0.0"%"', center=True, pad=3, color="tab:blue", negative_color="tab:red", label=True),
             ],

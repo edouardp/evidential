@@ -88,7 +88,7 @@ def _(EvidentialTable, col, detail, mo, rows):
             subtitle="A section per region, a custom average, and a grand total",
             row_lines=False,
             border=False,
-            page_size=2,
+            page_size=4,
             row_shading=True,
             row_numbers=True,
             download=True,
@@ -135,7 +135,7 @@ def _(EvidentialTable, col, detail, mo, rows):
             title="Aggregations by name",
             row_lines="gray",
             border=False,
-            page_size=2,
+            page_size=5,
             row_shading=True,
             section_indent=1,
             columns=[

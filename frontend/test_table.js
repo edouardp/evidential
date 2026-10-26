@@ -2540,3 +2540,21 @@ test("mark labels use the same cell formats and null text as ordinary columns", 
     renderer.destroy();
   }
 });
+
+test("tableau colour names resolve in cell chrome and highlights", () => {
+  const rows = [{ x: 1 }];
+  const columns = [{
+    name: "x", type: "number",
+    font_color: "tab:blue",
+    highlight: "C1",
+    cell_style: { background: "tab:green" },
+  }];
+  const renderer = new EvidentialTableRenderer(makeModel(rows, columns, { page_size: 10 }, el), el);
+  const cell = el.querySelector("tbody td");
+  // #1f77b4 / C1=#ff7f0e / #2ca02c, as jsdom normalises them.
+  assert.equal(cell.style.color, "rgb(31, 119, 180)");
+  assert.equal(cell.style.backgroundColor, "rgb(44, 160, 44)");
+  const header = el.querySelector("th");
+  assert.equal(header.style.backgroundColor, "rgb(255, 127, 14)");
+  renderer.destroy();
+});

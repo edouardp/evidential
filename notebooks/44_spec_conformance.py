@@ -44,10 +44,10 @@ def _(EvidentialTable, col, mo, settings):
     ]
     sales_marks = (
         col.range("before", "after", color="#222222", size=2)
-        .point("before", color="#6699ee", size=12)
-        .point("after", color="#ef4444", size=12)
-        .title("Weekly Sales")
-        .scale(domain=(0, 100), axis=True)
+           .point("before", color="#6699ee", size=12)
+           .point("after", color="#ef4444", size=12)
+           .title("Weekly Sales")
+           .scale(domain=(0, 100), axis=True)
     )
     report_style = settings(border=False, row_lines=False, row_shading=True, search=False, page_size=0, width=440)
     scale_gallery = [
@@ -272,6 +272,11 @@ def _(EvidentialTable, col, mo):
         )
     )
     log_ticks
+    return
+
+
+@app.cell
+def _():
     return
 
 

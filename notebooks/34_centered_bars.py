@@ -195,25 +195,25 @@ def _(
             columns=[
                 col.markdown("country"),
                 col.bar("gdp", title="Real GDP", color="#01A9C3", align="center")
-                .label(value=True, format="num1", position="outside_start")
-                .scale(domain=league_domains["gdp"])
-                .reference_line(0, color="#94a3b8"),
+                   .label(value=True, format="num1", position="outside_start")
+                   .scale(domain=league_domains["gdp"])
+                   .reference_line(0, color="#94a3b8"),
                 col.bar("consumption", title="Real consumption\nper person", color="#086FA1", align="center")
-                .label(value=True, format="num1", position="outside_start")
-                .scale(domain=league_domains["consumption"])
-                .reference_line(0, color="#94a3b8"),
+                   .label(value=True, format="num1", position="outside_start")
+                   .scale(domain=league_domains["consumption"])
+                   .reference_line(0, color="#94a3b8"),
                 col.bar("prices", title="Equity prices\n(USD)", color="#8BB9CE",  align="center")
-                .label(value=True, format="num1", position="outside_start")
-                .scale(domain=league_domains["prices"])
-                .reference_line(0, color="#94a3b8"),
+                   .label(value=True, format="num1", position="outside_start")
+                   .scale(domain=league_domains["prices"])
+                   .reference_line(0, color="#94a3b8"),
                 col.bar("investment", title="Real fixed\ninvestment", color="#559CB8", align="center")
-                .label(value=True, format="num1", position="outside_start")
-                .scale(domain=league_domains["investment"])
-                .reference_line(0, color="#94a3b8"),
+                   .label(value=True, format="num1", position="outside_start")
+                   .scale(domain=league_domains["investment"])
+                   .reference_line(0, color="#94a3b8"),
                 col.bar("debt", title="Central gov debt\n(pp of GDP)", color="#2EC1D3", align="center")
-                .label(value=True, format="num1", position="outside_start")
-                .scale(domain=league_domains["debt"])
-                .reference_line(0, color="#94a3b8"),
+                   .label(value=True, format="num1", position="outside_start")
+                   .scale(domain=league_domains["debt"])
+                   .reference_line(0, color="#94a3b8"),
             ],
             rules=[tab_style(cells_body(columns=list(league_domains)), min_width="110px")],
         )
@@ -263,7 +263,7 @@ def _(
                 width="760px",
             ),
             columns=[
-                col.text("country"),
+                col.markdown("country"),
                 col.bar("gdp", title="With values", color="blue", color_negative="red", size=0.65)
                 .label(value=True, format='0.0"%"', position="outside_start")
                 .scale(domain=league_domains["gdp"])
@@ -360,14 +360,14 @@ def _(EvidentialTable, cells_body, col, mo, price_table, settings, tab_style):
             ),
             columns=[
                 col.bar(lambda row: -row["spend"], title="Sales per capita (CAD)", color="@color", size=0.65)
-                .label(source="spend", format="usd1")
-                .scale(domain=(-34, 0))
-                .reference_line(-4.3, color="#94a3b8"),
+                   .label(source="spend", format="usd1")
+                   .scale(domain=(-34, 0))
+                   .reference_line(-4.3, color="#94a3b8"),
                 col.text("country", title="", align="center"),
                 col.bar("rate", title="Foreign-to-Canadian rate", color="@color", size=0.65)
-                .label(value=True, format="num2")
-                .scale(domain=(0, 2))
-                .reference_line(0.32, color="#94a3b8"),
+                   .label(value=True, format="num2")
+                   .scale(domain=(0, 2))
+                   .reference_line(0.32, color="#94a3b8"),
                 col.auto("color").hide(),
             ],
             rules=[tab_style(cells_body(), min_width="180px")],
@@ -458,7 +458,7 @@ def _(EvidentialTable, attitudes, cells_body, col, mo, settings, tab_style):
                 caption=("Illustrative data after Pew Research Center, Spring 2024 Global Attitudes Survey."),
                 row_lines=False,
                 border=False,
-                #stretch=False,
+                stretch=False,
                 # width="720px",
             ),
             columns=[

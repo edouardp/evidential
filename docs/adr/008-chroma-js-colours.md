@@ -39,6 +39,10 @@ table-level palettes are resolved in the same way as column-level palettes.
 
 - Good, because named presets (`green`, `blue`, `red`, …) and custom palettes
   behave like Evidence.
+- Good, because matplotlib's Tableau names (`tab:blue`, `C0`..`C9`) and the
+  single-letter base colours (`k`, `r`, …) resolve to hex at every boundary —
+  marks, `cell_style`, `highlight`, `font_color`, theme options, palette lists
+  and colour stops — not just in the bar renderer.
 - Good, because text colour is chosen from actual contrast.
 - Bad, because it adds a bundle dependency (~ tens of kB).
 - Bad, because diverging-scale edge cases (midpoint outside the range) need

@@ -63,17 +63,17 @@ def economic_table(EvidentialTable, col, mo, records):
             columns=[
                 col.text("country", title="Country"),
                 col.group("Gross domestic product", [
-                        col.subcolumns("Latest", [
-                                col.number("gdp", fmt="num1", align="right").neg(),
-                                col.auto("quarter").align("left").font_color("#808080"),
-                        ]),
-                        col.number("forecast", fmt="num1", align="right", title="Annual forecast"),
+                    col.subcolumns("Latest", [
+                        col.number("gdp", fmt="num1", align="right").neg(),
+                        col.auto("quarter").align("left").font_color("#808080"),
+                    ]),
+                    col.number("forecast", fmt="num1", align="right", title="Annual forecast"),
                     ],
                 ),
                 col.group("Consumer prices", [
-                        col.subcolumns("Latest", [
-                                col.number("inflation", fmt="num1", align="right").neg(),
-                                col.auto("month").align("left").font_color("#808080"),
+                    col.subcolumns("Latest", [
+                        col.number("inflation", fmt="num1", align="right").neg(),
+                        col.auto("month").align("left").font_color("#808080"),
                 ])]),
                 col.number("unemployment", fmt="num1", align="right", title="Unemployment (%)"),
             ],
@@ -228,20 +228,14 @@ def economist_recreation(EvidentialTable, col, economist_records, mo):
             economist_records,
             columns=[
                 col.text("country", title=" "),
-                col.group(
-                    "Gross domestic product\n% change on year ago:",
-                    [
-                        col.subcolumns(
-                            "latest",
-                            [
-                                col.number("gdp", fmt="num1").color(scale="@gdp_color"),
-                                col.auto("gdp_period").fmt("@").font_color("#808080"),
-                            ],
-                        ),
-                        col.number("gdp_quarter", fmt="num1", title="quarter*"),
-                        col.number("gdp_annual", fmt="num1", title="2023†"),
-                    ],
-                ),
+                col.group("Gross domestic product\n% change on year ago:",  [
+                    col.subcolumns("latest", [
+                        col.number("gdp", fmt="num1").color(scale="@gdp_color"),
+                        col.auto("gdp_period").fmt("@").font_color("#808080"),
+                    ]),
+                    col.number("gdp_quarter", fmt="num1", title="quarter*"),
+                    col.number("gdp_annual", fmt="num1", title="2023†"),
+                ]),
                 col.group(
                     "Consumer prices\n% change on year ago:",
                     [
@@ -323,6 +317,11 @@ def economist_recreation(EvidentialTable, col, economist_records, mo):
     </style>
     """
     mo.Html(f'{economist_css}<div class="economist-recreation">{economist.text}</div>')
+    return
+
+
+@app.cell
+def _():
     return
 
 

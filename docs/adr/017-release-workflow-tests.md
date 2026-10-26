@@ -36,6 +36,11 @@ Chosen option: "Release-workflow tests". `tests/release/` asserts that:
 - the README and docs keep valid-looking Python examples, existing local images
   and balanced code fences.
 
+The direct `make pypi` target uses the same `uv publish` subprocess keyring
+provider as the release script. README images use absolute GitHub raw URLs so
+the published PyPI description can display them; tests resolve those URLs back
+to repository files and reject repository-relative README image targets.
+
 ### Consequences
 
 - Good, because a broken gate or Make target fails the suite.

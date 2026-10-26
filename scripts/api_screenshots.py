@@ -1,572 +1,206 @@
 #!/usr/bin/env python
-"""Render the API documentation screenshots.
+"""Capture the documentation screenshots from a marimo notebook.
 
-Builds the illustrative :class:`~evidential.EvidentialTable` objects referenced
-from ``docs/api/API.md``, mounts each against the committed static bundle in a
-headless Chromium, and writes one PNG per example to ``docs/api/images/``.
+``notebooks/49_api_screenshots.py`` owns the API examples and README hero;
+``notebooks/50_graphics_gallery.py`` owns the README graphic gallery. Each table
+lives in a named cell, and the cell name is the image slug. This script starts
+each notebook with ``marimo run --headless`` and uses Playwright to screenshot
+the ``.et-root`` output of every target cell.
 
 Run it with::
 
-    uv run python scripts/api_screenshots.py
+    make api-screenshots
 
 It needs the ``playwright`` dev dependency and a Chromium-based browser
 (Edge/Chrome/Chromium) — the same requirement as ``tests/browser``. The output
-is committed, so re-run it only when an example or the renderer changes;
-``make lint`` checks the formatting of this file like any other script.
+is committed, so re-run only when an API example or the renderer changes.
 """
 
 from __future__ import annotations
 
-import datetime as dt
-import json
-import threading
-from functools import partial
-from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
+import os
+import socket
+import subprocess
+import sys
+import tempfile
+import time
+import urllib.error
+import urllib.request
+from contextlib import contextmanager
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-import duckdb
-
-from evidential import (
-    EvidentialTable,
-    cells_body,
-    col,
-    cols_merge_n_pct,
-    cols_merge_range,
-    cols_merge_uncert,
-    comparison_table,
-    grouped_table,
-    pivot_table,
-    query_table,
-    settings,
-    tab_style,
-    text_transform,
-)
-
 if TYPE_CHECKING:
-    from collections.abc import Callable, Iterator
+    from collections.abc import Iterator
 
 ROOT = Path(__file__).resolve().parent.parent
+NOTEBOOK = ROOT / "notebooks" / "49_api_screenshots.py"
+GALLERY_NOTEBOOK = ROOT / "notebooks" / "50_graphics_gallery.py"
 OUT = ROOT / "docs" / "api" / "images"
-HTML = ROOT / "__api_examples.html"
-SAMPLE = ROOT / "notebooks" / "sample_data" / "needful_things" / "orders.parquet"
-NOW = dt.datetime.now().replace(microsecond=0)
+PREVIEW = ROOT / "docs" / "preview.png"
+GALLERY_OUT = ROOT / "docs" / "img" / "graphics"
 
+#: (image slug, marimo cell name), in API.md order.
+SHOTS: list[tuple[str, str]] = [
+    ("quickstart", "quickstart"),
+    ("kinds", "kinds"),
+    ("relative-time", "relative_time"),
+    ("symbols", "symbols"),
+    ("visualizations", "visualizations"),
+    ("back-to-back", "back_to_back"),
+    ("styling", "styling"),
+    ("groups", "groups"),
+    ("subcolumns", "subcolumns"),
+    ("merged", "merged"),
+    ("grouped-table", "grouped_totals"),
+    ("pivot-table", "pivoted_columns"),
+    ("comparison-table", "prior_comparison"),
+    ("rules", "rules"),
+    ("query-table", "ad_hoc_query"),
+]
 
-def _ago(**delta: int) -> str:
-    return (NOW - dt.timedelta(**delta)).strftime("%Y-%m-%d %H:%M:%S")
+#: (image path, marimo cell name) for screenshots outside the API reference.
+EXTRAS: list[tuple[Path, str]] = [
+    (PREVIEW, "preview"),
+]
 
-
-def _orders() -> duckdb.DuckDBPyConnection:
-    """An in-memory DuckDB with Evidence's sample orders view."""
-    connection = duckdb.connect()
-    connection.execute("CREATE SCHEMA needful_things")
-    connection.execute(f"CREATE VIEW needful_things.orders AS SELECT * FROM read_parquet('{SAMPLE}')")
-    return connection
-
-
-# --------------------------------------------------------------------------
-# The examples, in the order they appear in API.md.
-
-
-def quickstart() -> EvidentialTable:
-    rows = [
-        {"city": "Boston", "trips": 1284, "revenue": 48120.50, "tip_rate": 0.183},
-        {"city": "New York", "trips": 3502, "revenue": 142880.25, "tip_rate": 0.171},
-        {"city": "Chicago", "trips": 2118, "revenue": 76540.00, "tip_rate": 0.164},
-        {"city": "San Francisco", "trips": 1907, "revenue": 98320.75, "tip_rate": 0.196},
-        {"city": "Seattle", "trips": 1463, "revenue": 61140.10, "tip_rate": 0.188},
-    ]
-    return EvidentialTable(
-        rows,
-        columns=[
-            col.text("city", title="City"),
-            col.integer("trips", title="Trips"),
-            col.currency("revenue", title="Revenue"),
-            col.percent("tip_rate", decimals=1, title="Tip rate"),
-        ],
-        settings=settings(
-            title="Tipping by city",
-            caption="Illustrative sample orders.",
-            width="620px",
-        ),
-    )
-
-
-def kinds() -> EvidentialTable:
-    rows = [
-        {
-            "item": "Espresso",
-            "count": 1240,
-            "price": 3.50,
-            "share": 0.42,
-            "day": "2024-03-04",
-            "origin": "ITA",
-            "active": True,
-        },
-        {
-            "item": "Cortado",
-            "count": 861,
-            "price": 4.25,
-            "share": 0.29,
-            "day": "2024-03-05",
-            "origin": "ESP",
-            "active": True,
-        },
-        {
-            "item": "Cold brew",
-            "count": 512,
-            "price": 5.00,
-            "share": 0.17,
-            "day": "2024-03-07",
-            "origin": "USA",
-            "active": False,
-        },
-        {
-            "item": "Matcha",
-            "count": 344,
-            "price": 5.75,
-            "share": 0.12,
-            "day": "2024-03-09",
-            "origin": "JPN",
-            "active": True,
-        },
-    ]
-    return EvidentialTable(
-        rows,
-        columns=[
-            col.text("item", title="Item"),
-            col.integer("count", title="Count"),
-            col.currency("price", title="Price"),
-            col.percent("share", decimals=0, title="Share"),
-            col.date("day", title="Day"),
-            col.flag("origin", title="Origin"),
-            col.boolean("active", title="Active"),
-        ],
-        settings=settings(title="Column kinds", width="760px"),
-    )
-
-
-def relative_time() -> EvidentialTable:
-    rows = [
-        {"event": "Deploy", "at": _ago(hours=2)},
-        {"event": "Backup", "at": _ago(days=1)},
-        {"event": "Report", "at": _ago(days=6)},
-        {"event": "Audit", "at": _ago(weeks=3)},
-        {"event": "Renewal", "at": _ago(days=200)},
-    ]
-    return EvidentialTable(
-        rows,
-        columns=[
-            col.text("event", title="Event"),
-            col.datetime("at", relative=True, title="When"),
-        ],
-        settings=settings(title="Relative time", width="420px"),
-    )
-
-
-def symbols() -> EvidentialTable:
-    rows = [
-        {"country": "Ireland", "gold": 4, "score": 3},
-        {"country": "Cyprus", "gold": 3, "score": 2},
-        {"country": "France", "gold": 2, "score": 4},
-        {"country": "Sweden", "gold": 2, "score": 1},
-        {"country": "Slovenia", "gold": 1, "score": 5},
-    ]
-    return EvidentialTable(
-        rows,
-        columns=[
-            col.text("country", title="Country"),
-            col.symbols("gold", symbol="■", color="#d97706", title="Glyph"),
-            col.symbols("gold", shape="square", color="#d97706", title="Squares"),
-            col.symbols("gold", shape="circle", color="#d97706", title="Circles"),
-            col.rating("score", title="Rating"),
-        ],
-        settings=settings(
-            title="Repeated symbols",
-            width="720px",
-            row_lines=False,
-            border=False,
-        ),
-    )
-
-
-def visualizations() -> EvidentialTable:
-    rows = [
-        {
-            "region": "West",
-            "revenue": 142000,
-            "growth": 0.12,
-            "share": 0.38,
-            "trend": [3, 4, 4, 6, 7, 9, 11],
-        },
-        {
-            "region": "East",
-            "revenue": 98000,
-            "growth": -0.04,
-            "share": 0.26,
-            "trend": [9, 8, 8, 6, 5, 5, 4],
-        },
-        {
-            "region": "South",
-            "revenue": 76000,
-            "growth": 0.07,
-            "share": 0.21,
-            "trend": [4, 5, 5, 6, 6, 7, 7],
-        },
-        {
-            "region": "North",
-            "revenue": 54000,
-            "growth": 0.02,
-            "share": 0.15,
-            "trend": [6, 6, 6, 5, 6, 6, 6],
-        },
-    ]
-    return EvidentialTable(
-        rows,
-        columns=[
-            col.text("region", title="Region"),
-            col.bar("revenue", title="Revenue"),
-            col.bar("growth", center=True, title="Growth"),
-            col.color("share", title="Share"),
-            col.chip("region", title="Chip"),
-            col.sparkline("trend", type="area", title="Trend"),
-            col.percent("growth", decimals=0, title="Δ").delta(),
-        ],
-        settings=settings(title="Visualisations", width="860px"),
-    )
-
-
-def styling() -> EvidentialTable:
-    rows = [
-        {"metric": "Revenue", "q1": 48120.50, "q2": 51240.00, "change": 0.065},
-        {"metric": "Costs", "q1": -31400.00, "q2": -29180.00, "change": 0.071},
-        {"metric": "Margin", "q1": 16720.50, "q2": 22060.00, "change": 0.319},
-        {"metric": "Headcount", "q1": -124, "q2": -131, "change": -0.056},
-    ]
-    return EvidentialTable(
-        rows,
-        columns=[
-            col.text("metric", title="Metric").bold(),
-            col.currency("q1", decimals=0, title="Q1").neg(),
-            col.currency("q2", decimals=0, title="Q2").neg(bracket=True),
-            col.percent("change", decimals=1, title="Change").neg().italic(),
-            col.percent("change", decimals=1, title="Δ %").bold().highlight("#fef3c7"),
-        ],
-        settings=settings(
-            title="Body-cell styling",
-            align_decimals=True,
-            font_size="+1",
-            width="600px",
-        ),
-    )
-
-
-def groups() -> EvidentialTable:
-    rows = [
-        {"region": "North", "revenue": 48120.5, "cost": -19800.0, "profit": 28320.5},
-        {"region": "South", "revenue": 36740.0, "cost": -16120.0, "profit": 20620.0},
-        {"region": "East", "revenue": 51280.0, "cost": -21500.0, "profit": 29780.0},
-        {"region": "West", "revenue": 29860.0, "cost": -13240.0, "profit": 16620.0},
-    ]
-    return EvidentialTable(
-        rows,
-        columns=[
-            col.text("region", title="Region"),
-            col.group(
-                "Financials",
-                [
-                    col.currency("revenue", title="Revenue"),
-                    col.currency("cost", title="Cost"),
-                    col.currency("profit", title="Profit"),
-                ],
-            ),
-        ],
-        settings=settings(title="Grouped headers", width="520px"),
-    )
-
-
-def subcolumns() -> EvidentialTable:
-    rows = [
-        {"country": "Ireland", "gdp": 2.4, "quarter": "Q4", "forecast": 2.1, "cpi": 1.8, "month": "Dec"},
-        {"country": "Portugal", "gdp": 3.1, "quarter": "Q4", "forecast": 2.6, "cpi": 2.4, "month": "Dec"},
-        {"country": "Greece", "gdp": 2.8, "quarter": "Q3", "forecast": 2.3, "cpi": 3.2, "month": "Nov"},
-        {"country": "Spain", "gdp": 1.9, "quarter": "Q4", "forecast": 2.0, "cpi": 2.1, "month": "Dec"},
-    ]
-    return EvidentialTable(
-        rows,
-        columns=[
-            col.text("country", title="Country"),
-            col.group(
-                "Gross domestic product",
-                [
-                    col.subcolumns(
-                        "Latest",
-                        [
-                            col.number("gdp", fmt="num1", align="right").neg(),
-                            col.auto("quarter").align("left").font_color("#94a3b8"),
-                        ],
-                    ),
-                    col.number("forecast", fmt="num1", align="right", title="Annual forecast"),
-                ],
-            ),
-            col.group(
-                "Consumer prices",
-                [
-                    col.subcolumns(
-                        "Latest",
-                        [
-                            col.number("cpi", fmt="num1", align="right").neg(),
-                            col.auto("month").align("left").font_color("#94a3b8"),
-                        ],
-                    )
-                ],
-            ),
-        ],
-        settings=settings(title="Sub-columns inside groups", width="760px"),
-        row_lines=False,
-        border=False,
-    )
-
-
-def merged() -> EvidentialTable:
-    rows = [
-        {"site": "Alpha", "low": 12, "high": 48, "value": 30.2, "uncert": 1.4, "n": 842, "pct": 0.62},
-        {"site": "Beta", "low": 8, "high": 31, "value": 19.6, "uncert": 0.9, "n": 511, "pct": 0.38},
-        {"site": "Gamma", "low": 21, "high": 60, "value": 42.1, "uncert": 2.0, "n": 1204, "pct": 0.89},
-    ]
-    return EvidentialTable(
-        rows,
-        columns=[
-            col.text("site", title="Site"),
-            col.merge("range", cols_merge_range("low", "high", fmt="num0", title="Range")),
-            col.merge(
-                "measurement",
-                cols_merge_uncert("value", "uncert", fmt="num1", title="Value"),
-            ),
-            col.merge("share", cols_merge_n_pct("n", "pct", title="Share")),
-        ],
-        settings=settings(title="Merged columns", width="560px"),
-    )
-
-
-def grouped() -> EvidentialTable:
-    return grouped_table(
-        _orders(),
-        "SELECT category AS category, sales FROM needful_things.orders",
-        dimensions=["category"],
-        measures=["round(sum(sales), 0) AS sales", "count(*) AS orders"],
-        dimension_config={"category": col.text("category")},
-        measure_config={
-            "sales": col.currency("sales", decimals=0),
-            "orders": col.integer("orders"),
-        },
-        title="Grouped totals",
-        page_size=10,
-        width="560px",
-    )
-
-
-def pivot() -> EvidentialTable:
-    return pivot_table(
-        _orders(),
-        "SELECT category, year(order_datetime) AS year, sales FROM needful_things.orders",
-        dimensions=["category"],
-        pivots=["year"],
-        measures=["round(sum(sales), 0) AS sales"],
-        dimension_config={"category": col.text("category")},
-        measure_config={"sales": col.currency("sales", decimals=0)},
-        title="Pivoted columns",
-        page_size=10,
-        width="640px",
-    )
-
-
-def comparison() -> EvidentialTable:
-    return comparison_table(
-        _orders(),
-        "SELECT category, order_datetime, sales FROM needful_things.orders",
-        dimensions=["category"],
-        measures=["round(sum(sales), 0) AS sales"],
-        date_column="order_datetime",
-        compare_vs="prior year",
-        measure_config={"sales": col.currency("sales", decimals=0)},
-        title="Prior-period comparison",
-        page_size=10,
-        width="820px",
-    )
-
-
-def back_to_back() -> EvidentialTable:
-    rows = [
-        {"country": "Switzerland", "spend": 26.0, "rate": 1.52, "color": "#d9a01c"},
-        {"country": "Canada", "spend": 19.1, "rate": 1.00, "color": "#b23a2e"},
-        {"country": "Australia", "spend": 18.2, "rate": 1.38, "color": "#3a9b9b"},
-        {"country": "United Kingdom", "spend": 13.3, "rate": 1.00, "color": "#d9a01c"},
-        {"country": "France", "spend": 12.5, "rate": 0.98, "color": "#d9a01c"},
-        {"country": "Germany", "spend": 10.0, "rate": 0.55, "color": "#d9a01c"},
-        {"country": "Slovenia", "spend": 9.6, "rate": 0.96, "color": "#3a9b9b"},
-        {"country": "Belgium", "spend": 9.0, "rate": 0.66, "color": "#3a9b9b"},
-        {"country": "Sweden", "spend": 7.4, "rate": 0.79, "color": "#d9a01c"},
-        {"country": "Ireland", "spend": 6.5, "rate": 0.40, "color": "#3a9b9b"},
-    ]
-    return EvidentialTable(
-        rows,
-        settings=settings(
-            title="Back-to-back bars",
-            caption="Illustrative data, in the style of The Economist.",
-            width="820px",
-            row_shading=True,
-            row_lines=False,
-            border=False,
-            stretch=False,
-        ),
-        columns=[
-            col.currency("spend", decimals=1, title="Sales per capita (CAD)")
-            .bar(
-                direction="left",
-                reference=4.3,
-                reference_label="OECD median 4.3",
-                color="@color",
-                pad=3,
-            )
-            .align("left"),
-            col.text("country", title=""),
-            col.number("rate", fmt="num2", title="Foreign-to-Canadian rate")
-            .bar(
-                reference=0.32,
-                reference_label="OECD median 0.32",
-                color="@color",
-                pad=3,
-            )
-            .align("right"),
-            col.auto("color").hide(),
-        ],
-    )
-
-
-def rules() -> EvidentialTable:
-    rows = [
-        {"category": "Widgets", "sales": 128400.0},
-        {"category": "Gadgets", "sales": 96210.0},
-        {"category": "Gizmos", "sales": 54180.0},
-        {"category": "Doohickeys", "sales": 21760.0},
-    ]
-    return EvidentialTable(
-        rows,
-        columns=[
-            col.text("category", title="Category"),
-            col.number("sales", fmt="usd0", title="Sales").bar(),
-        ],
-        rules=[
-            text_transform(cells_body("category"), str.upper),
-            tab_style(cells_body("sales"), color="#b45309"),
-        ],
-        settings=settings(title="Display rules", width="480px"),
-    )
-
-
-def query() -> EvidentialTable:
-    return query_table(
-        _orders(),
-        "SELECT category, item, round(sum(sales), 0) AS sales FROM needful_things.orders GROUP BY category, item",
-        order="sales DESC",
-        limit=6,
-        columns=[col.text("category"), col.text("item"), col.currency("sales", decimals=0)],
-        title="Ad-hoc query",
-        width="620px",
-    )
-
-
-EXAMPLES: list[tuple[str, Callable[[], EvidentialTable]]] = [
-    ("quickstart", quickstart),
-    ("kinds", kinds),
-    ("relative-time", relative_time),
-    ("symbols", symbols),
-    ("visualizations", visualizations),
-    ("back-to-back", back_to_back),
-    ("styling", styling),
-    ("groups", groups),
-    ("subcolumns", subcolumns),
-    ("merged", merged),
-    ("grouped-table", grouped),
-    ("pivot-table", pivot),
-    ("comparison-table", comparison),
-    ("rules", rules),
-    ("query-table", query),
+#: (image path, marimo cell name) for the README graphic gallery.
+GALLERY: list[tuple[Path, str]] = [
+    (GALLERY_OUT / "bar.png", "graphic_bar"),
+    (GALLERY_OUT / "bar-centered.png", "graphic_bar_centered"),
+    (GALLERY_OUT / "bar-overlay.png", "graphic_bar_overlay"),
+    (GALLERY_OUT / "bar-back-to-back.png", "graphic_bar_back_to_back"),
+    (GALLERY_OUT / "dumbbell.png", "graphic_dumbbell"),
+    (GALLERY_OUT / "points.png", "graphic_points"),
+    (GALLERY_OUT / "boxplot.png", "graphic_boxplot"),
+    (GALLERY_OUT / "distribution.png", "graphic_distribution"),
+    (GALLERY_OUT / "stacked-bar.png", "graphic_stacked_bar"),
+    (GALLERY_OUT / "stack-likert.png", "graphic_stack_likert"),
+    (GALLERY_OUT / "strip.png", "graphic_strip"),
+    (GALLERY_OUT / "color.png", "graphic_color"),
+    (GALLERY_OUT / "chip.png", "graphic_chip"),
+    (GALLERY_OUT / "delta.png", "graphic_delta"),
+    (GALLERY_OUT / "sparklines.png", "graphic_sparklines"),
+    (GALLERY_OUT / "symbols.png", "graphic_symbols"),
+    (GALLERY_OUT / "boolean-icons.png", "graphic_boolean_icons"),
+    (GALLERY_OUT / "reference.png", "graphic_reference"),
 ]
 
 
-# --------------------------------------------------------------------------
-# Rendering
+@contextmanager
+def _server(notebook: Path) -> Iterator[str]:
+    """Start a screenshot notebook and yield its local URL."""
+    with socket.socket() as sock:
+        sock.bind(("127.0.0.1", 0))
+        port = sock.getsockname()[1]
+    url = f"http://127.0.0.1:{port}"
+    with tempfile.TemporaryFile(mode="w+") as log:
+        process = subprocess.Popen(
+            [
+                sys.executable,
+                "-m",
+                "marimo",
+                "run",
+                str(notebook),
+                "--headless",
+                "--no-token",
+                "--port",
+                str(port),
+            ],
+            cwd=ROOT,
+            env={**os.environ, "PYTHONUNBUFFERED": "1"},
+            stdout=log,
+            stderr=subprocess.STDOUT,
+        )
+        try:
+            deadline = time.monotonic() + 30
+            while time.monotonic() < deadline:
+                try:
+                    with urllib.request.urlopen(url, timeout=0.5):
+                        yield url
+                        return
+                except (urllib.error.URLError, TimeoutError):
+                    if process.poll() is not None:
+                        log.seek(0)
+                        raise RuntimeError(f"marimo exited before serving:\n{log.read()}") from None
+                    time.sleep(0.1)
+            raise RuntimeError("the screenshot notebook did not start within 30 seconds")
+        finally:
+            process.terminate()
+            try:
+                process.wait(timeout=5)
+            except subprocess.TimeoutExpired:
+                process.kill()
+                process.wait(timeout=5)
 
 
-class _Handler(SimpleHTTPRequestHandler):
-    def log_message(self, *args: object) -> None:  # noqa: D102 - silence the log
-        pass
+def _launch(playwright):
+    """Prefer an installed browser so no download is required locally."""
+    for kwargs in ({"channel": "msedge"}, {"channel": "chrome"}, {}):
+        try:
+            return playwright.chromium.launch(headless=True, **kwargs)
+        except Exception:  # pragma: no cover - depends on the machine
+            continue
+    raise RuntimeError("A Chromium-based browser is required; run `uv run playwright install chromium`")
 
 
-def _serve(directory: Path) -> tuple[ThreadingHTTPServer, int]:
-    server = ThreadingHTTPServer(("127.0.0.1", 0), partial(_Handler, directory=str(directory)))
-    threading.Thread(target=server.serve_forever, daemon=True).start()
-    return server, server.server_address[1]
+def _wait_for_tables(page, targets: list[tuple[Path, str]]) -> None:
+    for cell in [cell for _, cell in targets]:
+        page.locator(f'[data-cell-name="{cell}"] .et-table').wait_for(state="visible", timeout=60_000)
+    page.wait_for_function("document.fonts.status === 'loaded'")
+    page.wait_for_timeout(500)
 
 
-def _page(tables: list[tuple[str, EvidentialTable]]) -> str:
-    panels = "\n".join(f'  <div class="shot" id="{slug}"></div>' for slug, _ in tables)
-    data = {slug: {"rows": t.rows, "columns": t.columns, "options": t.options} for slug, t in tables}
-    return f"""<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <link rel="stylesheet" href="src/evidential/static/table.css" />
-  <style>
-    body {{ margin: 0; background: #f8fafc; font-family: ui-sans-serif, system-ui, sans-serif; }}
-    .shot {{ display: inline-block; margin: 0; padding: 20px; background: #fff; }}
-  </style>
-</head>
-<body>
-{panels}
-  <script type="module">
-    import widget from "./src/evidential/static/table.js";
-    const DATA = {json.dumps(data)};
-    const model = (d) => ({{ get: (k) => d[k], set() {{}}, on() {{}}, off() {{}}, save_changes() {{}} }});
-    for (const [slug, d] of Object.entries(DATA)) {{
-      widget.render({{ model: model(d), el: document.getElementById(slug) }});
-    }}
-  </script>
-</body>
-</html>
-"""
+def _capture(page, cell: str, path: Path) -> Path:
+    root = page.locator(f'[data-cell-name="{cell}"] .et-root')
+    root.scroll_into_view_if_needed()
+    # Let the table keep its configured width while the screenshot gains the
+    # same 20px white border the documentation used to draw around each table.
+    root.evaluate(
+        """el => {
+            el.style.padding = '20px';
+            el.style.background = '#fff';
+            el.style.boxSizing = 'content-box';
+        }"""
+    )
+    path.parent.mkdir(parents=True, exist_ok=True)
+    root.screenshot(path=str(path))
+    return path
 
 
-def render(tables: list[tuple[str, EvidentialTable]]) -> Iterator[Path]:
+def _notebook_targets() -> list[tuple[Path, list[tuple[Path, str]]]]:
+    api_targets = [(OUT / f"{slug}.png", cell) for slug, cell in SHOTS]
+    return [
+        (NOTEBOOK, [*api_targets, *EXTRAS]),
+        (GALLERY_NOTEBOOK, GALLERY),
+    ]
+
+
+def render() -> Iterator[Path]:
     from playwright.sync_api import sync_playwright
 
-    OUT.mkdir(parents=True, exist_ok=True)
-    HTML.write_text(_page(tables), encoding="utf-8")
-    server, port = _serve(ROOT)
-    try:
-        with sync_playwright() as playwright:
-            browser = playwright.chromium.launch(channel="msedge", headless=True)
-            page = browser.new_page(viewport={"width": 1500, "height": 1000}, device_scale_factor=2)
-            page.goto(f"http://127.0.0.1:{port}/{HTML.name}", wait_until="load")
-            for slug, _ in tables:
-                page.wait_for_selector(f"#{slug} .et-table", timeout=20_000)
-            page.wait_for_timeout(600)
-            for slug, _ in tables:
-                path = OUT / f"{slug}.png"
-                page.locator(f"#{slug}").screenshot(path=str(path))
-                yield path
+    with sync_playwright() as playwright:
+        browser = _launch(playwright)
+        try:
+            for notebook, targets in _notebook_targets():
+                with _server(notebook) as url:
+                    context = browser.new_context(
+                        viewport={"width": 1600, "height": 1000},
+                        device_scale_factor=2,
+                        color_scheme="light",
+                    )
+                    page = context.new_page()
+                    page.goto(url, wait_until="networkidle")
+                    _wait_for_tables(page, targets)
+                    for path, cell in targets:
+                        yield _capture(page, cell, path)
+                    context.close()
+        finally:
             browser.close()
-    finally:
-        server.shutdown()
-        HTML.unlink(missing_ok=True)
 
 
 def main() -> None:
-    tables = [(slug, build()) for slug, build in EXAMPLES]
-    for path in render(tables):
+    for path in render():
         print(f"wrote {path.relative_to(ROOT)}")
 
 

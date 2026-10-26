@@ -103,20 +103,20 @@ def _(EvidentialTable, col, counts, mo):
             subtitle="Each row sums to 100%",
             row_lines=False,
             border=False,
-            stretch=False,
+            stretch=True, #width=600,
             columns=[
                 col.text("region"),
                 col.stacked_bar(
-                    "new",
-                    "renewal",
-                    "expansion",
-                    colors=["#2563eb", "#60a5fa", "#bfdbfe"],
-                    labels="percent",
-                    label_align="begin",
-                    size=0.6,
-                    normalize="percent",
-                    title="Share",
-                ).scale(domain=(0, 100), axis=True, gridlines=True),
+                        "new",
+                        "renewal",
+                        "expansion",
+                        colors=["#2563eb", "#60a5fa", "#bfdbfe"],
+                        labels="percent",
+                        label_align="begin",
+                        size=1,
+                        normalize="percent",
+                        title="Share")
+                    .scale(domain=(0, 100), axis=True, gridlines=True),
             ],
         )
     )
@@ -185,7 +185,7 @@ def _(EvidentialTable, col, mo, questions):
             subtitle="A neutral-centred five-part stack",
             row_lines=False,
             border=False,
-            stretch=False,
+            stretch=True, width=600,
             columns=[
                 col.text("question"),
                 col.stacked_bar(
@@ -200,7 +200,7 @@ def _(EvidentialTable, col, mo, questions):
                     diverge_at="neutral",
                     neutral="split",
                     normalize="percent",
-                    size=0.5,
+                    size=1,
                     title="Response",
                 ),
             ],

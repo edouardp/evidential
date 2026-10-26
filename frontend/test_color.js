@@ -104,3 +104,17 @@ test("color scale uses inferred bounds and requested interpolation mode", () => 
   assert.equal(getColorForValue(1, named), "#16a34a");
   assert.ok(createColorScale([0, 1], { colorPalette: "unknown" }));
 });
+
+test("tableau names resolve in cell styles and palette lists", () => {
+  // `colorStylesFromHex` resolves a named colour before chroma sees it.
+  const styles = colorStylesFromHex("tab:blue");
+  assert.equal(styles.backgroundColor, "#1f77b4");
+  // A list palette may mix named and literal colours.
+  const scale = buildColorVizScale(
+    { color_options: { color_scale: ["tab:blue", "tab:red"] } },
+    { min: 0, max: 10 },
+    null,
+  );
+  assert.equal(scale.colorPalette[0], "#1f77b4");
+  assert.equal(scale.colorPalette[scale.colorPalette.length - 1], "#d62728");
+});

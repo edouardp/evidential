@@ -63,12 +63,12 @@ def _(EvidentialTable, col, mo, settings, shares):
                 subtitle="Axis above the bars, with gridlines",
                 row_lines=False,
                 border=False,
-                stretch=True,
+                stretch=False,
             ),
             columns=[
                 col.text("party"),
                 col.bar("share", color="#2563eb")
-                .scale(domain=(0, 40), axis=True, gridlines=True, unit="%"),
+                   .scale(domain=(0, 40), axis=True, gridlines=True, unit="%"),
             ],
         )
     )
@@ -96,11 +96,11 @@ def _(EvidentialTable, col, mo, shares):
             subtitle="Axis below the bars",
             row_lines=True,
             border=False,
-            stretch=True,
+            stretch=True, width=600,
             columns=[
                 col.text("party"),
-                col.bar("share", color="#0ea5e9")
-                .scale(domain=(0, 40), axis=True, axis_position="bottom", unit="%"),
+                col.bar("share", color="#0ea5e9").label("@share")
+                   .scale(domain=(0, 40), axis=True, axis_position="bottom", unit="%"),
             ],
         )
     )
@@ -138,7 +138,7 @@ def _(EvidentialTable, col, mo, ratios):
             subtitle="A log axis with gridlines and the null at 1",
             row_lines=False,
             border=False,
-            stretch=False,
+            stretch=True, width=600,
             columns=[
                 col.text("study"),
                 col.range("low", "high", cap="line", color="#94a3b8")
@@ -149,7 +149,8 @@ def _(EvidentialTable, col, mo, ratios):
                     axis=True,
                     gridlines=True,
                 )
-                .reference_line(1, label="null"),
+                #.reference_line(1, label="null")
+                .title("Range").align("center")
             ],
         )
     )

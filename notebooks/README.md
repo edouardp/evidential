@@ -47,6 +47,8 @@ and without network access.
 | [`44_spec_conformance.py`](44_spec_conformance.py) | Scale reference layouts, fixed bounds and missing marks, point outlines, shared diverging stacks, irregular sparklines and paginated section summaries. |
 | [`45_display_row_layout.py`](45_display_row_layout.py) | Display-only group headings with counts/totals, optional group and grand summaries, nested groups, centered headings, and detail-based pagination with continuation headings. |
 | [`48_dumbbell_plots.py`](48_dumbbell_plots.py) | Plain dumbbells, negative connector colors, optional direction chevrons, and equal, missing and negative-valued endpoints. |
+| [`49_api_screenshots.py`](49_api_screenshots.py) | Named table examples captured into `docs/api/images` and `docs/preview.png` by `make api-screenshots`. |
+| [`50_graphics_gallery.py`](50_graphics_gallery.py) | Named examples of every graphic type, captured into `docs/img/graphics` for the README gallery. |
 
 `sample_data/needful_things/orders.parquet` is Evidence's demo dataset, copied
 from the published docs site.

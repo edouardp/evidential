@@ -222,27 +222,27 @@ def _(EvidentialTable, col, connection, label, mo):
             ),
             title="Monthly trips pivoted by payment type",
             search=True,
-            row_shading=True,
+            row_shading=3,
             columns=[
                 col.date("day", fmt="yyyy-mm-dd", title="Day"),
                 col.group(
                     "Payment type",
                     [
                         col.bar(
-                            "credit_card", title="Credit card", format="num0",
-                            label=label.auto_position("outside end"),
+                            "credit_card", title="Credit card", color="tab:blue",
+                            label=label.auto_position("outside end").fmt("num0"),
                         ),
                         col.bar(
                             "cash", title="Cash", format="num0",
-                            label=label.position("inside end"),
+                            label=label.position("inside end"), color="tab:purple",
                         ),
                         col.bar(
                             "no_charge", title="No charge", format="num0",
-                            label=label.position("inside end"),
+                            label=label.position("inside end"), color="tab:green",
                         ),
                         col.bar(
                             "dispute", title="Dispute", format="num0",
-                            label=label.position("inside end"),
+                            label=label.position("inside end"), color="tab:red",
                         ),
                     ],
                 ),
@@ -257,6 +257,11 @@ def _(EvidentialTable, col, connection, label, mo):
         )
     )
     pivoted
+    return
+
+
+@app.cell
+def _():
     return
 
 

@@ -12,9 +12,11 @@ things you actually compose:
 3. **Derived values** — merged columns and the grouped / pivot / comparison
    helpers, which reuse the same column builder.
 
-Every screenshot in this document is produced by
-[`scripts/api_screenshots.py`](../../scripts/api_screenshots.py); re-run it with
-`uv run python scripts/api_screenshots.py` after changing an example.
+Every screenshot in this document comes from
+[`notebooks/49_api_screenshots.py`](../../notebooks/49_api_screenshots.py) and is
+captured with Playwright by
+[`scripts/api_screenshots.py`](../../scripts/api_screenshots.py). Run
+`make api-screenshots` after changing an example.
 
 - [Quick start](#quick-start)
 - [The fluent column builder](#the-fluent-column-builder)
@@ -661,7 +663,9 @@ columns=[
 Two references are useful throughout: `@column` marks a column name wherever an
 option names a column (`sort_by="@x"`, `scale="@color"`, `footnote="@note"`,
 `link="@url"`, `color="@bar_colour"`, …), and colours accept matplotlib names
-(`"tab:blue"`, `"C3"`, `"k"`).
+(`"tab:blue"`, `"C3"`, `"k"`) **wherever a colour is accepted** — marks,
+`cell_style`, `highlight`, `font_color`, `negative_color`, theme options,
+palette lists and colour stops.
 
 ### Shared numeric domains
 

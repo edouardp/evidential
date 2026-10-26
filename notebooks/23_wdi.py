@@ -59,7 +59,7 @@ def _():
 @app.cell
 def _(Path, duckdb, mo, os):
     parquet = Path(
-        os.environ.get("WDI_PARQUET", "~/Downloads/WDI_CSV_2026_10_01/parquet")
+        os.environ.get("WDI_PARQUET", "~/datasets/WDI_CSV_2026_10_01/parquet")
     ).expanduser()
     if not (parquet / "wdi_observations").is_dir():
         mo.stop(
@@ -407,7 +407,7 @@ def _(EvidentialTable, col, connection, indicator, mo, region):
                 ),
                 col.number("avg_last_5", fmt="num2", title="Last 5y avg"),
                 col.number("avg_prev_10", fmt="num2", title="Prev 10y avg"),
-                col.sparkline("trend", title="Since 2000", x="year", y="value", type="bar", 
+                col.sparkline("trend", title="Since 2000", x="year", y="value", type="bar",
                     fit_to_data=True, width=130, height=26,
                 )
                 .sort_by("kendall_tau")
@@ -609,36 +609,40 @@ def trade_comparison(LiveEvidentialTable, col, connection, label, mo):
         caption="Source: World Bank WDI, NE.IMP.GNFS.CD and NE.EXP.GNFS.CD. Goods and services; regional and income-group aggregates excluded.",
         search=True,
         page_size=15,
-        row_shading=True,
+        row_shading=3,
         border=False,
         row_lines=False,
         columns=[
             col.text("country"),
-            col.bar(
-                "imports", side="left", size=0.7, color="#2563eb",
-                label=label.fmt("compact").auto_position("outside end"),
-            )
-            .bar(
-                "exports", side="right", size=0.7, color="#0f766e",
-                label=label.fmt("compact").auto_position("outside end"),
-            )
-            .title("Imports ← Trade (US$) → Exports")
-            .align("center")
-            .fmt("compact")
-            .sort_by("total_trade")
-            .scale(axis=True, gridlines=True)
-            .reference_line(0, color="#64748b"),
+            col.bar("imports", side="left", size=0.8, color="#2563eb",
+                               label=label.fmt("compact").auto_position("outside end"))
+                .bar("exports", side="right", size=0.8, color="#0f766e",
+                                label=label.fmt("compact").auto_position("outside end"))
+                .title("Imports ← Trade (US$) → Exports")
+                .align("center")
+                .fmt("compact")
+                .sort_by("total_trade")
+                .scale(axis=True, gridlines=True)
+                .reference_line(0, color="#64748b"),
             col.percent("exports_imports_ratio", title="Exports/imports", decimals=1)
-            .color(scale=["#fee2e280", "#ffffff20", "#bbf7d0"], min=0.5, max=1.5, midpoint=1),
+               .color(scale=["#fee2e2", "#ffffff", "#bbf7d0"], min=0.6, max=1.4, midpoint=1),
             col.number("net_exports", title="Balance\n(US$)", format="compact")
-            .color(scale=["#fee2e280", "#ffffff20", "#bbf7d0"], midpoint=0),
+               .color(scale=["#fee2e2", "#ffffff", "#bbf7d0"], midpoint=0),
             col.number("total_trade", title="Reported trade\n(US$)", format="compact"),
-            col.sparkline(
-                "trade_history", title="Exports/imports\n20-year trend", type="area",
-                x="year", y="ratio", y_fmt="pct1", color="#0f766e",
-                width=130, height=26, fit_to_data=True, markers="ends",
-                signed=True, reference=1, reference_color="#94a3b8",
-            ).align("center").sort_by("exports_imports_ratio"),
+            col.sparkline("trade_history",
+                          title="Exports/imports\n20-year trend",
+                          type="area",
+                          x="year", y="ratio", y_fmt="pct1",
+                          color="#0f766e",
+                          width=130,
+                          height=26,
+                          fit_to_data=True,
+                          markers="ends",
+                          signed=True,
+                          reference=1,
+                          reference_color="#94a3b8")
+                .align("center")
+                .sort_by("exports_imports_ratio"),
         ],
     )
     mo.vstack([trade_balance])

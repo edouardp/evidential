@@ -111,7 +111,7 @@ def _(EvidentialTable, col, mo, monthly):
             title="Yellow taxi — daily totals",
             search=True,
             page_size=15,
-            row_shading=True,
+            row_shading=3,
             max_height="480px",
             columns=[
                 col.date("pickup_day", fmt="date", title="Day"),

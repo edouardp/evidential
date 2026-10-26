@@ -79,7 +79,7 @@ def _(EvidentialTable, col, mo, polling, settings):
             ),
             columns=[
                 col.text("party"),
-                col.bar("previous", color="#e2e8f0", size=0.9, title="Previous")
+                col.bar("previous", color="#cc77ee", size=0.9, title="Previous")
                 .bar("votes", color="@colour", size=0.42, label={"value": True, "suffix": "%"}, label_position="outside_end")
                 .point("target", color="#0f766e", size=7)
                 .scale(domain=(0, 45)),
@@ -110,11 +110,11 @@ def _():
         {"name": "Effect C", "low": -1.8, "estimate": -0.5, "high": 0.7},
         {"name": "Effect D", "low": 0.3, "estimate": 0.9, "high": 1.5},
     ]
-    return
+    return (estimates,)
 
 
-app._unparsable_cell(
-    r"""
+@app.cell
+def _(EvidentialTable, col, estimates, mo, settings):
     forest = mo.ui.anywidget(
         EvidentialTable(
             estimates,
@@ -129,15 +129,14 @@ app._unparsable_cell(
                 col.text("name"),
                 col.range("low", "high", cap="line", color="#94a3b8", title="Estimate", align="center")
                    .point("estimate", color="#1d4ed8", size=8)
-                 # .reference_line(0, label="No effect"),
-                col.numeric("low")
+                   .reference_line(0).scale(axis=True, axis_position="bottom"),
+                col.number("low"),
+                col.number("high")
             ],
         )
     )
     forest
-    """,
-    name="_"
-)
+    return
 
 
 @app.cell
@@ -177,7 +176,7 @@ def _(EvidentialTable, col, likert, mo, settings):
                 caption="Illustrative survey data.",
                 row_lines=False,
                 border=False,
-                stretch=False,
+                stretch=True, #width=600,
             ),
             columns=[
                 col.text("question"),
@@ -194,7 +193,8 @@ def _(EvidentialTable, col, likert, mo, settings):
                     diverge_at="neutral",
                     neutral="split",
                     title="Response",
-                ),
+                    size=1)
+                    .title("Response").align("center")
             ],
         )
     )
@@ -204,7 +204,7 @@ def _(EvidentialTable, col, likert, mo, settings):
 
 @app.cell
 def _(EvidentialTable, col, form, mo, settings):
-    strips = mo.ui.anywidget(
+    TextTestrips = mo.ui.anywidget(
         EvidentialTable(
             form,
             settings=settings(
@@ -224,7 +224,7 @@ def _(EvidentialTable, col, form, mo, settings):
             ],
         )
     )
-    strips
+    TextTestrips
     return
 
 
@@ -262,15 +262,15 @@ def _(EvidentialTable, col, effects, mo, settings):
                 subtitle="Log scale with the null effect at 1",
                 row_lines=False,
                 border=False,
-                stretch=False,
+                stretch=True, width=600,
             ),
             columns=[
                 col.text("study"),
                 col.range("low", "high", cap="arrow", color="#94a3b8")
                 .point("estimate", color="#1d4ed8", size=8)
                 .scale(domain=(0.1, 10), transform="log")
-                .reference_band(0.8, 1.25, label="equivalence")
-                .reference_line(1, label="null"),
+                #.reference_band(0.8, 1.25)
+                #.reference_line(1),
             ],
         )
     )
@@ -336,8 +336,9 @@ def _(EvidentialTable, col, curves, mo, settings):
             columns=[
                 col.text("party"),
                 col.distribution("density", x="x", y="y", color="@ink", height=0.5)
-                .point("median", color="#111111", size=7, outline=False)
-                .scale(domain=(28, 68)),
+                .point("median", color="#111111", size=8, outline="white")
+                .scale(domain=(28, 68), axis=True)
+                .title("Density").align("center"),
             ],
         )
     )
@@ -349,10 +350,11 @@ def _(EvidentialTable, col, curves, mo, settings):
             columns=[
                 col.text("party"),
                 col.distribution("density", x="x", y="y", color="@ink")
-                .point("median", color="#111111", size=5, outline=False)
-                .scale(domain=(28, 68)),
+                   .point("median", color="#111111", size=8, outline="white")
+                   .scale(domain=(28, 68))
+                   .title("Density").align("center"),
             ],
-            width=200, search=False, page_size=0, border=False, row_lines=False,
+            width=300, search=False, page_size=0, border=False, row_lines=False,
         )
     )
     mo.hstack([bands, compact_bands], justify="start", gap=2)
@@ -381,13 +383,14 @@ def _(EvidentialTable, col, mo, polling, settings):
                 subtitle="Last election above, this poll below",
                 row_lines=False,
                 border=False,
-                stretch=False,
+                stretch=True, width=600
             ),
             columns=[
                 col.text("party"),
-                col.bar("previous", color="#cbd5e1", size=0.36, valign="top")
-                .bar("votes", color="@colour", size=0.36, valign="bottom")
-                .scale(domain=(0, 45)),
+                col.bar("previous", color="#b0b0b0", size=0.2, valign="bottom")
+                   .bar("votes", color="@colour", size=0.8, valign="top")
+                   .scale(domain=(0, 45))
+                   .title("Votes")
             ],
         )
     )
@@ -426,14 +429,16 @@ def _(EvidentialTable, col, mo, settings, wards):
             settings=settings(
                 title="Waiting times by ward",
                 subtitle="Mean as a bar, every observation as a point",
-                row_lines=False,
+                row_lines=True,
                 border=False,
-                stretch=False,
+                stretch=True, width=600,
             ),
             columns=[
                 col.text("ward"),
                 col.bar("mean", color="#bfdbfe", title="Mean")
-                .points("observations", size=6, color="#1d4ed860"),
+                   .points("observations", size=8, color="#1d4ed860", outline=False)
+                   .title("Mean")
+                   .align("center"),
             ],
         )
     )
@@ -477,9 +482,9 @@ def _(EvidentialTable, col, forecast, mo, settings):
             ),
             columns=[
                 col.text("month"),
-                col.range("low", "high", fill=True, color="#a5b4fc")
-                .point("estimate", color="#4338ca", size=8)
-                .scale(domain=(80, 140)),
+                col.range("low", "high", fill=True, color="#a5b4fc", size=1.0)
+                   .point("estimate", color="#4338ca", size=5)
+                   .scale(domain=(80, 140)),
             ],
         )
     )

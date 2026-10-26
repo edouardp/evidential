@@ -61,10 +61,10 @@ def chart_style(col, settings):
     def sales_column(**options):
         return (
             col.range("before", "after", color="#222222", size=2, **options)
-            .point("before", color="#6699ee", outline="#2f5fa8", size=12)
-            .point("after", color="#ff6666", outline="#cc1111", size=12)
-            .title("Weekly Sales")
-            .scale(domain=(0, 100), axis=True, axis_position="bottom")
+               .point("before", color="#6699ee", outline="#2f5fa8", size=12)
+               .point("after", color="#ff6666", outline="#cc1111", size=12)
+               .title("Weekly Sales").align("center")
+               .scale(domain=(0, 100), axis=True, axis_position="bottom")
         )
 
     return report, sales_column
@@ -89,7 +89,7 @@ def comparison(EvidentialTable, col, mo, report, sales, sales_column):
         )
     )
     mo.hstack([plain, negative], justify="start", gap=3, wrap=True)
-    return negative, plain
+    return
 
 
 @app.cell
@@ -100,11 +100,14 @@ def reference_style(EvidentialTable, col, mo, report, sales, sales_column):
             settings=report,
             title="Color and direction",
             subtitle="Chevron points from before to after",
-            columns=[col.text("country"), sales_column(color_negative="#cc1111", direction_marker=True)],
+            columns=[
+                col.text("country"),
+                sales_column(color_negative="#cc1111", direction_marker=True)
+            ],
         )
     )
     mo.vstack([directed])
-    return (directed,)
+    return
 
 
 @app.cell
@@ -125,13 +128,13 @@ def signed_changes(EvidentialTable, col, mo, report):
                 col.range("before", "after", color="#222222", color_negative="#cc1111", size=2, direction_marker=True)
                 .point("before", color="#6699ee", outline="#2f5fa8", size=12)
                 .point("after", color="#ff6666", outline="#cc1111", size=12)
-                .title("Before → After")
+                .title("Before → After").align("center")
                 .scale(domain=(-10, 10), axis=True, axis_position="bottom"),
             ],
         )
     )
     mo.vstack([signed])
-    return (signed,)
+    return
 
 
 @app.cell

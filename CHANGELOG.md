@@ -4,7 +4,7 @@ All notable changes to this project are documented in this file. The format is
 based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this
 project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## 0.1.0 (2026-10-13)
+## 0.1.0 (2026-10-26)
 
 First release.
 
@@ -18,8 +18,9 @@ First release.
   statistics, row shading and lines, frozen columns, wrapping, rotated headings,
   column merging (`cols_merge*`), substitutions (`sub_*`) and footnote marks.
 - **Formats** — Excel-style codes via `ssf`, auto-scaling `num`/`usd`/`pct`, and
-  the special formatters `bytes`, `duration`, `roman` and `flag` (ISO 3166-1
-  alpha-2 and alpha-3 country codes).
+  per-value `compact` units, readable scientific notation with superscript
+  exponents, plus `bytes`, `duration`, `roman` and `flag` (ISO 3166-1 alpha-2
+  and alpha-3 country codes).
 - **Conditional visualisations** — `viz="bar"`, `viz="color"`, `viz="chip"`,
   `viz="sparkline"` (line/area/bar), `viz="delta"`, plus column/group highlights
   and per-row conditional colours.
@@ -28,7 +29,22 @@ First release.
   `comparison_table`, `query_table` and client-side `grouped_records`.
 - **Live tables** — `LiveEvidentialTable` re-runs a parameterised query when its
   controls change.
+- **Fluent API** — typed column kinds, reusable label builders, shared numeric
+  domains, hierarchical header groups and independently aligned sub-columns.
+- **Declarative graphics** — labeled, centered, overlaid, back-to-back and
+  stacked bars; points, ranges, dumbbells with signed colors and direction
+  chevrons; strips, boxplots and distribution uncertainty bands. Shared axes
+  support logarithmic scales, minor ticks, references and gridlines.
+- **Sparklines** — line, area, bar, points and change styles, optional adjacent
+  differences, gradients and signed area fills around a configurable reference.
+- **Display rows** — synthetic group headings, summaries and grand totals stay
+  separate from source records, with continuation headings across pages.
+- **Source inspection** — `.raw` returns detached, unformatted source records
+  on regular and live tables, including the query and aggregation helpers.
+- **Readable details** — adaptive superscript footnote symbols, sub-column
+  statistics controls, contrast-aware labels, automatic inside/outside bar
+  labels, chart-aware column widths and nulls-last sorting in both directions.
 - **Interaction** — sorting, search, pagination, row links, row selection that
   drives the notebook, CSV download and a fullscreen dialog.
-- **Documentation** — 29 runnable notebooks plus design, architecture and ADR
-  documents.
+- **Documentation** — 50 demo notebooks, a graphics gallery, repeatable
+  Playwright screenshots, API documentation and architecture decisions.

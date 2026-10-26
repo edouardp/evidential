@@ -1,6 +1,7 @@
 // Column ordering and header layout, independent of row processing.
 import { h, withFigure, alignStyle, isStub } from "./dom.js";
 import { formatTitle } from "./format.js";
+import { resolveColor } from "./color.js";
 
 export function groupPath(group) {
   if (!group) return [];
@@ -147,7 +148,7 @@ export function renderHeader({columns, rowNumbers, options: opts, sort, onSort})
         // highlight — a whole-group band, not a single-column one.
         const spanned = columns.slice(cell.start, cell.start + cell.span);
         if (spanned.length && spanned.every((c) => c.highlight && c.highlight === spanned[0].highlight)) {
-          th.style.backgroundColor = spanned[0].highlight;
+          th.style.backgroundColor = resolveColor(spanned[0].highlight);
         }
         groupRow.append(th);
       }
@@ -183,7 +184,7 @@ export function renderHeader({columns, rowNumbers, options: opts, sort, onSort})
       th.style.setProperty("--et-th-angle", `${rotation}deg`);
     }
     const spanned = columns.slice(leaf.start, leaf.start + leaf.span);
-    if (col.highlight && spanned.every((member) => member.highlight === col.highlight)) th.style.backgroundColor = col.highlight;
+    if (col.highlight && spanned.every((member) => member.highlight === col.highlight)) th.style.backgroundColor = resolveColor(col.highlight);
     const inner = h("span", { class: "et-th-inner" });
     let title =
       isStubColumn && opts.stub_head

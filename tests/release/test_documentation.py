@@ -10,6 +10,7 @@ from xml.etree import ElementTree
 import pytest
 
 ROOT = Path(__file__).resolve().parents[2]
+README_ASSET_ROOT = "https://raw.githubusercontent.com/edouardp/evidential/main/"
 DOCS = (
     "README.md",
     "docs/design-and-dx.md",
@@ -67,9 +68,18 @@ def test_local_images_exist(relative: str) -> None:
     text = (ROOT / relative).read_text()
     base = (ROOT / relative).parent
     for target in re.findall(r"!\[[^\]]*\]\(([^)]+)\)", text):
+        if target.startswith(README_ASSET_ROOT):
+            assert (ROOT / target.removeprefix(README_ASSET_ROOT)).exists(), f"{relative}: missing image {target}"
+            continue
         if target.startswith(("http://", "https://")):
             continue
         assert (base / target).exists(), f"{relative}: missing image {target}"
+
+
+def test_readme_images_are_absolute_for_pypi():
+    targets = re.findall(r"!\[[^\]]*\]\(([^)]+)\)", (ROOT / "README.md").read_text())
+    assert targets
+    assert all(target.startswith("https://") for target in targets), "PyPI cannot resolve repository-relative images"
 
 
 @pytest.mark.parametrize("relative", DOCS)
@@ -82,7 +92,9 @@ def test_mermaid_blocks_are_present_and_balanced(relative: str) -> None:
 
 
 def test_api_images_match_the_screenshot_script() -> None:
-    """Every committed API image is referenced from API.md, and vice versa."""
+    """API.md, the capture script and the committed images use the same slugs."""
+    from scripts.api_screenshots import SHOTS
+
     doc = ROOT / "docs" / "api" / "API.md"
     referenced = {
         Path(target).name
@@ -90,8 +102,42 @@ def test_api_images_match_the_screenshot_script() -> None:
         if target.startswith("images/")
     }
     committed = {path.name for path in (ROOT / "docs" / "api" / "images").glob("*.png")}
-    assert referenced == committed, (
-        f"only in API.md: {sorted(referenced - committed)}; only on disk: {sorted(committed - referenced)}"
+    expected = {f"{slug}.png" for slug, _ in SHOTS}
+    assert referenced == expected == committed, (
+        f"only in API.md: {sorted(referenced - expected)}; "
+        f"only in SHOTS: {sorted(expected - referenced)}; "
+        f"only on disk: {sorted(committed - expected)}"
+    )
+
+
+def test_screenshots_have_a_named_notebook_cell() -> None:
+    """Every capture target points at a cell in its screenshot notebook."""
+    from scripts.api_screenshots import EXTRAS, GALLERY, GALLERY_NOTEBOOK, NOTEBOOK, SHOTS
+
+    for notebook, targets in ((NOTEBOOK, [*SHOTS, *EXTRAS]), (GALLERY_NOTEBOOK, GALLERY)):
+        tree = ast.parse(notebook.read_text())
+        cells = {node.name for node in tree.body if isinstance(node, ast.FunctionDef)}
+        names = [cell for _, cell in targets]
+        missing = [cell for cell in names if cell not in cells]
+        assert not missing, f"missing screenshot cell(s) in {notebook.name}: {missing}"
+        assert len(set(names)) == len(names), f"screenshot cell names in {notebook.name} must be unique"
+
+
+def test_gallery_images_match_readme_and_capture_targets() -> None:
+    """The README references every captured gallery image, and vice versa."""
+    from scripts.api_screenshots import GALLERY
+
+    referenced = {
+        path
+        for target in re.findall(r"!\[[^\]]*\]\(([^)]+)\)", (ROOT / "README.md").read_text())
+        if (path := target.removeprefix(README_ASSET_ROOT)).startswith("docs/img/graphics/")
+    }
+    expected = {str(path.relative_to(ROOT)) for path, _ in GALLERY}
+    committed = {str(path.relative_to(ROOT)) for path in (ROOT / "docs" / "img" / "graphics").glob("*.png")}
+    assert referenced == expected == committed, (
+        f"only in README: {sorted(referenced - expected)}; "
+        f"only in GALLERY: {sorted(expected - referenced)}; "
+        f"only on disk: {sorted(committed - expected)}"
     )
 
 

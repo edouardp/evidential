@@ -39,7 +39,7 @@ export function fontSizeValue(value) {
   }
   return text;
 }
-import { colorStylesFromHex } from "./color.js";
+import { colorStylesFromHex, resolveColor } from "./color.js";
 
 export class EvidentialTableRenderer {
   constructor(model, el) {
@@ -161,7 +161,7 @@ export class EvidentialTableRenderer {
     };
     for (const [k, v] of Object.entries(vars)) {
       for (const element of [this.root, this.dialog]) {
-        if (v) element.style.setProperty(k, v);
+        if (v) element.style.setProperty(k, resolveColor(v));
         else element.style.removeProperty(k);
       }
     }

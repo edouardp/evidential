@@ -99,6 +99,10 @@ preview: frontend-build ## Serve the renderer preview at http://HOST:PORT/fronte
 screenshot: frontend-build ## Capture the preview to /tmp/evidential_preview.png (Chromium-based browser)
 	@bash scripts/screenshot.sh
 
+.PHONY: api-screenshots
+api-screenshots: frontend-build ## Capture documentation screenshots from the screenshot notebooks
+	uv run python scripts/api_screenshots.py
+
 # ============================================================================
 # marimo Studio
 # ============================================================================
@@ -198,8 +202,8 @@ check: check-artifact ## Check the built distributions pass `twine check`
 	uvx twine check dist/*
 
 .PHONY: pypi
-pypi: check ## Publish the built distributions to PyPI (prompts for a token)
-	uv publish
+pypi: check ## Publish the built distributions to PyPI using the keyring
+	uv publish --keyring-provider subprocess --username __token__
 
 .PHONY: release
 release: ## Release interactively (choose patch, minor or major)

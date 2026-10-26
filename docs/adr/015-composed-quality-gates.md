@@ -9,13 +9,13 @@ deciders: edouard
 ## Context and Problem Statement
 
 The project has Python, JavaScript, shell and Markdown. Quality checks must run
-both on commit (fast, local) and in CI (authoritative), and the two must not
+both on commit and during local release validation, and the two must not
 drift apart.
 
 ## Decision Drivers
 
 - One definition of "clean" for the whole repository.
-- Same checks locally and in CI.
+- Same checks on commit and in local release validation.
 - Fail fast, with the failing tool's output preserved.
 
 ## Considered Options
@@ -35,7 +35,7 @@ ADRs). They are defined in `.pre-commit-config.yaml` and mirrored by
 
 ### Consequences
 
-- Good, because contributors and CI agree on what "clean" means.
+- Good, because contributors and local release gates agree on what "clean" means.
 - Good, because a failure stops the run and keeps the diagnostic.
 - Good, because the checks are exercised by tests
   ([ADR-017](017-release-workflow-tests.md)).

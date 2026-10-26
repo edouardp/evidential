@@ -1,4 +1,4 @@
-"""Release-workflow guardrails: metadata, changelog, release script and CI."""
+"""Release-workflow guardrails: metadata, changelog and local validation."""
 
 from __future__ import annotations
 
@@ -59,22 +59,14 @@ def test_direct_publish_uses_the_same_keyring_provider_as_the_release_script() -
     assert "uv publish --keyring-provider subprocess --username __token__" in publish
 
 
-def test_ci_workflow_runs_the_gates() -> None:
-    workflow = (ROOT / ".github" / "workflows" / "tests.yml").read_text()
-    assert "make lint" in workflow
-    assert "make check-notebooks" in workflow
-    assert "make test-python" in workflow
-    assert "make frontend-test" in workflow
-    assert "make check-artifact" in workflow
-    assert "make frontend-check" in workflow
-    assert "make test-browser" in workflow
-    assert 'EVIDENTIAL_REQUIRE_BROWSER: "1"' in workflow
-    assert "playwright install --with-deps chromium" in workflow
-    classifiers = PROJECT["classifiers"]
-    supported = [value.rsplit(" ", 1)[-1] for value in classifiers if re.search(r" :: 3\.\d+$", value)]
-    for version in supported:
-        assert f'"{version}"' in workflow
-    assert "uv sync --locked" in workflow
-    assert "pip install --upgrade uv" not in workflow
-    assert "checkmake@latest" not in workflow
-    assert "go install github.com/checkmake/checkmake/cmd/checkmake@v0.3.2" in workflow
+def test_releases_use_complete_local_gates_without_github_actions() -> None:
+    workflows = ROOT / ".github" / "workflows"
+    assert not [*workflows.glob("*.yml"), *workflows.glob("*.yaml")]
+    makefile = (ROOT / "Makefile").read_text()
+    validation = next(line for line in makefile.splitlines() if line.startswith("validate:")).split("##", 1)[0]
+    for gate in ("lint", "check-notebooks", "test", "frontend-check", "test-browser", "build"):
+        assert gate in validation.split(), f"make validate must run {gate} locally"
+    assert "EVIDENTIAL_REQUIRE_BROWSER=1 uv run pytest -m browser" in makefile
+    release_doc = (ROOT / "docs" / "RELEASE_PROCESS.md").read_text()
+    assert "Buildkite" in release_doc
+    assert "make check" in release_doc

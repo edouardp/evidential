@@ -33,8 +33,9 @@ committed. The wheel therefore contains the renderer with no build step.
 
 `frontend/build.js` defines the build flags once for both writing the package
 assets and checking freshness. `make frontend-check` builds in a temporary
-directory and compares bytes without rewriting the committed assets. CI runs
-this check before any packaging step can replace stale files.
+directory and compares bytes without rewriting the committed assets. Local
+release validation runs this check before packaging can replace stale files
+(see [ADR-078](078-local-release-validation.md)).
 
 ### Consequences
 

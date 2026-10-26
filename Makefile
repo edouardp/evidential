@@ -157,7 +157,7 @@ test-python: ## Run the Python test suite with coverage
 
 .PHONY: test-browser
 test-browser: frontend-build ## Run real-browser functional tests (Playwright + installed Edge/Chrome)
-	uv run pytest -m browser -v tests/browser
+	EVIDENTIAL_REQUIRE_BROWSER=1 uv run pytest -m browser -v tests/browser
 
 .PHONY: test
 test: test-python frontend-test ## Run Python and JavaScript tests
@@ -243,7 +243,7 @@ clean-all: clean ## Remove caches, build artifacts, the virtualenv and node_modu
 all: validate ## Run full validation
 
 .PHONY: validate
-validate: lint check-notebooks test frontend-check build ## Run lint, notebook checks, tests and a build
+validate: lint check-notebooks test frontend-check test-browser build ## Run all local release checks and a build
 	@echo ""
 	@echo "Validation complete."
 

@@ -36,19 +36,19 @@ Chosen option: "Layered":
 - **Playwright** (`tests/browser/`) for real DOM behaviour: sorting, search,
   pagination, fullscreen round-trips, sparklines and exact bar geometry. It
   prefers installed Edge/Chrome locally and falls back to Playwright Chromium.
-  CI installs Chromium with its system dependencies and requires a successful
-  launch, so missing browsers cannot silently skip the suite.
+  Local release validation requires a successful browser launch, so missing
+  browsers cannot silently skip the suite.
 
-CI separates quality/build checks from a Python 3.11–3.14 test matrix and the
-browser suite. Tool versions are pinned and dependencies installed with
-`uv sync --locked` and `npm ci`.
+Quality/build checks, Python tests and browser tests run locally before
+release, following [ADR-078](078-local-release-validation.md). Dependencies
+are installed with `uv sync --locked` and `npm ci`.
 
 ### Consequences
 
 - Good, because the fast suites cover the bulk of the logic.
 - Good, because jsdom cannot accidentally mask a layout bug — those are tested
   in a real browser.
-- Good, because browser regressions run on every pull request.
+- Good, because browser regressions block local release validation.
 - Bad, because behaviour can be duplicated across layers.
 - Bad, because the browser suite is the slowest and the most environment
   sensitive.

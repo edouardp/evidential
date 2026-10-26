@@ -54,12 +54,13 @@ documented in [docs/RELEASE_PROCESS.md](docs/RELEASE_PROCESS.md). In short:
 - Later releases use `make release` (or `release-patch` / `release-minor` /
   `release-major`), which bumps the version, writes the changelog, validates,
   publishes and tags.
-- CI ([`.github/workflows/tests.yml`](.github/workflows/tests.yml)) runs the
-  lint gate, `marimo check`, the Python/frontend tests and the artifact check on
-  every push and pull request.
+- Releases are validated, built and published locally, following `../galaga`
+  and `../gamr`. Run `make validate` and `make check` from a clean tracked
+  checkout before publishing. GitHub Actions is not used. If CI/CD is added,
+  use Buildkite.
 
 `tests/release/test_release.py` keeps the metadata, changelog entry, release
-script and CI in place — in particular, the `version` in `pyproject.toml` must
+script and local gates in place — in particular, the `version` in `pyproject.toml` must
 have a matching `CHANGELOG.md` section.
 
 ## Marimo notebooks

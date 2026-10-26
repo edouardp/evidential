@@ -2,7 +2,6 @@
 
 [![PyPI](https://img.shields.io/pypi/v/evidential.svg)](https://pypi.org/project/evidential/)
 [![Python versions](https://img.shields.io/pypi/pyversions/evidential.svg)](https://pypi.org/project/evidential/)
-[![CI](https://github.com/edouardp/evidential/actions/workflows/tests.yml/badge.svg)](https://github.com/edouardp/evidential/actions/workflows/tests.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 Evidence.dev-style interactive tables for [Marimo](https://marimo.io), packaged
@@ -859,7 +858,7 @@ make frontend-build     # rebuild static/table.js and static/table.css
 ```
 
 The gates are mirrored in [`.pre-commit-config.yaml`](.pre-commit-config.yaml)
-(on commit) and [`scripts/lint.sh`](scripts/lint.sh) (locally and in CI).
+(on commit) and [`scripts/lint.sh`](scripts/lint.sh) (local validation).
 `tests/release/` checks the repository workflow itself, including that the wheel
 contains the committed renderer assets.
 

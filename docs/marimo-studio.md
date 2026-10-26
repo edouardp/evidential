@@ -221,7 +221,7 @@ make studio-validate     # marimo-studio validate --target notebooks/21_studio_d
 
 `marimo-studio validate` checks that every projection site resolves against the
 notebook's cells and values without running it. `tests/release/test_studio_views.py`
-re-checks the committed view's manifest, provider and projection targets in CI,
+re-checks the committed view's manifest, provider and projection targets in the local test suite,
 without requiring Studio to be installed.
 
 A **Prepared** or **Browser** export (`marimo-studio view export …`) needs

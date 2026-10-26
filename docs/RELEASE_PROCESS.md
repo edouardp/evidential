@@ -90,7 +90,8 @@ make validate
 
 This runs `make lint` (ruff, bandit, pip-audit, pyrefly, shellcheck, checkmake,
 rumdl), `marimo check` on every notebook, the Python and frontend test suites,
-`frontend-check` (the committed bundle matches a fresh build), and a build.
+`frontend-check` (the committed bundle matches a fresh build), required
+Playwright browser tests, and a build.
 
 ### 3. Dry run on Test PyPI
 
@@ -186,13 +187,17 @@ happens, do not try to replace the published file; publish a new patch version.
 
 ## Quality gates
 
-`make validate` is the gate, and it is the same set that CI runs on every push
-and pull request ([`.github/workflows/tests.yml`](../.github/workflows/tests.yml)):
+Releases are validated, built and published **locally**, following the sibling
+Galaga and Gamr workflows. Run `make validate` and `make check` from a clean
+tracked checkout of the release commit. GitHub Actions is not used; if CI/CD
+is introduced later, it will use **Buildkite**, as recorded in
+[ADR-078](adr/078-local-release-validation.md). The local gates are:
 
 - **ruff** (lint + format), **bandit**, **pip-audit**, **pyrefly** (types),
   **shellcheck**, **checkmake** and **rumdl** (markdown) — `make lint`;
 - **`marimo check`** on every notebook — `make check-notebooks`;
 - **pytest** (unit) and the **jsdom** frontend tests — `make test`;
+- **Playwright** — required-browser tests run as part of `make validate`;
 - **`frontend-check`** — the committed renderer bundle matches a fresh build;
 - **build** — `uv build`.
 
@@ -200,7 +205,7 @@ and pull request ([`.github/workflows/tests.yml`](../.github/workflows/tests.yml
 machinery honest: the Makefile help, that the lint gate fails fast, that ADRs and
 their index stay consistent, that notebook examples remain valid, that the wheel
 contains the renderer assets, and that the `version` / changelog / release script
-/ CI stay in place.
+/ local gates stay in place.
 
 Before publishing, confirm the release state mechanically:
 

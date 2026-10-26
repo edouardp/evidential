@@ -19,7 +19,7 @@ own.
 - Let a view show the notebook's own table, interactivity intact.
 - Keep the notebook the single owner of data and computation.
 - Give the view control of presentation (KPIs, layout, formatting).
-- Keep the committed demo verifiable without requiring Studio in CI.
+- Keep the committed demo verifiable without requiring Studio for validation.
 
 ## Considered Options
 

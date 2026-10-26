@@ -2,7 +2,7 @@
 
 These checks are intentionally dependency-light: they parse the view manifest
 and the notebook's AST instead of requiring ``marimo-studio`` to be installed,
-so they run in the normal unit suite and in CI.
+so they run in the normal local unit suite.
 """
 
 from __future__ import annotations

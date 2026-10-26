@@ -96,6 +96,7 @@ dated, immutable record of the decisions behind them.
 | [075](075-per-value-compact-formatting.md) | Per-Value Compact Formatting | Accepted |
 | [076](076-sparkline-reference-origins.md) | Sparkline Reference Origins | Accepted |
 | [077](077-unformatted-source-snapshots.md) | Unformatted Source Snapshots | Accepted |
+| [078](078-local-release-validation.md) | Local Release Validation | Accepted |
 
 ## Creating New ADRs
 

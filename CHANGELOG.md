@@ -4,6 +4,33 @@ All notable changes to this project are documented in this file. The format is
 based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this
 project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.1.1 (2026-10-26)
+
+### Added
+
+- **Notebook-generated README examples** — descriptions, column definitions
+  and Playwright screenshots now come from the same named marimo cells.
+- **Documentation freshness checks** — `make readme` regenerates examples and
+  images; `make readme-check` detects stale content using source and image
+  hashes. Checks run in pre-commit, lint and release validation.
+
+### Changed
+
+- **README image paths** — repository images use local paths. A generated
+  PyPI README resolves image and documentation links to absolute URLs.
+- **Local release workflow** — aligned with Galaga's `make release` chooser,
+  patch/minor/major targets and exact `VERSION=` requests, including alpha,
+  beta and release candidates. Releases edit the changelog, validate locally,
+  retrieve credentials through the keyring, publish, tag and create a GitHub
+  release.
+
+### Fixed
+
+- Stop releases with stale README examples or screenshots before changing
+  the version or opening the changelog editor.
+- Remove old distributions before building, preventing stale artifacts from
+  being checked or uploaded alongside the current version.
+
 ## 0.1.0 (2026-10-26)
 
 First release.

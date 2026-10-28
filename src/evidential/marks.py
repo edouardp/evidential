@@ -685,6 +685,8 @@ def rebind_measure(column: Mapping[str, Any], source: str, target: str) -> dict[
     change; literal labels/colors and independent dimension bindings stay intact.
     """
     spec = dict(column)
+    if spec.get("tooltip") == f"@{source}":
+        spec["tooltip"] = f"@{target}"
     if not spec.get("encodings"):
         return spec
     encodings = []

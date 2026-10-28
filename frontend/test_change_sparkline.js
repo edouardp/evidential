@@ -39,8 +39,8 @@ test("missing and invalid values leave ordinal gaps; structured x values label e
     {period: "2026-09", delta: "oops"}, {period: "2026-10", delta: 0}], {x: "period", y: "delta", width: 100, y_fmt: "num1"});
   const marks = rects(svg);
   assert.deepEqual(marks.map(mark => number(mark, "x")), [3, 43, 83]);
-  assert.equal(marks[0].textContent, "2026-01: 3.0 (up)");
-  assert.equal(marks[2].textContent, "2026-10: 0.0 (steady)");
+  assert.equal(marks[0].textContent, "2026-01: 3\nChange: up");
+  assert.equal(marks[2].textContent, "2026-10: 0\nChange: steady");
   assert.match(svg.getAttribute("aria-label"), /2 missing/);
   assert.equal(rects(render([[0, -1], [10, 1]])).length, 2);
   for (const values of [[], [null, undefined, NaN, Infinity, "bad"]]) assert.equal(render(values).textContent, "–");

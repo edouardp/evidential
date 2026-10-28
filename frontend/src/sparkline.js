@@ -1,5 +1,6 @@
 import { h } from "./dom.js";
-import { formatValue } from "./format.js";
+import { inspectable } from "./tooltips.js";
+import { observationTooltip, tooltipValue } from "./tooltip-data.js";
 import { numeric } from "./mark-data.js";
 import { sparklinePoints } from "./sparkline-data.js";
 import { renderChangeSparkline } from "./change-sparkline.js";
@@ -57,7 +58,7 @@ export function renderSparkline(col, value, changeColor, sharedRange) {
 
   const tooltip = ([x, y]) => {
     const title = document.createElementNS(svgNS, "title");
-    const yText = formatValue(y, opts.y_fmt, { type: "number", fallback: String(y) });
+    const yText = tooltipValue(y, opts.y_fmt);
     title.textContent = x === undefined || x === null || x === "" ? yText : `${x}: ${yText}`;
     return title;
   };
@@ -97,6 +98,8 @@ export function renderSparkline(col, value, changeColor, sharedRange) {
       rect.setAttribute("rx", "0.5");
       rect.setAttribute("fill", color);
       rect.append(tooltip(point.raw));
+      inspectable(rect, observationTooltip(point.raw[0], point.raw[1], opts.y_fmt, point.source, color,
+        [opts.x, opts.y, "x", "y", "value"]), {priority: 2});
       svg.append(rect);
     });
   } else if (type !== "points") {
@@ -142,6 +145,10 @@ export function renderSparkline(col, value, changeColor, sharedRange) {
     dot.setAttribute("r", visible ? "2.2" : "2.5");
     dot.setAttribute("fill", visible ? (perPoint || opts.marker_color || color) : "transparent");
     dot.append(tooltip(point.raw));
+    const tooltipColor = type === "area" && opts.signed
+      ? point.raw[1] < (reference ?? 0) ? "var(--et-negative, #dc2626)" : color : perPoint || opts.marker_color || color;
+    inspectable(dot, observationTooltip(point.raw[0], point.raw[1], opts.y_fmt, point.source, tooltipColor,
+      [opts.x, opts.y, "x", "y", "value"]), {priority: 3});
     svg.append(dot);
   });
   return svg;

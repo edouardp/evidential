@@ -64,7 +64,7 @@ test("valid density support and overlays share the domain, color bindings and ac
   const node = renderMarks(col, data, domain);
   assert.equal(node.querySelector(".et-mark-point").style.left, "80%");
   assert.equal(node.querySelector(".et-density-band-run").style.backgroundColor, "rgb(18, 52, 86)");
-  assert.match(node.getAttribute("aria-label"), /median: 8/);
+  assert.match(node.getAttribute("aria-label"), /Median: 8/);
 });
 
 test("a logarithmic axis positions a density peak and its overlay identically", () => {

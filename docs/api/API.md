@@ -820,6 +820,27 @@ columns=[
   search, pagination or sorting. See
   [`54_legends.py`](../../notebooks/54_legends.py) for one stack, two stacks and
   nine age-band points using real population data.
+- **Tooltips** — inspect full, comma-grouped values independently of painted
+  labels. Dots under the pointer share a multiline tooltip with named series;
+  their invisible hit area is slightly larger than the visible dot. Stack
+  segments report category, amount, share and total, including hidden labels
+  and both halves of a split neutral category. Ranges report endpoints and
+  change; box plots report their five-number summary and outliers. Object-backed
+  observations can carry plain-text metadata such as date, opponent and score.
+  Currency and percentage units are retained while abbreviated/scientific
+  numbers expand to their available source precision.
+  Every column supports `.tooltip(False)`, `.tooltip("@hover_text")` and literal
+  multiline `.tooltip("First line\nSecond line")`; `.tooltip()` restores defaults.
+  Overrides apply to the whole cell, including all child marks; text is never
+  interpreted as HTML. Graphic cells provide one Tab stop; Left/Right cycles
+  marks, Home/End jumps and Escape dismisses. Sparklines choose just one nearest
+  x observation across the graphic's height; signed-area swatches follow the
+  above/below-reference fill. Stacks and strips choose one segment at an edge.
+  Hover timing is configured in seconds with
+  `settings(tooltips={"delay": 0.8, "text_delay": 1.5})`; per-column
+  `.tooltip(delay=0)` overrides the graphics delay. Defaults are 0s for graphics
+  and 0.8s for text. Keyboard and touch inspection bypass hover delays. See the offline
+  [`55_tooltips.py`](../../notebooks/55_tooltips.py) gallery.
 - **Boxplot** — `boxplot(minimum, q1, median, q3, maximum, outliers=, whisker=`
   `"extrema"|"iqr")`. The renderer never computes statistics; the five numbers
   arrive from SQL or Python.
@@ -975,12 +996,13 @@ Use `compactN` for **up to N significant figures**, from `compact1` through
 `compact21`. For example, `.fmt("compact4")` displays `1147650000000` as
 **1.148T** and `877123400000` as **877.1B**. The suffix controls significant
 figures, not decimal places; unnecessary trailing zeros are omitted.
-`label.fmt("compact4")`, statistics, sparkline tooltips and scale axes use the
-same formatter. Plain `compact` retains its one-decimal behavior.
+`label.fmt("compact4")`, statistics and scale axes use the same formatter.
+Tooltips expand the underlying number with commas and retain its available
+precision. Plain `compact` retains its one-decimal behavior.
 
 `.fmt("sci")` displays scientific notation as **1.23 × 10⁵**, with two decimal
 places in the mantissa. HTML cells, mark labels, statistics and axes use a real
-superscript exponent; tooltips use readable Unicode superscripts. Small values
+superscript exponent; tooltips expand the full underlying value. Small values
 use negative powers, for example `0.000123` becomes **1.23 × 10⁻⁴**. Explicit SSF
 codes such as `.fmt("0.000E+0")` retain their requested `1.235E+5` notation.
 See [the formatting demo](../../notebooks/08_column_options.py).
@@ -1118,6 +1140,7 @@ other than `auto`, `merge`, `group` and `subcolumns` return a `Column`;
 | `.group(label)` / `.subcolumn(label)` | header structure (dict spelling) |
 | `.repeat_values(bool=True)` / `.hide(bool=True)` / `.sort_by(column)` | display |
 | `.info(str)` / `.footnote(column)` | tooltip / footnote |
+| `.tooltip(value=True, *, delay=None, text_delay=None)` | full values; `False` disables, `"@field"` binds text, other strings are literal; newlines and hover delays in seconds |
 | `.markdown()` / `.html()` | render rich text |
 | `.link(column=, *, label=, new_tab=)` / `.image(...)` / `.logo(...)` | rich cells |
 | `.template(value, **formats)` | fill-in-the-blanks cell |

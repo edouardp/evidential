@@ -51,8 +51,9 @@ only its original fields. The connector has no separate legend entry.
 
 The same series expansion and palette resolver serve marks and legends.
 Mapping names become the automatic legend labels; ordinary legend overrides
-can still rename or omit entries. Per-point titles expose the series name and
-formatted value. Domain inference includes every bound field; log validation
+can still rename or omit entries. Shared tooltips expose series names and full
+values, including overlapping points (see [ADR-085](085-data-tooltips.md)).
+Domain inference includes every bound field; log validation
 checks each non-null field even when the first is missing. Rebinding a measure
 updates its entry in both source and name metadata.
 

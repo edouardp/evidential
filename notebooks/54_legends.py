@@ -197,7 +197,9 @@ def population_doc(mo):
     concern, so it needs no extra minimum/maximum fields or connector key.
     `palette="viridis"` samples nine colours in age-band order; omit it for
     an automatic categorical palette. A colour list overrides the range.
-    Coincident points can overlap.
+    Hover a dot for its age band and full percentage. Coincident and nearby dots
+    share one multiline tooltip, so overlapping values remain inspectable.
+    Hover an abbreviated population value to see its full, comma-grouped count.
 
     These are genuine **2024 World Bank WDI / UN World Population Prospects**
     estimates for twelve countries spanning income groups. The committed
@@ -294,7 +296,17 @@ def football_form_data(Path, json):
                 "wins": outcomes.count("Win"),
                 "draws": outcomes.count("Draw"),
                 "losses": outcomes.count("Loss"),
-                "form": outcomes,
+                "form": [
+                    {
+                        "category": game["result"],
+                        "date": game["date"],
+                        "opponent": game["opponent"],
+                        "score": game["score"],
+                        "venue": game["venue"],
+                        "competition": game["competition"],
+                    }
+                    for game in matches
+                ],
             }
         )
     return (recent_form,)

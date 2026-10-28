@@ -42,8 +42,7 @@ def test_compact_precision_notebook_and_shared_formatting_surfaces(page, live_se
     assert page.locator("#case-1 .et-mark-label-text").all_text_contents() == ["1.148T", "877.1B"]
     assert "1.012T" in page.locator("#case-1 .et-stats-value").all_text_contents()
     assert "1.148T" in page.locator("#case-1 .et-axis-tick").all_text_contents()
-    assert page.locator("#case-1 .et-sparkline").first.locator("circle title").all_text_contents() == [
-        "0: 1.148T",
-        "1: 877.1B",
-    ]
+    for index, expected in enumerate(["1,147,650,000,000", "877,123,400,000"]):
+        page.locator("#case-1 .et-sparkline").first.locator("circle").nth(index).hover()
+        assert page.locator("#case-1 .et-tooltip-value").inner_text() == expected
     capture(page, "compact-formatting.png")

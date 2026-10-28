@@ -4,7 +4,9 @@ import { formattedText } from "./formatted-text.js";
 import { resolveColor } from "./color.js";
 import { markColor, pointSeries } from "./mark-series.js";
 import { numeric, observationValue } from "./mark-data.js";
-import { renderDensityBand } from "./density-band.js";
+import { renderDensityBand, readDensity } from "./density-band.js";
+import { inspectable, inspectionData } from "./tooltips.js";
+import { markTooltip, observationTooltip, tooltipText, tooltipValue, seriesName } from "./tooltip-data.js";
 import { markLabelText, renderMarkLabel, autoLabelColor, labelTextStyle } from "./mark-labels.js";
 
 /** Inline top/bottom/transform for a mark's `valign` (default centred). */
@@ -33,12 +35,18 @@ function rangeDirection(enc, start, end, color) {
 }
 
 /** An ordered categorical sequence: equal-width or positioned segments. */
-function renderStrip(enc, row, lo, span) {
+function renderStrip(enc, row, lo, span, col, context) {
   const raw = row[enc.source];
   const items = Array.isArray(raw) ? raw : [];
   const colors = enc.colors || {};
   const colourOf = (category) => resolveColor(colors[String(category)]) || "var(--et-accent, #2563eb)";
   const named = (item) => (item && typeof item === "object" ? (item.category ?? item.state ?? item.value) : item);
+  const inspect = (segment, item) => {
+    const category = named(item);
+    if (category != null) inspectable(segment, observationTooltip(
+      seriesName(col, enc, String(category), context), "", null, item, colourOf(category), ["category", "state", "value"]), {priority: 2});
+    return segment;
+  };
   const positioned =
     span != null && items.some((item) => item && typeof item === "object" && (item.start != null || item.position != null));
   if (positioned) {
@@ -63,7 +71,7 @@ function renderStrip(enc, row, lo, span) {
       if (enc.strip_labels && named(item) != null && String(named(item)) !== "") {
         segment.append(h("span", { class: "et-strip-label" }, String(named(item)).charAt(0)));
       }
-      wrap.append(segment);
+      wrap.append(inspect(segment, item));
     });
     return wrap;
   }
@@ -77,13 +85,13 @@ function renderStrip(enc, row, lo, span) {
     if (enc.strip_labels && category != null && String(category) !== "") {
       segment.append(h("span", { class: "et-strip-label" }, String(category).charAt(0)));
     }
-    wrap.append(segment);
+    wrap.append(inspect(segment, item));
   }
   return wrap;
 }
 
 /** One stack segment: an absolutely positioned coloured box with optional label. */
-function stackSegment(enc, row, col, leftPct, widthPct, text = "") {
+function stackSegment(enc, row, col, leftPct, widthPct, text = "", context = {}) {
   const left = Math.max(0, Math.min(100, leftPct));
   const right = Math.max(0, Math.min(100, leftPct + widthPct));
   const segment = h("div", {
@@ -94,12 +102,14 @@ function stackSegment(enc, row, col, leftPct, widthPct, text = "") {
       backgroundColor: markColor(enc, row, "var(--et-accent, #2563eb)"),
     },
   });
+  const total = (col.encodings || []).filter(item => item.kind === "stacked_bar")
+    .reduce((sum, item) => sum + (Number(row[item.source]) > 0 ? Number(row[item.source]) : 0), 0);
+  inspectable(segment, markTooltip(col, enc, row, {total, context}), {priority: 2});
   if (text) {
     const align = enc.label?.align || (enc.label?.position === "inside_start" ? "begin" : enc.label?.position === "center" ? "center" : "end");
     if (align === "begin") segment.style.justifyContent = "flex-start";
     else if (align === "end") segment.style.justifyContent = "flex-end";
     const spec = enc.label || {};
-    segment.title = text;
     const label = h("span", { class: "et-mark-stack-label", "data-mark-label": "",
       "data-overflow": spec.overflow || "hide", "data-min-width": spec.min_width || 0,
       style: labelTextStyle(spec),
@@ -131,7 +141,7 @@ function stackContainer(encodings) {
 }
 
 /** A diverging stack: categories either side of a split neutral segment. */
-function renderDivergingStack(col, encodings, row, normalize, lo, hi, format) {
+function renderDivergingStack(col, encodings, row, normalize, lo, hi, format, context) {
   const values = encodings.map((enc) => {
     const num = Number(row[enc.source]);
     return isFinite(num) && num > 0 ? num : 0;
@@ -146,27 +156,27 @@ function renderDivergingStack(col, encodings, row, normalize, lo, hi, format) {
   const label = (index, value) => stackLabelText(col, encodings[index], row, value, total, normalize, format);
   // The neutral segment straddles the origin: half left, half right.
   let left = pv / 2;
-  stack.append(stackSegment(encodings[pivot], row, col, 50 - at(left), at(pv / 2), label(pivot, values[pivot])));
+  stack.append(stackSegment(encodings[pivot], row, col, 50 - at(left), at(pv / 2), label(pivot, values[pivot]), context));
   for (let index = pivot - 1; index >= 0; index -= 1) {
     const value = scaled[index];
-    stack.append(stackSegment(encodings[index], row, col, 50 - at(left + value), at(value), label(index, values[index])));
+    stack.append(stackSegment(encodings[index], row, col, 50 - at(left + value), at(value), label(index, values[index]), context));
     left += value;
   }
   let right = pv / 2;
-  stack.append(stackSegment(encodings[pivot], row, col, 50, at(pv / 2), ""));
+  stack.append(stackSegment(encodings[pivot], row, col, 50, at(pv / 2), "", context));
   for (let index = pivot + 1; index < encodings.length; index += 1) {
     const value = scaled[index];
-    stack.append(stackSegment(encodings[index], row, col, 50 + at(right), at(value), label(index, values[index])));
+    stack.append(stackSegment(encodings[index], row, col, 50 + at(right), at(value), label(index, values[index]), context));
     right += value;
   }
   return stack;
 }
 
 /** A cumulative stack of segment magnitudes over the column's shared scale. */
-function renderStack(col, encodings, row, lo, hi, format) {
+function renderStack(col, encodings, row, lo, hi, format, context) {
   const normalize = (col.scale || {}).normalize === "percent";
   if (encodings[0].diverge_at) {
-    return renderDivergingStack(col, encodings, row, normalize, lo, hi, format);
+    return renderDivergingStack(col, encodings, row, normalize, lo, hi, format, context);
   }
   const values = encodings.map((enc) => {
     const num = Number(row[enc.source]);
@@ -181,7 +191,7 @@ function renderStack(col, encodings, row, lo, hi, format) {
     const magnitude = normalize ? (total ? (values[index] / total) * 100 : 0) : values[index];
     const width = (magnitude / spanTotal) * 100;
     stack.append(
-      stackSegment(enc, row, col, ((cursor - lo) / spanTotal) * 100, width, stackLabelText(col, enc, row, values[index], total, normalize, format)),
+      stackSegment(enc, row, col, ((cursor - lo) / spanTotal) * 100, width, stackLabelText(col, enc, row, values[index], total, normalize, format), context),
     );
     cursor += magnitude;
   });
@@ -189,7 +199,7 @@ function renderStack(col, encodings, row, lo, hi, format) {
 }
 
 /** A precomputed five-number summary with optional outliers. */
-function renderBox(col, enc, row, pos) {
+function renderBox(col, enc, row, pos, context) {
   const parts = enc.parts || {};
   const value = (name) => numeric(row[parts[name]]);
   const [minimum, q1, median, q3, maximum] = ["minimum", "q1", "median", "q3", "maximum"].map(value);
@@ -198,6 +208,7 @@ function renderBox(col, enc, row, pos) {
   }
   const color = markColor(enc, row, "var(--et-accent, #2563eb)");
   const box = h("div", { class: "et-mark et-mark-box" });
+  inspectable(box, markTooltip(col, enc, row, {context}));
   box.append(h("div", { class: "et-box-whisker", style: { left: `${pos(minimum)}%`, width: `${Math.max(0, pos(maximum) - pos(minimum))}%`, backgroundColor: color } }));
   box.append(h("div", { class: "et-box-cap", style: { left: `${pos(minimum)}%`, backgroundColor: color } }));
   box.append(h("div", { class: "et-box-cap", style: { left: `${pos(maximum)}%`, backgroundColor: color } }));
@@ -207,7 +218,8 @@ function renderBox(col, enc, row, pos) {
   for (const outlier of outliers) {
     const number = numeric(outlier);
     if (number == null) continue;
-    box.append(h("div", { class: "et-box-outlier", style: { left: `${pos(number)}%`, backgroundColor: color } }));
+    box.append(inspectable(h("div", { class: "et-box-outlier", style: { left: `${pos(number)}%`, backgroundColor: color } }),
+      {name: "Outlier", value: tooltipValue(number, context.formatCode ?? col.fmt, col), color}, {priority: 3}));
   }
   return box;
 }
@@ -307,7 +319,10 @@ function markScale(lo, hi, transform) {
   };
 }
 
-export function renderMarks(col, row, range, format) {
+export function renderMarks(col, row, range, format, context = {}) {
+  const labelFor = (column, enc, record, geometry, formatter) => inspectable(
+    renderMarkLabel(column, enc, record, geometry, formatter), markTooltip(column, enc, record, {context}),
+    {priority: 1, navigate: false});
   const encodings = col.encodings || [];
   const scale = col.scale || {};
   const {lo, hi, span} = marksDomain(col, range);
@@ -318,12 +333,7 @@ export function renderMarks(col, row, range, format) {
     return pct == null ? null : Math.max(0, Math.min(100, pct));
   };
   const track = h("div", { class: "et-marks" });
-  const description = encodings.map(enc => [...new Set([enc.source, enc.high, ...(enc.sources || []), ...Object.values(enc.parts || {})])]
-    .filter(field => field && row[field] != null).map(field => `${field}: ${JSON.stringify(row[field])}`).join(", "))
-    .filter(Boolean).join("; ");
-  track.title = description;
   track.setAttribute("role", "img");
-  track.setAttribute("aria-label", description || "No observations");
   if (encodings.some(enc => ["above", "below"].includes(enc.label?.position))) track.classList.add("et-marks-tall");
 
   // Faint vertical lines at round values help read a mark against the scale.
@@ -395,20 +405,31 @@ export function renderMarks(col, row, range, format) {
   let barIndex = 0;
   for (const enc of encodings) {
     if (enc.kind === "stacked_bar") {
-      if (enc === stack[0]) track.append(renderStack(col, stack, row, lo, hi, format));
+      if (enc === stack[0]) track.append(renderStack(col, stack, row, lo, hi, format, context));
       continue;
     }
     if (enc.kind === "boxplot") {
-      track.append(renderBox(col, enc, row, clampPos));
+      track.append(renderBox(col, enc, row, clampPos, context));
       const median = clampPos(row[enc.source]);
-      if (enc.label && median != null) track.append(renderMarkLabel(col, enc, row, {pointPct: median}, format));
+      if (enc.label && median != null) track.append(labelFor(col, enc, row, {pointPct: median}, format));
       continue;
     }
     if (enc.kind === "distribution") {
       const node = renderDensityBand(enc, row, pos, markColor(enc, row, "var(--et-accent, #2563eb)"));
       if (node) {
+        const runs = readDensity(row[enc.source], enc.distribution);
+        let count = 0, peak = 0;
+        for (const run of runs) for (const sample of run) { count++; peak = Math.max(peak, sample.density); }
+        const inspect = value => tooltipValue(value, context.formatCode ?? col.fmt, col);
+        inspectable(node, {name: seriesName(col, enc, enc.source, context), value: "Density band",
+          color: markColor(enc, row), details: [
+            {name: "Support start", value: inspect(runs[0][0].x)},
+            {name: "Support end", value: inspect(runs.at(-1).at(-1).x)},
+            {name: "Peak density", value: tooltipValue(peak)},
+            {name: "Samples", value: tooltipValue(count)},
+          ]});
         track.append(node);
-        if (enc.label) track.append(renderMarkLabel(col, enc, row, {pointPct: 50}, format));
+        if (enc.label) track.append(labelFor(col, enc, row, {pointPct: 50}, format));
       }
       continue;
     }
@@ -440,7 +461,7 @@ export function renderMarks(col, row, range, format) {
       const pad = enc.pad == null ? null : typeof enc.pad === "number" ? `${enc.pad}px` : String(enc.pad);
       const height = pad ? (typeof enc.pad === "number" ? `calc(${size * 100}% - ${2 * enc.pad}px)` : `calc(${size * 100}% - ${pad} - ${pad})`) : `${size * 100}%`;
       track.append(
-        h("div", {
+        inspectable(h("div", {
           class: `et-mark et-mark-bar${enc.side ? ` et-mark-bar-${enc.side}` : ""}`,
           style: {
             ...verticalStyle(enc.valign),
@@ -449,17 +470,17 @@ export function renderMarks(col, row, range, format) {
             height,
             backgroundColor: color,
           },
-        }),
+        }), markTooltip(col, enc, row, {context}), {priority: 2}),
       );
       if (!enc.hide_labels && enc.label) {
         const labelled = enc.center && !enc.label.position ? {...enc, label: {...enc.label, position: "outside_start"}} : enc;
-        track.append(renderMarkLabel(col, labelled, row, { leftPct, widthPct, color, negative: reverse ? value >= 0 : value < 0 || enc.side === "left" }, format));
+        track.append(labelFor(col, labelled, row, { leftPct, widthPct, color, negative: reverse ? value >= 0 : value < 0 || enc.side === "left" }, format));
       }
     } else if (enc.kind === "points") {
       const values = Array.isArray(row[enc.source]) ? row[enc.source] : [];
       const size = enc.size != null ? Number(enc.size) : enc.sources ? 9 : 6;
       const observations = enc.sources ? pointSeries(enc).map(point => ({point, raw: row[point.source]}))
-        : values.map(item => ({point: enc, raw: observationValue(item)}));
+        : values.map(item => ({point: enc, raw: observationValue(item), observation: item}));
       const projected = observations.map(item => ({...item, pct: clampPos(item.raw)})).filter(item => item.pct != null);
       if (enc.connect && projected.length > 1) {
         const positions = projected.map(item => item.pct);
@@ -468,30 +489,32 @@ export function renderMarks(col, row, range, format) {
           "aria-hidden": "true", style: {...verticalStyle(enc.valign), left: `${left}%`, width: `${right-left}%`,
             height: "1px", backgroundColor: "var(--et-muted, #94a3b8)"}}));
       }
-      for (const {point, raw, pct} of projected) {
-        const title = enc.sources ? `${enc.names?.[point.source] ?? point.source}: ${format ? format(raw) : formatValue(raw, col.fmt, {fallback: String(raw)})}` : null;
+      for (const {point, raw, pct, observation} of projected) {
+        const data = enc.sources ? markTooltip(col, point, row, {value: raw, context})
+          : observationTooltip(seriesName(col, enc, enc.source, context), raw, context.formatCode ?? col.fmt, observation,
+            markColor(point, row), ["value", "y"]);
         track.append(
-          h("div", {
-            class: "et-mark et-mark-point", title,
+          inspectable(h("div", {
+            class: "et-mark et-mark-point",
             style: { ...verticalStyle(enc.valign, true), ...pointOutlineStyle(enc.outline), left: `${pct}%`, width: `${size}px`, height: `${size}px`, backgroundColor: markColor(point, row) },
-          }),
+          }), data, {priority: 3}),
         );
-        if (enc.label) track.append(renderMarkLabel(col, point, {...row, [point.source]: raw}, {pointPct: pct}, format));
+        if (enc.label) track.append(labelFor(col, point, {...row, [point.source]: raw}, {pointPct: pct}, format));
       }
     } else if (enc.kind === "point") {
       const pct = clampPos(value);
       if (pct == null) continue;
       const size = enc.size != null ? Number(enc.size) : 7;
       track.append(
-        h("div", {
+        inspectable(h("div", {
           class: "et-mark et-mark-point",
           style: { ...verticalStyle(enc.valign, true), ...pointOutlineStyle(enc.outline), left: `${pct}%`, width: `${size}px`, height: `${size}px`, backgroundColor: markColor(enc, row, "var(--et-accent, #2563eb)") },
-        }),
+        }), markTooltip(col, enc, row, {context}), {priority: 3}),
       );
-      if (enc.label) track.append(renderMarkLabel(col, enc, row, { pointPct: pct }, format));
+      if (enc.label) track.append(labelFor(col, enc, row, { pointPct: pct }, format));
     } else if (enc.kind === "strip") {
-      track.append(renderStrip(enc, row, lo, span));
-      if (enc.label) track.append(renderMarkLabel(col, enc, row, {pointPct: 50}, format));
+      track.append(renderStrip(enc, row, lo, span, col, context));
+      if (enc.label) track.append(labelFor(col, enc, row, {pointPct: 50}, format));
     } else if (enc.kind === "range") {
       const low = value;
       const high = numeric(row[enc.high]);
@@ -525,13 +548,13 @@ export function renderMarks(col, row, range, format) {
           });
         if (arrowStart) band.append(h("span", { class: "et-mark-cap et-mark-arrow et-mark-arrow-start", style: { borderRightColor: color } }));
         if (arrowEnd) band.append(h("span", { class: "et-mark-cap et-mark-arrow et-mark-arrow-end", style: { borderLeftColor: color } }));
-        track.append(band);
+        track.append(inspectable(band, markTooltip(col, enc, row, {context})));
         const direction = rangeDirection(enc, start, end, color);
         if (direction) {
           direction.style.left = `${(left + right) / 2}%`;
           track.append(direction);
         }
-        if (enc.label) track.append(renderMarkLabel(col, enc, row, { pointPct: left }, format));
+        if (enc.label) track.append(labelFor(col, enc, row, { pointPct: left }, format));
         continue;
       }
       const line = h("div", {
@@ -547,13 +570,16 @@ export function renderMarks(col, row, range, format) {
       if (arrowEnd) line.append(h("span", { class: "et-mark-cap et-mark-arrow et-mark-arrow-end", style: { borderLeftColor: color } }));
       const direction = rangeDirection(enc, start, end, color);
       if (direction) line.append(direction);
-      track.append(line);
-      if (enc.label) track.append(renderMarkLabel(col, enc, row, { pointPct: left }, format));
+      track.append(inspectable(line, markTooltip(col, enc, row, {context})));
+      if (enc.label) track.append(labelFor(col, enc, row, { pointPct: left }, format));
     }
   }
   if (!track.querySelector(".et-mark, .et-mark-strip, .et-density-band")) {
     track.append(h("span", {class: "et-null"}, String(col.null_text ?? (format ? format(null) : "–"))));
   }
+  const description = [...new Set([...track.querySelectorAll("[data-et-tooltip]:not([data-mark-label])")]
+    .map(node => tooltipText(inspectionData(node))))].join("\n");
+  track.setAttribute("aria-label", description || "No observations");
   return track;
 }
 

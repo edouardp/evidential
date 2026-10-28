@@ -1,5 +1,6 @@
 import { createColorScale, getColorForValue, resolveColor, buildDomainColorScale } from "./color.js";
-import { formatValue } from "./format.js";
+import { inspectable } from "./tooltips.js";
+import { observationTooltip } from "./tooltip-data.js";
 import { sparklinePoints } from "./sparkline-data.js";
 
 /** The inclusive steady interval is categorical; magnitude only determines color. */
@@ -80,7 +81,7 @@ export function renderChangeSparkline(points, opts, colorForValue) {
     else counts[changeState(value, opts.steady)]++;
   });
   svg.setAttribute("aria-label", `Changes: ${counts.up} up, ${counts.steady} steady, ${counts.down} down, ${counts.missing} missing`);
-  points.forEach(([x, value], index) => {
+  points.forEach(([x, value, source], index) => {
     if (value == null) return;
     const state = changeState(value, opts.steady);
     const rect = document.createElementNS(ns, "rect");
@@ -92,11 +93,9 @@ export function renderChangeSparkline(points, opts, colorForValue) {
     rect.setAttribute("rx", String(Math.min(0.6, slot * 0.35)));
     rect.setAttribute("fill", colors(value));
     rect.setAttribute("data-state", state);
-    const title = document.createElementNS(ns, "title");
-    const formatted = formatValue(value, opts.y_fmt, {type: "number", fallback: String(value)});
-    const text = x === undefined || x === null || x === "" ? formatted : `${x}: ${formatted}`;
-    title.textContent = `${text} (${state})`;
-    rect.append(title);
+    const data = observationTooltip(x, value, opts.y_fmt, source, colors(value), [opts.x, opts.y, "x", "y", "value"]);
+    data.details.push({name: "Change", value: state});
+    inspectable(rect, data, {priority: 2});
     svg.append(rect);
   });
   return svg;

@@ -145,7 +145,10 @@ def test_marimo_legend_has_square_spaced_chips_and_respects_the_right_edge(page)
         assert population.locator(".et-mark-point").count() == 108
         assert population.locator(".et-point-connector").count() == 12
         assert population.locator(".et-legend-label").count() == 9
-        assert population.locator(".et-mark-point").first.get_attribute("title").startswith("0–9: 33%")
+        population.locator(".et-mark-point").first.hover()
+        assert population.locator(".et-tooltip-name").inner_text() == "0–9:"
+        assert population.locator(".et-tooltip-value").inner_text().startswith("33.")
+        assert population.locator(".et-mark-point").first.get_attribute("title") is None
         strips = page.locator('[data-cell-name="football_form"] .et-root')
         strips.locator(".et-strip-seg").last.wait_for()
         assert strips.locator(".et-strip-seg").count() == 48

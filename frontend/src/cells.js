@@ -4,6 +4,7 @@ import { formattedText } from "./formatted-text.js";
 import { withDecimals, indentForCell } from "./rows.js";
 import { calculateColorStyles, contrastTextColor, resolveColor } from "./color.js";
 import { renderBar, renderDelta, renderMarks, renderSparkline, renderSymbols } from "./visualizations.js";
+import { inspectCell } from "./tooltips.js";
 
 /** Return the first matching substitution text, or null. */
 export function matchSubstitution(col, row, value, options) {
@@ -89,7 +90,9 @@ export function renderCell({row, col, index, ctx, rowIndex, options: opts, toggl
   }
   const td = h("td", { class: `et-td${isStub(opts, col) ? " et-stub" : ""}`, style: tdStyle });
   const matched = matchingRules(col, row, opts);
+  let tooltipFormat = col.fmt_column && row[col.fmt_column] != null ? String(row[col.fmt_column]) : col.fmt;
   const finish = (includeFootnote = true) => {
+    inspectCell(td, col, row, opts, tooltipFormat);
     decorateCell(td, col, row, ctx, rowIndex, matched.style, includeFootnote, opts);
     return td;
   };
@@ -230,6 +233,7 @@ export function renderCell({row, col, index, ctx, rowIndex, options: opts, toggl
       ? `(${String(text).replace(/^-/, "")})` : text;
   };
   const formatted = format(value);
+  tooltipFormat = formatCode;
 
   // Conditional color background.
   let vizStyles = null;
@@ -244,7 +248,7 @@ export function renderCell({row, col, index, ctx, rowIndex, options: opts, toggl
 
   const negative =
     (col.red_negatives || col.negative_color) && !isNaN(Number(value)) && Number(value) < 0;
-  const content = renderContent(col, value, formatted, ctx, row, format);
+  const content = renderContent(col, value, formatted, ctx, row, format, formatCode);
   // Column guides span the cell, not an over-sized region around the glyph
   // track. Isolating their clipping preserves overflow labels and end arrows.
   if (content.classList?.contains("et-marks")) {
@@ -282,11 +286,12 @@ export function renderCell({row, col, index, ctx, rowIndex, options: opts, toggl
   return finish();
 }
 
-function renderContent(col, value, formatted, ctx, row, format) {
+function renderContent(col, value, formatted, ctx, row, format, formatCode) {
   const isSubtotal = row.render_type === "row_subtotal";
   let content;
   if (col.encodings && col.encodings.length && row.render_type !== "row_total") {
-    content = renderMarks(col, row, ctx.ranges.get(col) || ctx.ranges.get(col.name), format);
+    content = renderMarks(col, row, ctx.ranges.get(col) || ctx.ranges.get(col.name), format,
+      {columns: ctx.columns, options: ctx.options, formatCode});
   } else if (col.viz === "bar" && !(isSubtotal && col.viz_include_subtotals === false) && row.render_type !== "row_total") {
     content = renderBar(col, value, formatted, ctx.ranges.get(col) || ctx.ranges.get(col.name), row);
   } else if (col.viz === "delta") {

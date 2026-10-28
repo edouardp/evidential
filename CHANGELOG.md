@@ -8,6 +8,12 @@ project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- Shared multiline tooltips for scalar values and graphics: full readable
+  numbers, overlapping point values, named stack shares and amounts, match
+  metadata, range changes and box summaries. Includes keyboard inspection,
+  touch support, separate graphics/text hover delays and `.tooltip()` overrides,
+  with an offline gallery in notebook 55. Sparklines inspect one x observation;
+  signed-area swatches match the above/below-reference fill.
 - Fluent `.legend()` for mark columns: compact, wrapping colour keys beside
   the table title, with source-derived or custom names, optional omitted
   entries, an optional outline, automatic/explicit column names, and matching

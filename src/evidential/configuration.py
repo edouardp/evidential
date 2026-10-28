@@ -71,7 +71,14 @@ class Theme(TypedDict, total=False):
     font_size: str | None
 
 
+class TooltipOptions(TypedDict, total=False):
+    #: Hover delays in seconds; graphics default to 0, scalar text to 0.8.
+    delay: float
+    text_delay: float
+
+
 class TableOptions(TypedDict, total=False):
+    tooltips: TooltipOptions | None
     title: str | None
     subtitle: str | None
     caption: str | None
@@ -488,6 +495,8 @@ class ColumnOptions(TypedDict, total=False):
     column_group: str | Sequence[str] | None
     subcolumn_group: str | None
     info: str | None
+    tooltip: bool | str
+    tooltip_options: TooltipOptions | None
     repeat_values: bool | None
     color_options: ColorOptions | None
     bar_options: BarOptions | None
@@ -527,6 +536,7 @@ class ColumnOptions(TypedDict, total=False):
 
 
 TABLE_DEFAULTS: TableOptions = {
+    "tooltips": None,
     "title": None,
     "subtitle": None,
     "caption": None,
@@ -623,6 +633,8 @@ def validate_options(options: Mapping[str, Any], schema: Any, path: str) -> None
             raise unknown_option(name, list(fields), path)
         if not _matches(value, fields[name], f"{path}.{name}"):
             raise TypeError(f"{path}.{name} expects {fields[name]}, got {value!r}")
+        if schema is TooltipOptions and value < 0:
+            raise ValueError(f"{path}.{name} must be nonnegative (seconds)")
         if name in {"row_shading", "neutral_range"} and isinstance(value, (list, tuple)) and len(value) != 2:
             raise TypeError(f"{path}.{name} expects a pair of values")
     for name in getattr(schema, "__required_keys__", ()):

@@ -50,6 +50,8 @@ def _normalize_column_options(data: dict[str, Any]) -> dict[str, Any]:
     ``{"color_scale": "green", "sparkY": "sales"}`` to populate
     ``color_options`` / ``sparkline_options`` / ``bar_options`` / etc.
     """
+    if data.get("tooltip") == "@":
+        raise ValueError("tooltip row binding needs a field name")
     for canonical, compatibility in (
         ("fmt", "format"),
         ("fmt_column", "format_column"),
@@ -70,6 +72,7 @@ def _normalize_column_options(data: dict[str, Any]) -> dict[str, Any]:
         "cell_style",
         "image_options",
         "logo_options",
+        "tooltip_options",
     ):
         if data.get(key) is not None and not isinstance(data[key], Mapping):
             raise TypeError(f"column.{key} expects a mapping")

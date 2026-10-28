@@ -16,7 +16,7 @@ test("signed areas meet at exact reference crossings with positive and negative 
   const svg = render([0.5, 1.5]);
   const reference = svg.querySelector(".et-sparkline-reference");
   assert.equal(reference.getAttribute("y1"), "11.5");
-  assert.equal(reference.textContent, "100.0%");
+  assert.equal(reference.textContent, "100%");
   assert.equal(reference.getAttribute("stroke-dasharray"), "2 2");
   const [above, below] = svg.querySelectorAll("polygon");
   assert.equal(above.getAttribute("fill"), "green");
@@ -48,7 +48,7 @@ test("reference areas preserve gaps, original values and percentage tooltips", (
   assert.equal(svg.querySelectorAll("polygon").length, 4);
   assert.equal(svg.querySelectorAll("polyline").length, 2);
   assert.deepEqual([...svg.querySelectorAll("circle title")].map(title => title.textContent),
-    ["0: 80.0%", "1: 120.0%", "3: 70.0%", "4: 130.0%"]);
+    ["0: 80%", "1: 120%", "3: 70%", "4: 130%"]);
   assert.equal(render([null, null]).textContent, "–");
   const clipped = render([1.2, 1.5], {}, {min: 1.1, max: 1.6, shared: true});
   assert.equal(clipped.querySelectorAll("line").length, 0);

@@ -61,9 +61,12 @@ def test_trade_demo_uses_shared_zero_compact_amounts_and_surplus_deficit_colors(
         assert rows.nth(2).locator("td").nth(column_index["exports_imports_ratio"]).inner_text() == "–"
         assert rows.nth(2).locator("td").nth(column_index["net_exports"]).inner_text() == "–"
         history = rows.nth(0).locator(".et-sparkline")
-        assert history.locator("circle title").all_text_contents() == ["2020: 100.0%", "2021: 200.0%", "2023: 724.9%"]
+        for index, expected in enumerate([100, 200, 1.7e12 / 234.5e9 * 100]):
+            history.locator("circle").nth(index).hover()
+            text = page.locator(".et-tooltip:visible .et-tooltip-content > .et-tooltip-value").inner_text()
+            assert float(text.replace(",", "").rstrip("%")) == pytest.approx(expected)
         assert history.locator("polyline").count() == 2  # Leave the missing 2022 gap open.
-        assert history.locator(".et-sparkline-reference title").text_content() == "100.0%"
+        assert history.locator(".et-sparkline-reference title").text_content() == "100%"
         assert history.locator("polygon").count() == 4  # Signed fill on each side of the gap.
         for row in rows.all()[:2]:
             baseline = float(row.locator(".et-sparkline-reference").get_attribute("y1"))

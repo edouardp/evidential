@@ -20,7 +20,7 @@ test("adjacent differences show decreases in positive absolute measurements", ()
   const marks = [...svg.querySelectorAll("rect")];
   assert.deepEqual(marks.map(mark => mark.dataset.state), ["up", "down", "up", "up", "down", "up", "up"]);
   assert.equal(Number(marks[0].getAttribute("x")), 11.5);
-  assert.equal(marks[1].textContent, "2: -1.0 (down)");
+  assert.equal(marks[1].textContent, "2: -1\nChange: down");
   assert.match(svg.getAttribute("aria-label"), /5 up, 0 steady, 2 down, 1 missing/);
   for (const opts of [{type: "change"}, {type: "change", delta: false}]) {
     assert.deepEqual([...render([5, 4], opts).querySelectorAll("rect")].map(mark => mark.dataset.state), ["up", "up"]);

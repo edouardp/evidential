@@ -159,7 +159,7 @@ test("overflow arrows retain true endpoints in accessible text", () => {
     scale: {domain: [0, 10]}}, {lo: -5, hi: 15}, null);
   assert.equal(node.querySelectorAll(".et-mark-arrow").length, 2);
   assert.equal(node.querySelectorAll(".et-mark-cap:not(.et-mark-arrow)").length, 0);
-  assert.match(node.getAttribute("aria-label"), /lo: -5, hi: 15/);
+  assert.match(node.getAttribute("aria-label"), /Lo: -5\nHi: 15/);
 });
 
 test("tiny segment labels hide completely and reappear when space becomes available", () => {
@@ -236,7 +236,7 @@ test("stack segments clip their geometry to fixed domain bounds", () => {
   assert.equal(parseFloat(segments[0].style.left), 0);
   assert.ok(Math.abs(parseFloat(segments[0].style.width) - 50) < 1e-9);
   assert.equal(parseFloat(segments[1].style.left) + parseFloat(segments[1].style.width), 100);
-  assert.match(node.getAttribute("aria-label"), /a: 50/);
+  assert.match(node.getAttribute("aria-label"), /A: 50/);
 });
 
 test("bar compatibility options still work with a shared scale and explicit labels", () => {

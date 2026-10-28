@@ -50,9 +50,11 @@ def test_additional_examples_keep_real_results_and_distinct_shape_keys():
     assert len(form.raw) == 4
     for row in form.raw:
         assert len(row["form"]) == 12
-        assert row["wins"] == row["form"].count("Win")
-        assert row["draws"] == row["form"].count("Draw")
-        assert row["losses"] == row["form"].count("Loss")
+        outcomes = [game["category"] for game in row["form"]]
+        assert row["wins"] == outcomes.count("Win")
+        assert row["draws"] == outcomes.count("Draw")
+        assert row["losses"] == outcomes.count("Loss")
+        assert all(game["opponent"] and game["score"] and game["date"] for game in row["form"])
     assert list(form.columns[-1]["encodings"][0]["colors"]) == ["Win", "Draw", "Loss"]
     targets = definitions["target_table"].widget
     assert [enc["kind"] for enc in targets.columns[-1]["encodings"]] == ["bar", "point"]

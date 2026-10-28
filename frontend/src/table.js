@@ -20,6 +20,7 @@ import { h, inlineMarkdown, withFigure, formatRowRanges, alignStyle, isStub } fr
 import { hiddenColumns, visibleRows, searchRows, sortRows, paginateRows,
   computeRowspans, shaded, sectionContinuation } from "./rows.js";
 import { renderCell } from "./cells.js";
+import { TooltipController } from "./tooltips.js";
 import { formatTitle, formatValue } from "./format.js";
 import { formattedText } from "./formatted-text.js";
 import { axisTicks, marksDomain, scalePosition } from "./visualizations.js";
@@ -114,6 +115,7 @@ export class EvidentialTableRenderer {
     });
     this.closeBtn.textContent = "✕";
     this.root.append(this.closeBtn);
+    this._tooltips = new TooltipController(this.root);
     // The comment marks where the widget lives inline so it can be moved back
     // after the fullscreen dialog closes. It must be attached to the DOM
     // before it can anchor anything.
@@ -173,6 +175,7 @@ export class EvidentialTableRenderer {
     this._holdController.stop();
     this._loadingController.destroy();
     this._viewport.destroy();
+    this._tooltips.destroy();
     this._pipeline.clear();
     this.dialog.remove();
     this.placeholder.remove();
@@ -221,6 +224,7 @@ export class EvidentialTableRenderer {
   }
   // --------------------------------------------------------------- render ---
   render() {
+    this._tooltips.hide();
     const opts = this.options;
     this._applyTheme();
     this.root.style.maxWidth =
@@ -315,6 +319,8 @@ export class EvidentialTableRenderer {
     } else {
       this.scroller.append(
         this._renderTable(columns, rows, {
+          columns: this.columns,
+          options: opts,
           ranges,
           formatRanges,
           colorScales,
@@ -350,6 +356,7 @@ export class EvidentialTableRenderer {
     this.caption.replaceChildren();
     if (opts.caption) this.caption.append(inlineMarkdown(opts.caption));
     this._updateBaselineHeight();
+    this._tooltips.refresh();
     this._viewport.frame(() => {
       this._viewport.applyFrozenOffsets();
       fitMarkLabels(this.root);

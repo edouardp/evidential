@@ -36,7 +36,7 @@ export function markSeries(column, columns = [], options = {}) {
   return series.map((item, index) => {
     const source = columns.find(col => col !== column && col.name === item.key);
     const automatic = item.enc.names?.[item.key] ?? (item.enc.kind === "strip" ? item.key : columnHeading(source || {name: item.key}, options));
-    return {...item, label: Array.isArray(labels) && index < labels.length ? labels[index]
+    return {...item, name: automatic, label: Array.isArray(labels) && index < labels.length ? labels[index]
       : labels && typeof labels === "object" && Object.hasOwn(labels, item.key) ? labels[item.key] : automatic};
   });
 }

@@ -158,7 +158,7 @@ def test_wdi_ranking_does_not_scroll_for_omitted_outside_labels(page, live_serve
             })""")
             assert geometry["table"] <= geometry["available"] + 1, geometry
             assert geometry["scroll"] <= geometry["available"] + 1, geometry
-            assert first_label.get_attribute("title")
+            assert first_label.locator("xpath=ancestor::td").get_attribute("aria-label")
         capture(page, "wdi-ranking-no-scrollbar.png")
 
 
@@ -228,7 +228,7 @@ def test_automatic_bar_label_preferences_signed_bars_and_resize(page, live_serve
     page.locator("section").first.evaluate("el => el.style.width = '24px'")
     first = page.locator("#case-0 .et-mark-label").first
     page.wait_for_function("document.querySelector('#case-0 .et-mark-label').hidden")
-    assert first.get_attribute("title") == "Revenue: $95"
+    assert "X: $95" in first.locator("xpath=ancestor::td").get_attribute("aria-label")
     assert first.evaluate("el => getComputedStyle(el).display") == "none"
     page.locator("#case-0 .et-marks").evaluate_all("nodes => nodes.forEach(el => el.style.minWidth = '')")
     page.locator("section").first.evaluate("el => el.style.width = '2000px'")
@@ -367,8 +367,9 @@ def test_change_sparklines_geometry_color_anchors_and_pagination(page, live_serv
     assert gradient.nth(1).get_attribute("fill") == "#808080"
     one_color = gradient.nth(2).get_attribute("fill")
     assert one_color != "#0000ff"  # The unseen next page contains +8.
-    assert gradient.nth(2).locator("title").text_content().endswith("(up)")
-    assert page.locator(".et-sparkline-change").first.get_attribute("aria-label").endswith("1 missing")
+    gradient.nth(2).hover()
+    assert "Change: up" in page.locator(".et-tooltip:visible").inner_text()
+    assert "1 missing" in page.locator(".et-sparkline-change").first.get_attribute("aria-label")
     scroller = page.locator(".et-scroller")
     assert scroller.evaluate("el => el.scrollHeight <= el.clientHeight")
     page.get_by_role("button", name="Next page", exact=True).click()
@@ -1094,7 +1095,7 @@ def test_labels_hide_completely_when_the_segment_is_tiny(page, live_server):
     labels = page.locator(".et-mark-stack-label")
     page.wait_for_function("getComputedStyle(document.querySelector('.et-mark-stack-label')).visibility === 'hidden'")
     assert labels.nth(1).is_visible()
-    assert "a: 1" in page.locator(".et-marks").get_attribute("aria-label")
+    assert "A: 1" in page.locator(".et-marks").get_attribute("aria-label")
     capture(page, "evidential-labels.png")
 
 
@@ -1305,7 +1306,8 @@ def test_scientific_notation_uses_html_exponents_across_formatted_surfaces(page,
     assert geometry["exponentBottom"] < geometry["baseBottom"] - 1
     for selector in (".et-chip", ".et-mark-label-text", ".et-stats-value", ".et-axis-tick", ".et-mark-stack-label"):
         assert page.locator(f"#case-1 {selector} sup").count() > 0
-    assert page.locator("#case-1 .et-mark-label").get_attribute("title") == "1.23 × 10⁵"
+    page.locator("#case-1 .et-mark-label").hover()
+    assert page.locator("#case-1 .et-tooltip-value").inner_text() == "123,456"
     capture(page, "scientific-formatting.png")
 
 
@@ -1320,13 +1322,14 @@ def test_five_style_notebook_shows_adjacent_revenue_decreases(page, live_server)
     mount(page, live_server, [("One series, five styles", styles, [])])
     revenue = page.locator("tbody tr").first.locator(".et-sparkline-change")
     assert revenue.locator("rect").count() == 7
-    assert revenue.get_attribute("aria-label") == "Changes: 5 up, 0 steady, 2 down, 1 missing"
+    assert revenue.get_attribute("aria-label").startswith("Changes: 5 up, 0 steady, 2 down, 1 missing")
     states = revenue.locator("rect").evaluate_all("nodes => nodes.map(el => el.dataset.state)")
     assert states == ["up", "down", "up", "up", "down", "up", "up"]
     for index in (1, 4):
-        tooltip = revenue.locator("rect title").nth(index).text_content()
-        assert float(tooltip.split(": ")[-1].split(" ")[0]) == -1
-        assert tooltip.endswith("(down)")
+        revenue.locator("rect").nth(index).hover()
+        tooltip = page.locator(".et-tooltip:visible")
+        assert tooltip.locator(".et-tooltip-content > .et-tooltip-value").inner_text() == "-1"
+        assert "Change: down" in tooltip.inner_text()
     assert page.locator("tbody tr").nth(1).locator("rect[data-state=steady]").count() == 3
     assert page.locator("tbody tr").first.locator(".et-sparkline").count() == 5
     capture(page, "sparkline-adjacent-deltas.png")

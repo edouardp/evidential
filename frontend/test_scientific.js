@@ -56,7 +56,7 @@ test("cells, chips, templates, mark labels, stack labels, statistics and axes sh
   const cells = el.querySelectorAll("tbody td");
   for (const cell of cells) assert.ok(cell.querySelector("sup.et-scientific-exponent"), cell.outerHTML);
   assert.equal(cells[1].querySelector("sup").textContent, "-4");
-  assert.equal(cells[2].querySelector(".et-mark-label").title, "1.23 × 10⁵");
+  assert.match(cells[2].getAttribute("aria-label"), /Bar: 123,456/);
   assert.match(cells[4].textContent, /^\(1\.23 × 10/);
   assert.ok(el.querySelector(".et-stats-value sup"));
   assert.ok(el.querySelector(".et-axis-tick sup"));
@@ -67,6 +67,6 @@ test("cells, chips, templates, mark labels, stack labels, statistics and axes sh
 test("SVG tooltips use readable text without HTML tags", () => {
   const chart = renderSparkline({sparkline_options: {type: "points", y_fmt: "sci"}}, [123456]);
   const title = chart.querySelector("title");
-  assert.equal(title.textContent, "0: 1.23 × 10⁵");
+  assert.equal(title.textContent, "0: 123,456");
   assert.equal(title.querySelector("sup"), null);
 });

@@ -123,7 +123,17 @@ stacks, inspect `diverge_at` and `neutral` semantics in the installed API.
 
 Sparkline types are `line`, `area`, `bar`, `points`, and `change`. Supply ordered
 numbers, pairs, or objects with explicit `x`/`y` bindings. Nulls preserve gaps;
-markers can be `True` or `"ends"`. `y_fmt` controls tooltip formatting.
+markers can be `True` or `"ends"`. `y_fmt` supplies tooltip units; inspection
+expands abbreviated/rounded numbers to readable full values. Sparklines select
+one observation by x-position. Signed-area tooltip swatches match the fill on
+the observation's side of the reference.
+
+All columns support `.tooltip(False)`, `.tooltip("@field")` and literal
+multiline text. Hover delays are seconds: table
+`settings(tooltips={"delay": 0.8, "text_delay": 1.5})`, or per-column
+`.tooltip(delay=0)`. Defaults are instant graphics and 0.8s for text; keyboard
+and touch inspection is immediate. Point plots can collect overlapping dots,
+while stacks and strips inspect one segment. See notebook 55 for runnable examples.
 
 - `type="change"` interprets input as signed changes/outcomes by default.
   For absolute observations such as `[5, 4, 8]`, set `delta=True` to compare

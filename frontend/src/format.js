@@ -16,6 +16,11 @@ const CURRENCIES = {
   sek: '"kr"',
 };
 
+/** Currency identity without spreadsheet-format quoting or display rounding. */
+export function currencySymbol(code) {
+  return CURRENCIES[code]?.replaceAll('"', "") ?? null;
+}
+
 export const BASE_AUTO_FORMATS = [
   "num",
   "usd",
@@ -102,7 +107,7 @@ const DATE_FORMATS = new Set([
   "shortdate", "longdate", "fulldate", "mdy", "dmy", "hms",
 ]);
 
-function isDateFormatCode(code) {
+export function isDateFormatCode(code) {
   if (!code) return false;
   if (DATE_FORMATS.has(code.toLowerCase())) return true;
   return /\b(yyyy|yy|mmmm|mmm|dd|ddd|dddd|hh|ss|AM|PM)\b/i.test(code);

@@ -1218,3 +1218,37 @@ tbody tr:last-child .et-bar-center .et-bar-axis { bottom: var(--et-bar-pad, 0); 
 .et-root .et-display-row.et-display-rule-below .et-td,
 .et-root .et-display-row.et-display-rule-both .et-td { border-bottom: 1px solid var(--et-header-border); }
 .et-display-label + .et-display-value { margin-left: 0.6em; }
+
+/* A widget-owned popover escapes scroll clipping and stays themed in fullscreen. */
+.et-root .et-tooltip {
+  position: fixed;
+  inset: auto;
+  margin: 0;
+  z-index: 10000;
+  box-sizing: border-box;
+  max-width: min(28rem, calc(100vw - 16px));
+  max-height: calc(100vh - 16px);
+  overflow: auto;
+  padding: 0.5rem 0.625rem;
+  border: 1px solid var(--et-border, #cbd5e1);
+  border-radius: 4px;
+  background: var(--et-surface, var(--et-bg, white));
+  color: var(--et-text, #0f172a);
+  font-family: var(--et-font, Arial, sans-serif);
+  font-size: 12px;
+  line-height: 1.45;
+  text-align: left;
+  white-space: normal;
+  box-shadow: 0 3px 12px rgb(0 0 0 / 18%);
+  pointer-events: auto;
+}
+.et-root .et-tooltip[hidden] { display: none; }
+.et-tooltip-entry { display: flex; align-items: baseline; gap: 0.4rem; }
+.et-tooltip-entry + .et-tooltip-entry { margin-top: 0.3rem; }
+.et-tooltip-swatch { width: 0.65em; height: 0.65em; flex: 0 0 0.65em; }
+.et-tooltip-content { min-width: 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+.et-tooltip-name { font-weight: 600; margin-right: 0.5em; }
+.et-tooltip-value { font-variant-numeric: tabular-nums; }
+.et-tooltip-detail { color: var(--et-text, #0f172a); }
+.et-root [data-et-tooltip-cell]:focus-visible { outline: 2px solid var(--et-accent, #2563eb); outline-offset: -2px; }
+.et-tooltip-active { outline: 2px solid var(--et-text, #0f172a); outline-offset: 2px; }

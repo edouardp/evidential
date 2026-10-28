@@ -16,7 +16,7 @@ from ._column_options import _normalize_column_options
 from ._domain import domain_spec
 from ._sparkline import normalize_sparkline_options
 from ._text_style import TextStyle
-from .configuration import Relative, SparklineType
+from .configuration import Relative, SparklineType, TooltipOptions, validate_options
 
 Align = Literal["left", "right", "center"]
 Rotation = Literal["vertical"] | float
@@ -137,6 +137,23 @@ class Column(TextStyle, Mapping[str, Any]):
         return self._with(**{key: merged or None})
 
     # -- labels and formatting -------------------------------------------
+    def tooltip(self, value: bool | str = True, *, delay: float | None = None, text_delay: float | None = None) -> Self:
+        """Inspect full values by default, hide with ``False``, or supply text.
+
+        ``"@field"`` reads text from another field in the row. Literal and
+        field-bound text can contain newlines; they are rendered as plain text.
+        One override applies to the whole cell, including compound marks.
+        Hover delays are in seconds. ``delay`` is for graphics, ``text_delay``
+        for scalar cells; table defaults come from ``settings(tooltips=...)``.
+        """
+        if not isinstance(value, (bool, str)):
+            raise TypeError("tooltip expects True, False or text (use @field for a row binding)")
+        if value == "@":
+            raise ValueError("tooltip row binding needs a field name")
+        options = _clean(delay=delay, text_delay=text_delay)
+        validate_options(options, TooltipOptions, "tooltip")
+        return self._with(tooltip=value, tooltip_options=options)
+
     def title(self, value: str) -> Self:
         """Override the column's header text.
 

@@ -261,7 +261,7 @@ def matching_players(
     return (players,)
 
 
-@app.cell
+@app.cell(expand_output=True)
 def tables(EvidentialTable, col, domain, label, mo):
     percentage = domain.numeric("fg-percent").bounds(0, 1)
     player_table = mo.ui.anywidget(

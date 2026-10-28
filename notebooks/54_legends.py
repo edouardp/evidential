@@ -90,7 +90,7 @@ def illustrative_data(settings):
         },
     ]
     cost_colors = ["#1d4ed8", "#f59e0b", "#dc2626", "#94a3b8"]
-    frame = settings(border=False, row_lines=False, row_shading=True, page_size=0, width="100%")
+    frame = settings(border=False, row_lines=False, row_shading=3, page_size=0, width="100%")
     return cost_colors, frame, services
 
 

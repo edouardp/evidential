@@ -16,7 +16,8 @@ const stack = {name: "storage_cost", title: "Monthly cost", legend: true, encodi
 test("legends use source names rather than the compound column title and match real fills", () => {
   const node = renderLegends([stack], [stack], {});
   assert.equal(node.getAttribute("aria-label"), "Legend");
-  assert.equal(node.querySelector(".et-legend-column").textContent, "Monthly cost");
+  assert.equal(node.querySelector(".et-legend-column"), null);
+  assert.equal(node.querySelector('[role="group"]').getAttribute("aria-label"), "Monthly cost");
   assert.deepEqual([...node.querySelectorAll(".et-legend-label")].map(n => n.textContent), ["Storage Cost", "Requests"]);
   const marks = renderMarks(stack, {storage_cost: 12, requests: 3});
   assert.deepEqual([...node.querySelectorAll(".et-legend-swatch")].map(n => n.style.backgroundColor),
@@ -25,15 +26,29 @@ test("legends use source names rather than the compound column title and match r
 
 test("names honor source overrides, formatting options and subcolumn heading joins", () => {
   const sources = [stack, {name: "requests", title: "API calls", hide: true}];
+  const named = {...stack, legend_options: {column_names: true}};
   assert.deepEqual(markSeries(stack, sources).map(s => s.label), ["Storage Cost", "API calls"]);
-  assert.equal(renderLegends([stack], sources, {format_titles: false}).querySelector(".et-legend-column").textContent,
+  assert.equal(renderLegends([named], sources, {format_titles: false}).querySelector(".et-legend-column").textContent,
     "storage_cost");
-  assert.equal(renderLegends([stack], sources, {all_caps: true}).querySelector(".et-legend-column").textContent,
+  assert.equal(renderLegends([named], sources, {all_caps: true}).querySelector(".et-legend-column").textContent,
     "MONTHLY COST");
-  assert.equal(renderLegends([{...stack, subcolumn_group: "Combined"}], sources, {})
+  assert.equal(renderLegends([{...named, subcolumn_group: "Combined"}], sources, {})
     .querySelector(".et-legend-column").textContent, "Combined");
-  assert.equal(renderLegends([stack], sources, {stub: "storage_cost", stub_head: "Costs"})
+  assert.equal(renderLegends([named], sources, {stub: "storage_cost", stub_head: "Costs"})
     .querySelector(".et-legend-column").textContent, "Costs");
+});
+
+test("column names default off for one nonempty group and on for several, with explicit overrides", () => {
+  const second = {...stack, name: "b", title: "Traffic"};
+  assert.equal(renderLegends([stack], [stack, second], {}).querySelectorAll(".et-legend-column").length, 0);
+  assert.equal(renderLegends([stack, second], [stack, second], {}).querySelectorAll(".et-legend-column").length, 2);
+  const forced = {...stack, legend_options: {column_names: true}};
+  assert.equal(renderLegends([forced], [forced], {}).querySelectorAll(".et-legend-column").length, 1);
+  const hidden = {...stack, legend_options: {column_names: false}};
+  assert.deepEqual([...renderLegends([hidden, second], [hidden, second], {}).querySelectorAll(".et-legend-column")]
+    .map(n => n.textContent), ["Traffic"]);
+  const empty = {...second, legend: [null, null]};
+  assert.equal(renderLegends([stack, empty], [stack, empty], {}).querySelectorAll(".et-legend-column").length, 0);
 });
 
 test("each column gets its own row without a redundant visible legend heading", () => {

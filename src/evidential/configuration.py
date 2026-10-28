@@ -457,6 +457,7 @@ class DomainSpec(TypedDict, total=False):
 
 class LegendOptions(TypedDict, total=False):
     outline: bool
+    column_names: bool | None
 
 
 class ColumnOptions(TypedDict, total=False):

@@ -10,7 +10,8 @@ project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 - Fluent `.legend()` for mark columns: compact, wrapping colour keys beside
   the table title, with source-derived or custom names, optional omitted
-  entries, an optional outline, and matching bar, point, range and strip swatches.
+  entries, an optional outline, automatic/explicit column names, and matching
+  bar, point, range and strip swatches.
 - Notebook 54 demonstrates one and two stacked-bar legends plus nine coloured
   age-band points using genuine 2024 WDI population estimates for twelve
   countries. A documented snapshot and aggregation query keep it usable offline.

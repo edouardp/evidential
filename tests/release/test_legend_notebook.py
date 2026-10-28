@@ -44,6 +44,23 @@ def test_real_snapshot_has_complete_exhaustive_age_bands():
     assert records[-1]["country"] == "Japan"
 
 
+def test_additional_examples_keep_real_results_and_distinct_shape_keys():
+    _, definitions = runpy.run_path(str(NOTEBOOK))["app"].run()
+    form = definitions["form_table"].widget
+    assert len(form.raw) == 4
+    for row in form.raw:
+        assert len(row["form"]) == 12
+        assert row["wins"] == row["form"].count("Win")
+        assert row["draws"] == row["form"].count("Draw")
+        assert row["losses"] == row["form"].count("Loss")
+    assert list(form.columns[-1]["encodings"][0]["colors"]) == ["Win", "Draw", "Loss"]
+    targets = definitions["target_table"].widget
+    assert [enc["kind"] for enc in targets.columns[-1]["encodings"]] == ["bar", "point"]
+    dumbbells = definitions["dumbbell_table"].widget
+    assert [enc["kind"] for enc in dumbbells.columns[-1]["encodings"]] == ["range", "points"]
+    assert dumbbells.columns[-1]["legend"] == ["Change", "Before", "After"]
+
+
 def test_population_query_weights_sex_specific_percentages_and_requires_every_band():
     with duckdb.connect() as connection:
         connection.execute("""

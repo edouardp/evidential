@@ -52,7 +52,7 @@ explorers can require a local data bundle; their introduction describes its loca
 | [`51_table_layouts.py`](51_table_layouts.py) | Notebook-backed README layout gallery: frames, titles/notes, rules, row shading, headings, summaries, grand totals and nested column groups. |
 | [`52_sra_historical_statistics.py`](52_sra_historical_statistics.py) | Philippine SRA dbt product: six series, measure filters, crop-year sparklines, monthly bars and prior-year comparisons, source-conflict metadata and printed totals/averages. Requires the built product in `~/datasets/sra-historical-statistics` or `SRA_DATASET`. |
 | [`53_nba_shooting.py`](53_nba_shooting.py) | Local NBA shot-detail archives: season/phase/team filters, weighted player shooting leaders, shot-mix stacks and fixed-scale sparklines, linked shot-zone benchmarks and game logs. Requires `~/datasets/nba_data` or `NBA_DATASET`. |
-| [`54_legends.py`](54_legends.py) | Wrapping legends alongside the title: one stack, two stacks, and nine coloured age-band points on a line using genuine 2024 WDI population estimates for twelve countries. Runs offline. |
+| [`54_legends.py`](54_legends.py) | Wrapping legends: one/two stacks, nine age-band points with sampled colours, real football W/D/L strips, bars with target dots, and dumbbells with coloured lines and endpoint dots. Uses committed snapshots and runs offline. |
 
 `sample_data/needful_things/orders.parquet` is Evidence's demo dataset, copied
 from the published docs site.

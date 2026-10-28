@@ -23,7 +23,7 @@ if (!dom.window.HTMLDialogElement.prototype.showModal) {
 const { EvidentialTableRenderer, render, fontSizeValue } = await import("./src/table.js");
 
 test("legends render without a table title, follow visibility and update with column metadata", () => {
-  const column = {name: "a", title: "Response", legend: true, encodings: [
+  const column = {name: "a", title: "Response", legend: true, legend_options: {column_names: true}, encodings: [
     {kind: "stacked_bar", source: "a", color: "navy"},
     {kind: "stacked_bar", source: "b", color: "red"},
   ]};

@@ -30,12 +30,17 @@ title area has space on the right, including when multiple columns need keys.
 
 ## Decision Outcome
 
-Chosen option: **3**. `MarkColumn.legend(labels=True, *, outline=False)` adds a colour key for the
+Chosen option: **3**. `MarkColumn.legend(labels=True, *, outline=False,
+column_names=None)` adds a colour key for the
 whole presentation column. The titlebar contains the existing title/subtitle
 block and one accessible legend region, without a redundant visible title.
 One group per opted-in visible column is labelled with the same heading resolver
 as the table header (including explicit titles, title formatting, all caps,
 stub headings and subcolumn joins).
+Visible column names default to off for one nonempty legend group and on for
+two or more. The count excludes hidden columns and groups with no entries.
+`column_names=True` or `False` overrides this group's heading; `None` restores
+automatic selection. The accessible group name remains available either way.
 
 Source headings supply default entry names; an explicitly configured source
 column title is used when available separately from the compound mark column.

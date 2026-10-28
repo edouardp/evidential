@@ -23,7 +23,7 @@ def imports():
     return EvidentialTable, Path, col, json, label, mo, settings
 
 
-@app.cell
+@app.cell(hide_code=True)
 def introduction(mo):
     mo.md("""
     # Legends
@@ -34,6 +34,8 @@ def introduction(mo):
     swatches. Swatch and label stay together; flexbox wraps whole keys as the
     available space changes. Try narrowing the window. Use
     `.legend(outline=True)` for a thin box around the combined key.
+    A single group omits its column name; two or more show their names.
+    `column_names=True` or `False` overrides that automatic choice.
 
     Names default to source headings. Pass a list or mapping for custom names;
     `.legend(False)` removes a key and a `None` label omits an individual entry.
@@ -236,12 +238,12 @@ def population_points(EvidentialTable, age_labels, col, frame, mo, population):
         EvidentialTable(
             population,
             columns=[
-                col.text("country"), 
-                col.text("income_group"), 
-                col.number("population", format="compact3"), 
+                col.text("country"),
+                col.text("income_group"),
+                col.number("population", format="compact3"),
                 col.points(age_labels, palette="viridis", connect=True, title="Population share", format="pct0")
-                   .scale(domain=(0, 0.35), axis=True, axis_position="bottom", gridlines=True)
-                   .legend()
+                .scale(domain=(0, 0.35), axis=True, axis_position="bottom", gridlines=True)
+                .legend(),
             ],
             settings=frame,
             title="From younger to older populations",
@@ -255,7 +257,153 @@ def population_points(EvidentialTable, age_labels, col, frame, mo, population):
 
 
 @app.cell
-def _():
+def football_form_doc(mo):
+    mo.md("""
+    ## Categorical strips: wins, draws and losses
+
+    A strip's colour key comes from its category-to-colour mapping, rather than
+    from numeric source columns. Here each segment is one of the last twelve
+    **recorded domestic league matches in calendar 2024**, oldest to newest.
+    The W/D/L counts refer to those same twelve matches, not the whole season.
+
+    This reuses the genuine, committed football-data / worldclubratings.com
+    snapshot from notebook 46. See `data/README.md` for provenance and the Open
+    Data Commons Attribution License. It works without the local football dataset.
+    """)
+    return
+
+
+@app.cell
+def football_form_data(Path, json):
+    football_snapshot = json.loads((Path(__file__).parent / "data/46_football_england_2024.json").read_text())
+    clubs = ["Arsenal FC", "Chelsea", "Liverpool", "Manchester City"]
+    recent_form = []
+    for club in clubs:
+        matches = sorted(
+            [
+                game
+                for game in football_snapshot["matches"]
+                if game["team"] == club and game["competition"] == "england" and game["level"] == "national"
+            ],
+            key=lambda game: (game["match_date"], game["opponent"], game["venue"]),
+        )[-12:]
+        outcomes = [game["result"] for game in matches]
+        recent_form.append(
+            {
+                "club": club,
+                "wins": outcomes.count("Win"),
+                "draws": outcomes.count("Draw"),
+                "losses": outcomes.count("Loss"),
+                "form": outcomes,
+            }
+        )
+    return (recent_form,)
+
+
+@app.cell
+def football_form(EvidentialTable, col, frame, mo, recent_form):
+    form_table = mo.ui.anywidget(
+        EvidentialTable(
+            recent_form,
+            columns=[
+                col.text("club"),
+                col.integer("wins"),
+                col.integer("draws"),
+                col.integer("losses"),
+                col.strip("form", colors={"Win": "#2166ac", "Draw": "#b8bcc2", "Loss": "#b2182b"}).legend(outline=True),
+            ],
+            settings=frame,
+            title="Twelve results, three states",
+            subtitle="Four English clubs · last twelve recorded league matches in 2024",
+            caption="Source: football-data / worldclubratings.com, committed notebook 46 snapshot. ODC-By 1.0.",
+        )
+    )
+    form_table
+    return
+
+
+@app.cell
+def comparison_examples_doc(mo):
+    mo.md("""
+    ## Mixed marks: a bar and a target point
+
+    A legend can explain **shape as well as colour**. A square swatch identifies
+    the filled completion bar; a dot identifies its target. These operational
+    figures and the sales comparison below are illustrative.
+    `column_names=True` forces this single group's heading to show.
+    """)
+    return
+
+
+@app.cell
+def comparison_data():
+    operations = [
+        {"region": "North", "completion": 0.82, "target": 0.9, "before": 29, "after": 94},
+        {"region": "South", "completion": 0.67, "target": 0.8, "before": 76, "after": 41},
+        {"region": "East", "completion": 0.94, "target": 0.9, "before": 27, "after": 47},
+        {"region": "West", "completion": 0.76, "target": 0.85, "before": 20, "after": 20},
+    ]
+    return (operations,)
+
+
+@app.cell
+def target_points(EvidentialTable, col, frame, label, mo, operations):
+    target_table = mo.ui.anywidget(
+        EvidentialTable(
+            operations,
+            columns=[
+                col.text("region"),
+                col.bar("completion", color="#0f766e", format="pct0", label=label.auto_position("inside end"))
+                .point("target", color="#334155", size=8)
+                .title("Completion vs target")
+                .scale(domain=(0, 1), axis=True, axis_position="bottom")
+                .legend(column_names=True),
+            ],
+            settings=frame,
+            title="Completion against target",
+            subtitle="Illustrative operating regions · shared 0–100% scale",
+        )
+    )
+    target_table
+    return
+
+
+@app.cell
+def dumbbell_legend_doc(mo):
+    mo.md("""
+    ## Dumbbells: coloured lines and endpoint dots
+
+    Line swatches distinguish the change from the endpoint dots. Negative
+    changes automatically get a second line key in the negative colour. The
+    chevron follows the change; equal endpoints have no direction marker.
+
+    This uses the new multi-field `points` shorthand for the endpoints. The
+    ordered legend labels distinguish the connecting range from the **before**
+    point, even though both read the same source field.
+    """)
+    return
+
+
+@app.cell
+def dumbbell_legend(EvidentialTable, col, frame, mo, operations):
+    dumbbell_table = mo.ui.anywidget(
+        EvidentialTable(
+            operations,
+            columns=[
+                col.text("region"),
+                col.range("before", "after", color="#4b5563", color_negative="#dc2626", size=2, direction_marker=True)
+                .points({"before": "Before", "after": "After"}, palette=["#94a3b8", "#2563eb"])
+                .title("Weekly sales")
+                .fmt("num0")
+                .scale(domain=(0, 100), axis=True, axis_position="bottom")
+                .legend(["Change", "Before", "After"], outline=True),
+            ],
+            settings=frame,
+            title="Direction and endpoints",
+            subtitle="Illustrative weekly sales · before → after",
+        )
+    )
+    dumbbell_table
     return
 
 

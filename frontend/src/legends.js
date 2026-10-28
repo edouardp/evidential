@@ -19,6 +19,7 @@ export function renderLegends(columns, allColumns, options) {
   const outlined = enabled.some(col => col.legend_options?.outline);
   const legends = h("aside", {class: `et-legends${outlined ? " et-legends-outlined" : ""}`, "aria-label": "Legend"});
   const groups = h("div", {class: "et-legend-groups"});
+  const headings = [];
   const {leaves} = headerLayout(columns);
   for (const column of enabled) {
     const index = columns.indexOf(column);
@@ -35,9 +36,14 @@ export function renderLegends(columns, allColumns, options) {
     if (items.childElementCount) {
       group.append(items);
       groups.append(group);
+      headings.push({group, column});
     }
   }
   if (!groups.childElementCount) return null;
+  for (const {group, column} of headings) {
+    const show = column.legend_options?.column_names ?? groups.childElementCount > 1;
+    if (!show) group.querySelector(".et-legend-column").remove();
+  }
   legends.append(groups);
   return legends;
 }

@@ -59,6 +59,8 @@ Use `.legend(["Actual", "Target"])` for ordered names or
 an entry, useful for a connecting range behind several coloured points.
 `.legend(False)` disables a key. Strip keys come from their `colors` mapping.
 Use `.legend(outline=True)` for one thin box around the combined key.
+Column headings are omitted for a single key and shown for multiple keys;
+`column_names=True` or `False` overrides this per column.
 Legends require fixed colours; per-row colour references do not identify
 categories on their own. As with other additions, check installed capabilities
 before using `.legend()` against an older published package.

@@ -797,8 +797,12 @@ columns=[
   left and right (a Likert chart).
 - **Legends** — append `.legend()` to a mark column for a compact color key
   above the table, to the right of the title and subtitle. A group for each
-  opted-in column is named exactly like its rendered table heading. Each group
-  occupies its own `Column name: <keys>` row; complete swatch/label pairs wrap
+  opted-in column is named exactly like its rendered table heading. Column
+  names default to hidden for one nonempty group and visible for two or more.
+  `.legend(column_names=True)` forces this group's heading to show;
+  `column_names=False` hides it, and `None` restores automatic behavior.
+  Each group occupies its own `Column name: <keys>` row when named;
+  complete swatch/label pairs wrap
   without splitting words. There is no extra visible legend heading.
   `.legend(outline=True)` draws a thin box around the combined key; any opted-in
   column can request the shared outline. On narrow displays the
@@ -1120,7 +1124,7 @@ other than `auto`, `merge`, `group` and `subcolumns` return a `Column`;
 | `.viz(kind, **options)` | set `viz` directly |
 | `.color(...)` / `.chip(...)` / `.delta(...)` / `.sparkline(...)` / `.symbols(...)` | visualisations |
 | `.bar(source, …)` / `.point(source, …)` / `.range(low, high, …)` | append a mark |
-| `.legend(labels=True, *, outline=False)` | wrapping color key; list/mapping names, `None` entries omitted; optional shared box |
+| `.legend(labels=True, *, outline=False, column_names=None)` | wrapping key; optional box and automatic/explicit column headings |
 | `.label(value=True \| "@field", *, source=, text=, position=, format=)` | annotate the last mark |
 | `.scale(domain=(lo, hi), include_zero=, unit=, transform="linear"\|"log", axis=, axis_position=, gridlines=)` / `.reference_line(value, label=, color=)` / `.reference_band(low, high, …)` | shared axis / rules |
 | `.relative(value=True)` / `.fmt_column(column)` | relative time / format source |

@@ -79,14 +79,24 @@ def test_connecting_marks_can_be_omitted_and_switching_to_scalar_removes_the_key
 
 def test_legend_outline_is_optional_typed_and_cleared_with_scalar_styles():
     original = col.stacked_bar("a", "b")
-    assert original.legend()["legend_options"] == {"outline": False}
+    assert original.legend()["legend_options"] == {"outline": False, "column_names": None}
     outlined = original.legend(outline=True)
-    assert outlined["legend_options"] == {"outline": True}
+    assert outlined["legend_options"] == {"outline": True, "column_names": None}
     assert "legend_options" not in original
     assert "legend_options" not in outlined.chip()
     table = EvidentialTable([{"a": 1, "b": 2}], columns=[outlined])
-    assert table.columns[0]["legend_options"] == {"outline": True}
+    assert table.columns[0]["legend_options"] == {"outline": True, "column_names": None}
     with pytest.raises(TypeError, match="outline"):
         original.legend(outline="yes")
     with pytest.raises(TypeError, match="outline"):
         EvidentialTable([{"a": 1, "b": 2}], columns=[{**outlined, "legend_options": {"outline": "yes"}}])
+
+
+def test_legend_column_names_can_be_forced_hidden_or_reset_to_automatic():
+    original = col.stacked_bar("a", "b").legend()
+    assert original["legend_options"]["column_names"] is None
+    assert original.legend(column_names=True)["legend_options"]["column_names"] is True
+    assert original.legend(column_names=False)["legend_options"]["column_names"] is False
+    assert original.legend(column_names=True).legend()["legend_options"]["column_names"] is None
+    with pytest.raises(TypeError, match="column_names"):
+        original.legend(column_names="yes")

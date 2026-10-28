@@ -19,6 +19,8 @@ def test_legend_notebook_renders_stacks_and_nine_population_points(page, live_se
     mount(page, live_server, [("", table, []) for table in tables])
     page.locator("section").evaluate_all("nodes => nodes.forEach(el => el.style.width = '1100px')")
     assert page.locator("#case-0 .et-legend-group").count() == 1
+    assert page.locator("#case-0 .et-legend-column").count() == 0
+    assert page.locator("#case-2 .et-legend-column").count() == 0
     assert page.locator("#case-1 .et-legend-group").count() == 2
     assert page.locator(".et-legend-title").count() == 0
     assert page.locator("#case-0 .et-legends-outlined").count() == 0
@@ -144,6 +146,16 @@ def test_marimo_legend_has_square_spaced_chips_and_respects_the_right_edge(page)
         assert population.locator(".et-point-connector").count() == 12
         assert population.locator(".et-legend-label").count() == 9
         assert population.locator(".et-mark-point").first.get_attribute("title").startswith("0–9: 33%")
+        strips = page.locator('[data-cell-name="football_form"] .et-root')
+        strips.locator(".et-strip-seg").last.wait_for()
+        assert strips.locator(".et-strip-seg").count() == 48
+        targets = page.locator('[data-cell-name="target_points"] .et-root')
+        targets.locator(".et-mark-point").last.wait_for()
+        assert targets.locator(".et-mark-bar").count() == 4
+        assert targets.locator(".et-mark-point").count() == 4
+        dumbbells = page.locator('[data-cell-name="dumbbell_legend"] .et-root')
+        dumbbells.locator(".et-mark-point").last.wait_for()
+        assert dumbbells.locator(".et-mark-point").count() == 8
         for width in (1100, 700, 420, 360, 310, 280):
             root.evaluate("(el, width) => el.style.width = width + 'px'", width)
             geometry = root.evaluate("""root => {
@@ -175,3 +187,32 @@ def test_marimo_legend_has_square_spaced_chips_and_respects_the_right_edge(page)
                 assert name["lines"] == 1
                 assert "/ 0.72" in name["color"]
         capture(page, "legends-marimo.png")
+
+
+def test_strips_targets_and_dumbbells_have_matching_color_and_shape_keys(page, live_server):
+    _, definitions = runpy.run_path(str(NOTEBOOK))["app"].run()
+    tables = [definitions[name].widget for name in ("form_table", "target_table", "dumbbell_table")]
+    mount(page, live_server, [("", table, []) for table in tables])
+    page.locator("section").evaluate_all("nodes => nodes.forEach(el => el.style.width = '950px')")
+    assert page.locator("#case-0 .et-legend-label").all_text_contents() == ["Win", "Draw", "Loss"]
+    assert page.locator("#case-0 .et-strip-seg").count() == 48
+    assert page.locator("#case-1 .et-legend-label").all_text_contents() == ["Completion", "Target"]
+    assert page.locator("#case-1 .et-legend-column").all_text_contents() == ["Completion vs target"]
+    assert page.locator("#case-1 .et-legend-swatch-bar").count() == 1
+    assert page.locator("#case-1 .et-legend-swatch-point").count() == 1
+    assert page.locator("#case-1 .et-mark-label-text").all_text_contents() == ["82%", "67%", "94%", "76%"]
+    assert page.locator("#case-2 .et-legend-label").all_text_contents() == [
+        "Change",
+        "Change (negative)",
+        "Before",
+        "After",
+    ]
+    assert page.locator("#case-2 .et-legend-swatch-range").count() == 2
+    assert page.locator("#case-2 .et-legend-swatch-points").count() == 2
+    assert page.locator("#case-2 .et-range-direction").count() == 3
+    negative = page.locator("#case-2 tbody tr").nth(1).locator(".et-mark-range")
+    swatch = page.locator("#case-2 .et-legend-swatch-range").nth(1)
+    assert negative.evaluate("el => getComputedStyle(el).backgroundColor") == swatch.evaluate(
+        "el => getComputedStyle(el).backgroundColor"
+    )
+    capture(page, "legends-more-graphics.png")

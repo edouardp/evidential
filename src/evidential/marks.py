@@ -349,7 +349,9 @@ class MarkColumn(Column):
     def _encodings(self) -> list[dict[str, Any]]:
         return list(self._spec.get("encodings") or [])
 
-    def legend(self, labels: LegendLabels = True, *, outline: bool = False) -> MarkColumn:
+    def legend(
+        self, labels: LegendLabels = True, *, outline: bool = False, column_names: bool | None = None
+    ) -> MarkColumn:
         """Add this column's color key above the table, alongside its title.
 
         Names default to source column headings (strip category names for a
@@ -358,10 +360,17 @@ class MarkColumn(Column):
         a connecting range behind points). ``False`` removes the key. Fixed mark colors
         are required; a per-row color alone cannot identify categories.
         ``outline=True`` draws a thin box around the table's combined legend.
+        Column names appear for two or more legend groups by default; set
+        ``column_names=True`` or ``False`` to override this group's heading.
         """
         if not isinstance(outline, bool):
             raise TypeError("legend outline must be True or False")
-        return self._with(legend=normalize_legend(labels, self._encodings()), legend_options={"outline": outline})
+        if column_names is not None and not isinstance(column_names, bool):
+            raise TypeError("legend column_names must be True, False or None (automatic)")
+        return self._with(
+            legend=normalize_legend(labels, self._encodings()),
+            legend_options={"outline": outline, "column_names": column_names},
+        )
 
     # --------------------------------------------------------- mark chain ---
     def _add(

@@ -353,6 +353,12 @@ class EncodingSpec(TypedDict, total=False):
     kind: Literal["bar", "point", "points", "range", "stacked_bar", "strip", "boxplot", "distribution"]
     #: The field a scalar mark reads, or a range's first endpoint.
     source: str | Callable[[Mapping[str, Any]], Any] | None
+    #: ``points``: named scalar fields, as an alternative to one array field.
+    sources: Sequence[str] | None
+    names: Mapping[str, str] | None
+    palette: Palette | None
+    #: ``points``: a display-only span across the valid observations.
+    connect: bool | None
     #: A range's second endpoint (may be less than the first).
     high: str | Callable[[Mapping[str, Any]], Any] | None
     color: str | Callable[[Mapping[str, Any]], Any] | None

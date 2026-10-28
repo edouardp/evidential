@@ -19,9 +19,10 @@ def test_gallery_runs_offline_with_one_two_and_nine_point_legends():
     assert sum(bool(col.get("legend")) for col in definitions["double"].widget.columns) == 2
     assert definitions["double"].widget.columns[1]["legend_options"]["outline"] is True
     ages = definitions["age_structure"].widget.columns[-1]
-    assert len([enc for enc in ages["encodings"] if enc["kind"] == "point"]) == 9
-    assert ages["legend"]["age_min"] is None
-    assert ages["legend"]["age_80_plus"] == "80+"
+    assert len(ages["encodings"]) == 1
+    assert len(ages["encodings"][0]["sources"]) == 9
+    assert ages["encodings"][0]["names"]["age_80_plus"] == "80+"
+    assert ages["legend"] is True
 
 
 def test_real_snapshot_has_complete_exhaustive_age_bands():
@@ -37,8 +38,7 @@ def test_real_snapshot_has_complete_exhaustive_age_bands():
     }
     for row in records:
         assert sum(row[field] for field in FIELDS) == pytest.approx(1, abs=1e-8)
-        assert row["age_min"] == min(row[field] for field in FIELDS)
-        assert row["age_max"] == max(row[field] for field in FIELDS)
+        assert "age_min" not in row and "age_max" not in row
         assert row["population"] > 0
     assert records[0]["country"] == "Niger"
     assert records[-1]["country"] == "Japan"

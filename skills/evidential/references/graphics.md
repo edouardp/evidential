@@ -104,6 +104,14 @@ colors a decreasing connector and `direction_marker=True` adds its chevron.
 Points support `outline=False` or a CSS outline color. Keep glyph styling
 separate from `.cell_style(...)`, which styles the surrounding cell.
 
+For several scalar point series, pass the fields or their display-name mapping
+directly: `col.points({"target": "Target", "actual": "Actual"}, connect=True)`.
+It chooses categorical colours automatically; `palette="viridis"` samples a
+named range and a colour list supplies custom stops. `.legend()` uses the same
+names and colours. The renderer calculates the connecting span, so data needs
+no artificial minimum/maximum fields or connector entry in the legend.
+Single-string `col.points("samples")` continues to read an array of observations.
+
 Stack sources are additive segment magnitudes. `normalize="percent"` maps
 the cumulative stack to 0–100; use a 0–100 axis, not 0–1, for that normalized
 stack. A scalar fraction formatted with `pct1` instead uses 0–1. For diverging

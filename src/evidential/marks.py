@@ -32,7 +32,7 @@ from ._aliases import alias, format_code
 from ._column import Column, _clean, _field
 from ._distribution import band_spec, validate_curve
 from ._label import LABEL_POSITIONS, _label_spec
-from .configuration import EncodingSpec, LegendLabels, validate_options
+from .configuration import COLOR_SCALES, EncodingSpec, LegendLabels, Palette, validate_options
 
 __all__ = [
     "MarkColumn",
@@ -66,6 +66,10 @@ _BAR_STYLE_KEYS = {
 _ENCODING_KEYS = (
     "kind",
     "source",
+    "sources",
+    "names",
+    "palette",
+    "connect",
     "high",
     "color",
     "color_negative",
@@ -165,6 +169,10 @@ def _canonical_encoding(
         "y",
         "style",
         "distribution",
+        "sources",
+        "names",
+        "palette",
+        "connect",
     ):
         if style.get(key) is not None:
             encoding[key] = style.pop(key)
@@ -179,7 +187,7 @@ def _canonical_encoding(
     allowed = {
         "bar": {*_BAR_STYLE_KEYS, "color_negative_column", "side", "size", "valign"},
         "point": {"outline", "size", "valign"},
-        "points": {"outline", "size", "valign"},
+        "points": {"outline", "size", "valign", "sources", "names", "palette", "connect"},
         "range": {
             "high",
             "cap",
@@ -205,6 +213,36 @@ def _canonical_encoding(
         raise ValueError(f"{', '.join(sorted(irrelevant))} is not supported for {kind} marks")
     if kind == "range" and high is None:
         raise TypeError("range expects two endpoints: col.range(low, high)")
+    if kind == "points":
+        fields = encoding.get("sources")
+        if fields is not None:
+            if not isinstance(fields, Sequence) or isinstance(fields, (str, bytes)) or not fields:
+                raise ValueError("points sources must be a nonempty list of field names")
+            if not all(isinstance(name, str) and name for name in fields) or len(set(fields)) != len(fields):
+                raise ValueError("points sources must be distinct nonempty field names")
+            encoding["sources"] = list(fields)
+            names = encoding.get("names")
+            if names is not None:
+                if not isinstance(names, Mapping) or not all(
+                    key in fields and isinstance(value, str) for key, value in names.items()
+                ):
+                    raise ValueError("points names must map source fields to display strings")
+                encoding["names"] = dict(names)
+            palette = encoding.get("palette")
+            if isinstance(palette, str):
+                if palette.lower() not in (*COLOR_SCALES, "tab10"):
+                    raise ValueError(f"Unknown points palette {palette!r}")
+                encoding["palette"] = palette.lower()
+            elif palette is not None:
+                if (
+                    not isinstance(palette, Sequence)
+                    or not palette
+                    or not all(isinstance(color, str) and color.strip() for color in palette)
+                ):
+                    raise ValueError("points palette must be a named palette or a nonempty list of colors")
+                encoding["palette"] = list(palette)
+        elif any(key in encoding for key in ("palette", "names", "connect")):
+            raise ValueError("points palette, names and connect need a field list or mapping")
     size = encoding.get("size")
     if size is not None:
         if not isinstance(size, (int, float)) or isinstance(size, bool) or not math.isfinite(size) or size <= 0:
@@ -263,6 +301,8 @@ def normalize_legend(value: LegendLabels, encodings: Sequence[Mapping[str, Any]]
             if not colors:
                 raise ValueError("a strip legend needs a colors mapping")
             keys.extend(colors)
+        elif encoding.get("sources"):
+            keys.extend(encoding["sources"])
         else:
             keys.append(encoding["source"])
     if value is True:
@@ -440,8 +480,8 @@ class MarkColumn(Column):
         return self._add("point", source, outline=outline, **options)
 
     def points(self, source: Any, *, outline: bool | str | None = None, **options: Any) -> MarkColumn:
-        """Add array points, with the same ``outline`` control as scalar points."""
-        return self._add("points", source, outline=outline, **options)
+        """Add array points or a named multi-field series; see :func:`points`."""
+        return self._append_column(points(source, outline=outline, **options))
 
     def range(
         self,
@@ -646,6 +686,10 @@ def rebind_measure(column: Mapping[str, Any], source: str, target: str) -> dict[
                 encoding[role] = target
         if encoding.get("parts"):
             encoding["parts"] = {key: target if value == source else value for key, value in encoding["parts"].items()}
+        if encoding.get("sources"):
+            encoding["sources"] = [target if value == source else value for value in encoding["sources"]]
+        if encoding.get("names"):
+            encoding["names"] = {target if key == source else key: value for key, value in encoding["names"].items()}
         if (encoding.get("label") or {}).get("source") == source:
             encoding["label"] = {**encoding["label"], "source": target}
         encodings.append(encoding)
@@ -767,6 +811,13 @@ def _validate_encoding_data(
             source = encoding["source"]
             value = hidden[source][index] if source in hidden else row.get(source)
             kind = encoding["kind"]
+            if kind == "points" and encoding.get("sources"):
+                if scale.get("transform") == "log":
+                    for field in encoding["sources"]:
+                        observed = row.get(field)
+                        if observed is not None and float(observed) <= 0:
+                            raise ValueError(f"a log scale needs positive values in {field!r}")
+                continue
             if kind == "distribution":
                 validate_curve(value, encoding["distribution"], source=source, log=scale.get("transform") == "log")
                 continue
@@ -853,14 +904,44 @@ def points(
     size: float | None = None,
     color: str | None = None,
     outline: bool | str | None = None,
+    palette: Palette | None = None,
+    connect: bool = False,
     **options: Any,
 ) -> MarkColumn:
-    """An array column drawn as one point per observation (a strip/scatter).
+    """Array observations or a named series of scalar fields on one track.
 
     ``source`` holds a list of numbers; each is placed on the column's shared
     scale, so the row's distribution is read directly against a bar or target.
     ``outline=False`` removes rings; a color string sets their color.
+
+    A list of field names or field-to-display-name mapping creates a series,
+    automatically colored from a categorical palette. ``palette="viridis"``
+    samples a named range; a list supplies custom color stops. ``connect=True``
+    spans the valid points without needing extra data fields. Series defaults
+    are nine-pixel dots without outlines; explicit styles override them.
     """
+    if not isinstance(connect, bool):
+        raise TypeError("points connect must be True or False")
+    if isinstance(source, Mapping) or (isinstance(source, Sequence) and not isinstance(source, (str, bytes))):
+        fields = [_field(field) for field in source]
+        if not fields:
+            raise ValueError("points sources must be a nonempty list of field names")
+        names = {_field(field): name for field, name in source.items()} if isinstance(source, Mapping) else None
+        column = _factory_column(fields[0], options, title=title, fmt=format_code(format, fmt), align=align)
+        return column._add(
+            "points",
+            fields[0],
+            sources=fields,
+            names=names,
+            palette=palette if palette is not None else "tab10",
+            connect=connect,
+            size=9 if size is None else size,
+            color=color,
+            outline=False if outline is None else outline,
+            **options,
+        )
+    if palette is not None or connect:
+        raise ValueError("points palette and connect need a field list or mapping")
     column = _factory_column(source, options, title=title, fmt=format_code(format, fmt), align=align)
     return column._add("points", source, size=size, color=color, outline=outline, **options)._with(type="array")
 

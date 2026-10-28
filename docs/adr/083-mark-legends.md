@@ -43,7 +43,7 @@ The compound slot's title never replaces its first segment's identity.
 Strip category keys come from the declared `colors` mapping, independently of
 the currently visible rows. Lists override names in declaration order;
 source/category mappings override selected names. A `None` name omits an entry,
-so a connecting range can be left out of a key for nine age-band points.
+so a connecting range can be left out of a key for overlaid points.
 `False` disables the column's legend. Enabled legends are validated both in
 builders and canonical dictionaries, and revalidated when columns change.
 
@@ -81,6 +81,7 @@ legends remain separate decisions.
 ## More Information
 
 - [Legend notebook](../../notebooks/54_legends.py).
+- [ADR-084: Named Point Series](084-named-point-series.md).
 - [Colour-key request](https://github.com/edouardp/evidential/issues/1).
 - [Related tooltip request](https://github.com/edouardp/evidential/issues/2).
 - [ADR-058: Encoding-Based Columns](058-encoding-based-columns.md).

@@ -14,6 +14,9 @@ project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Notebook 54 demonstrates one and two stacked-bar legends plus nine coloured
   age-band points using genuine 2024 WDI population estimates for twelve
   countries. A documented snapshot and aggregation query keep it usable offline.
+- Named multi-field `col.points(...)` accepts field lists or display-name maps,
+  automatic categorical colours, sampled palettes and optional connecting
+  spans. Its legend shares the names and colours; no derived data fields are needed.
 
 ## 0.1.2 (2026-10-26)
 

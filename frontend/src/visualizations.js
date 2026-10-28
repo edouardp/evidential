@@ -2,7 +2,7 @@ import { h } from "./dom.js";
 import { formatValue } from "./format.js";
 import { formattedText } from "./formatted-text.js";
 import { resolveColor } from "./color.js";
-import { markColor } from "./mark-series.js";
+import { markColor, pointSeries } from "./mark-series.js";
 import { numeric, observationValue } from "./mark-data.js";
 import { renderDensityBand } from "./density-band.js";
 import { markLabelText, renderMarkLabel, autoLabelColor, labelTextStyle } from "./mark-labels.js";
@@ -318,7 +318,7 @@ export function renderMarks(col, row, range, format) {
     return pct == null ? null : Math.max(0, Math.min(100, pct));
   };
   const track = h("div", { class: "et-marks" });
-  const description = encodings.map(enc => [enc.source, enc.high, ...Object.values(enc.parts || {})]
+  const description = encodings.map(enc => [...new Set([enc.source, enc.high, ...(enc.sources || []), ...Object.values(enc.parts || {})])]
     .filter(field => field && row[field] != null).map(field => `${field}: ${JSON.stringify(row[field])}`).join(", "))
     .filter(Boolean).join("; ");
   track.title = description;
@@ -457,19 +457,26 @@ export function renderMarks(col, row, range, format) {
       }
     } else if (enc.kind === "points") {
       const values = Array.isArray(row[enc.source]) ? row[enc.source] : [];
-      const size = enc.size != null ? Number(enc.size) : 6;
-      const color = markColor(enc, row, "var(--et-accent, #2563eb)");
-      for (const item of values) {
-        const raw = observationValue(item);
-        const pct = clampPos(raw);
-        if (pct == null) continue;
+      const size = enc.size != null ? Number(enc.size) : enc.sources ? 9 : 6;
+      const observations = enc.sources ? pointSeries(enc).map(point => ({point, raw: row[point.source]}))
+        : values.map(item => ({point: enc, raw: observationValue(item)}));
+      const projected = observations.map(item => ({...item, pct: clampPos(item.raw)})).filter(item => item.pct != null);
+      if (enc.connect && projected.length > 1) {
+        const positions = projected.map(item => item.pct);
+        const left = Math.min(...positions), right = Math.max(...positions);
+        if (right > left) track.append(h("div", {class: "et-mark et-mark-range et-point-connector",
+          "aria-hidden": "true", style: {...verticalStyle(enc.valign), left: `${left}%`, width: `${right-left}%`,
+            height: "1px", backgroundColor: "var(--et-muted, #94a3b8)"}}));
+      }
+      for (const {point, raw, pct} of projected) {
+        const title = enc.sources ? `${enc.names?.[point.source] ?? point.source}: ${format ? format(raw) : formatValue(raw, col.fmt, {fallback: String(raw)})}` : null;
         track.append(
           h("div", {
-            class: "et-mark et-mark-point",
-            style: { ...verticalStyle(enc.valign, true), ...pointOutlineStyle(enc.outline), left: `${pct}%`, width: `${size}px`, height: `${size}px`, backgroundColor: color },
+            class: "et-mark et-mark-point", title,
+            style: { ...verticalStyle(enc.valign, true), ...pointOutlineStyle(enc.outline), left: `${pct}%`, width: `${size}px`, height: `${size}px`, backgroundColor: markColor(point, row) },
           }),
         );
-        if (enc.label) track.append(renderMarkLabel(col, enc, {...row, [enc.source]: raw}, {pointPct: pct}, format));
+        if (enc.label) track.append(renderMarkLabel(col, point, {...row, [point.source]: raw}, {pointPct: pct}, format));
       }
     } else if (enc.kind === "point") {
       const pct = clampPos(value);

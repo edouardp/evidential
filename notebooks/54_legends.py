@@ -13,7 +13,6 @@ app = marimo.App(width="full")
 @app.cell
 def imports():
 
-
     import json
     from pathlib import Path
 
@@ -192,7 +191,10 @@ def population_doc(mo):
     Each dot shows the share of a country's total population in one age band,
     from **0–9** through **80+**. The grey line connects the smallest and largest
     shares; it is a visual span, not a time series or uncertainty interval.
-    Its legend entry is omitted with `None`, leaving the nine age-band keys.
+    `col.points(age_labels, connect=True)` calculates that span as a display
+    concern, so it needs no extra minimum/maximum fields or connector key.
+    `palette="viridis"` samples nine colours in age-band order; omit it for
+    an automatic categorical palette. A colour list overrides the range.
     Coincident points can overlap.
 
     These are genuine **2024 World Bank WDI / UN World Population Prospects**
@@ -225,33 +227,22 @@ def population_data(Path, json):
         "age_70_79": "70–79",
         "age_80_plus": "80+",
     }
-    age_colors = ["#4e79a7", "#f28e2b", "#e15759", "#76b7b2", "#59a14f", "#edc948", "#b07aa1", "#ff9da7", "#9c755f"]
-    return age_colors, age_labels, population
+    return age_labels, population
 
 
 @app.cell
-def population_points(
-    EvidentialTable,
-    age_colors,
-    age_labels,
-    col,
-    frame,
-    mo,
-    population,
-):
-    ages = col.range("age_min", "age_max", color="#a1a1aa", size=1)
-    for field, color in zip(age_labels, age_colors, strict=True):
-        ages = ages.point(field, color=color, size=9, outline=False)
-    ages = (
-        ages.title("Population share")
-        .fmt("pct0")
-        .scale(domain=(0, 0.35), axis=True, axis_position="bottom", gridlines=True)
-        .legend({"age_min": None, **age_labels})
-    )
+def population_points(EvidentialTable, age_labels, col, frame, mo, population):
     age_structure = mo.ui.anywidget(
         EvidentialTable(
             population,
-            columns=[col.text("country"), col.text("income_group"), col.number("population", format="compact3"), ages],
+            columns=[
+                col.text("country"), 
+                col.text("income_group"), 
+                col.number("population", format="compact3"), 
+                col.points(age_labels, palette="viridis", connect=True, title="Population share", format="pct0")
+                   .scale(domain=(0, 0.35), axis=True, axis_position="bottom", gridlines=True)
+                   .legend()
+            ],
             settings=frame,
             title="From younger to older populations",
             subtitle="2024 · share of total population in each age band",
@@ -260,6 +251,11 @@ def population_points(
         )
     )
     age_structure
+    return
+
+
+@app.cell
+def _():
     return
 
 

@@ -138,6 +138,12 @@ def test_marimo_legend_has_square_spaced_chips_and_respects_the_right_edge(page)
         page.goto(url, wait_until="networkidle")
         root = page.locator('[data-cell-name="two_legends"] .et-root')
         root.locator(".et-legend-label").last.wait_for()
+        population = page.locator('[data-cell-name="population_points"] .et-root')
+        population.locator(".et-mark-point").last.wait_for()
+        assert population.locator(".et-mark-point").count() == 108
+        assert population.locator(".et-point-connector").count() == 12
+        assert population.locator(".et-legend-label").count() == 9
+        assert population.locator(".et-mark-point").first.get_attribute("title").startswith("0–9: 33%")
         for width in (1100, 700, 420, 360, 310, 280):
             root.evaluate("(el, width) => el.style.width = width + 'px'", width)
             geometry = root.evaluate("""root => {

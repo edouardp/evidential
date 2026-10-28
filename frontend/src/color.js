@@ -96,6 +96,18 @@ function resolvePalette(palette) {
   return COLOR_SCALES[palette.toLowerCase()];
 }
 
+/** Fixed series slots: categorical by default, or evenly sampled color stops. */
+export function seriesColors(count, palette = "tab10") {
+  if (count <= 0) return [];
+  if (palette == null || palette === "tab10") {
+    return Array.from({length: count}, (_, index) => TABLEAU[index % TABLEAU.length][1]);
+  }
+  const stops = resolvePalette(palette);
+  if (!stops?.length) return Array(count).fill(resolveColor("C0"));
+  if (stops.length === 1) return Array(count).fill(stops[0]);
+  return chroma.scale(stops).mode("lab").colors(count);
+}
+
 function isValidColor(color) {
   try {
     chroma(color);

@@ -102,6 +102,7 @@ dated, immutable record of the decisions behind them.
 | [081](081-notebook-layout-excerpts.md) | Notebook Layout Excerpts | Accepted |
 | [082](082-portable-evidential-agent-skill.md) | Portable Evidential Agent Skill | Accepted |
 | [083](083-mark-legends.md) | Mark Legends | Accepted |
+| [084](084-named-point-series.md) | Named Point Series | Accepted |
 
 ## Creating New ADRs
 

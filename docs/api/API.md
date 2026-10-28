@@ -774,6 +774,21 @@ columns=[
   color string such as `outline="#334155"` to recolor it independently of
   `color` (the fill). Omission, `None`, or `True` keeps the default one-pixel
   theme ring, without changing the marker's size or position.
+- **Named point series** — `col.points(["actual", "target"], palette=,
+  connect=True)` draws several scalar fields without repeated `.point(...)`
+  calls. A field-to-name mapping, such as
+  `col.points({"young": "0–9", "old": "80+"}, palette="viridis", connect=True)`,
+  supplies both fields and legend names; `.legend()` picks those names up
+  automatically. Omitting `palette` uses the categorical `tab10` sequence;
+  named ranges such as `viridis` are sampled evenly in declared series order.
+  A list supplies custom colour stops, and an explicit `color` overrides the
+  palette. `size` and `outline` override the defaults of nine-pixel points
+  without rings. `connect=True` draws a thin span across valid points as a
+  display concern, without adding extrema fields or a legend entry. Missing
+  values keep the remaining series' colour assignments; equal or singleton
+  points have no span. `col.points("array_column")` retains its existing array
+  semantics and defaults. Palette/connection options require the field-list or
+  mapping form. The scale, axis and value format remain explicit choices.
 - **Stacks** — `stacked_bar(*sources, colors=, labels=, label_align="begin"|
   "center"|"end", normalize="percent", size=, diverge_at=, neutral="split")`.
   `labels=True` writes each segment's value and `labels="percent"` its share;
@@ -1055,7 +1070,7 @@ other than `auto`, `merge`, `group` and `subcolumns` return a `Column`;
 | `col.icons(name, *, map={...}, title=)` | category → glyph / image |
 | `col.bar(source, *, title=, label=, size=, side=, color=, …)` | bar mark with an optional owned label |
 | `col.point(source, *, title=, size=, color=, label=)` | point marker |
-| `col.points(source, *, size=, color=)` | one marker per array observation |
+| `col.points(source, *, size=, color=, outline=, palette=, connect=False)` | array observations or named scalar point series |
 | `col.range(low, high, *, cap=, fill=, color=, color_negative=, direction_marker=, label=)` | interval / dumbbell |
 | `col.stacked_bar(*sources, *, colors=, labels=, normalize="percent", diverge_at=, neutral="split")` | cumulative stack |
 | `col.strip(source, *, colors=, labels=, segmented=)` | ordered categorical strip |

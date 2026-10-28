@@ -20,8 +20,9 @@ band as a percentage of that sex's population. The query multiplies each by
 `SP.POP.TOTL.MA.IN` or `SP.POP.TOTL.FE.IN` before combining the sexes and dividing
 by their combined population. Adjacent five-year bands form 0–9, 10–19, …,
 70–79; 80+ already includes every older age. The nine resulting fractions sum
-to one. `age_min` / `age_max` describe the span of these nine shares, not an
-uncertainty interval. No chronological line is implied by the connecting mark.
+to one. The graphic calculates its connecting span in the renderer; no minimum
+or maximum fields are added to the data. The span is not an uncertainty
+interval and does not imply a chronological line.
 
 Source: [World Bank WDI / United Nations Population Division, World Population Prospects](https://data.worldbank.org/indicator/SP.POP.0004.MA.5Y).
 The source identifies the series as midyear estimates under

@@ -44,7 +44,8 @@ export function encodingRange(col, rows) {
       const raw = row[enc.source];
       if (enc.kind === "stacked_bar") continue;
       if (enc.kind === "points") {
-        for (const item of Array.isArray(raw) ? raw : []) add(observationValue(item));
+        if (enc.sources) for (const field of enc.sources) add(row[field]);
+        else for (const item of Array.isArray(raw) ? raw : []) add(observationValue(item));
       } else if (enc.kind === "distribution") {
         for (const run of readDensity(raw, enc.distribution)) for (const sample of run) add(sample.x);
       } else if (enc.kind === "strip") {

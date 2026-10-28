@@ -43,8 +43,7 @@ WITH selected(code) AS (
            MAX(share) FILTER (WHERE age = 50) AS age_50_59,
            MAX(share) FILTER (WHERE age = 60) AS age_60_69,
            MAX(share) FILTER (WHERE age = 70) AS age_70_79,
-           MAX(share) FILTER (WHERE age = 80) AS age_80_plus,
-           MIN(share) AS age_min, MAX(share) AS age_max
+           MAX(share) FILTER (WHERE age = 80) AS age_80_plus
     FROM shares
     GROUP BY country_code
     HAVING COUNT(*) = 9

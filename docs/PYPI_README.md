@@ -45,6 +45,21 @@ The renderer bundle is committed, so users need no JavaScript toolchain.
 Extras are `evidential[duckdb]`, `evidential[marimo]` and `evidential[studio]`
 (see [`pyproject.toml`](https://github.com/edouardp/evidential/blob/main/pyproject.toml)).
 
+## Agent skill
+
+The bundled [Evidential skill](https://github.com/edouardp/evidential/blob/main/skills/evidential/SKILL.md) helps coding agents
+build tables and marimo explorers using the public API. It includes focused
+references and runnable report/explorer templates, with no local dataset
+requirements. Install it from a checkout using the skills CLI:
+
+```bash
+npx skills add . --skill evidential
+```
+
+For a published revision on GitHub, the same skill can be installed with
+`npx skills add edouardp/evidential --skill evidential`. The skill checks the
+installed library's capabilities because this checkout can be ahead of PyPI.
+
 ## 1. Your first table
 
 ```python

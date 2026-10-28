@@ -56,7 +56,7 @@ repos:
 
       - id: rumdl
         name: rumdl (markdown lint)
-        entry: uvx rumdl check README.md CHANGELOG.md docs notebooks
+        entry: uvx rumdl check README.md CHANGELOG.md docs notebooks skills
         language: system
         types: [markdown]
         pass_filenames: false

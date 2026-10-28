@@ -1,0 +1,4 @@
+interface:
+  display_name: "Evidential"
+  short_description: "Build readable Evidential tables and notebooks"
+  default_prompt: "Use $evidential to build a readable interactive table for my data."

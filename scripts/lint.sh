@@ -38,9 +38,9 @@ checkmake --config=.checkmake Makefile
 
 echo "=== rumdl ==="
 if [[ -n "$FIX" ]]; then
-    uvx rumdl fmt README.md CHANGELOG.md docs notebooks
+    uvx rumdl fmt README.md CHANGELOG.md docs notebooks skills
 else
-    uvx rumdl check README.md CHANGELOG.md docs notebooks
+    uvx rumdl check README.md CHANGELOG.md docs notebooks skills
 fi
 
 echo "=== readme-check ==="

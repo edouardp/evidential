@@ -100,6 +100,7 @@ dated, immutable record of the decisions behind them.
 | [079](079-notebook-generated-readme.md) | Notebook-Generated README Examples | Accepted |
 | [080](080-house-release-commands.md) | House Release Commands | Accepted |
 | [081](081-notebook-layout-excerpts.md) | Notebook Layout Excerpts | Accepted |
+| [082](082-portable-evidential-agent-skill.md) | Portable Evidential Agent Skill | Accepted |
 
 ## Creating New ADRs
 

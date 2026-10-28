@@ -4,17 +4,27 @@ All notable changes to this project are documented in this file. The format is
 based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this
 project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## Unreleased
+## 0.2.0 (2026-10-28)
 
 ### Added
 
+- **Significant-figure compact formatting** — `compact1` through `compact21`
+  control significant figures, so `compact4` displays values as `1.148T` and
+  `877.1B`. Available in cells, labels, statistics and axes; plain `compact`
+  retains its existing one-decimal behavior.
+- **Data-product explorers** — notebook 52 explores the Philippine SRA dbt
+  product with source metadata, time series and comparisons. Notebook 53 adds
+  an NBA shooting explorer with season/team filters, weighted player leaders,
+  shot-mix graphics and linked zone benchmarks and game logs.
+- **Portable agent skill** — an Evidential skill with API references and tested
+  notebook templates for standalone, live, linked and grouped tables.
 - Opaque, differently coloured points within a bounded one-pixel cluster render
   as equal pie sectors, retaining outlines and every inspection value. Clusters
   recalculate on resize, preserve translucent/differently sized marks, and never
   grow along a chain. Notebook 48 and the README demonstrate the rendering.
 - Shared multiline tooltips for scalar values and graphics: full readable
-  numbers, overlapping point values, named stack shares and amounts, match
-  metadata, range changes and box summaries. Includes keyboard inspection,
+  numbers, overlapping point values sorted by x-value, named stack shares and
+  amounts, match metadata, range changes and box summaries. Includes keyboard inspection,
   touch support, separate graphics/text hover delays and `.tooltip()` overrides,
   with an offline gallery in notebook 55. Sparklines inspect one x observation;
   signed-area swatches match the above/below-reference fill.
@@ -28,6 +38,24 @@ project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Named multi-field `col.points(...)` accepts field lists or display-name maps,
   automatic categorical colours, sampled palettes and optional connecting
   spans. Its legend shares the names and colours; no derived data fields are needed.
+
+### Changed
+
+- **README graphics gallery** — adds segmented point examples with a captured
+  open tooltip. Descriptions, code and screenshots remain notebook-derived;
+  genuine-data examples include documented offline snapshot provenance.
+- **Notebook layouts** — ignore local `notebooks/layouts/` state rather than
+  tracking editor-generated layout files.
+
+### Fixed
+
+- [#1](https://github.com/edouardp/evidential/issues/1): Colour-coded marks now
+  support `.legend()` with named swatches derived from their actual colours,
+  including stacked bars, strips and compound mark columns.
+- [#2](https://github.com/edouardp/evidential/issues/2): Stacked-bar tooltips
+  identify the segment and show its full amount, share and row total independently
+  of the drawn label's format or visibility. Narrow and unlabelled segments,
+  including both halves of a split neutral category, retain inspection details.
 
 ## 0.1.2 (2026-10-26)
 

@@ -1,6 +1,7 @@
 import { h } from "./dom.js";
 import { columnHeading } from "./headers.js";
 import { tooltipText, tooltipValue } from "./tooltip-data.js";
+import { pointVisual } from "./point-clusters.js";
 
 const targets = new WeakMap();
 const delays = new WeakMap();
@@ -118,18 +119,26 @@ export class TooltipController {
       if (!nodes.length) { this.scheduleHide(); return; }
       this.hover(nodes, cell, event.clientX, event.clientY);
     });
-    on(root, "pointerleave", () => this.scheduleHide());
+    on(root, "pointerleave", event => { if (event.pointerType !== "touch") this.scheduleHide(); });
     on(this.popup, "pointerenter", () => this.cancelHide());
-    on(this.popup, "pointerleave", () => this.scheduleHide());
+    on(this.popup, "pointerleave", event => { if (event.pointerType !== "touch") this.scheduleHide(); });
+    on(root, "pointerdown", () => { this.touchInspection = null; clearTimeout(this.touchTimer); });
     on(root, "pointerup", event => {
       if (event.pointerType !== "touch") return;
       const cell = event.target.closest?.("[data-et-tooltip-cell]");
       if (!cell) { this.hide(); return; }
       const data = this.values(hitTargets(cell, event.clientX, event.clientY, event.target));
-      // Let the row's click/selection run normally, even if it rebuilds its cells.
+      this.touchInspection = {data, x: event.clientX, y: event.clientY};
+    });
+    on(root, "click", () => {
+      const inspection = this.touchInspection;
+      this.touchInspection = null;
+      if (!inspection) return;
+      // A synthetic touch click can arrive AFTER a pointerup timer. Wait for
+      // the click itself, whose row handler may already have replaced the cell.
       clearTimeout(this.touchTimer);
       this.touchTimer = setTimeout(() => {
-        if (this.root.isConnected) this.showData(data, this.root, event.clientX, event.clientY);
+        if (this.root.isConnected) this.showData(inspection.data, this.root, inspection.x, inspection.y);
       }, 0);
     });
     on(root, "focusin", event => {
@@ -150,7 +159,9 @@ export class TooltipController {
     on(root, "scroll", () => this.hide(), true);
     on(this.view, "resize", () => this.hide());
     on(this.view, "scroll", () => this.hide(), true);
-    on(root.ownerDocument, "pointerdown", event => { if (!root.contains(event.target)) this.hide(); });
+    on(root.ownerDocument, "pointerdown", event => {
+      if (!root.contains(event.target)) { this.touchInspection = null; clearTimeout(this.touchTimer); this.hide(); }
+    });
     on(root.ownerDocument, "keydown", event => {
       if (event.key === "Escape" && (!this.popup.hidden || this.pending) && !root.contains(event.target)) {
         event.preventDefault(); this.hide();
@@ -178,8 +189,8 @@ export class TooltipController {
       ? hitTargets(this.keyboardCell, rect.left + rect.width / 2, rect.top + rect.height / 2, node) : [node];
     this.show(nodes, this.keyboardCell, rect.left + rect.width / 2, rect.bottom);
     this.active?.classList.remove("et-tooltip-active");
-    this.active = node;
-    node.classList.add("et-tooltip-active");
+    this.active = pointVisual(node);
+    this.active.classList.add("et-tooltip-active");
   }
 
   values(nodes) {
@@ -187,7 +198,7 @@ export class TooltipController {
     return nodes.map(node => targets.get(node)?.data).filter(data => {
       if (!data || seen.has(tooltipText(data))) return false;
       seen.add(tooltipText(data)); return true;
-    });
+    }).sort((a, b) => Number.isFinite(a.xValue) && Number.isFinite(b.xValue) ? a.xValue - b.xValue : 0);
   }
 
   show(nodes, anchor, x, y) { this.showData(this.values(nodes), anchor, x, y); }

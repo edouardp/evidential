@@ -157,7 +157,8 @@ def test_marimo_legend_has_square_spaced_chips_and_respects_the_right_edge(page)
         assert targets.locator(".et-mark-bar").count() == 4
         assert targets.locator(".et-mark-point").count() == 4
         dumbbells = page.locator('[data-cell-name="dumbbell_legend"] .et-root')
-        dumbbells.locator(".et-mark-point").last.wait_for()
+        dumbbells.locator(".et-mark-point").last.wait_for(state="attached")
+        dumbbells.locator(".et-point-composite").wait_for()
         assert dumbbells.locator(".et-mark-point").count() == 8
         for width in (1100, 700, 420, 360, 310, 280):
             root.evaluate("(el, width) => el.style.width = width + 'px'", width)

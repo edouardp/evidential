@@ -1,5 +1,6 @@
 // Fullscreen sizing and frozen-column lifecycle, supplied through explicit ports.
 import { fitMarkLabels } from "./mark-labels.js";
+import { combinePoints } from "./point-clusters.js";
 const ROW_HEIGHT = 28;
 
 export class TableViewport {
@@ -30,6 +31,7 @@ export class TableViewport {
     this.observer = new ResizeObserver(() => {
       this.applyFrozenOffsets();
       fitMarkLabels(this.root);
+      combinePoints(this.root);
       if (this.expanded) this.fit();
     });
     this.observer.observe(scroller);

@@ -77,6 +77,7 @@ GALLERY: list[tuple[Path, str]] = [
     (GALLERY_OUT / "bar-back-to-back.png", "graphic_bar_back_to_back"),
     (GALLERY_OUT / "dumbbell.png", "graphic_dumbbell"),
     (GALLERY_OUT / "points.png", "graphic_points"),
+    (GALLERY_OUT / "point-overlaps.png", "graphic_point_overlaps"),
     (GALLERY_OUT / "boxplot.png", "graphic_boxplot"),
     (GALLERY_OUT / "distribution.png", "graphic_distribution"),
     (GALLERY_OUT / "stacked-bar.png", "graphic_stacked_bar"),
@@ -183,6 +184,11 @@ def _wait_for_tables(page, targets: list[tuple[Path, str]]) -> None:
     page.wait_for_timeout(500)
 
 
+# These cells deliberately demonstrate a transient interaction in their image.
+# All other screenshots are captured with the pointer outside the table.
+HOVER_TARGETS = {"graphic_point_overlaps": ".et-point-composite"}
+
+
 def _capture(page, cell: str, path: Path) -> Path:
     root = page.locator(f'[data-cell-name="{cell}"] .et-root')
     root.scroll_into_view_if_needed()
@@ -196,7 +202,29 @@ def _capture(page, cell: str, path: Path) -> Path:
         }"""
     )
     path.parent.mkdir(parents=True, exist_ok=True)
-    root.screenshot(path=str(path))
+    if selector := HOVER_TARGETS.get(cell):
+        # Padding changes layout. Settle it before opening a transient popover.
+        root.scroll_into_view_if_needed()
+        page.evaluate("() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)))")
+        root.locator(selector).first.hover()
+        root.locator(".et-tooltip").wait_for(state="visible")
+        bounds = root.bounding_box()
+        scroll = page.evaluate("({x: scrollX, y: scrollY})")
+        # Element screenshots may scroll again and dismiss the tooltip. Capture
+        # the page compositor (including the top layer) at the same bounds.
+        page.screenshot(
+            path=str(path),
+            full_page=True,
+            clip={
+                "x": bounds["x"] + scroll["x"],
+                "y": bounds["y"] + scroll["y"],
+                "width": bounds["width"],
+                "height": bounds["height"],
+            },
+        )
+    else:
+        root.screenshot(path=str(path))
+    page.mouse.move(0, 0)
     return path
 
 

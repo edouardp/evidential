@@ -21,6 +21,7 @@ import { hiddenColumns, visibleRows, searchRows, sortRows, paginateRows,
   computeRowspans, shaded, sectionContinuation } from "./rows.js";
 import { renderCell } from "./cells.js";
 import { TooltipController } from "./tooltips.js";
+import { combinePoints } from "./point-clusters.js";
 import { formatTitle, formatValue } from "./format.js";
 import { formattedText } from "./formatted-text.js";
 import { axisTicks, marksDomain, scalePosition } from "./visualizations.js";
@@ -360,6 +361,7 @@ export class EvidentialTableRenderer {
     this._viewport.frame(() => {
       this._viewport.applyFrozenOffsets();
       fitMarkLabels(this.root);
+      combinePoints(this.root);
     });
 
     this.el.dataset.rowCount = String(total);

@@ -493,6 +493,7 @@ export function renderMarks(col, row, range, format, context = {}) {
         const data = enc.sources ? markTooltip(col, point, row, {value: raw, context})
           : observationTooltip(seriesName(col, enc, enc.source, context), raw, context.formatCode ?? col.fmt, observation,
             markColor(point, row), ["value", "y"]);
+        data.xValue = Number(raw);
         track.append(
           inspectable(h("div", {
             class: "et-mark et-mark-point",

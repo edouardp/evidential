@@ -38,6 +38,7 @@ def test_touch_inspection_retains_selection_and_cleans_up(browser, live_server):
         page.evaluate("tooltipModel.set('selected', null)")
         expect(page.locator(".et-tooltip")).to_be_hidden()
         page.locator(".et-mark-point").tap()
+        page.wait_for_timeout(250)  # Touch-end pointerleave must not start hover dismissal.
         expect(page.locator(".et-tooltip")).to_be_visible()
         page.evaluate("disposeTooltips()")
         expect(page.locator(".et-tooltip")).to_have_count(0)

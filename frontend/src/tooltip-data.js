@@ -56,6 +56,7 @@ export function markTooltip(col, enc, row, {key = enc.source, value = row[key], 
   const code = context.formatCode ?? col.fmt;
   const inspect = raw => tooltipValue(raw, code, col);
   const data = {name: seriesName(col, enc, key, context), value: inspect(value), color: markColor(enc, row), details: []};
+  if (["point", "points"].includes(enc.kind) && value != null && Number.isFinite(Number(value))) data.xValue = Number(value);
   if (enc.kind === "stacked_bar") {
     const share = total ? Number(value) / total : 0;
     const showShare = enc.label?.share || col.scale?.normalize === "percent";

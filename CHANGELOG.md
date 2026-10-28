@@ -8,6 +8,10 @@ project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- Opaque, differently coloured points within a bounded one-pixel cluster render
+  as equal pie sectors, retaining outlines and every inspection value. Clusters
+  recalculate on resize, preserve translucent/differently sized marks, and never
+  grow along a chain. Notebook 48 and the README demonstrate the rendering.
 - Shared multiline tooltips for scalar values and graphics: full readable
   numbers, overlapping point values, named stack shares and amounts, match
   metadata, range changes and box summaries. Includes keyboard inspection,

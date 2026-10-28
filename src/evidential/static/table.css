@@ -1252,3 +1252,6 @@ tbody tr:last-child .et-bar-center .et-bar-axis { bottom: var(--et-bar-pad, 0); 
 .et-tooltip-detail { color: var(--et-text, #0f172a); }
 .et-root [data-et-tooltip-cell]:focus-visible { outline: 2px solid var(--et-accent, #2563eb); outline-offset: -2px; }
 .et-tooltip-active { outline: 2px solid var(--et-text, #0f172a); outline-offset: 2px; }
+.et-point-combined-member { visibility: hidden; }
+.et-point-composite { border-radius: 50%; }
+.et-point-composite > svg { display: block; width: 100%; height: 100%; overflow: visible; }

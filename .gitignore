@@ -11,6 +11,9 @@ dist/
 htmlcov/
 __marimo__/
 
+# Local marimo layout state
+notebooks/layouts/
+
 # Node / frontend
 frontend/node_modules/
 

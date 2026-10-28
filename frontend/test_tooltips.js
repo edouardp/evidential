@@ -165,3 +165,48 @@ test("hover delays survive pointer motion and are cancelled by leaving, refresh 
   assert.equal(root.querySelector(".et-tooltip"), null);
   root.remove();
 });
+
+test("overlapping values sort by their numeric x coordinate, with declaration-order ties", () => {
+  const {root, cell} = fixture();
+  const controller = new TooltipController(root);
+  const nodes = [...cell.querySelectorAll("[data-et-tooltip]")];
+  for (const [node, data] of nodes.map((node, i) => [node, {name: ["High", "Low", "Equal low"][i], xValue: [25.3, 23.9, 23.9][i], value: "formatted"}])) {
+    inspectable(node, data, {priority: 3});
+  }
+  assert.deepEqual(controller.values(nodes).map(data => data.name), ["Low", "Equal low", "High"]);
+  controller.destroy(); root.remove();
+});
+
+test("touch pointerleave does not dismiss inspection like a mouse hover", t => {
+  t.mock.timers.enable({apis: ["setTimeout"]});
+  const {root, cell} = fixture();
+  const controller = new TooltipController(root);
+  controller.showData([{name: "Value", value: "12"}], cell, 40, 10);
+  const touchLeave = new dom.window.Event("pointerleave");
+  Object.defineProperty(touchLeave, "pointerType", {value: "touch"});
+  root.dispatchEvent(touchLeave);
+  t.mock.timers.tick(500);
+  assert.equal(controller.popup.hidden, false);
+  root.dispatchEvent(new dom.window.Event("pointerleave"));
+  t.mock.timers.tick(150);
+  assert.equal(controller.popup.hidden, true);
+  controller.destroy(); root.remove();
+});
+
+test("touch inspection waits for the click and survives a row replacement after pointerup", t => {
+  t.mock.timers.enable({apis: ["setTimeout"]});
+  const {root, cell} = fixture();
+  const controller = new TooltipController(root);
+  const point = cell.querySelector("[data-et-tooltip]");
+  const event = new dom.window.MouseEvent("pointerup", {bubbles: true, clientX: 44, clientY: 14});
+  Object.defineProperty(event, "pointerType", {value: "touch"});
+  point.dispatchEvent(event);
+  t.mock.timers.tick(300);
+  assert.equal(controller.popup.hidden, true);
+  cell.addEventListener("click", () => { controller.refresh(); cell.replaceChildren(); });
+  point.dispatchEvent(new dom.window.MouseEvent("click", {bubbles: true}));
+  t.mock.timers.tick(1);
+  assert.equal(controller.popup.hidden, false);
+  assert.equal(controller.popup.querySelectorAll(".et-tooltip-entry").length, 2);
+  controller.destroy(); root.remove();
+});

@@ -238,6 +238,51 @@ def graphic_points(EvidentialTable, col, frame, stats):
 
 
 @app.cell(hide_code=True)
+def graphic_point_overlaps_doc(mo):
+    mo.md(r"""
+    #### Overlapping points and full-value tooltips
+
+    Opaque, differently coloured dots within **1 screen pixel** share a circle
+    split into equal sectors. The whole cluster must fit within 1px, so a chain
+    of nearby points cannot collapse into one long group. Clusters recalculate
+    on resize; translucent and differently sized points keep their rendering.
+
+    Hover for every underlying named value, sorted by x-value, with full precision
+    and readable commas. Tooltips also name stack segments and report amounts, shares and
+    totals. Sparklines inspect one observation by x-position, with signed-area
+    swatches matching the fill. Newlines, keyboard inspection and touch work
+    throughout. Use `settings(tooltips={"delay": 0.8, "text_delay": 1.5})` for
+    separate graphics/text hover delays, or override a column with
+    `.tooltip(delay=0)`. See the [tooltip gallery](notebooks/55_tooltips.py) and
+    [dumbbell examples](notebooks/48_dumbbell_plots.py).
+    """)
+    return
+
+
+@app.cell
+def graphic_point_overlaps(EvidentialTable, col, frame):
+    _rows = [
+        {"case": "Two equal", "before": 51.234567, "after": 51.234567, "target": None, "forecast": None},
+        {"case": "Three equal", "before": 50, "after": 50, "target": 50, "forecast": None},
+        {"case": "Four equal", "before": 50, "after": 50, "target": 50, "forecast": 50},
+        {"case": "Two pairs", "before": 30, "after": 30, "target": 70, "forecast": 70},
+        {"case": "Separate", "before": 20, "after": 40, "target": 60, "forecast": 80},
+    ]
+    EvidentialTable(
+        _rows,
+        columns=[
+            col.text("case"),
+            col.points({"before": "Before", "after": "After", "target": "Target", "forecast": "Forecast"},
+                palette=["#2563eb", "#dc2626", "#16a34a", "#9333ea"], size=18, connect=True)
+            .title("Comparison").fmt("num0")
+            .scale(domain=(0, 100), axis=True, axis_position="bottom").legend(),
+        ],
+        settings=frame("Overlapping points", 600, subtitle="Hover to inspect all values; opaque dots share equal sectors."),
+    )
+    return
+
+
+@app.cell(hide_code=True)
 def graphic_boxplot_doc(mo):
     mo.md(r"""
     #### Box plot

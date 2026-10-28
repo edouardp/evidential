@@ -1091,6 +1091,40 @@ columns=[
 
 <!-- /notebook -->
 
+<!-- notebook: notebooks/50_graphics_gallery.py#graphic_point_overlaps -->
+
+#### Overlapping points and full-value tooltips
+
+Opaque, differently coloured dots within **1 screen pixel** share a circle
+split into equal sectors. The whole cluster must fit within 1px, so a chain
+of nearby points cannot collapse into one long group. Clusters recalculate
+on resize; translucent and differently sized points keep their rendering.
+
+Hover for every underlying named value, sorted by x-value, with full precision
+and readable commas. Tooltips also name stack segments and report amounts, shares and
+totals. Sparklines inspect one observation by x-position, with signed-area
+swatches matching the fill. Newlines, keyboard inspection and touch work
+throughout. Use `settings(tooltips={"delay": 0.8, "text_delay": 1.5})` for
+separate graphics/text hover delays, or override a column with
+`.tooltip(delay=0)`. See the [tooltip gallery](notebooks/55_tooltips.py) and
+[dumbbell examples](notebooks/48_dumbbell_plots.py).
+
+```python
+columns=[
+    col.text("case"),
+    col.points({"before": "Before", "after": "After", "target": "Target", "forecast": "Forecast"},
+        palette=["#2563eb", "#dc2626", "#16a34a", "#9333ea"], size=18, connect=True)
+    .title("Comparison").fmt("num0")
+    .scale(domain=(0, 100), axis=True, axis_position="bottom").legend(),
+]
+```
+
+![Overlapping points and full-value tooltips](docs/img/graphics/point-overlaps.png)
+
+[Notebook source: `graphic_point_overlaps`](notebooks/50_graphics_gallery.py)
+
+<!-- /notebook -->
+
 <!-- notebook: notebooks/50_graphics_gallery.py#graphic_boxplot -->
 
 #### Box plot

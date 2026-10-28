@@ -104,6 +104,7 @@ dated, immutable record of the decisions behind them.
 | [083](083-mark-legends.md) | Mark Legends | Accepted |
 | [084](084-named-point-series.md) | Named Point Series | Accepted |
 | [085](085-data-tooltips.md) | Data Tooltips | Accepted |
+| [086](086-segmented-overlapping-points.md) | Segmented Overlapping Points | Accepted |
 
 ## Creating New ADRs
 

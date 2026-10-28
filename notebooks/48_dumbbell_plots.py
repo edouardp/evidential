@@ -160,5 +160,71 @@ def notes(mo):
     return
 
 
+@app.cell(hide_code=True)
+def overlapping_values_doc(mo):
+    mo.md("""
+    ## Overlapping endpoints and comparison points
+
+    These illustrative values are printed beside the graphic. Opaque dots whose
+    centres fit within **one CSS pixel** become one segmented circle: halves,
+    thirds or quarters. Hover it for every named value. The nearly-equal row
+    also merges at this width. Resize the table and pixel-space clusters update.
+
+    The separate example uses translucent dots, so its ordinary colour compositing is
+    preserved. A sequence of small steps does not form one long cluster: the
+    **whole cluster**, rather than just each adjacent gap, must fit inside 1px.
+    Different-sized dots also retain their size encoding.
+    """)
+    return
+
+
+@app.cell
+def overlapping_values(EvidentialTable, col, mo, settings):
+    overlap_values = [
+        {"case": "Two equal", "before": 50, "after": 50, "target": None, "forecast": None},
+        {"case": "Three equal", "before": 50, "after": 50, "target": 50, "forecast": None},
+        {"case": "Four equal", "before": 50, "after": 50, "target": 50, "forecast": 50},
+        {"case": "Nearly equal", "before": 50, "after": 50.01, "target": 50.02, "forecast": 50.03},
+        {"case": "Two separate pairs", "before": 30, "after": 30, "target": 70, "forecast": 70},
+        {"case": "All separated", "before": 20, "after": 40, "target": 60, "forecast": 80},
+        {"case": "Small steps, bounded clusters", "before": 50, "after": 50.2, "target": 50.4, "forecast": 50.6},
+    ]
+    overlap_table = mo.ui.anywidget(
+        EvidentialTable(
+            overlap_values,
+            columns=[
+                col.text("case"),
+                col.number("before", format="num2"),
+                col.number("after", format="num2"),
+                col.number("target", format="num2"),
+                col.number("forecast", format="num2"),
+                col.points({"before": "Before", "after": "After", "target": "Target", "forecast": "Forecast"},
+                    palette=["#2563eb", "#dc2626", "#16a34a", "#9333ea"], size=18, connect=True)
+                .title("Comparison").fmt("num2").scale(domain=(0, 100), axis=True, axis_position="bottom")
+                .legend(),
+            ],
+            settings=settings(border=False, row_lines=False, row_shading=True, search=False, page_size=0, width=1000),
+            title="Equal and nearly equal points",
+            caption="Illustrative values. Translucent colours are shown separately below.",
+        )
+    )
+    transparent_table = mo.ui.anywidget(
+        EvidentialTable(
+            [{"case": "Translucent", "before": 50.3, "after": 50.6, "target": 50.9}],
+            columns=[col.text("case"), col.points({"before": "Before", "after": "After", "target": "Target"},
+                palette=["#2563eb80", "#dc262680", "#16a34a80"], size=18)
+                .title("Translucent points").scale(domain=(0, 100), axis=True, axis_position="bottom").legend()],
+            settings=settings(border=False, row_lines=False, page_size=0, width=600),
+        )
+    )
+    mo.vstack([overlap_table, transparent_table])
+    return
+
+
+@app.cell
+def _():
+    return
+
+
 if __name__ == "__main__":
     app.run()

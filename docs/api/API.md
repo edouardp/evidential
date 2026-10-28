@@ -820,8 +820,17 @@ columns=[
   search, pagination or sorting. See
   [`54_legends.py`](../../notebooks/54_legends.py) for one stack, two stacks and
   nine age-band points using real population data.
+- **Overlapping points** — opaque, differently coloured dots whose centres fit
+  within one CSS pixel share a circle split into equal pie sectors. Halves
+  divide vertically; thirds and larger groups meet at the centre. The entire
+  group's span is bounded, so a chain of nearby points cannot collapse into
+  one long cluster. A sorted sweep recalculates after layout and resize.
+  Translucent and differently sized points keep their existing rendering.
+  Source values, individual outline colours and tooltip identities are retained.
+  See [`48_dumbbell_plots.py`](../../notebooks/48_dumbbell_plots.py).
 - **Tooltips** — inspect full, comma-grouped values independently of painted
-  labels. Dots under the pointer share a multiline tooltip with named series;
+  labels. Dots under the pointer share a multiline tooltip with named series,
+  sorted by numeric x-value (declaration order breaks ties);
   their invisible hit area is slightly larger than the visible dot. Stack
   segments report category, amount, share and total, including hidden labels
   and both halves of a split neutral category. Ranges report endpoints and

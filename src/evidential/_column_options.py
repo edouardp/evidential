@@ -267,6 +267,10 @@ def _normalize_column_options(data: dict[str, Any]) -> dict[str, Any]:
         from .marks import normalize_encoding
 
         data["encodings"] = [normalize_encoding(encoding) for encoding in data["encodings"]]
+    if data.get("legend") is not None:
+        from .marks import normalize_legend
+
+        data["legend"] = normalize_legend(data["legend"], data.get("encodings") or [])
     if data.get("domain") is not None:
         data["domain"] = domain_spec(data["domain"])
     validate_options(data, ColumnOptions, "column")

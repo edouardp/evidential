@@ -22,6 +22,29 @@ if (!dom.window.HTMLDialogElement.prototype.showModal) {
 
 const { EvidentialTableRenderer, render, fontSizeValue } = await import("./src/table.js");
 
+test("legends render without a table title, follow visibility and update with column metadata", () => {
+  const column = {name: "a", title: "Response", legend: true, encodings: [
+    {kind: "stacked_bar", source: "a", color: "navy"},
+    {kind: "stacked_bar", source: "b", color: "red"},
+  ]};
+  const model = makeModel([{a: 1, b: 2}], [column], {}, el);
+  const renderer = new EvidentialTableRenderer(model, el);
+  assert.equal(el.querySelector(".et-title-text"), null);
+  assert.equal(el.querySelector(".et-legend-column").textContent, "Response");
+  renderer._state.hidden.add("a");
+  renderer.render();
+  assert.equal(el.querySelector(".et-legends"), null);
+  renderer._state.hidden.clear();
+  model.data.columns = [{...column, title: "Revised", legend: ["One", "Two"]}];
+  renderer.render();
+  assert.equal(el.querySelector(".et-legend-column").textContent, "Revised");
+  assert.deepEqual([...el.querySelectorAll(".et-legend-label")].map(n => n.textContent), ["One", "Two"]);
+  model.data.columns = [{...column, legend: false}];
+  renderer.render();
+  assert.equal(el.querySelector(".et-titlebar").childElementCount, 0);
+  renderer.destroy();
+});
+
 test("repeat_values false suppresses adjacent display values and restarts on every page", () => {
   const rows = [{region: "North", product: "A"}, {region: "North", product: "B"},
     {region: "South", product: "C"}, {region: "North", product: "D"}];

@@ -104,6 +104,75 @@
 .et-titlebar {
   margin-bottom: 0.35rem;
 }
+.et-titlebar:has(.et-legends) {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 0.4rem 1.5rem;
+}
+.et-titlebar:has(.et-legends) .et-title-text {
+  flex: 1 1 12rem;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.et-legends {
+  flex: 0 1 auto;
+  min-width: 0;
+  max-width: min(100%, 38rem);
+  margin-left: auto;
+  padding-inline-end: 0.375rem;
+  box-sizing: border-box;
+  font-size: 0.9em;
+  line-height: 1.35;
+}
+.et-legends-outlined {
+  border: 1px solid var(--et-header-border);
+  padding: 0.4em 0.6em;
+}
+.et-legend-groups, .et-legend-items {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.2rem 0.85rem;
+}
+.et-legend-groups { flex-direction: column; gap: 0.25rem; }
+.et-legend-group {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  min-width: 0;
+  max-width: 100%;
+}
+.et-legend-column { flex: 0 0 auto; font-weight: 600; white-space: nowrap; }
+.et-legend-column::after { content: ":"; }
+.et-legends .et-legend-items {
+  flex: 1 1 auto;
+  min-width: 0;
+  list-style: none;
+  padding: 0 0.1em 0 0;
+  margin: 0;
+  column-gap: 1.25em;
+}
+.et-legends .et-legend-item {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 0.4em;
+  padding: 0;
+  margin: 0;
+  white-space: nowrap;
+}
+.et-legend-label { white-space: nowrap; }
+.et-legend-column, .et-legend-label { color: color-mix(in srgb, currentColor 72%, transparent); }
+.et-legend-swatch {
+  flex: 0 0 0.75em;
+  width: 0.75em;
+  height: 0.75em;
+}
+.et-legend-swatch-bar { opacity: 0.55; }
+.et-legend-swatch-point, .et-legend-swatch-points {
+  border-radius: 50%;
+}
+.et-legend-swatch-range { height: 2px; opacity: 0.9; }
 .et-title {
   font-size: 1.4em;
   font-weight: 600;

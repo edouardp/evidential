@@ -11,6 +11,7 @@ import { renderAnnotation } from "./display-rows.js";
 import { renderStatsRow } from "./statistics.js";
 import { renderHeader, headerLayout, decorateSubcolumn, orderedColumns } from "./headers.js";
 import { renderColumnSizing } from "./column-sizing.js";
+import { renderLegends } from "./legends.js";
 import { RowPipeline } from "./derived.js";
 import { HoldController, bindRowSelection } from "./interactions.js";
 import { LoadingController } from "./loading.js";
@@ -246,7 +247,6 @@ export class EvidentialTableRenderer {
     this.root.classList.toggle("et-compact", !!opts.compact);
     this.root.classList.toggle("et-stretch-off", opts.stretch === false);
     this.root.classList.toggle("et-group-gap", !!opts.group_gap);
-    this._renderTitle();
     this._renderToolbar();
 
     const processed = this._pipeline.get({
@@ -255,6 +255,7 @@ export class EvidentialTableRenderer {
       search: this._state.search, hidden: hiddenColumns(this.columns, this._state.hidden), sort: this._state.sort,
     });
     const { columns, hasGroups, dimCount, ranges, formatRanges, decimals, colorScales, changeScales, stats } = processed;
+    this._renderTitle(columns);
     const layout = headerLayout(columns);
     const subcolumns = layout.joins;
     const visibility = this._pipeline.visible(processed, this._groupVersion, (key) => this._isCollapsed(key));
@@ -383,10 +384,9 @@ export class EvidentialTableRenderer {
     this.el.dataset.baselineHeight = String(Math.round(this._baselineHeight));
   }
 
-  _renderTitle() {
+  _renderTitle(columns) {
     const { title, subtitle, info, info_link, info_link_title } = this.options;
     this.titlebar.replaceChildren();
-    if (!title && !subtitle) return;
     const text = h("div", { class: "et-title-text" });
     if (title) {
       const t = h("span", { class: "et-title" });
@@ -410,7 +410,9 @@ export class EvidentialTableRenderer {
       s.append(inlineMarkdown(subtitle));
       text.append(s);
     }
-    this.titlebar.append(text);
+    if (text.childElementCount) this.titlebar.append(text);
+    const legends = renderLegends(columns, this.columns, this.options);
+    if (legends) this.titlebar.append(legends);
   }
 
   _renderToolbar() {

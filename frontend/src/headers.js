@@ -3,6 +3,14 @@ import { h, withFigure, alignStyle, isStub } from "./dom.js";
 import { formatTitle } from "./format.js";
 import { resolveColor } from "./color.js";
 
+/** The visible heading, shared by table headers and their legend groups. */
+export function columnHeading(col, options = {}, label = null) {
+  let title = label || (isStub(options, col) && options.stub_head
+    ? options.stub_head : options.format_titles === false ? col.name : col.title ?? formatTitle(col.name));
+  if (options.all_caps) title = String(title).toUpperCase();
+  return title;
+}
+
 export function groupPath(group) {
   if (!group) return [];
   return Array.isArray(group) ? group.map(String) : [String(group)];
@@ -186,14 +194,7 @@ export function renderHeader({columns, rowNumbers, options: opts, sort, onSort})
     const spanned = columns.slice(leaf.start, leaf.start + leaf.span);
     if (col.highlight && spanned.every((member) => member.highlight === col.highlight)) th.style.backgroundColor = resolveColor(col.highlight);
     const inner = h("span", { class: "et-th-inner" });
-    let title =
-      isStubColumn && opts.stub_head
-        ? opts.stub_head
-        : opts.format_titles === false
-          ? col.name
-          : col.title ?? formatTitle(col.name);
-    if (leaf.label) title = leaf.label;
-    if (opts.all_caps) title = String(title).toUpperCase();
+    const title = columnHeading(col, opts, leaf.label);
     // A `\n` in the title forces a line break; whether other lines wrap at
     // spaces is up to `wrap_titles` (see CSS).
     inner.append(headerTitle(title));

@@ -39,6 +39,7 @@ FigureStyle = Literal[
 ]
 #: Relative-time rendering for a date/time column: ``True`` (auto unit) or a unit.
 Relative = bool | Literal["second", "minute", "hour", "day", "week", "month", "year"]
+LegendLabels: TypeAlias = bool | Sequence[str | None] | Mapping[str, str | None]
 
 
 class DefaultSort(TypedDict, total=False):
@@ -448,6 +449,10 @@ class DomainSpec(TypedDict, total=False):
     neutral_range: tuple[float, float]
 
 
+class LegendOptions(TypedDict, total=False):
+    outline: bool
+
+
 class ColumnOptions(TypedDict, total=False):
     name: str
     domain: DomainSpec | str | None
@@ -491,6 +496,8 @@ class ColumnOptions(TypedDict, total=False):
     logo_options: LogoOptions | None
     viz_include_subtotals: bool | None
     encodings: Sequence[EncodingSpec] | None
+    legend: LegendLabels | None
+    legend_options: LegendOptions | None
     scale: ScaleSpec | None
     references: Sequence[ReferenceSpec] | None
     sort_by: str | None

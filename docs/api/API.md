@@ -780,6 +780,27 @@ columns=[
   `size` is the stack height fraction. `diverge_at="neutral", neutral="split"`
   centres the named segment on the origin and grows the categories either side
   left and right (a Likert chart).
+- **Legends** — append `.legend()` to a mark column for a compact color key
+  above the table, to the right of the title and subtitle. A group for each
+  opted-in column is named exactly like its rendered table heading. Each group
+  occupies its own `Column name: <keys>` row; complete swatch/label pairs wrap
+  without splitting words. There is no extra visible legend heading.
+  `.legend(outline=True)` draws a thin box around the combined key; any opted-in
+  column can request the shared outline. On narrow displays the
+  key moves below the title as needed. Column and key names use mid-dark grey;
+  bar/stack swatches are square. Entries are separated by spacing, with no
+  leading separator after a wrap, and stay inside the table's right edge.
+  Stacks, bars, points, ranges and strips share this API. Names default to source
+  headings (or strip category keys); `.legend(["Storage", "Requests"])` overrides
+  all names in declaration order, while `.legend({"requests": "API calls"})`
+  overrides selected names. A `None` label omits an entry, such as a connecting
+  range behind coloured points. `.legend(False)` disables the column's key.
+  Swatches resolve the same colors as their marks, including theme defaults
+  and explicit negative colors. Per-row color references are rejected because
+  a color field alone cannot identify categories. Keys do not change with row
+  search, pagination or sorting. See
+  [`54_legends.py`](../../notebooks/54_legends.py) for one stack, two stacks and
+  nine age-band points using real population data.
 - **Boxplot** — `boxplot(minimum, q1, median, q3, maximum, outliers=, whisker=`
   `"extrema"|"iqr")`. The renderer never computes statistics; the five numbers
   arrive from SQL or Python.
@@ -1084,6 +1105,7 @@ other than `auto`, `merge`, `group` and `subcolumns` return a `Column`;
 | `.viz(kind, **options)` | set `viz` directly |
 | `.color(...)` / `.chip(...)` / `.delta(...)` / `.sparkline(...)` / `.symbols(...)` | visualisations |
 | `.bar(source, …)` / `.point(source, …)` / `.range(low, high, …)` | append a mark |
+| `.legend(labels=True, *, outline=False)` | wrapping color key; list/mapping names, `None` entries omitted; optional shared box |
 | `.label(value=True \| "@field", *, source=, text=, position=, format=)` | annotate the last mark |
 | `.scale(domain=(lo, hi), include_zero=, unit=, transform="linear"\|"log", axis=, axis_position=, gridlines=)` / `.reference_line(value, label=, color=)` / `.reference_band(low, high, …)` | shared axis / rules |
 | `.relative(value=True)` / `.fmt_column(column)` | relative time / format source |

@@ -48,6 +48,21 @@ if neither fits. `.position(...)` chooses fixed placement. Use the preferred
 inside/outside and start/end explicitly instead of inventing `position="auto"`.
 The renderer handles inside contrast unless a color is explicitly supplied.
 
+## Legends
+
+Append `.legend()` to a mark column when colour identifies series or categories.
+It adds a compact wrapping key above the table, alongside the title/subtitle.
+Stacks, bars, points, ranges and strips share the method; each opted-in column
+gets a group named after its rendered heading. Source names are automatic.
+Use `.legend(["Actual", "Target"])` for ordered names or
+`.legend({"target": "Budget"})` to override selected sources. A `None` name omits
+an entry, useful for a connecting range behind several coloured points.
+`.legend(False)` disables a key. Strip keys come from their `colors` mapping.
+Use `.legend(outline=True)` for one thin box around the combined key.
+Legends require fixed colours; per-row colour references do not identify
+categories on their own. As with other additions, check installed capabilities
+before using `.legend()` against an older published package.
+
 ## Domains and guides
 
 Use `.scale(domain=(low, high), ...)` for a mark column's fixed track. Use

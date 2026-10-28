@@ -1,4 +1,4 @@
-"""NBA shot queries preserve shooting denominators, traded-player scope and order."""
+"""NBA notebook queries preserve denominators, traded-player scope and order."""
 
 import re
 import runpy

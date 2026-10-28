@@ -32,7 +32,7 @@ from ._aliases import alias, format_code
 from ._column import Column, _clean, _field
 from ._distribution import band_spec, validate_curve
 from ._label import LABEL_POSITIONS, _label_spec
-from .configuration import EncodingSpec, validate_options
+from .configuration import EncodingSpec, LegendLabels, validate_options
 
 __all__ = [
     "MarkColumn",
@@ -248,6 +248,40 @@ def normalize_encoding(encoding: Mapping[str, Any]) -> dict[str, Any]:
     return _canonical_encoding(kind, source, **options)
 
 
+def normalize_legend(value: LegendLabels, encodings: Sequence[Mapping[str, Any]]) -> LegendLabels:
+    """Validate a key against its marks, copying caller-owned labels."""
+    if value is False:
+        return False
+    if not encodings:
+        raise ValueError("legend needs a mark column")
+    keys = []
+    for encoding in encodings:
+        if encoding.get("color_column") or encoding.get("color_negative_column"):
+            raise ValueError("legend needs fixed mark colors; per-row colors have no categorical key")
+        if encoding["kind"] == "strip":
+            colors = encoding.get("colors") or {}
+            if not colors:
+                raise ValueError("a strip legend needs a colors mapping")
+            keys.extend(colors)
+        else:
+            keys.append(encoding["source"])
+    if value is True:
+        return True
+    if isinstance(value, Mapping):
+        if not all(isinstance(key, str) and (text is None or isinstance(text, str)) for key, text in value.items()):
+            raise TypeError("legend labels must map source names or categories to strings")
+        if unknown := set(value) - set(keys):
+            raise ValueError(f"Unknown legend source or category: {', '.join(sorted(unknown))}")
+        return dict(value)
+    if isinstance(value, Sequence) and not isinstance(value, (str, bytes)):
+        if not all(text is None or isinstance(text, str) for text in value):
+            raise TypeError("legend labels must be strings")
+        if len(value) != len(keys):
+            raise ValueError("legend needs one label per mark or strip category")
+        return list(value)
+    raise TypeError("legend expects True, False, a list of labels or a label mapping")
+
+
 def _merge_label(previous: Mapping[str, Any] | None, update: Mapping[str, Any] | None) -> dict[str, Any] | None:
     """Refine label style, replacing its binding only when a new one is given."""
     if update is None:
@@ -268,10 +302,26 @@ class MarkColumn(Column):
     def _with(self, **changes: Any) -> MarkColumn:
         if changes.get("viz") in ("color", "chip", "delta", "symbols"):
             changes["encodings"] = None
+            changes["legend"] = None
+            changes["legend_options"] = None
         return super()._with(**changes)
 
     def _encodings(self) -> list[dict[str, Any]]:
         return list(self._spec.get("encodings") or [])
+
+    def legend(self, labels: LegendLabels = True, *, outline: bool = False) -> MarkColumn:
+        """Add this column's color key above the table, alongside its title.
+
+        Names default to source column headings (strip category names for a
+        strip). Pass a list in declaration order or a source/category-to-label
+        mapping to override them; a ``None`` label omits that entry (for example,
+        a connecting range behind points). ``False`` removes the key. Fixed mark colors
+        are required; a per-row color alone cannot identify categories.
+        ``outline=True`` draws a thin box around the table's combined legend.
+        """
+        if not isinstance(outline, bool):
+            raise TypeError("legend outline must be True or False")
+        return self._with(legend=normalize_legend(labels, self._encodings()), legend_options={"outline": outline})
 
     # --------------------------------------------------------- mark chain ---
     def _add(
@@ -600,6 +650,8 @@ def rebind_measure(column: Mapping[str, Any], source: str, target: str) -> dict[
             encoding["label"] = {**encoding["label"], "source": target}
         encodings.append(encoding)
     spec["encodings"] = encodings
+    if isinstance(spec.get("legend"), Mapping) and source in spec["legend"]:
+        spec["legend"] = {target if key == source else key: value for key, value in spec["legend"].items()}
     return spec
 
 

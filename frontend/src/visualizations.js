@@ -2,6 +2,7 @@ import { h } from "./dom.js";
 import { formatValue } from "./format.js";
 import { formattedText } from "./formatted-text.js";
 import { resolveColor } from "./color.js";
+import { markColor } from "./mark-series.js";
 import { numeric, observationValue } from "./mark-data.js";
 import { renderDensityBand } from "./density-band.js";
 import { markLabelText, renderMarkLabel, autoLabelColor, labelTextStyle } from "./mark-labels.js";
@@ -20,19 +21,6 @@ function pointOutlineStyle(outline) {
   if (outline === false) return { boxShadow: "none" };
   if (typeof outline === "string") return { boxShadow: `0 0 0 1px ${resolveColor(outline) || outline}` };
   return {};
-}
-
-/** Resolve a mark's colour: an explicit colour, a per-row column, or a default. */
-function markColor(enc, row, fallback, isNegative = row && Number(row[enc.source]) < 0) {
-  if (isNegative) {
-    const negative = resolveColor(enc.color_negative) || resolveColor(row[enc.color_negative_column]);
-    if (negative) return negative;
-  }
-  if (enc.color_column && row) {
-    const resolved = resolveColor(row[enc.color_column]);
-    if (resolved) return resolved;
-  }
-  return resolveColor(enc.color) || fallback;
 }
 
 /** Direction follows projected endpoints; equality and fully clipped spans omit it. */

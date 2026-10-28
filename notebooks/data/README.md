@@ -1,5 +1,33 @@
 # Notebook data snapshots
 
+## Population age bands
+
+`54_population_age_bands_2024.json` is the result of
+[`54_population_ages.sql`](../sql/54_population_ages.sql), queried from the local
+`WDI_CSV_2026_10_01/parquet` bundle on 28 October 2026. Notebook 54 reads this
+committed snapshot, so no network or local dataset is required at runtime.
+The query expects `country` and `observations` views over `country.parquet`
+and the partitioned `wdi_observations` data (enable Hive partitioning for `year`).
+
+The twelve selected countries span all four recorded income groups. These
+classifications come from the October 2026 bundle, not a historical 2024 income
+classification. Estimates use the common year **2024**; no missing values are
+imputed and incomplete countries are excluded.
+
+The 34 sex-specific, five-year indicators `SP.POP.0004.MA.5Y` /
+`SP.POP.0004.FE.5Y` through `SP.POP.80UP.MA.5Y` / `SP.POP.80UP.FE.5Y` give each
+band as a percentage of that sex's population. The query multiplies each by
+`SP.POP.TOTL.MA.IN` or `SP.POP.TOTL.FE.IN` before combining the sexes and dividing
+by their combined population. Adjacent five-year bands form 0–9, 10–19, …,
+70–79; 80+ already includes every older age. The nine resulting fractions sum
+to one. `age_min` / `age_max` describe the span of these nine shares, not an
+uncertainty interval. No chronological line is implied by the connecting mark.
+
+Source: [World Bank WDI / United Nations Population Division, World Population Prospects](https://data.worldbank.org/indicator/SP.POP.0004.MA.5Y).
+The source identifies the series as midyear estimates under
+[CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). Values are derived
+by weighting and aggregating the original indicators as described above.
+
 ## European trade
 
 `50_europe_trade_2024.json` is the result of

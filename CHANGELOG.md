@@ -4,15 +4,15 @@ All notable changes to this project are documented in this file. The format is
 based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this
 project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## Unreleased
+## 0.2.1 (2026-10-30)
 
 ### Added
 
 - `DimensionGrid`, a separate anywidget with cross-filtered category bars,
-  per-dimension string search, mouse scrolling, virtualized lists, horizontal
-  navigation, in-place selections marked in bold with dark red strips, slim
-  vertical scrollbars, bold titles, centered category counts and safe
-  parameterized SQL predicates.
+  multi-selection, per-dimension string search, virtualized lists, native mouse
+  scrolling and horizontal navigation. Selections combine with OR within a
+  dimension and AND across dimensions; parameterized SQL predicates support
+  linked tables without interpolating values.
 - Notebook 56: Needful Things orders linked to monthly sales. Notebook 57
   explores the local AWS CUR data product with nine useful slicers, full cost
   totals, daily cost-driver trends and searchable individual charges.
@@ -21,8 +21,10 @@ project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
-- DimensionGrid uses the table's default font, compact 20px rows and tighter
-  header and column spacing.
+- DimensionGrid uses the table's default font, compact 20px rows, tighter
+  spacing and slim vertical scrollbars. Titles are bold and category counts
+  are centered. Selected items stay in ranked position, marked with bold text
+  and a full-height dark red strip.
 
 ## 0.2.0 (2026-10-28)
 

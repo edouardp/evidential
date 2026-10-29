@@ -184,12 +184,25 @@ def cost_filters(DimensionGrid, cur_connection, cur_dimensions, mo):
 def summary_cards(cur_summary, mo):
     mo.hstack(
         [
-            mo.stat(f"${cur_summary['amortized_cost']:,.2f}", label="Amortized cost", bordered=True),
-            mo.stat(f"${cur_summary['unblended_cost']:,.2f}", label="Unblended cost", bordered=True),
-            mo.stat(f"{cur_summary['line_items']:,}", label="Matching line items", bordered=True),
+            mo.stat(
+                f"${cur_summary['amortized_cost']:,.2f}",
+                label="Amortized cost",
+                bordered=True,
+            ),
+            mo.stat(
+                f"${cur_summary['unblended_cost']:,.2f}",
+                label="Unblended cost",
+                bordered=True,
+            ),
+            mo.stat(
+                f"{cur_summary['line_items']:,}",
+                label="Matching line items",
+                bordered=True,
+            ),
             mo.stat(f"{cur_summary['services']:,}", label="Services", bordered=True),
         ],
-        widths="equal",align="center", 
+        widths="equal",
+        align="center",
     )
     return
 

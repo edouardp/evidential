@@ -28,6 +28,7 @@ REQUIRED = (
     f"{PACKAGE}/comparison.py",
     f"{PACKAGE}/configuration.py",
     f"{PACKAGE}/data.py",
+    f"{PACKAGE}/dimension.py",
     f"{PACKAGE}/duck.py",
     f"{PACKAGE}/grouped.py",
     f"{PACKAGE}/live.py",
@@ -38,6 +39,8 @@ REQUIRED = (
     f"{PACKAGE}/py.typed",
     f"{PACKAGE}/static/table.js",
     f"{PACKAGE}/static/table.css",
+    f"{PACKAGE}/static/dimension-grid.js",
+    f"{PACKAGE}/static/dimension-grid.css",
 )
 FORBIDDEN = ("tests/", "notebooks/", "frontend/", "__pycache__", ".pyc", ".coverage")
 MIN_RENDERER_BYTES = 10_000
@@ -73,6 +76,10 @@ def sdist_members(path: Path) -> dict[str, bytes]:
 def inspect(members: dict[str, bytes]) -> list[str]:
     """Return a list of problems with an archive's members (empty means good)."""
     problems = [f"missing {name}" for name in REQUIRED if name not in members]
+    # PEP 561's py.typed marker is intentionally empty.
+    problems += [
+        f"empty {name}" for name in REQUIRED if name in members and not members[name] and not name.endswith("/py.typed")
+    ]
     problems += [f"unexpected dev file: {name}" for name in members if any(part in name for part in FORBIDDEN)]
     for name in RENDERER_ASSETS:
         if name in members and len(members[name]) < MIN_RENDERER_BYTES:

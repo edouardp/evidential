@@ -5,11 +5,18 @@ How `evidential` is built. For *why*, see
 
 ## 1. Overview
 
-`evidential` is an [anywidget](https://anywidget.dev): a Python class that
+`EvidentialTable` is an [anywidget](https://anywidget.dev): a Python class that
 ships a JavaScript module and a stylesheet to the browser. The Python side
 normalises data into JSON traits — `rows`, `row_layout`, `columns`, `options` — and the
 JavaScript side renders them. There is no server round-trip for interaction:
 sorting, searching, paging, collapsing and fullscreen all happen in the browser.
+
+`DimensionGrid` is a separate input widget with its own bundle. Python keeps
+the source records and computes cross-filtered aggregate facets; only those
+facets and typed selections synchronize. The browser owns transient string
+searches and virtualized vertical lists, plus horizontal dimension navigation.
+Linked tables update in separate reactive marimo cells using `.filtered` or
+the parameterized `.where()` predicate. See [ADR-087](adr/087-dimension-grid.md).
 
 Detail data stays in `rows`; synthetic headings and summaries live in the
 separate `row_layout` plan. The browser filters and sorts details, paginates
@@ -56,6 +63,7 @@ src/evidential/        Python package (the anywidget)
   __init__.py               public API re-exports
   table.py                  EvidentialTable, option keys, column coercion
   data.py                   normalise / infer / jsonify
+  dimension.py              DimensionGrid, linked category facets and predicates
   grouped.py                grouped_table, decorate_grouped_rows, simple_table
   client.py                 grouped_records (in-memory grouping)
   aggregations.py           built-in + callable aggregations
@@ -68,9 +76,12 @@ src/evidential/        Python package (the anywidget)
   _compat.py                soft Arrow/pandas detection
   static/table.js           committed esbuild bundle
   static/table.css          committed stylesheet
+  static/dimension-grid.js  committed slicer bundle
+  static/dimension-grid.css committed slicer stylesheet
 frontend/src/               frontend sources
   index.js                  re-exports table.js
   table.js                  renderer + render() entry
+  dimension-grid.js          virtualized dimension slicer + render() entry
   headers.js                column ordering, shared headers and member layout
   format.js                 formatValue on top of ssf
   color.js                  colour scales on top of chroma-js
@@ -78,7 +89,7 @@ frontend/src/               frontend sources
 frontend/test_*.js          jsdom unit tests
 tests/                      pytest unit tests
 tests/browser/              Playwright functional tests
-notebooks/                  marimo demos (01–20)
+notebooks/                  marimo demos and notebook-backed documentation
 ```
 
 ## 3. The anywidget contract

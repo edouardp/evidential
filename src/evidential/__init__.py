@@ -38,6 +38,7 @@ from .client import grouped_records
 from .comparison import comparison_table
 from .configuration import ColumnOptions, SparklineType, TableOptions, settings
 from .data import make_column
+from .dimension import DimensionGrid
 from .grouped import grouped_table, simple_table
 from .live import LiveEvidentialTable, query_values
 from .pivot import pivot_table
@@ -77,6 +78,7 @@ __all__ = [
     "CURRENCY_CODES",
     "settings",
     "EvidentialTable",
+    "DimensionGrid",
     "section_row",
     "spacer_row",
     "LiveEvidentialTable",

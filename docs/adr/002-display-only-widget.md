@@ -35,12 +35,18 @@ query features are offered as SQL-building helpers (`grouped_table`,
 `pivot_table`, `query_table`, `comparison_table`, `date_range_sql`) and as live,
 parameterised re-querying (`LiveEvidentialTable`).
 
+The separate `DimensionGrid` input added in
+[ADR-087](087-dimension-grid.md) supplies cross-filtered category selections
+and a parameterized predicate for user-written SQL. The display table's role
+and query ownership remain unchanged.
+
 ### Consequences
 
 - Good, because the same widget renders rows from DuckDB, pandas or a list.
 - Good, because the renderer stays small and has one grouping model.
 - Good, because there is no second, Python-side query language to learn.
-- Bad, because there is no dimension/measure UI; users write SQL for that.
+- Bad, because measures and query shapes still require SQL; dimension selection
+  can be supplied by the separate `DimensionGrid` input.
 - Bad, because some Evidence features (comparison tooltips) need extra plumbing.
 
 ## More Information

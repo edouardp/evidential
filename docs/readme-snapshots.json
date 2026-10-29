@@ -5,14 +5,15 @@
     "notebooks/49_api_screenshots.py": "219de292a242152427ca2e62163eb787c5c7355f974909eff90bd0c76ac5606b",
     "notebooks/50_graphics_gallery.py": "e235905ba1d861ff65cca5089cce5d2f0bb28b349d8919c314267cb6921f1848",
     "notebooks/51_table_layouts.py": "fc2b54717875601b8006e79bb0a5d4c1725d62453e53d2115c1ac19a745d9c95",
+    "notebooks/56_dimension_grid.py": "f7d3d9072acaca349af82071293dd481d656b2cc8a2b7880bb030a962bb40180",
     "notebooks/data/46_football_england_2024.json": "aa8d550e7bb3e776dfd2dbfee5dd2cd57ab14a66c5c036dd393001055b55ff03",
     "notebooks/data/50_europe_trade_2024.json": "04a22223c3b1a958255b27b41ad83ff47ca528f3f985f7db579c2e75f05f525e",
     "notebooks/sample_data/needful_things/orders.parquet": "b373511b4f7a0547b704022b055655b6d3bafc2505a2a573292b206417fe3eb4",
     "notebooks/sql/50_europe_trade.sql": "c01857da122eb48c819aa14def0bcd4f6fb2e762ea987e55271c58f509746ea6",
     "pyproject.toml": "3952351abcc07313af282773adaed5abebc718275879d186f7fe5368c1b16705",
-    "scripts/api_screenshots.py": "bdb8961923578fa43746aa2541b971f0aa891b55c4686eb0068bc2586f91689c",
-    "scripts/generate_readme.py": "589f0fafa44bc41591cb1ce19bbc8ba957d01fdbab1e35be7c3cff5f7dfd0282",
-    "src/evidential/__init__.py": "f5bac40f585c749cd06c40f4498c7de868a382a30abaed198ce08634ab7adbc7",
+    "scripts/api_screenshots.py": "51f148ecf55c4ea5927a34ad82691a8fc6162a46e76dfea3f6a002e600b47ee4",
+    "scripts/generate_readme.py": "73d9f6620f06101bde52b2d3dbe9cd99f2b33293ae9b30de2747f41c3a2cfb21",
+    "src/evidential/__init__.py": "88288dad79c3c7f9ad3fae0b8baf2b93dc8240bcf23491e6e52405caa519b8e1",
     "src/evidential/_aliases.py": "5e207c4a862754e1ca9f7ea309a0e489bf158a7e380876f8edcf20eeee1438f1",
     "src/evidential/_column.py": "e4713584d5fd07b0a73ebcbe0acbbbc805bf3c4e0a2c5d824207ca285777653e",
     "src/evidential/_column_options.py": "89d757e915d4a5173fa19372aa9e394f3370ebbc686d85b638aa74f4434b190b",
@@ -30,6 +31,7 @@
     "src/evidential/comparison.py": "5389757b27d9cd42f796599792f9555efcd577d0d1b9c32437f98a0593c77ee9",
     "src/evidential/configuration.py": "f0e41e3520c29019871ece1cb76d2ec9c847860dec7e49b84cdc294fd84cb074",
     "src/evidential/data.py": "009c8807ece3c5d244f81ac37439f167ba174d440b905a568803b5b0ae63fdad",
+    "src/evidential/dimension.py": "8cafeb469efa216223c8e724cfed852f5515b3fbb1fd6804d95ba2ad6f92d233",
     "src/evidential/domain.py": "9e607e105122cffb1a6cc4de27adb15bdc3f73af1184b3506302cb908bf34ba9",
     "src/evidential/duck.py": "fed7bbdc25492a8457ca7b1ba4903dacacf9cb2643a789f2c66d018b8449c8b3",
     "src/evidential/grouped.py": "58013c3f6dfccf46c644e8d2724b76c895d84ebe50e044e3a246bac195537807",
@@ -40,6 +42,8 @@
     "src/evidential/query.py": "1474b03ca11f438611b59a911221cf34625621b12af3c2871ed94710d5808049",
     "src/evidential/rows.py": "d0011886124d330e596627f9c9c39202346cd5bab6e35a0056e779f6fb3af948",
     "src/evidential/rules.py": "eb0142d511b63a5b4d0725f70599084784ddb82130655c72e8ff36ce816ed104",
+    "src/evidential/static/dimension-grid.css": "e923da73e29d033fcef186eaf35250553cd39d74352199a7692667c3cd935815",
+    "src/evidential/static/dimension-grid.js": "201e5e3c5316f81df07e3d96f38fc15c2cd440b48c6501062b869dad3201ce01",
     "src/evidential/static/table.css": "4bd40e339864d28c3db5406c4fe0ff064f4ee3b1b618d7364de1f2791fa6b48c",
     "src/evidential/static/table.js": "0613a53f2f8410247578aa3dc01d72548b44ef0ddfbe79fd32ad090681e728bd",
     "src/evidential/table.py": "3f635ffd925ec907c71a3b675d2ffaf17f9fc61e21acb46e3bbc6573bd9cb9b6",
@@ -159,7 +163,7 @@
     "docs/img/graphics/point-overlaps.png": {
       "notebook": "notebooks/50_graphics_gallery.py",
       "cell": "graphic_point_overlaps",
-      "sha256": "f7854d318e5968e62140e3dae8663a9ba4e513e0a8f3bbb14bda68ffc2c6982e"
+      "sha256": "3e32c01b5bc449d03f530c99cb7a15ed5c2d85b4721eef2708aac06e3168ffef"
     },
     "docs/img/graphics/boxplot.png": {
       "notebook": "notebooks/50_graphics_gallery.py",
@@ -325,6 +329,11 @@
       "notebook": "notebooks/51_table_layouts.py",
       "cell": "layout_groups_two",
       "sha256": "406b772934e3149ac9fb0e7a25128a1f11ebd46b8ccc4d1853905e28e64f4a53"
+    },
+    "docs/img/dimension-grid.png": {
+      "notebook": "notebooks/56_dimension_grid.py",
+      "cell": "orders_grid",
+      "sha256": "3e39fe292e7e01d0cb6edaf93c25bf5ed9ef8fa06fa77bff1b62d1580739e229"
     }
   }
 }

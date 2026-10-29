@@ -10,9 +10,10 @@ Evidence.dev-style interactive tables for [Marimo](https://marimo.io), packaged
 as an [anywidget](https://anywidget.dev) and powered by
 [DuckDB](https://duckdb.org) when you need it.
 
-`evidential` is a **display** widget. SQL or pandas shapes the data, Python says
+`EvidentialTable` is a **display** widget. SQL or pandas shapes the data, Python says
 how to present it, and the browser renders it: sort, search, paginate, freeze
 columns, group with subtotals, download CSV and open a fullscreen view.
+The separate `DimensionGrid` input provides linked category slicers.
 
 <!-- notebook: notebooks/49_api_screenshots.py#preview image-only -->
 
@@ -1627,6 +1628,38 @@ con.sql("SELECT * FROM s3tables.taxi.yellow_trips LIMIT 100")
 
 This attaches an Iceberg REST catalog using ambient AWS credentials. See
 [`notebooks/02_s3_tables.py`](https://github.com/edouardp/evidential/blob/main/notebooks/02_s3_tables.py).
+
+<!-- notebook: notebooks/56_dimension_grid.py#orders_grid call -->
+
+## Dimension slicers
+
+Search and mouse-scroll ranked category lists; click to filter linked
+results. Other dimensions narrow automatically. The **⌕** switches the
+heading to a search input, while horizontal scrolling and arrow controls
+keep large sets of dimensions usable. Selected values stay visible.
+
+This example uses Evidence's committed `needful_things.orders` sample and
+links to monthly sales below. The same notebook also demonstrates 230
+illustrative cloud services, 23,000 usage types, and twenty dimensions.
+
+```python
+DimensionGrid(
+    connection.sql("SELECT state, category, item, channel, sales FROM orders"),
+    dimensions=["state", "category", "item", "channel"],
+    metric="sales",
+    multiple=True,
+    format="compact4",
+    height=320,
+    title="Explore orders",
+    subtitle="Select a state, category, item or channel to narrow monthly sales.",
+)
+```
+
+![Dimension slicers](https://raw.githubusercontent.com/edouardp/evidential/main/docs/img/dimension-grid.png)
+
+[Notebook source: `orders_grid`](https://github.com/edouardp/evidential/blob/main/notebooks/56_dimension_grid.py)
+
+<!-- /notebook -->
 
 ## Compatibility
 

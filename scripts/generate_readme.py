@@ -32,7 +32,7 @@ ASSET_ROOT = "https://raw.githubusercontent.com/edouardp/evidential/main/"
 REPO_ROOT = "https://github.com/edouardp/evidential/blob/main/"
 START = re.compile(r"^<!-- notebook: ([\w/.-]+\.py)#(\w+)(?: (image-only|call))? -->$", re.MULTILINE)
 END = "<!-- /notebook -->"
-TABLES = {"EvidentialTable", "grouped_table", "pivot_table", "comparison_table", "query_table"}
+TABLES = {"EvidentialTable", "DimensionGrid", "grouped_table", "pivot_table", "comparison_table", "query_table"}
 
 
 def _cell(source: str, name: str) -> ast.FunctionDef:

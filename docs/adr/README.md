@@ -105,6 +105,7 @@ dated, immutable record of the decisions behind them.
 | [084](084-named-point-series.md) | Named Point Series | Accepted |
 | [085](085-data-tooltips.md) | Data Tooltips | Accepted |
 | [086](086-segmented-overlapping-points.md) | Segmented Overlapping Points | Accepted |
+| [087](087-dimension-grid.md) | Searchable, Cross-Filtered Dimension Grid | Accepted |
 
 ## Creating New ADRs
 

@@ -52,8 +52,22 @@ def test_inspect_rejects_empty_renderer_assets() -> None:
     assert any("looks empty" in problem for problem in gate.inspect(members))
 
 
+def test_dimension_grid_runtime_and_assets_are_required_and_nonempty() -> None:
+    members = dict.fromkeys(gate.REQUIRED, b"x" * 20000)
+    for name in (
+        "evidential/dimension.py",
+        "evidential/static/dimension-grid.js",
+        "evidential/static/dimension-grid.css",
+    ):
+        assert name in gate.REQUIRED
+        members[name] = b""
+        assert f"empty {name}" in gate.inspect(members)
+        members[name] = b"x"
+
+
 def test_inspect_accepts_a_complete_archive() -> None:
     members = dict.fromkeys(gate.REQUIRED, b"x" * 20000)
+    members["evidential/py.typed"] = b""
     assert gate.inspect(members) == []
 
 

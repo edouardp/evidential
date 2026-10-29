@@ -33,6 +33,7 @@ captured with Playwright by
 - [Table settings](#table-settings)
 - [Visualisations](#visualisations)
 - [Formatting](#formatting)
+- [Dimension slicers](#dimension-slicers)
 - [Reference](#reference)
 
 ## Quick start
@@ -1081,6 +1082,77 @@ there; `text_transform` rewrites the displayed value with a Python callable; and
 `sub_missing` / `sub_zero` / `sub_small_vals` / `sub_large_vals` / `sub_values`
 substitute placeholder text. They run in order and can target columns, rows, or
 a predicate.
+
+## Dimension slicers
+
+`DimensionGrid` is a separate anywidget input. It accepts the same data
+containers as `EvidentialTable`, infers string dimensions, and displays ranked
+category bars. See [notebook 56](../../notebooks/56_dimension_grid.py) for
+Needful Things orders linked to monthly sales and a high-cardinality demo.
+
+```python
+from evidential import DimensionGrid
+
+slicer = mo.ui.anywidget(
+    DimensionGrid(
+        con.sql("SELECT state, category, item, channel, sales FROM orders"),
+        metric="sales",
+        multiple=True,
+        format="compact4",
+    )
+)
+slicer
+```
+
+In a **separate reactive cell**, read `slicer.value["selected"]`. Then use
+`slicer.widget.filtered` for detached matching records, or query the source:
+
+```python
+selection = slicer.value["selected"]  # Establish the marimo dependency.
+predicate, parameters = slicer.widget.where()
+result = con.execute(
+    f"SELECT category, sum(sales) AS sales FROM orders WHERE {predicate} GROUP BY ALL",
+    parameters,
+).to_arrow_table()
+linked_table.widget.set_data(result)
+```
+
+Create `linked_table` in its own cell; do not recreate either widget when
+selections change. `.where()` quotes field identifiers and binds values,
+including null categories. Apply it to a relation with the same field names.
+
+| Parameter | Default | Meaning |
+| --- | --- | --- |
+| `dimensions` | Inferred string fields | Sequence of field names or `{field: display_name}`. Explicit scalar numeric/boolean dimensions are supported. |
+| `metric` | `None` | Numeric field to aggregate; an omitted field counts records. |
+| `aggregate` | `"sum"` with a metric, otherwise `"count"` | `"sum"`, `"count"`, `"mean"`, `"min"`, `"max"`. `count` with a metric counts non-null values; the other aggregates skip nulls. |
+| `format` | `"compact"` | Existing Evidential numeric/SSF format code. |
+| `multiple` | `True` | Toggle multiple selections within each dimension; `False` restricts each dimension to one. |
+| `height` | `280` | Each dimension's height in pixels, including its header and footer. |
+| `dimension_width` | `220` | Minimum dimension width in pixels; horizontal overflow scrolls. |
+| `color` | `"#93b4ef"` | Bar colour. Bar lengths encode absolute magnitudes; signs remain in the values. |
+| `title`, `subtitle` | `None` | Optional heading and description. |
+| `selected` | `{}` | Initial `{field: [values]}` selection. Assign a new dictionary to update it. |
+
+Selections are **OR within**, **AND between** dimensions. Each facet excludes
+its own filter, keeping its alternatives available. Thus selecting an AWS
+service narrows usage types without an explicit hierarchy declaration.
+Incompatible selections remain pinned and removable, marked unavailable.
+
+The search icon replaces a heading with an input; blur restores the heading
+with an active indicator. Search covers the entire currently available category
+domain and filters choices, not source records. Selected values remain pinned.
+The × clears the search, while clicking a selected row removes that selection.
+Lists support native wheel scrolling and keyboard arrows/Home/End. Horizontal
+scrolling and arrow buttons reveal additional dimensions.
+
+`.raw` returns all source records; `.filtered` returns selected records. Both
+are detached snapshots. `.set_data(data)` refreshes the source and prunes
+missing selections. `.clear()` clears selections independently of search.
+Only aggregate category data travels to the browser; virtualization bounds
+rendered rows. Source normalization and aggregation remain in memory: for
+large sources, preaggregate additive metrics at the needed dimension grain
+in SQL before passing them to the grid. Do not sum precomputed means.
 
 ## Reference
 

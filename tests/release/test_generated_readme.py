@@ -102,6 +102,22 @@ def totals(grouped_table, col):
     ast.parse(code)
 
 
+def test_dimension_grid_excerpt_extracts_the_input_call():
+    source = """@app.cell
+def facets(DimensionGrid, mo):
+    mo.ui.anywidget(DimensionGrid(
+        con.sql("SELECT service, usage_type, cost FROM costs"),
+        metric="cost", multiple=True,
+    ))
+    return
+"""
+    code = docs.example_code(source, "facets", mode="call")
+    assert code.startswith("DimensionGrid(")
+    assert "multiple=True" in code
+    assert "mo.ui.anywidget" not in code
+    ast.parse(code)
+
+
 def test_call_mode_extracts_real_layout_options_without_data_preparation():
     source = """@app.cell
 def layout_demo(EvidentialTable, rows):

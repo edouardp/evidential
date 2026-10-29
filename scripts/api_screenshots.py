@@ -40,6 +40,7 @@ NOTEBOOK = ROOT / "notebooks" / "49_api_screenshots.py"
 GALLERY_NOTEBOOK = ROOT / "notebooks" / "50_graphics_gallery.py"
 STUDIO_NOTEBOOK = ROOT / "notebooks" / "21_studio_dashboard.py"
 LAYOUT_NOTEBOOK = ROOT / "notebooks" / "51_table_layouts.py"
+DIMENSION_NOTEBOOK = ROOT / "notebooks" / "56_dimension_grid.py"
 OUT = ROOT / "docs" / "api" / "images"
 PREVIEW = ROOT / "docs" / "preview.png"
 GALLERY_OUT = ROOT / "docs" / "img" / "graphics"
@@ -179,7 +180,7 @@ def _launch(playwright):
 
 def _wait_for_tables(page, targets: list[tuple[Path, str]]) -> None:
     for cell in [cell for _, cell in targets]:
-        page.locator(f'[data-cell-name="{cell}"] .et-table').wait_for(state="visible", timeout=60_000)
+        page.locator(f'[data-cell-name="{cell}"] :is(.et-table, .edg-root)').wait_for(state="visible", timeout=60_000)
     page.wait_for_function("document.fonts.status === 'loaded'")
     page.wait_for_timeout(500)
 
@@ -190,7 +191,7 @@ HOVER_TARGETS = {"graphic_point_overlaps": ".et-point-composite"}
 
 
 def _capture(page, cell: str, path: Path) -> Path:
-    root = page.locator(f'[data-cell-name="{cell}"] .et-root')
+    root = page.locator(f'[data-cell-name="{cell}"] :is(.et-root, .edg-root)')
     root.scroll_into_view_if_needed()
     # Let the table keep its configured width while the screenshot gains the
     # same 20px white border the documentation used to draw around each table.
@@ -235,6 +236,7 @@ def _notebook_targets() -> list[tuple[Path, list[tuple[Path, str]]]]:
         (GALLERY_NOTEBOOK, GALLERY),
         (STUDIO_NOTEBOOK, [(ROOT / "docs" / "img" / "studio-table.png", "revenue_table")]),
         (LAYOUT_NOTEBOOK, LAYOUTS),
+        (DIMENSION_NOTEBOOK, [(ROOT / "docs" / "img" / "dimension-grid.png", "orders_grid")]),
     ]
 
 

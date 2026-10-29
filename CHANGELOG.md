@@ -4,6 +4,16 @@ All notable changes to this project are documented in this file. The format is
 based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this
 project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Unreleased
+
+### Added
+
+- `DimensionGrid`, a separate anywidget with cross-filtered category bars,
+  per-dimension string search, mouse scrolling, virtualized lists, horizontal
+  navigation, pinned selections and safe parameterized SQL predicates.
+- Notebook 56: Needful Things orders linked to monthly sales, plus a
+  high-cardinality cloud-cost example with twenty dimensions.
+
 ## 0.2.0 (2026-10-28)
 
 ### Added

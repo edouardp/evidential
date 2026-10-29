@@ -1137,13 +1137,16 @@ including null categories. Apply it to a relation with the same field names.
 Selections are **OR within**, **AND between** dimensions. Each facet excludes
 its own filter, keeping its alternatives available. Thus selecting an AWS
 service narrows usage types without an explicit hierarchy declaration.
-Incompatible selections remain pinned and removable, marked unavailable.
+Incompatible selections remain in the list and removable, marked unavailable.
 
 The search icon replaces a heading with an input; blur restores the heading
 with an active indicator. Search covers the entire currently available category
-domain and filters choices, not source records. Selected values remain pinned.
+domain and filters choices, not source records. Selected values remain in
+ranked order, including through searches, with bold text and a full-height
+6px dark red strip to the left. Selection does not move an item to the top.
 The × clears the search, while clicking a selected row removes that selection.
-Lists support native wheel scrolling and keyboard arrows/Home/End. Horizontal
+Lists have slim vertical scrollbars, native wheel scrolling and keyboard
+arrows/Home/End. Horizontal
 scrolling and arrow buttons reveal additional dimensions.
 
 `.raw` returns all source records; `.filtered` returns selected records. Both

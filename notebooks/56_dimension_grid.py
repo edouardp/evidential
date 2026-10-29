@@ -43,9 +43,11 @@ def introduction(mo):
     Each **⌕** replaces the heading with a string search. Moving focus away
     restores the heading; **⌕●** indicates an active search. Open it again to
     edit, or use **×** to clear. Search filters category choices, not the linked
-    data: select a result to apply it. Selected values stay pinned and removable.
+    data: select a result to apply it. Selected values keep their ranked positions,
+    with bold text and a full-height dark red marker. They remain in the list
+    during searches, so you can remove them without clearing the search.
 
-    Use the mouse wheel to scroll a category list. Horizontal scrolling and the
+    Use the mouse wheel or slim scrollbar to scroll a category list. Horizontal scrolling and the
     arrow buttons reveal more dimensions without making their columns narrower.
     Keyboard: Tab to a list, then arrows or Home/End; Enter/Space selects.
     """)
@@ -68,7 +70,9 @@ def orders_grid_doc(mo):
     Search and mouse-scroll ranked category lists; click to filter linked
     results. Other dimensions narrow automatically. The **⌕** switches the
     heading to a search input, while horizontal scrolling and arrow controls
-    keep large sets of dimensions usable. Selected values stay visible.
+    keep large sets of dimensions usable. Selected values keep their ranked
+    positions, marked with bold text and a dark red strip; slim scrollbars
+    make longer category lists easy to navigate.
 
     This example uses Evidence's committed `needful_things.orders` sample and
     links to monthly sales below. The same notebook also demonstrates 230
@@ -137,7 +141,7 @@ def cloud_doc(mo):
     or search for **RDS**. Select it and **Usage type** narrows to its 100 usage
     types. Search `Backup` there to find it anywhere in the ranking. Selection
     is OR within a dimension, AND between dimensions. Incompatible selections
-    stay pinned with an unavailable value so you can remove them.
+    remain in the list with an unavailable value so you can remove them.
 
     The arrow buttons navigate all twenty dimensions; trackpads and the native
     horizontal scrollbar work too. Only visible category buttons are rendered.

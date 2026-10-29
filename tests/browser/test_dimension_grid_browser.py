@@ -36,6 +36,20 @@ def test_wheel_horizontal_navigation_search_and_keyboard(page, live_server):
     )
     dimension = page.locator(".edg-dimension").first
     listing = dimension.locator(".edg-list")
+    fifth = listing.locator(".edg-row").nth(4)
+    before = fifth.bounding_box()
+    fifth.click()
+    selected = listing.locator('.edg-row[aria-pressed="true"]')
+    expect(selected).to_contain_text("Category 4")
+    assert selected.bounding_box()["y"] == before["y"]
+    assert selected.evaluate("el => getComputedStyle(el).fontWeight") == "700"
+    marker = selected.evaluate("""el => {
+      const style = getComputedStyle(el, '::before');
+      return {width: style.width, height: style.height, color: style.backgroundColor};
+    }""")
+    assert marker == {"width": "6px", "height": "28px", "color": "rgb(139, 30, 45)"}
+    assert listing.evaluate("el => getComputedStyle(el).scrollbarWidth") == "thin"
+    selected.click()
     listing.hover()
     page.mouse.wheel(0, 1100)
     page.wait_for_function("document.querySelector('.edg-list').scrollTop > 500")
@@ -47,12 +61,12 @@ def test_wheel_horizontal_navigation_search_and_keyboard(page, live_server):
     page.wait_for_function("document.querySelector('.edg-track').scrollLeft < 1")
     dimension.get_by_role("button", name="Search Dimension 0", exact=True).click()
     search = dimension.get_by_role("searchbox")
-    search.fill("Category 229")
+    search.fill("Category 228")
     expect(dimension.locator(".edg-row")).to_have_count(1)
     dimension.locator(".edg-row").click()
     expect(search).to_be_hidden()
     expect(dimension.locator(".edg-search-toggle")).to_have_class("edg-search-toggle edg-filtered")
-    expect(dimension.locator(".edg-pinned .edg-row")).to_have_attribute("aria-pressed", "true")
+    expect(dimension.locator('.edg-list .edg-row[aria-pressed="true"]')).to_have_count(1)
     dimension.locator(".edg-search-toggle").click()
     dimension.locator(".edg-search-toggle").click()
     listing.focus()
@@ -82,14 +96,15 @@ def test_needful_things_and_cloud_demo_cross_filter_with_a_live_kernel(page):
         orders.screenshot(path="/private/tmp/evidential-dimensions-orders.png")
         category = orders.get_by_role("region", name="Category", exact=True)
         category.locator(".edg-row").first.click()
-        expect(category.locator(".edg-pinned .edg-row")).to_have_count(1)
+        expect(category.locator('.edg-row[aria-pressed="true"]')).to_have_count(1)
         item = orders.get_by_role("region", name="Item", exact=True)
         expect(item.locator(".edg-status")).to_have_text("3 available")
         # A source-linked monthly result changes after filtering (sum rather than a copied fixture).
         expect(monthly.locator("tbody tr").first).not_to_have_text(unfiltered_month)
-        category.locator(".edg-list .edg-row").first.click()
-        expect(category.locator(".edg-pinned .edg-row")).to_have_count(2)
+        category.locator(".edg-list .edg-row").nth(1).click()
+        expect(category.locator('.edg-row[aria-pressed="true"]')).to_have_count(2)
         expect(item.locator(".edg-status")).to_have_text("6 available")
+        orders.screenshot(path="/private/tmp/evidential-dimensions-selected.png")
         expect(cloud.locator(".edg-dimension")).to_have_count(20)
         service = cloud.get_by_role("region", name="Service", exact=True)
         service.locator(".edg-search-toggle").click()

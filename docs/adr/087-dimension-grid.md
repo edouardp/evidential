@@ -38,7 +38,7 @@ Selections are OR within a dimension and AND across dimensions. Each category
 list applies all selections except its own dimension's filter. This
 disjunctive faceting keeps alternatives available without breaking hierarchy:
 selecting RDS constrains usage types to those belonging to RDS. Incompatible
-selections remain pinned and removable with an unavailable metric. Empty
+selections remain in the list and removable with an unavailable metric. Empty
 selection means the entire source. Null is a distinct selectable category.
 Multiple selection is enabled by default: each click toggles a category without
 modifier keys. `multiple=False` opts into one selection per dimension.
@@ -53,10 +53,13 @@ The browser owns transient search and scroll state. Search covers all available
 categories, not a truncated ranking; it narrows choices rather than selecting
 records by substring. The search icon replaces the heading with an input and
 close button. Blur restores the heading, retaining the query and a small active
-indicator. Selected values stay pinned outside the search results.
+indicator. Selected values remain in the same ranked list, including when
+they do not match the search. Selecting a row does not promote it to the top
+or change the scrolling position. Bold text and a full-height, six-pixel dark
+red strip on the left identify selected rows without shifting their labels.
 
-Each dimension has native vertical wheel scrolling with a fixed-row virtual
-window and small overscan. The outer strip has native horizontal scrolling,
+Each dimension has slim native vertical scrollbars and wheel scrolling with
+a fixed-row virtual window and small overscan. The outer strip has native horizontal scrolling,
 arrow navigation and minimum column widths. Keyboard navigation reaches
 off-screen categories. Search inputs and scroll state survive facet updates.
 The dedicated bundle reuses formatting and safe DOM helpers while leaving the

@@ -1634,7 +1634,9 @@ This attaches an Iceberg REST catalog using ambient AWS credentials. See
 Search and mouse-scroll ranked category lists; click to filter linked
 results. Other dimensions narrow automatically. The **⌕** switches the
 heading to a search input, while horizontal scrolling and arrow controls
-keep large sets of dimensions usable. Selected values stay visible.
+keep large sets of dimensions usable. Selected values keep their ranked
+positions, marked with bold text and a dark red strip; slim scrollbars
+make longer category lists easy to navigate.
 
 This example uses Evidence's committed `needful_things.orders` sample and
 links to monthly sales below. The same notebook also demonstrates 230

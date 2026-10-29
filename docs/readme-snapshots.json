@@ -5,7 +5,7 @@
     "notebooks/49_api_screenshots.py": "219de292a242152427ca2e62163eb787c5c7355f974909eff90bd0c76ac5606b",
     "notebooks/50_graphics_gallery.py": "e235905ba1d861ff65cca5089cce5d2f0bb28b349d8919c314267cb6921f1848",
     "notebooks/51_table_layouts.py": "fc2b54717875601b8006e79bb0a5d4c1725d62453e53d2115c1ac19a745d9c95",
-    "notebooks/56_dimension_grid.py": "f7d3d9072acaca349af82071293dd481d656b2cc8a2b7880bb030a962bb40180",
+    "notebooks/56_dimension_grid.py": "2f6ff5206e128b9b2650c03b45e38757e1fbf9c0a06a58c2acf80677e879e044",
     "notebooks/data/46_football_england_2024.json": "aa8d550e7bb3e776dfd2dbfee5dd2cd57ab14a66c5c036dd393001055b55ff03",
     "notebooks/data/50_europe_trade_2024.json": "04a22223c3b1a958255b27b41ad83ff47ca528f3f985f7db579c2e75f05f525e",
     "notebooks/sample_data/needful_things/orders.parquet": "b373511b4f7a0547b704022b055655b6d3bafc2505a2a573292b206417fe3eb4",
@@ -42,8 +42,8 @@
     "src/evidential/query.py": "1474b03ca11f438611b59a911221cf34625621b12af3c2871ed94710d5808049",
     "src/evidential/rows.py": "d0011886124d330e596627f9c9c39202346cd5bab6e35a0056e779f6fb3af948",
     "src/evidential/rules.py": "eb0142d511b63a5b4d0725f70599084784ddb82130655c72e8ff36ce816ed104",
-    "src/evidential/static/dimension-grid.css": "e923da73e29d033fcef186eaf35250553cd39d74352199a7692667c3cd935815",
-    "src/evidential/static/dimension-grid.js": "201e5e3c5316f81df07e3d96f38fc15c2cd440b48c6501062b869dad3201ce01",
+    "src/evidential/static/dimension-grid.css": "a69ec5e11ecd4ca9fa4f15c16db617ba220a1cf9422c48e6e9d5dac57bb6627e",
+    "src/evidential/static/dimension-grid.js": "7f4375fbcc1ee3c49e80baefc5b1e131c7b6bd5a761a86ffbde12bec23cac341",
     "src/evidential/static/table.css": "4bd40e339864d28c3db5406c4fe0ff064f4ee3b1b618d7364de1f2791fa6b48c",
     "src/evidential/static/table.js": "0613a53f2f8410247578aa3dc01d72548b44ef0ddfbe79fd32ad090681e728bd",
     "src/evidential/table.py": "3f635ffd925ec907c71a3b675d2ffaf17f9fc61e21acb46e3bbc6573bd9cb9b6",
@@ -163,7 +163,7 @@
     "docs/img/graphics/point-overlaps.png": {
       "notebook": "notebooks/50_graphics_gallery.py",
       "cell": "graphic_point_overlaps",
-      "sha256": "3e32c01b5bc449d03f530c99cb7a15ed5c2d85b4721eef2708aac06e3168ffef"
+      "sha256": "f7854d318e5968e62140e3dae8663a9ba4e513e0a8f3bbb14bda68ffc2c6982e"
     },
     "docs/img/graphics/boxplot.png": {
       "notebook": "notebooks/50_graphics_gallery.py",
@@ -333,7 +333,7 @@
     "docs/img/dimension-grid.png": {
       "notebook": "notebooks/56_dimension_grid.py",
       "cell": "orders_grid",
-      "sha256": "3e39fe292e7e01d0cb6edaf93c25bf5ed9ef8fa06fa77bff1b62d1580739e229"
+      "sha256": "aef51f1a32a2248addd013e5d4afa6e490c617d7e30cef8211339e5c84587bbf"
     }
   }
 }

@@ -49,16 +49,20 @@ test("search covers low-ranked categories and retains its indicator on blur", ()
   cleanup();
 });
 
-test("x clears a search, selections remain visible through nonmatching searches", () => {
+test("selection stays in ranked order and remains visible through nonmatching searches", () => {
   const { el, state, saves, cleanup } = mount();
-  el.querySelector(".edg-row").click();
-  assert.deepEqual(state.selected, { service: ["Service 0"] });
+  const original = [...el.querySelectorAll(".edg-category")].map(row => row.textContent);
+  el.querySelectorAll(".edg-row")[4].click();
+  assert.deepEqual(state.selected, { service: ["Service 4"] });
+  assert.deepEqual([...el.querySelectorAll(".edg-category")].map(row => row.textContent), original);
+  assert.equal(el.querySelectorAll(".edg-row")[4].getAttribute("aria-pressed"), "true");
+  assert.equal(el.querySelector(".edg-pinned"), null);
   searchFor("service 229");
-  assert.equal(el.querySelector(".edg-pinned .edg-category").textContent, "Service 0");
+  assert.deepEqual([...el.querySelectorAll(".edg-category")].map(row => row.textContent), ["Service 4", "Service 229"]);
   el.querySelector(".edg-search-toggle").click();
   assert.equal(el.querySelector("input").value, "");
-  assert.match(el.querySelector(".edg-status").textContent, /229 available/);
-  el.querySelector(".edg-pinned .edg-row").click();
+  assert.match(el.querySelector(".edg-status").textContent, /230 available/);
+  el.querySelector('[aria-pressed="true"]').click();
   assert.deepEqual(state.selected, {});
   assert.equal(saves(), 2);
   cleanup();
@@ -67,8 +71,8 @@ test("x clears a search, selections remain visible through nonmatching searches"
 test("single selections replace and multiple selections accumulate; reset clears", () => {
   for (const multiple of [false, true]) {
     const { el, state, cleanup } = mount({ multiple });
-    el.querySelector(".edg-list .edg-row").click();
-    el.querySelector(".edg-list .edg-row").click();
+    el.querySelectorAll(".edg-list .edg-row")[0].click();
+    el.querySelectorAll(".edg-list .edg-row")[1].click();
     assert.deepEqual(state.selected.service, multiple ? ["Service 0", "Service 1"] : ["Service 1"]);
     el.querySelector(".edg-reset").click();
     assert.deepEqual(state.selected, {});
@@ -84,6 +88,20 @@ test("scrolling windows far down the dimension without growing the DOM", () => {
   assert.ok(el.querySelectorAll(".edg-row").length < 30);
   assert.match(el.querySelector(".edg-category").textContent, /Service 8996/);
   assert.deepEqual(windowRange(10, 0, 280), [0, 10]);
+  cleanup();
+});
+
+test("selection and facet refresh preserve the scrolled position", () => {
+  const { el, model, state, cleanup } = mount({ count: 10000 });
+  const list = el.querySelector(".edg-list");
+  list.scrollTop = 28 * 500;
+  list.dispatchEvent(new window.Event("scroll"));
+  const before = [...el.querySelectorAll(".edg-category")].map(row => row.textContent);
+  el.querySelectorAll(".edg-row")[5].click();
+  model.set("facets", state.facets.map(facet => ({ ...facet, items: [...facet.items] })));
+  assert.equal(list.scrollTop, 28 * 500);
+  assert.deepEqual([...el.querySelectorAll(".edg-category")].map(row => row.textContent), before);
+  assert.equal(el.querySelectorAll(".edg-row")[5].getAttribute("aria-pressed"), "true");
   cleanup();
 });
 

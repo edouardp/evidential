@@ -10,7 +10,8 @@ project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 - `DimensionGrid`, a separate anywidget with cross-filtered category bars,
   per-dimension string search, mouse scrolling, virtualized lists, horizontal
-  navigation, pinned selections and safe parameterized SQL predicates.
+  navigation, in-place selections marked in bold with dark red strips, slim
+  vertical scrollbars and safe parameterized SQL predicates.
 - Notebook 56: Needful Things orders linked to monthly sales, plus a
   high-cardinality cloud-cost example with twenty dimensions.
 

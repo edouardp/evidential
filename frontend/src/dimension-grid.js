@@ -62,14 +62,13 @@ export default {
       const search = h("input", { type: "search", class: "edg-search", "aria-label": `Search ${title}`, placeholder: title, hidden: true });
       const toggle = h("button", { type: "button", class: "edg-search-toggle", "aria-label": `Search ${title}`, "aria-expanded": "false" }, "⌕");
       const header = h("div", { class: "edg-header" }, [heading, search, toggle]);
-      const pinned = h("div", { class: "edg-pinned", role: "group", "aria-label": `Selected ${title}` });
       const viewport = h("div", { class: "edg-list", role: "group", "aria-label": `${title} categories`, tabindex: "0" });
       const content = h("div", { class: "edg-content" });
       viewport.append(content);
       const status = h("div", { class: "edg-status", "aria-live": "polite" });
-      const column = h("section", { class: "edg-dimension", "aria-label": title }, [header, pinned, viewport, status]);
+      const column = h("section", { class: "edg-dimension", "aria-label": title }, [header, viewport, status]);
       track.append(column);
-      const state = { facet, title, column, heading, search, toggle, pinned, viewport, content, status, query: "", items: [], maximum: 1 };
+      const state = { facet, title, column, heading, search, toggle, viewport, content, status, query: "", items: [], selected: new Set(), maximum: 1 };
       function close() {
         search.hidden = true;
         heading.hidden = false;
@@ -138,7 +137,7 @@ export default {
       ]);
       button.onclick = () => {
         select(state.facet.name, item.value);
-        // Selection moves between the scrolling and pinned lists. Keep focus.
+        // Rendering replaces the row buttons. Keep focus on the same category.
         [...state.column.querySelectorAll(".edg-row")].find(row => row.dataset.key === key(item.value))?.focus({ preventScroll: true });
       };
       return button;
@@ -150,21 +149,23 @@ export default {
       const focusKey = content.contains(document.activeElement) ? document.activeElement.dataset.key : null;
       content.style.paddingTop = `${start * ROW_HEIGHT}px`;
       content.style.paddingBottom = `${(items.length - end) * ROW_HEIGHT}px`;
-      content.replaceChildren(...items.slice(start, end).map((item, offset) => rowButton(state, item, false, start + offset)));
-      if (!items.length) content.append(h("div", { class: "edg-empty" }, state.pinned.hidden ? "No matching categories" : "No other matching categories"));
+      content.replaceChildren(...items.slice(start, end).map((item, offset) => rowButton(state, item, state.selected.has(key(item.value)), start + offset)));
+      if (!items.length) content.append(h("div", { class: "edg-empty" }, "No matching categories"));
       if (focusKey !== null) [...content.children].find(row => row.dataset.key === focusKey)?.focus({ preventScroll: true });
     }
 
     function updateColumn(state) {
       const selected = new Set((model.get("selected")?.[state.facet.name] || []).map(key));
-      const chosen = state.facet.items.filter(item => selected.has(key(item.value)));
+      state.selected = selected;
       state.maximum = state.facet.items.reduce((maximum, item) => Math.max(maximum, Math.abs(item.metric || 0)), 1e-30);
-      state.items = state.facet.items.filter(item => !selected.has(key(item.value)) && label(item.value).toLocaleLowerCase().includes(state.query));
-      state.pinned.hidden = !chosen.length;
-      state.pinned.replaceChildren(...chosen.map(item => rowButton(state, item, true, -1)));
-      const count = state.items.length;
-      state.status.textContent = `${count.toLocaleString("en")} ${state.query ? "matching" : "available"}${chosen.length ? ` · ${chosen.length} selected` : ""}`;
-      state.viewport.scrollTop = Math.min(state.viewport.scrollTop, Math.max(0, count * ROW_HEIGHT - (state.viewport.clientHeight || options.height)));
+      let matches = 0;
+      state.items = state.facet.items.filter(item => {
+        const match = label(item.value).toLocaleLowerCase().includes(state.query);
+        if (match) matches++;
+        return match || selected.has(key(item.value));
+      });
+      state.status.textContent = `${matches.toLocaleString("en")} ${state.query ? "matching" : "available"}${selected.size ? ` · ${selected.size} selected` : ""}`;
+      state.viewport.scrollTop = Math.min(state.viewport.scrollTop, Math.max(0, state.items.length * ROW_HEIGHT - (state.viewport.clientHeight || options.height)));
       drawWindow(state);
     }
 

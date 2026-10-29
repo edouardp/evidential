@@ -24,12 +24,17 @@ is a static report. Both run without access to the author's local datasets.
 | Already computed dataframe, Arrow table or records | `existing_table.set_data(data)` |
 | SQL query controlled by notebook inputs | `LiveEvidentialTable(..., auto_run=False)` then `set_controls(...)` |
 | Another table's selected record | `select="stable_id"`, then read `wrapped.widget.selected` in a separate cell |
+| Several category selections | `DimensionGrid`, then read `wrapped.value["selected"]` and update existing results using `.filtered` or `.where()` |
 | Several model changes together | `with table.hold_sync():` around model updates |
 | Plain raw grid beside a report | `mo.ui.table(wrapped.widget.raw, selection=None)` in the updating cell |
 
 `hold_sync()` batches widget messages. It does not freeze computation, hide
 dependencies or prevent marimo from rerunning a cell. Keep the widget-creation
 cell independent even when batching updates elsewhere.
+
+Read [Dimension slicers](dimensions.md) for category search, multi-selection,
+cross-filter semantics and parameterized linked queries. Use a deliberate
+subset of useful dimensions rather than every available source field.
 
 `LiveEvidentialTable` binds `$name` or `{name}` placeholders to values passed
 to `set_controls`. Pass controls or their `.value` as appropriate; values are

@@ -54,7 +54,8 @@ explorers can require a local data bundle; their introduction describes its loca
 | [`53_nba_shooting.py`](53_nba_shooting.py) | Local NBA shot-detail archives: season/phase/team filters, weighted player shooting leaders, shot-mix stacks and fixed-scale sparklines, linked shot-zone benchmarks and game logs. Requires `~/datasets/nba_data` or `NBA_DATASET`. |
 | [`54_legends.py`](54_legends.py) | Wrapping legends: one/two stacks, nine age-band points with sampled colours, real football W/D/L strips, bars with target dots, and dumbbells with coloured lines and endpoint dots. Uses committed snapshots and runs offline. |
 | [`55_tooltips.py`](55_tooltips.py) | Full numeric values, overlapping dots, named stacks and split neutral categories, real match metadata, ranges, box plots, multiline overrides, keyboard inspection, signed-area swatches and separate graphics/text hover delays. Runs offline. |
-| [`56_dimension_grid.py`](56_dimension_grid.py) | Searchable, mouse-scrollable dimension slicers linked to Needful Things monthly sales; twenty illustrative cloud dimensions demonstrate 230 services, 23,000 usage types, multiple selection and hierarchical filtering. Runs offline. |
+| [`56_dimension_grid.py`](56_dimension_grid.py) | Searchable, mouse-scrollable dimension slicers linked to Needful Things monthly sales, with multiple selection and a link to the CUR explorer. Runs offline. |
+| [`57_aws_cur_explorer.py`](57_aws_cur_explorer.py) | Real AWS CUR product explorer: nine cross-filtered dimensions, cost and charge counts, cost-driver totals with daily trends and unit-safe quantities, plus searchable individual line items. Requires `~/datasets/aws-cur-example` or `AWS_CUR_DATASET`. |
 
 `sample_data/needful_things/orders.parquet` is Evidence's demo dataset, copied
 from the published docs site.

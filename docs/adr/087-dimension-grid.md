@@ -66,6 +66,10 @@ The dedicated bundle reuses formatting and safe DOM helpers while leaving the
 table lifecycle independent. Both bundles are committed and package-checked.
 The slicer uses a white surface and dark text, matching the table examples
 regardless of the browser's preferred colour scheme.
+Its inherited font and `0.75rem` baseline match the table. Compact 20px rows
+share one JavaScript height constant with CSS through a custom property so
+virtualized scrolling and rendered geometry stay aligned. Titles are bold;
+availability and selection counts are centered below each dimension.
 
 ### Consequences
 
@@ -80,9 +84,15 @@ should be preaggregated at the required dimension grain before constructing
 the grid; sum/count weights compose, but precomputed means require careful
 weighting. A database-paged backend would be a separate future decision.
 
-Notebook 56 links the committed Needful Things orders to monthly sales and
-stress-tests 230 illustrative services, 23,000 usage types and twenty
-dimensions. Unit and live-browser tests cover aggregation, hierarchy, safe
+Notebook 56 links the committed Needful Things orders to monthly sales.
+Notebook 57 replaces the synthetic stress example with the local processed
+`aws-cur-example` product: nine useful dimensions, cost-driver totals, daily
+trends and individual line items. Additive cost is preaggregated at the full
+filter grain for the slicer; linked results filter the original line items
+before aggregation. Detail row limits do not affect totals or shares, and
+usage quantities are grouped within billing units.
+
+Unit and live-browser tests cover aggregation, hierarchy, safe
 SQL, complete search, wheel scrolling, keyboard navigation and overflow.
 
 ## More Information

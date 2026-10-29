@@ -35,6 +35,7 @@ def test_wheel_horizontal_navigation_search_and_keyboard(page, live_server):
         }"""
     )
     dimension = page.locator(".edg-dimension").first
+    assert dimension.locator(".edg-status").evaluate("el => getComputedStyle(el).textAlign") == "center"
     listing = dimension.locator(".edg-list")
     fifth = listing.locator(".edg-row").nth(4)
     before = fifth.bounding_box()
@@ -47,7 +48,7 @@ def test_wheel_horizontal_navigation_search_and_keyboard(page, live_server):
       const style = getComputedStyle(el, '::before');
       return {width: style.width, height: style.height, color: style.backgroundColor};
     }""")
-    assert marker == {"width": "6px", "height": "28px", "color": "rgb(139, 30, 45)"}
+    assert marker == {"width": "6px", "height": "20px", "color": "rgb(139, 30, 45)"}
     assert listing.evaluate("el => getComputedStyle(el).scrollbarWidth") == "thin"
     selected.click()
     listing.hover()
@@ -82,16 +83,18 @@ def test_wheel_horizontal_navigation_search_and_keyboard(page, live_server):
     assert page.evaluate("document.documentElement.scrollWidth <= innerWidth")
 
 
-def test_needful_things_and_cloud_demo_cross_filter_with_a_live_kernel(page):
+def test_needful_things_demo_cross_filters_with_a_live_kernel(page):
     with _server(ROOT / "notebooks" / "56_dimension_grid.py") as url:
         page.goto(url)
         orders = page.locator('[data-cell-name="orders_grid"] .edg-root')
         orders.wait_for(timeout=60_000)
-        cloud = page.locator('[data-cell-name="cloud_grid"] .edg-root')
-        cloud.wait_for(timeout=60_000)
+        assert orders.locator(".edg-title").evaluate("el => getComputedStyle(el).fontWeight") == "700"
         expect(orders.locator(".edg-dimension")).to_have_count(4)
         monthly = page.locator('[data-cell-name="monthly_table"] .et-table')
         expect(monthly.locator("tbody tr").first).to_contain_text("Jan-19", timeout=30_000)
+        grid_font = orders.evaluate("el => [getComputedStyle(el).fontSize, getComputedStyle(el).fontFamily]")
+        table_font = monthly.evaluate("el => [getComputedStyle(el).fontSize, getComputedStyle(el).fontFamily]")
+        assert grid_font == table_font
         unfiltered_month = monthly.locator("tbody tr").first.inner_text()
         orders.screenshot(path="/private/tmp/evidential-dimensions-orders.png")
         category = orders.get_by_role("region", name="Category", exact=True)
@@ -105,16 +108,3 @@ def test_needful_things_and_cloud_demo_cross_filter_with_a_live_kernel(page):
         expect(category.locator('.edg-row[aria-pressed="true"]')).to_have_count(2)
         expect(item.locator(".edg-status")).to_have_text("6 available")
         orders.screenshot(path="/private/tmp/evidential-dimensions-selected.png")
-        expect(cloud.locator(".edg-dimension")).to_have_count(20)
-        service = cloud.get_by_role("region", name="Service", exact=True)
-        service.locator(".edg-search-toggle").click()
-        service.get_by_role("searchbox").fill("RDS")
-        service.locator(".edg-list .edg-row").click()
-        usage = cloud.get_by_role("region", name="Usage Type", exact=True)
-        expect(usage.locator(".edg-status")).to_have_text("100 available", timeout=30_000)
-        assert all(text.startswith("RDS:") for text in usage.locator(".edg-category").all_text_contents())
-        usage.locator(".edg-search-toggle").click()
-        usage.get_by_role("searchbox").fill("Backup")
-        expect(usage.locator(".edg-list .edg-row")).to_have_count(1)
-        expect(usage.locator(".edg-category")).to_have_text("RDS: Backup 099")
-        cloud.screenshot(path="/private/tmp/evidential-dimensions-cloud.png")

@@ -59,3 +59,52 @@ def nba_dataset(tmp_path):
             member.size = len(payload)
             archive.addfile(member, io.BytesIO(payload))
     return directory.parent
+
+
+@pytest.fixture
+def aws_cur_dataset(tmp_path):
+    """A small CUR product for deterministic query and live-widget tests."""
+    import datetime as dt
+
+    import pyarrow as pa
+    import pyarrow.parquet as pq
+
+    directory = tmp_path / "aws-cur-example" / "data" / "processed"
+    directory.mkdir(parents=True)
+    records = []
+    for index, (service, usage, region, kind, quantity, unit, cost, effective, day, environment) in enumerate(
+        [
+            ("AmazonRDS", "RDS:Instance", "eu-west-1", "DiscountedUsage", 2, "Hrs", 0, 12, 1, "prod"),
+            ("AmazonRDS", "RDS:Instance", "eu-west-1", "Usage", 1, "Hrs", 8, 0, 3, "prod"),
+            ("AmazonEC2", "EC2:Compute", "us-east-1", "Usage", 10, "Hrs", 20, 0, 1, "dev"),
+            ("AmazonEC2", "EC2:Storage", "us-east-1", "Usage", 5, "GB-Mo", 3, 0, 3, "dev"),
+            ("AmazonRDS", "RDS:Instance", "eu-west-1", "RIFee", 0, "Hrs", 5, 0, 3, ""),
+            ("AmazonEC2", "EC2:Compute", "us-east-1", "Credit", 0, "Hrs", -2, 0, 3, "dev"),
+        ]
+    ):
+        records.append(
+            {
+                "billing_month": "2018-10",
+                "usage_date": dt.date(2018, 10, day),
+                "identity_line_item_id": f"line-{index}",
+                "product_servicecode": service,
+                "line_item_product_code": service,
+                "line_item_usage_type": usage,
+                "product_region": region,
+                "line_item_usage_account_id": "test-account",
+                "line_item_line_item_type": kind,
+                "resource_tags_user_environment": environment,
+                "resource_tags_user_workload": "orders",
+                "resource_tags_user_cost_center": "platform",
+                "line_item_resource_id": f"resource-{index}",
+                "line_item_line_item_description": f"Test {usage}",
+                "pricing_unit": unit,
+                "line_item_usage_amount": float(quantity),
+                "line_item_currency_code": "USD",
+                "line_item_unblended_cost": float(cost),
+                "pricing_public_on_demand_cost": float(max(cost, 0)),
+                "reservation_effective_cost": float(effective),
+            }
+        )
+    pq.write_table(pa.Table.from_pylist(records), directory / "cur_line_items.parquet")
+    return directory.parent.parent

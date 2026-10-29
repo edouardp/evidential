@@ -1088,7 +1088,11 @@ a predicate.
 `DimensionGrid` is a separate anywidget input. It accepts the same data
 containers as `EvidentialTable`, infers string dimensions, and displays ranked
 category bars. See [notebook 56](../../notebooks/56_dimension_grid.py) for
-Needful Things orders linked to monthly sales and a high-cardinality demo.
+Needful Things orders linked to monthly sales.
+[Notebook 57](../../notebooks/57_aws_cur_explorer.py) explores a local AWS CUR
+product with selected dimensions, cost-driver trends and matching charges.
+See the [CUR explorer guide](../aws-cur-explorer.md) for setup, data grain and
+cost definitions.
 
 ```python
 from evidential import DimensionGrid
@@ -1148,6 +1152,8 @@ The × clears the search, while clicking a selected row removes that selection.
 Lists have slim vertical scrollbars, native wheel scrolling and keyboard
 arrows/Home/End. Horizontal
 scrolling and arrow buttons reveal additional dimensions.
+The grid shares the table's default inherited font at `0.75rem`, with compact
+20px rows, a bold title and centered availability/selection counts.
 
 `.raw` returns all source records; `.filtered` returns selected records. Both
 are detached snapshots. `.set_data(data)` refreshes the source and prunes

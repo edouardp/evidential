@@ -1641,8 +1641,8 @@ positions, marked with bold text and a dark red strip; slim scrollbars
 make longer category lists easy to navigate.
 
 This example uses Evidence's committed `needful_things.orders` sample and
-links to monthly sales below. The same notebook also demonstrates 230
-illustrative cloud services, 23,000 usage types, and twenty dimensions.
+links to monthly sales below. Notebook 57 applies the same slicer to the local AWS CUR data product,
+with linked cost-driver and line-item tables.
 
 ```python
 DimensionGrid(

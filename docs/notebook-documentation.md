@@ -37,6 +37,10 @@ dependency and configuration changes still invalidate it.
    `notebooks/50_graphics_gallery.py` (graphic examples),
    `notebooks/51_table_layouts.py` (layout examples) or another notebook
    registered in the capture script, such as `notebooks/21_studio_dashboard.py`.
+   `notebooks/56_dimension_grid.py` supplies the DimensionGrid example: its
+   complete constructor call is extracted and `.edg-root` is captured instead
+   of the table's `.et-root`. Notebook 57's local CUR product is not required
+   to regenerate these portable screenshots.
    Keep a single table call in that cell. Use an inline `columns=[...]` list
    for column excerpts; complete-call excerpts can reference shared columns.
 2. Immediately above it, add a Markdown cell named `<table_cell>_doc`, with

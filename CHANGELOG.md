@@ -11,9 +11,18 @@ project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - `DimensionGrid`, a separate anywidget with cross-filtered category bars,
   per-dimension string search, mouse scrolling, virtualized lists, horizontal
   navigation, in-place selections marked in bold with dark red strips, slim
-  vertical scrollbars and safe parameterized SQL predicates.
-- Notebook 56: Needful Things orders linked to monthly sales, plus a
-  high-cardinality cloud-cost example with twenty dimensions.
+  vertical scrollbars, bold titles, centered category counts and safe
+  parameterized SQL predicates.
+- Notebook 56: Needful Things orders linked to monthly sales. Notebook 57
+  explores the local AWS CUR data product with nine useful slicers, full cost
+  totals, daily cost-driver trends and searchable individual charges.
+- The agent skill covers DimensionGrid semantics, persistent linked results,
+  SQL predicates and real-product aggregation, with executable examples.
+
+### Changed
+
+- DimensionGrid uses the table's default font, compact 20px rows and tighter
+  header and column spacing.
 
 ## 0.2.0 (2026-10-28)
 

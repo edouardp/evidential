@@ -1,6 +1,6 @@
 # /// script
 # requires-python = ">=3.12"
-# dependencies = ["marimo", "duckdb>=1.3", "evidential"]
+# dependencies = ["marimo", "duckdb>=1.3", "pyarrow>=17", "evidential"]
 # ///
 """Searchable, scrollable category slicers, including high-cardinality dimensions."""
 
@@ -75,8 +75,8 @@ def orders_grid_doc(mo):
     make longer category lists easy to navigate.
 
     This example uses Evidence's committed `needful_things.orders` sample and
-    links to monthly sales below. The same notebook also demonstrates 230
-    illustrative cloud services, 23,000 usage types, and twenty dimensions.
+    links to monthly sales below. Notebook 57 applies the same slicer to the local AWS CUR data product,
+    with linked cost-driver and line-item tables.
     """)
     return
 
@@ -133,76 +133,15 @@ def update_monthly(connection, monthly_sales, orders_slicer):
 
 
 @app.cell(hide_code=True)
-def cloud_doc(mo):
+def cur_explorer_link(mo):
     mo.md("""
-    ## High cardinality: 230 services, 23,000 usage types, 20 dimensions
+    ## Explore AWS cost and usage
 
-    **Illustrative cloud costs**, generated locally. Scroll within **Service**,
-    or search for **RDS**. Select it and **Usage type** narrows to its 100 usage
-    types. Search `Backup` there to find it anywhere in the ranking. Selection
-    is OR within a dimension, AND between dimensions. Incompatible selections
-    remain in the list with an unavailable value so you can remove them.
-
-    The arrow buttons navigate all twenty dimensions; trackpads and the native
-    horizontal scrollbar work too. Only visible category buttons are rendered.
-    Aggregation runs in Python, and source records stay out of the browser.
-    For very large sources, pass a SQL-preaggregated relation at the required
-    dimension grain with `metric="cost"` and the default `aggregate="sum"`.
+    Open **57_aws_cur_explorer.py** for a real CUR explorer using the processed
+    product in `~/datasets/aws-cur-example`. Nine useful dimensions filter
+    cost-driver totals, daily sparklines and individual charges. Set
+    `AWS_CUR_DATASET` to use another local checkout of the data product.
     """)
-    return
-
-
-@app.cell
-def cloud_data():
-    services = ["RDS", "EC2", "Lambda", "S3", *[f"Service {index:03}" for index in range(4, 230)]]
-    tag_names = [
-        "project", "environment", "cost_center", "team", "owner", "application",
-        "product", "department", "business_unit", "billing_entity", "platform",
-        "support_tier", "lifecycle", "compliance", "purchase_option", "resource_group",
-    ]
-    cloud_records = [
-        {
-            "service": service,
-            "usage_type": f"{service}: {'Backup' if usage == 99 else 'Usage'} {usage:03}",
-            "region": ["us-east-1", "eu-west-1", "ap-southeast-2"][usage % 3],
-            "account": f"Account {index % 12 + 1:02}",
-            **{tag: f"{tag.replace('_', ' ').title()} {(index + usage + offset) % 8 + 1}" for offset, tag in enumerate(tag_names)},
-            "cost": round((230 - index) * (100 - usage) * 0.017, 2),
-        }
-        for index, service in enumerate(services)
-        for usage in range(100)
-    ]
-    return (cloud_records,)
-
-
-@app.cell
-def cloud_grid(DimensionGrid, cloud_records, mo):
-    cloud_slicer = mo.ui.anywidget(
-        DimensionGrid(
-            cloud_records,
-            metric="cost",
-            format="usd0",
-            multiple=True,
-            height=340,
-            dimension_width=240,
-            title="Cloud cost explorer",
-            subtitle="Illustrative data · 230 services · 23,000 usage types · 20 dimensions",
-            color="#2c83b8",
-        )
-    )
-    cloud_slicer
-    return (cloud_slicer,)
-
-
-@app.cell
-def cloud_selection(cloud_slicer, mo):
-    cloud_selected = cloud_slicer.value["selected"]
-    matching_costs = cloud_slicer.widget.filtered
-    mo.md(
-        f"**{len(matching_costs):,} matching records · "
-        f"${sum(row['cost'] for row in matching_costs):,.2f}**\n\n"
-        f"Selections: `{cloud_selected}`"
-    )
     return
 
 

@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { JSDOM } from "jsdom";
-import widget, { windowRange } from "./src/dimension-grid.js";
+import widget, { ROW_HEIGHT, windowRange } from "./src/dimension-grid.js";
 
 function mount({ count = 230, multiple = false } = {}) {
   const dom = new JSDOM("<!doctype html><body><main></main>", { pretendToBeVisual: true });
@@ -83,7 +83,7 @@ test("single selections replace and multiple selections accumulate; reset clears
 test("scrolling windows far down the dimension without growing the DOM", () => {
   const { el, cleanup } = mount({ count: 10000 });
   const list = el.querySelector(".edg-list");
-  list.scrollTop = 28 * 9000;
+  list.scrollTop = ROW_HEIGHT * 9000;
   list.dispatchEvent(new window.Event("scroll"));
   assert.ok(el.querySelectorAll(".edg-row").length < 30);
   assert.match(el.querySelector(".edg-category").textContent, /Service 8996/);
@@ -94,12 +94,12 @@ test("scrolling windows far down the dimension without growing the DOM", () => {
 test("selection and facet refresh preserve the scrolled position", () => {
   const { el, model, state, cleanup } = mount({ count: 10000 });
   const list = el.querySelector(".edg-list");
-  list.scrollTop = 28 * 500;
+  list.scrollTop = ROW_HEIGHT * 500;
   list.dispatchEvent(new window.Event("scroll"));
   const before = [...el.querySelectorAll(".edg-category")].map(row => row.textContent);
   el.querySelectorAll(".edg-row")[5].click();
   model.set("facets", state.facets.map(facet => ({ ...facet, items: [...facet.items] })));
-  assert.equal(list.scrollTop, 28 * 500);
+  assert.equal(list.scrollTop, ROW_HEIGHT * 500);
   assert.deepEqual([...el.querySelectorAll(".edg-category")].map(row => row.textContent), before);
   assert.equal(el.querySelectorAll(".edg-row")[5].getAttribute("aria-pressed"), "true");
   cleanup();

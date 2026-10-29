@@ -1,7 +1,7 @@
 import { h } from "./dom.js";
 import { formatTitle, formatValue } from "./format.js";
 
-const ROW_HEIGHT = 28;
+export const ROW_HEIGHT = 20;
 const OVERSCAN = 4;
 const key = value => JSON.stringify(value);
 const label = value => value === null ? "(Missing)" : String(value);
@@ -20,6 +20,7 @@ export default {
     root.style.setProperty("--edg-color", options.color);
     root.style.setProperty("--edg-height", `${options.height}px`);
     root.style.setProperty("--edg-width", `${options.dimension_width}px`);
+    root.style.setProperty("--edg-row-height", `${ROW_HEIGHT}px`);
     const titles = h("div", { class: "edg-titles" });
     if (options.title) titles.append(h("h3", { class: "edg-title" }, options.title));
     if (options.subtitle) titles.append(h("p", { class: "edg-subtitle" }, options.subtitle));

@@ -1,6 +1,6 @@
 ---
 name: evidential
-description: Build and refine interactive Python tables with Evidential, including marimo reports, DuckDB explorers, cell graphics, grouped summaries, and linked drill-downs. Use when the user requests Evidential or is working in an existing Evidential notebook or application.
+description: Build and refine interactive Python tables and dimension slicers with Evidential, including marimo reports, DuckDB explorers, cell graphics, grouped summaries, and linked drill-downs. Use when the user requests Evidential or is working in an existing Evidential notebook or application.
 license: MIT
 ---
 
@@ -28,6 +28,9 @@ do not need Node or a frontend build. Follow the project's dependency manager.
   [Cell graphics](references/graphics.md).
 - For reactive controls, selection and live queries, read
   [Marimo integration](references/marimo.md).
+- For searchable category filters and linked results, read
+  [Dimension slicers](references/dimensions.md). Check for the `DimensionGrid`
+  export first; this addition may be newer than the installed release.
 
 The bundled [report template](assets/report.py) and
 [linked explorer template](assets/explorer.py) are executable marimo notebooks
@@ -91,7 +94,7 @@ and units. For notebooks, run `marimo check` and execute the notebook with the
 project's Python environment. Check reactive changes as well as initial output.
 
 When a browser is available, render the actual marimo output and inspect the
-target `.et-root`: headings, visible labels, alignment, missing values, chart
+target `.et-root` or `.edg-root`: headings, visible labels, alignment, missing values, chart
 scales and scrolling at the intended width. Verify selection and controls keep
 the existing table in place. Do not describe unrendered output as visually
 verified. In this repository, follow its contributor checks and rebuild assets

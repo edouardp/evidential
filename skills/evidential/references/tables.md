@@ -15,6 +15,7 @@ the result of refinements. Automatic headings derive from column names.
 | Up to four significant figures | `.fmt("compact4")`: `1.148T`, `877.1B`; supported suffixes are 1–21 |
 | Readable scientific notation | `.fmt("sci")` renders a mantissa and superscript exponent |
 | Custom spreadsheet format | `.fmt('#,##0.00" kg"')` |
+| Twelve-digit AWS account IDs | `.fmt("000000000000")` preserves the full ID and leading zeros |
 | Negative styling | `.neg(color="red", bracket=True)` |
 | Adjacent repeated group labels | `.repeat_values(False)` suppresses display text, not source data |
 | Shared table options | `settings(...)`, overridden by explicit table keywords |

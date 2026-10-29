@@ -66,6 +66,25 @@ def test_report_template_runs_after_copying_outside_the_repository(installed_ski
     assert table.raw[0]["note"] == "Launch month."
 
 
+def test_dimension_slicer_reference_filters_persistent_results_after_copying(installed_skill):
+    document = installed_skill / "references/dimensions.md"
+    examples = re.findall(r"```python\n(.*?)\n```", document.read_text(), re.DOTALL)
+    namespace = {}
+    for example in examples:
+        exec(compile(example, str(document), "exec"), namespace)
+    slicer = namespace["slicer"].widget
+    results = namespace["results"].widget
+    assert results.raw == namespace["facts"]
+    slicer.selected = {"region": ["North"], "product": ["Lamp", "Chair"]}
+    exec(compile(examples[-1], str(document), "exec"), namespace)
+    assert namespace["results"].widget is results
+    assert sum(row["sales"] for row in results.raw) == 3000
+    assert slicer.where()[1] == ["North", "Lamp", "Chair"]
+    slicer.clear()
+    exec(compile(examples[-1], str(document), "exec"), namespace)
+    assert results.raw == namespace["facts"]
+
+
 def test_explorer_template_updates_in_place_and_binds_selection(installed_skill):
     notebook = runpy.run_path(str(installed_skill / "assets/explorer.py"))
     _, definitions = notebook["app"].run()

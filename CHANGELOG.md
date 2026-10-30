@@ -4,6 +4,16 @@ All notable changes to this project are documented in this file. The format is
 based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this
 project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Unreleased
+
+### Added
+
+- Notebook 58 explores the local OECD product with a 1960–2019 technical-recession
+  timeline by region, annual PPP GDP, debt and fiscal ratios, recession shares,
+  a year-range selector and linked quarterly growth bars. A source-series browser
+  retains units, dimensions and observation statuses across GDP, finance, debt
+  and external-sector datasets.
+
 ## 0.2.1 (2026-10-30)
 
 ### Added

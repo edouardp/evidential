@@ -108,3 +108,144 @@ def aws_cur_dataset(tmp_path):
         )
     pq.write_table(pa.Table.from_pylist(records), directory / "cur_line_items.parquet")
     return directory.parent.parent
+
+
+@pytest.fixture
+def oecd_dataset(tmp_path):
+    """Quarterly GDP with gaps, a boundary-spanning run and incompatible series."""
+    import datetime as dt
+
+    import pyarrow as pa
+    import pyarrow.parquet as pq
+
+    directory = tmp_path / "oecd" / "data" / "processed"
+    directory.mkdir(parents=True)
+
+    def observation(code, year, quarter, growth, **extra):
+        return {
+            "dataflow": "gdp_growth",
+            "dataflow_name": "Real GDP growth",
+            "ref_area": code,
+            "ref_area_label": {"USA": "United States", "NZL": "New Zealand", "OECD": "OECD"}[code],
+            "freq": "Q",
+            "freq_label": "Quarterly",
+            "adjustment": "Y",
+            "adjustment_label": "Calendar and seasonally adjusted",
+            "transaction": "B1GQ",
+            "transaction_label": "Gross domestic product",
+            "sector": "S1",
+            "counterpart_sector": "S1",
+            "activity": "_Z",
+            "expenditure": "_Z",
+            "instr_asset": "_Z",
+            "unit_measure": "PC",
+            "unit_measure_label": "Percentage change",
+            "price_base": "L",
+            "transformation": "G1",
+            "transformation_label": "Growth rate, period on period",
+            "table_identifier": "T0102",
+            "conf_status": "F",
+            "unit_mult": "0",
+            "multiplier": 1.0,
+            "period_start": dt.date(year, (quarter - 1) * 3 + 1, 1),
+            "year": year,
+            "quarter": quarter,
+            "time_period": f"{year}-Q{quarter}",
+            "obs_value": growth,
+            "obs_status": "A",
+            "obs_status_label": "Normal value",
+            **extra,
+        }
+
+    records = [
+        observation("USA", year, quarter, value)
+        for year, quarter, value in [
+            (1959, 4, -2.0),
+            (1960, 1, -1.0),
+            (1960, 2, 1.0),
+            (1960, 3, -0.5),
+            (1960, 4, 0.0),
+            (1961, 1, -1.0),
+            (1961, 2, -2.0),
+            (1961, 3, -3.0),
+            (1961, 4, -1.0),
+            (1962, 1, -2.0),
+            (1962, 2, 0.5),
+        ]
+    ]
+    records += [
+        observation("NZL", year, quarter, value)
+        for year, quarter, value in [
+            (1960, 2, -0.5),
+            (1960, 4, -0.4),
+            (1961, 1, -0.2),
+            (1961, 2, 0.0),
+            (1961, 3, 0.5),
+        ]
+    ]
+    records.append(observation("NZL", 1961, 4, None, obs_status="P", obs_status_label="Provisional value"))
+    records += [observation("OECD", 1960, quarter, -1.0) for quarter in (1, 2)]
+    records += [
+        observation("USA", 1960, 1, 99.0, transformation="GY"),
+        observation("USA", 1960, 1, -99.0, transaction="P6"),
+        observation("USA", 1960, 1, -99.0, adjustment="N"),
+        observation("USA", 1960, 1, -99.0, price_base="V"),
+    ]
+    pq.write_table(pa.Table.from_pylist(records), directory / "gdp_growth.parquet")
+    finance = [
+        {
+            "ref_area": "NZL",
+            "ref_area_label": "New Zealand",
+            "time_period": "1961",
+            "period_start": dt.date(1961, 1, 1),
+            "year": 1961,
+            "quarter": None,
+            "freq": "A",
+            "freq_label": "Annual",
+            "unit_measure": "USD",
+            "unit_measure_label": "US dollars",
+            "obs_value": 12.5,
+            "multiplier": 1_000_000.0,
+            "measure_label": "Public debt",
+            "sector_label": "General government",
+            "sector": "S13",
+            "category": "PF",
+            "edition": "YU",
+            "measure": "GGD",
+            "obs_status": "A",
+            "obs_status_label": "Normal value",
+        }
+    ]
+    finance += [
+        {
+            **finance[0],
+            "unit_measure": "PT_B1GQ",
+            "unit_measure_label": "Percentage of GDP",
+            "obs_value": value,
+            "multiplier": 1.0,
+            "measure": measure,
+        }
+        for measure, value in [("GGD", 35.0), ("GNLB", -4.0)]
+    ]
+    pq.write_table(pa.Table.from_pylist(finance), directory / "gov_finance.parquet")
+    annual_gdp = [
+        {
+            **observation(code, year, 1, value),
+            "freq": "A",
+            "freq_label": "Annual",
+            "time_period": str(year),
+            "unit_measure": "USD_PPP",
+            "unit_measure_label": "US dollars, PPP converted",
+            "price_base": "V",
+            "transformation": "LA",
+            "unit_mult": "6",
+            "multiplier": 1_000_000.0,
+        }
+        for code, year, value in [("USA", 1961, 100.0), ("USA", 1962, 200.0), ("NZL", 1961, 15.0)]
+    ]
+    annual_gdp += [
+        {**annual_gdp[0], "freq": "Q", "obs_value": 999.0},
+        {**annual_gdp[0], "price_base": "LR", "obs_value": 999.0},
+    ]
+    pq.write_table(pa.Table.from_pylist(annual_gdp), directory / "gdp_quarterly_usd.parquet")
+    return directory.parent.parent

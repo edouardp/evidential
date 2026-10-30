@@ -63,10 +63,12 @@ function renderStrip(enc, row, lo, span, col, context) {
         end = next && typeof next === "object" && next.position != null ? next.position : lo + span;
       }
       const left = at(start);
-      const width = Math.max(0, at(Number(end)) - left);
+      const right = 100 - Math.max(left, at(Number(end)));
       const segment = h("div", {
         class: "et-strip-run",
-        style: { left: `${left}%`, width: `${width}%`, backgroundColor: colourOf(named(item)) },
+        // Inset both edges so neighbouring intervals share one rounded boundary.
+        // Rounding left + width independently can leave a visible hairline seam.
+        style: { left: `${left}%`, right: `${right}%`, backgroundColor: colourOf(named(item)) },
       });
       if (enc.strip_labels && named(item) != null && String(named(item)) !== "") {
         segment.append(h("span", { class: "et-strip-label" }, String(named(item)).charAt(0)));

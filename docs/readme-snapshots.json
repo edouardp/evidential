@@ -45,7 +45,7 @@
     "src/evidential/static/dimension-grid.css": "54f56d45e03b8af5ba1aa8f7c1153b3bc3cfcc8b195dedf347afba0686460fdc",
     "src/evidential/static/dimension-grid.js": "80cb5f93dfdc5a5dc02c5f8c1e218bd462662a00114d6c43523a58d2c0ca4095",
     "src/evidential/static/table.css": "4bd40e339864d28c3db5406c4fe0ff064f4ee3b1b618d7364de1f2791fa6b48c",
-    "src/evidential/static/table.js": "0613a53f2f8410247578aa3dc01d72548b44ef0ddfbe79fd32ad090681e728bd",
+    "src/evidential/static/table.js": "e44d097029685067e534e9eb2bf1ad52a64378198528d9a5182366035c1c042c",
     "src/evidential/table.py": "3f635ffd925ec907c71a3b675d2ffaf17f9fc61e21acb46e3bbc6573bd9cb9b6",
     "uv.lock": "da72481fe29cbd2cc1636b6603f296a6567e0997e95032d2bce2f0fc2dfebfcd"
   },
@@ -163,7 +163,7 @@
     "docs/img/graphics/point-overlaps.png": {
       "notebook": "notebooks/50_graphics_gallery.py",
       "cell": "graphic_point_overlaps",
-      "sha256": "3e32c01b5bc449d03f530c99cb7a15ed5c2d85b4721eef2708aac06e3168ffef"
+      "sha256": "f7854d318e5968e62140e3dae8663a9ba4e513e0a8f3bbb14bda68ffc2c6982e"
     },
     "docs/img/graphics/boxplot.png": {
       "notebook": "notebooks/50_graphics_gallery.py",

@@ -102,6 +102,9 @@ and reserve source-data names, including label/box/outlier bindings. Stack
 segments clip their visible geometry to the shared domain while retaining true
 values in accessible text. Unlabelled categorical strips have a positioned
 track; `segmented=False` joins adjacent runs without gaps or outlines.
+Positioned strips use left/right edge insets rather than independently rounded
+left/width values. Contiguous intervals therefore share a browser layout edge
+at fractional container widths, while genuine gaps between intervals remain.
 
 Fluent `.scale(...)` and `.label(...)` calls refine existing settings. A new
 label binding replaces its prior binding while preserving positioning/style.

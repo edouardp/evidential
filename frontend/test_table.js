@@ -2135,7 +2135,29 @@ test("positioned strip maps runs to a shared x axis", () => {
   const runs = [...el.querySelectorAll(".et-strip-run")];
   assert.equal(runs.length, 3);
   // Shared domain 0..5: the first run spans 0..3 (60%).
-  assert.match(runs[0].style.width, /60%/);
+  assert.equal(runs[0].style.left, "0%");
+  assert.equal(runs[0].style.right, "40%");
+  assert.equal(runs[0].style.width, "");
+  assert.equal(runs[1].style.left, "60%");
+  assert.equal(runs[1].style.right, "0%");
+  assert.equal(runs[2].style.left, "20%");
+  assert.equal(runs[2].style.right, "20%");
+  renderer.destroy();
+});
+
+test("positioned strip edge insets clip to the domain and keep reversed spans empty", () => {
+  const rows = [{periods: [
+    {start: -2, end: 2, category: "a"},
+    {start: 8, end: 12, category: "b"},
+    {start: 6, end: 4, category: "a"},
+  ]}];
+  const columns = [{name: "periods", scale: {domain: [0, 10]},
+    encodings: [{kind: "strip", source: "periods", segmented: false}]}];
+  const renderer = new EvidentialTableRenderer(makeModel(rows, columns, {}, el), el);
+  const runs = [...el.querySelectorAll(".et-strip-run")];
+  assert.deepEqual(runs.map(run => [run.style.left, run.style.right]), [
+    ["0%", "80%"], ["80%", "0%"], ["60%", "40%"],
+  ]);
   renderer.destroy();
 });
 

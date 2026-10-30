@@ -14,6 +14,11 @@ project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   retains units, dimensions and observation statuses across GDP, finance, debt
   and external-sector datasets.
 
+### Fixed
+
+- Positioned strips share adjoining edges at fractional widths, preventing
+  rounding seams between contiguous intervals while preserving genuine gaps.
+
 ## 0.2.1 (2026-10-30)
 
 ### Added

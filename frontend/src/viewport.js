@@ -185,17 +185,25 @@ export class TableViewport {
       for (const cell of row.children) cell.style.top = `${top}px`;
       top += row.getBoundingClientRect().height;
     }
-    if (n <= 0) return;
     // Measure physical column edges, never infer them from spanning headers.
     // Reading before writing avoids measuring already-sticky cells on resize.
     const bodyCells = [...table.querySelectorAll("tbody [data-column-index]")];
     const axisCells = [...table.querySelectorAll("thead .et-axis-row [data-column-index], tfoot [data-column-index]")];
     const spanningCells = [...table.querySelectorAll("[data-column-start]")];
+    // A plain section spans the table. Pin its label inside that span rather
+    // than freezing the entire cell or splitting it and changing column widths.
+    const headingLabels = [...table.querySelectorAll(".et-display-heading:not(.et-display-align-center) > .et-display-label")];
+    for (const label of headingLabels) {
+      label.classList.toggle("et-frozen-heading-label", n > 0);
+      label.style.left = n > 0 ? window.getComputedStyle(label.parentElement).paddingLeft : "";
+    }
     for (const cell of [...bodyCells, ...axisCells, ...spanningCells]) {
+      if (n <= 0 && !cell.classList.contains("et-frozen")) continue;
       cell.style.left = "";
       cell.classList.remove("et-frozen", "et-frozen-last");
       if (cell.tagName === "TD") cell.style.position = "";
     }
+    if (n <= 0) return;
     const offsets = new Map();
     const tableLeft = table.getBoundingClientRect().left;
     for (const cell of bodyCells) {

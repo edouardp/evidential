@@ -76,6 +76,14 @@ EvidentialTable(
   insets details under left-aligned headings or top summaries. Centered headings
   leave detail labels flush left. CSV exports matching details in
   display order across every page, excluding annotations.
+- With `freeze_columns`, left-aligned spanning headings pin their label inside
+  the full-width cell, including nested and continuation headings. The sticky
+  inset uses the cell's computed padding, retaining indentation and custom
+  styles. The spanning cell continues to supply the background and rules;
+  splitting it must not change physical column widths. Centered headings keep
+  their full-table alignment. Headings with values and summaries use ordinary
+  physical column indices, including their blank row-number cell, so they
+  freeze at the same offsets as detail cells.
 - A dedicated group-label column can use `.repeat_values(False)` to blank
   adjacent equal values in the rendered detail order. The default and explicit
   `True` repeat values. Runs restart on every page and after annotations, so a

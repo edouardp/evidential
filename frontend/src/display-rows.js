@@ -22,13 +22,14 @@ export function renderAnnotation(entry, columns, ctx, options) {
   };
   if (section && !Object.keys(entry.cells).length) {
     const cell = h("td", {class: `et-td et-display-heading et-display-align-${entry.align}`,
-      colspan: columns.length + (ctx.rowNumbers ? 1 : 0) + (options.link ? 1 : 0)}, entry.label);
+      colspan: columns.length + (ctx.rowNumbers ? 1 : 0) + (options.link ? 1 : 0)},
+    h("span", {class: "et-display-label"}, entry.label));
     indentLabel(cell);
     applyStyle(cell);
     tr.append(cell);
     return tr;
   }
-  if (ctx.rowNumbers) tr.append(h("td", {class: "et-td et-row-num"}));
+  if (ctx.rowNumbers) tr.append(h("td", {class: "et-td et-row-num", "data-column-index": 0}));
   const labelColumn = entry.labelColumn || columns.find(col => isStub(options, col))?.name || columns[0]?.name;
   columns.forEach((col, index) => {
     const cell = h("td", {class: `et-td${isStub(options, col) ? " et-stub" : ""}`,

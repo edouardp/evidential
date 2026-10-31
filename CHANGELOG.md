@@ -16,6 +16,9 @@ project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+- Group heading labels remain visible beside frozen columns during horizontal
+  scrolling, including nested and continuation headings. Summary and heading
+  row-number spacers now freeze with the corresponding detail cells ([#4](https://github.com/edouardp/evidential/issues/4)).
 - Expanded tables fit measured pages after reserving grouped/multiline headings,
   statistics, axes, notes and navigation. Wrapped rows and synthetic summaries
   contribute their actual height, resizing drops stale height constraints, and

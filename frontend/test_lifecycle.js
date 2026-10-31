@@ -82,6 +82,36 @@ test("hold repeat interval eases from 700ms to 100ms by 3s", () => {
   assert.equal(holdInterval(10000), 100);
 });
 
+test("spanning group labels freeze at their styled indentation without changing column spans", () => {
+  const scroller = dom.window.document.createElement("div");
+  scroller.innerHTML = `<table><tbody>
+    <tr><td class="et-display-heading" colspan="2" style="padding-left:20px"><span class="et-display-label">North</span></td></tr>
+    <tr><td class="et-display-heading et-display-align-center" colspan="2"><span class="et-display-label">Centered</span></td></tr>
+    <tr><td data-column-index="0">A</td><td data-column-index="1">10</td></tr>
+    </tbody></table>`;
+  const options = {freeze_columns: 1};
+  const viewport = new TableViewport({scroller, getOptions: () => options});
+  const [label, centered] = scroller.querySelectorAll(".et-display-label");
+  viewport.applyFrozenOffsets();
+  assert.ok(label.classList.contains("et-frozen-heading-label"));
+  assert.equal(label.style.left, "20px");
+  assert.equal(label.parentElement.colSpan, 2);
+  assert.equal(label.parentElement.style.position, "");
+  assert.ok(!centered.classList.contains("et-frozen-heading-label"));
+  options.freeze_columns = 0;
+  viewport.applyFrozenOffsets();
+  assert.ok(!label.classList.contains("et-frozen-heading-label"));
+  assert.equal(label.style.left, "");
+  assert.equal(scroller.querySelector("[data-column-index='0']").style.position, "");
+  const ordinary = scroller.querySelector("[data-column-index='1']");
+  ordinary.style.position = "relative";
+  ordinary.style.left = "3px";
+  viewport.applyFrozenOffsets();
+  assert.equal(ordinary.style.position, "relative", "unfrozen cell styles belong to their renderer");
+  assert.equal(ordinary.style.left, "3px");
+  viewport.destroy();
+});
+
 test("freezing keeps header and footer axes aligned with their physical columns", () => {
   const scroller = dom.window.document.createElement("div");
   scroller.innerHTML = `<table><thead>

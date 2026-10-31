@@ -9,6 +9,7 @@ from math import log10
 from pathlib import Path
 
 import pytest
+from playwright.sync_api import expect
 
 from evidential import EvidentialTable, col, domain, grouped_records, label
 from evidential import rows as row_builder
@@ -208,7 +209,7 @@ def test_automatic_bar_label_preferences_signed_bars_and_resize(page, live_serve
     for index, preferred in enumerate(positions):
         labels = page.locator(f"#case-{index} .et-mark-label")
         assert labels.count() == 4
-        assert labels.first.get_attribute("data-label-position") == preferred.replace("outside", "inside")
+        expect(labels.first).to_have_attribute("data-label-position", preferred.replace("outside", "inside"))
         if preferred.endswith("end"):
             assert labels.nth(1).get_attribute("data-label-position") == preferred
             assert labels.nth(2).get_attribute("data-label-position") == "outside_end"
@@ -217,10 +218,10 @@ def test_automatic_bar_label_preferences_signed_bars_and_resize(page, live_serve
             assert labels.nth(2).get_attribute("hidden") is not None
             assert labels.nth(3).get_attribute("hidden") is not None
     signed = page.locator("#case-4 .et-mark-label")
-    assert signed.first.get_attribute("data-label-position") == "inside_end"
+    expect(signed.first).to_have_attribute("data-label-position", "inside_end")
     assert "et-mark-label-align-begin" in signed.first.get_attribute("class")
     assert "et-mark-label-align-end" in signed.last.get_attribute("class")
-    assert page.locator("#case-5 .et-mark-label").first.get_attribute("data-label-position") == "inside_end"
+    expect(page.locator("#case-5 .et-mark-label").first).to_have_attribute("data-label-position", "inside_end")
     assert signed.first.evaluate("el => getComputedStyle(el).color") == "rgb(255, 255, 255)"
     capture(page, "automatic-bar-labels.png")
     # Bypass the chart minimum to test a track too narrow for either position.

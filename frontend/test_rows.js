@@ -109,9 +109,19 @@ test("section rows paginate and repeat their label as a continuation", () => {
   const page = paginateRows(rows, 4, 1, {});
   assert.equal(page.pageCount, 2);
   assert.equal(page.start, 4);
-  assert.equal(sectionContinuation(rows, page.start, page.rows), "South (cont.)");
+  assert.deepEqual(sectionContinuation(rows, page.start, page.rows), {...rows[3], __label: "South (cont.)"});
   // The first page starts with its own section row: no continuation needed.
   assert.equal(sectionContinuation(rows, 0, rows.slice(0, 4)), null);
+});
+
+test("continuations copy all section metadata and values without mutating the source", () => {
+  const heading = Object.freeze({render_type: "row_section", __label: "North", __align: "center", value: 30,
+    __style: {color: "red"}});
+  const rows = [heading, {value: 10}, {value: 20}];
+  const repeated = sectionContinuation(rows, 2, rows.slice(2));
+  assert.deepEqual(repeated, {...heading, __label: "North (cont.)"});
+  assert.equal(heading.__label, "North");
+  assert.notEqual(repeated, heading);
 });
 
 test("derived data invalidates search, sort, hidden columns and group visibility independently", () => {

@@ -95,7 +95,8 @@ grouped_report = EvidentialTable(
 Portable reducers (`"sum"`, `"mean"`, `rows.count(...)`,
 `rows.aggregate(...)`) recalculate over browser search matches. Python callable
 summaries retain their source scope until a Python refresh. Page size counts
-details, with continuation headings as needed. Summary rows do not participate
+details, with continuation headings retaining values and presentation and adding
+only a space and `(cont.)` to the label. Summary rows do not participate
 in detail statistics, scale inference, raw snapshots or CSV data.
 
 Make headings interactive with `.section(collapsible=True)` or

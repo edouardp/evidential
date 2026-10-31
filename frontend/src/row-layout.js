@@ -27,7 +27,7 @@ export function summaryValue(spec, members) {
 }
 
 function annotationEntry(kind, id, spec, members, depth, continuation = false) {
-  const cells = continuation ? {} : Object.fromEntries(Object.entries(spec.cells || {}).map(([name, value]) =>
+  const cells = Object.fromEntries(Object.entries(spec.cells || {}).map(([name, value]) =>
     [name, {...value, value: summaryValue(value, members)}]));
   return {kind, id, depth, label: `${spec.label}${continuation ? " (cont.)" : ""}`,
     cells, style: spec.style || {}, rule: spec.rule || "none", align: spec.align || "left",

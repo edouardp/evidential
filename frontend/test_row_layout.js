@@ -23,7 +23,8 @@ test("pagination counts detail records and keeps summaries with their final memb
   const second = projectLayout(layout, source, source, 1, 1);
   assert.deepEqual(second.entries.map(entry => entry.kind), ["section", "data", "summary"]);
   assert.equal(second.entries[0].label, "North (cont.)");
-  assert.deepEqual(second.entries[0].cells, {});
+  assert.deepEqual(second.entries[0].cells, first.entries[0].cells);
+  assert.deepEqual({...second.entries[0], label: first.entries[0].label, continuation: false}, first.entries[0]);
   assert.equal(second.entries[2].cells.value.value, 40);
   const last = projectLayout(layout, source, source, 1, 2);
   assert.deepEqual(last.entries.map(entry => entry.kind), ["section", "data", "summary", "grand_summary"]);

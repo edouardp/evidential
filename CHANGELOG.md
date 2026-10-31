@@ -22,6 +22,9 @@ project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+- Continued section headings keep their values, formatting, alignment and rules,
+  appending only `(cont.)` to the label. Removed continuation-specific typography
+  and reused the ordinary renderer for legacy section headings ([#5](https://github.com/edouardp/evidential/issues/5)).
 - Group heading labels remain visible beside frozen columns during horizontal
   scrolling, including nested and continuation headings. Summary and heading
   row-number spacers now freeze with the corresponding detail cells ([#4](https://github.com/edouardp/evidential/issues/4)).

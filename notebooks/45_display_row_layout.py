@@ -27,7 +27,8 @@ def _(mo):
     Headings and summaries belong to the display. They never become source
     records, run through detail mark functions, or affect statistics and scales.
     Search for a product to see the counts and totals recalculate. Use the pager
-    to see a repeated **(cont.)** heading; page size counts detail records.
+    to see a repeated **(cont.)** heading with the same values and presentation;
+    only its label changes. Page size counts detail records.
     CSV downloads contain matching details, without headings or summaries.
     """)
     return

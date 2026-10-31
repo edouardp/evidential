@@ -44,8 +44,8 @@
     "src/evidential/rules.py": "eb0142d511b63a5b4d0725f70599084784ddb82130655c72e8ff36ce816ed104",
     "src/evidential/static/dimension-grid.css": "54f56d45e03b8af5ba1aa8f7c1153b3bc3cfcc8b195dedf347afba0686460fdc",
     "src/evidential/static/dimension-grid.js": "80cb5f93dfdc5a5dc02c5f8c1e218bd462662a00114d6c43523a58d2c0ca4095",
-    "src/evidential/static/table.css": "4caa6c9f5f4f8d771d4af341419a3ca808f8362a695dc75d1f8918e783254c03",
-    "src/evidential/static/table.js": "3601f541875acd5ece94c0f1adf380b3b9a0179d5dd881288f2b90ce9b65f01d",
+    "src/evidential/static/table.css": "320269ef18f348a0d21ea957fe77edfd003dc49a8206088f8f22336739ea3fea",
+    "src/evidential/static/table.js": "72e97fb704ce65eb4b8e281f411a5d5af74a523eb0015254fe8eb0a26b5581a6",
     "src/evidential/table.py": "3f635ffd925ec907c71a3b675d2ffaf17f9fc61e21acb46e3bbc6573bd9cb9b6",
     "uv.lock": "da72481fe29cbd2cc1636b6603f296a6567e0997e95032d2bce2f0fc2dfebfcd"
   },

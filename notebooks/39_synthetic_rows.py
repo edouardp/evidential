@@ -115,6 +115,7 @@ def _(mo):
     `rows.count(suffix=" countries")`. Numeric detail columns can hold text in
     annotation cells without running through a numeric mark or formatter.
     Only the details consume page slots. Move forward to see **(cont.)** headings;
+    they keep the same values, alignment, rules and styling, changing only the label.
     each group summary stays with its final detail, and the grand summary appears
     once on the final page.
     """)
@@ -135,7 +136,7 @@ def _(EvidentialTable, col, detail, mo, rows):
             title="Aggregations by name",
             row_lines="gray",
             border=False,
-            page_size=5,
+            page_size=4,
             row_shading=True,
             section_indent=1,
             columns=[
@@ -256,7 +257,7 @@ def _(EvidentialTable, col, detail, mo, rows):
         EvidentialTable(
             detail,
             columns=[col.text("country"), col.currency("arr", decimals=1), col.integer("accounts")],
-            row_layout=rows.group_by("region")
+            row_layout=rows.group_by("region", "country")
             .section(align="center", rule="below")
             .collapsible()
             .summary("Subtotal", values={"arr": "sum", "accounts": "sum"})

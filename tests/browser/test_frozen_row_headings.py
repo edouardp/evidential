@@ -125,8 +125,8 @@ def test_nested_and_continued_headings_and_summaries_freeze_with_row_numbers(pag
     scroller.evaluate("el => el.scrollLeft = 0")
     page.wait_for_timeout(100)
     continued = label_positions()
-    # The nested heading keeps its depth indentation on both pages.
-    assert continued[1] - continued[0] == pytest.approx(16, abs=1)
+    # Continuation headings retain the original cells and nested indentation.
+    assert continued[:2] == pytest.approx(before[:2], abs=1)
     scroller.evaluate("el => el.scrollLeft = 250")
     page.wait_for_timeout(100)
     assert label_positions() == pytest.approx(continued, abs=1)

@@ -260,7 +260,7 @@ export function shaded(index, options) {
 }
 
 /**
- * The label for a repeated section row at the top of a page. A section that
+ * The repeated section row at the top of a page. A section that
  * spans a page break is re-introduced as `"<label> (cont.)"` so the reader
  * knows which section the page continues.
  */
@@ -273,7 +273,7 @@ export function sectionContinuation(allRows, start, pageRows) {
     if (row.render_type === "row_section") {
       if (pageRows[0].__parent_key && pageRows[0].__parent_key !== row.__group_key) return null;
       const label = row.__label;
-      return label == null || label === "" ? null : `${label} (cont.)`;
+      return label == null || label === "" ? null : {...row, __label: `${label} (cont.)`};
     }
     if (row.render_type === "row_total") break;
   }

@@ -916,11 +916,6 @@ tbody tr:last-child .et-bar-center .et-bar-axis { bottom: var(--et-bar-pad, 0); 
   background: var(--et-subtotal-bg);
 }
 .et-row-section .et-section-center { text-align: center; }
-.et-row-continuation .et-section-cell {
-  font-style: italic;
-  font-weight: 500;
-  border-bottom: none;
-}
 /* A blank spacer row (`spacer_row`): a gap with no rule. */
 .et-row-spacer .et-spacer-cell {
   border: none;
@@ -1231,7 +1226,6 @@ tbody tr:last-child .et-bar-center .et-bar-axis { bottom: var(--et-bar-pad, 0); 
 }
 .et-section-toggle:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }
 .et-section-chevron { flex: none; width: 0.75em; text-align: center; }
-.et-display-row.et-row-continuation .et-td { font-style: italic; font-weight: 500; }
 .et-root .et-display-row.et-display-rule-above .et-td,
 .et-root .et-display-row.et-display-rule-both .et-td { border-top: 1px solid var(--et-header-border); }
 .et-root .et-display-row.et-display-rule-below .et-td,

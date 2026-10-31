@@ -59,7 +59,10 @@ EvidentialTable(
   headings, optional summaries, and a single final grand summary. Summaries
   aggregate details directly, including at nested levels.
 - An intersecting group emits its heading on every page; a repeated heading is
-  labelled `(cont.)` and omits aggregate cells. Bottom summaries appear on the
+  labelled `(cont.)` and retains the original heading's values, formatting,
+  alignment, rules and style. Continuation status is metadata, with no separate
+  styling overrides. Legacy section continuations reuse the ordinary section
+  renderer with a copied record and changed label. Bottom summaries appear on the
   page with the group's final matching detail, top summaries on its first page,
   and the grand summary on the final nonempty page. No annotations consume a
   detail-page slot. Empty filtered results have no annotations.

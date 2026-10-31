@@ -138,7 +138,7 @@ test("builder summaries paginate and repeat only the current section", () => {
   const second = paginateRows(grouped, 2, 1, {});
   assert.equal(first.rows.length, 2);
   assert.equal(second.pageCount, 4);
-  assert.equal(sectionContinuation(grouped, second.start, second.rows), "North (cont.)");
+  assert.equal(sectionContinuation(grouped, second.start, second.rows).__label, "North (cont.)");
   const last = paginateRows(grouped, 2, 3, {});
   assert.equal(sectionContinuation(grouped, last.start, last.rows), null);
 });

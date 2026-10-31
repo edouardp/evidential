@@ -515,7 +515,8 @@ retain their source scope until a Python `set_data` refresh. Filter upstream to
 recalculate an arbitrary Python function over a filtered dataset.
 
 Page size counts details only. Every page repeats its active group headings as
-`"<label> (cont.)"`, without repeating heading values. A bottom group summary
+`"<label> (cont.)"`, retaining the same heading values, formatting, alignment,
+rules and styling; only the label changes. A bottom group summary
 appears after its last matching detail; `summary(position="top")` puts it before
 the first one. The grand summary appears once on the final nonempty page.
 Empty search results have no annotations. CSV contains matching details in

@@ -286,7 +286,8 @@ test("display annotations have independent cells, style, numbering and selection
   assert.deepEqual([...el.querySelectorAll("tbody .et-row-num")].map(cell => cell.textContent), ["", "1"]);
   renderer._gotoPage(1);
   assert.match(el.querySelector(".et-row-continuation").textContent, /Group \(cont\.\)/);
-  assert.deepEqual([...el.querySelectorAll("tbody .et-row-num")].map(cell => cell.textContent), ["2", ""]);
+  assert.deepEqual([...el.querySelectorAll("tbody .et-row-num")].map(cell => cell.textContent), ["", "2", ""]);
+  assert.match(el.querySelector(".et-row-continuation").textContent, /2 productsApproved/);
   assert.equal(el.querySelector(".et-display-summary .et-display-value").textContent, "30.0");
   renderer.destroy();
 });

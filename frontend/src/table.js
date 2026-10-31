@@ -310,7 +310,7 @@ export class EvidentialTableRenderer {
     this._pageMetrics = {count: displayPage?.unitCount ?? rows.length, remaining: total - start, projection: processed};
     this._state.page = page;
     this._pageCount = pageCount;
-    const continuationLabel = displayPage ? null : sectionContinuation(visibility.rows, start, rows);
+    const continuationRow = displayPage ? null : sectionContinuation(visibility.rows, start, rows);
 
     // Section-style groups merge each group's dimension cell across its rows.
     // Count levels over all rows (not just the page) so a fully collapsed table
@@ -382,7 +382,7 @@ export class EvidentialTableRenderer {
           isEmpty,
           emptyRows: isEmpty ? this._emptyRowCount(opts) : 0,
           emptyMessage: opts.empty_message || "No records",
-          continuationLabel,
+          continuationRow,
           displayEntries: displayPage?.entries,
           toggleSection: key => this._toggleSection(key),
           insetGroups: new Set(visibility.rows.filter(row => row.render_type === "row_section" && row.__align !== "center")
@@ -528,14 +528,11 @@ export class EvidentialTableRenderer {
         tbody.append(this._renderPlaceholderRow(columns, ctx));
       }
     } else {
-      if (ctx.continuationLabel) {
+      if (ctx.continuationRow) {
         // A section that spans pages repeats its label at the top of the page.
-        const colSpan = columns.length + (ctx.rowNumbers ? 1 : 0) + (opts.link ? 1 : 0);
-        tbody.append(
-          h("tr", { class: "et-row et-row-section et-row-continuation" }, [
-            h("td", { class: "et-td et-section-cell", colspan: colSpan }, String(ctx.continuationLabel)),
-          ]),
-        );
+        const heading = this._renderRow(ctx.continuationRow, columns, ctx, 0);
+        heading.classList.add("et-row-continuation");
+        tbody.append(heading);
       }
       if (ctx.displayEntries) {
         for (const entry of ctx.displayEntries) {

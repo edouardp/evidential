@@ -30,3 +30,24 @@ test("annotations with cells index the row-number spacer like regular data cells
     assert.equal(row.cells[2].textContent, "25.0");
   }
 });
+
+test("section toggles expose state, escape labels and do not bubble into row selection", () => {
+  const keys = [];
+  const row = renderAnnotation({...heading, label: "<script>North</script>", collapsible: true,
+    collapsed: true, groupKey: '["North"]'}, columns, {...context(), toggleSection: key => keys.push(key)}, {});
+  let selected = 0;
+  row.addEventListener("click", () => selected++);
+  const button = row.querySelector("button");
+  assert.equal(button.getAttribute("aria-expanded"), "false");
+  assert.equal(button.getAttribute("aria-label"), "Toggle section <script>North</script>");
+  assert.equal(row.querySelector("script"), null);
+  button.click();
+  assert.deepEqual(keys, ['["North"]']);
+  assert.equal(selected, 0);
+});
+
+test("a hidden label column falls back to a visible column so closed totals remain toggleable", () => {
+  const row = renderAnnotation({...heading, collapsible: true, labelColumn: "hidden",
+    cells: {sales: {value: 25}}}, columns, context(), {});
+  assert.ok(row.cells[1].querySelector("button"));
+});

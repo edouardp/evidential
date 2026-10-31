@@ -27,6 +27,47 @@ def test_layout_never_injects_synthetic_data_or_metadata() -> None:
     json.dumps(table.row_layout, allow_nan=False)
 
 
+def test_collapsible_sections_are_immutable_and_both_spellings_match() -> None:
+    base = rows.group_by("region").section(values={"arr": "sum"}, rule="below")
+    fluent = base.collapsible(collapsed_summary=True).summary("Average", values={"arr": "mean"})
+    keyword = (
+        rows.group_by("region")
+        .section(values={"arr": "sum"}, rule="below", collapsible=True, collapsed_summary=True)
+        .summary("Average", values={"arr": "mean"})
+    )
+    assert fluent.compile(DETAIL) == keyword.compile(DETAIL)
+    assert not base.compile(DETAIL)["groups"][0]["section"]["collapsible"]
+    assert fluent.compile(DETAIL)["groups"][0]["section"]["collapsible"]
+    assert not fluent.collapsible(False).compile(DETAIL)["groups"][0]["section"]["collapsible"]
+    assert fluent.collapsible(False).compile(DETAIL)["groups"][0]["section"]["collapsed_summary"]
+
+
+def test_collapsible_can_create_a_heading_and_survives_nested_refresh() -> None:
+    layout = rows.group_by("region", "country").collapsible(collapsed_summary=True).summary(values={"arr": "sum"})
+    table = EvidentialTable(DETAIL, row_layout=layout)
+    assert table.rows == DETAIL
+    assert all(group["section"]["collapsible"] for group in table.row_layout["groups"])
+    assert table.row_layout["groups"][0]["children"][0]["section"]["collapsible"]
+    table.set_data(DETAIL[:1])
+    section = table.row_layout["groups"][0]["section"]
+    assert section["collapsible"] and section["collapsed_summary"]
+    assert section["cells"] == {}
+    assert table.rows == DETAIL[:1]
+
+
+def test_collapsible_options_validate_booleans_and_centered_summary_conflicts() -> None:
+    with pytest.raises(TypeError, match="booleans"):
+        rows.group_by("region").section(collapsible="yes")  # type: ignore[arg-type]
+    with pytest.raises(TypeError, match="booleans"):
+        rows.group_by("region").collapsible(collapsed_summary=1)  # type: ignore[arg-type]
+    with pytest.raises(ValueError, match="left-aligned"):
+        rows.group_by("region").section(align="center", collapsible=True, collapsed_summary=True)
+    with pytest.raises(ValueError, match="left-aligned"):
+        rows.group_by("region").section(align="center").collapsible(collapsed_summary=True)
+    centered = rows.group_by("region").section(align="center", collapsible=True).compile(DETAIL)
+    assert centered["groups"][0]["section"]["collapsible"]
+
+
 def test_bound_build_contains_only_detail_data_and_preserves_layout() -> None:
     view = rows.of(DETAIL).group_by("region").section().summary("Average", values={"arr": "mean"}).total().build()
     assert isinstance(view, RowView)

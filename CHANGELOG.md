@@ -8,6 +8,12 @@ project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- Collapsible display sections through `.section(collapsible=True)` or
+  `.section().collapsible()`, with keyboard controls, nested-state retention,
+  display-slot pagination and unchanged aggregates/exports. Closing hides the
+  group's summary; optional `collapsed_summary=True` copies its values into a
+  plain closed heading. Centered headings support folding without summary
+  promotion. Notebook 39 demonstrates the variants.
 - Notebook 58 explores the local OECD product with a 1960–2019 technical-recession
   timeline by region, annual PPP GDP, debt and fiscal ratios, recession shares,
   a year-range selector and linked quarterly growth bars. A source-series browser

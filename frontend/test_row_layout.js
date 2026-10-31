@@ -31,6 +31,61 @@ test("pagination counts detail records and keeps summaries with their final memb
   assert.equal(last.entries.at(-1).cells.value.value, 140);
 });
 
+const collapsible = {...layout, groups: layout.groups.map(group => ({...group, section: {...group.section, collapsible: true}}))};
+const closed = (keys, anchorGroup = null) => ({isCollapsed: key => keys.includes(key), anchorGroup});
+
+test("closed groups occupy one display slot and hide details and top/bottom summaries", () => {
+  for (const position of ["top", "bottom"]) {
+    const plan = {...collapsible, groups: collapsible.groups.map(group => ({...group, summary: {...summary, position}}))};
+    const page = projectLayout(plan, source, source, 1, 0, null, closed(["north", "south"]));
+    assert.deepEqual(page.entries.map(entry => entry.kind), ["section"]);
+    assert.equal(page.entries[0].collapsed, true);
+    assert.equal(page.entries[0].groupKey, "north");
+    assert.equal(page.entries[0].cells.value.value, 40);
+    assert.equal(page.total, 2);
+    assert.equal(page.matchingTotal, 3);
+    assert.equal(page.unitCount, 1);
+    assert.deepEqual(page.rows, []);
+    const last = projectLayout(plan, source, source, 1, 1, null, closed(["north", "south"]));
+    assert.deepEqual(last.entries.map(entry => entry.kind), ["section", "grand_summary"]);
+    assert.equal(last.entries[1].cells.value.value, 140);
+    assert.equal(projectLayout(plan, source, [], 1, 0, null, closed(["north"])).entries.length, 0);
+  }
+});
+
+test("closed heading totals are opt-in, search-sensitive, and never replace explicit heading values", () => {
+  const base = {...collapsible.groups[0], section: {...heading("North"), cells: {}, collapsible: true}};
+  const project = section => projectLayout({groups: [{...base, section}]}, source, [source[1]], 0, 0, null, closed(["north"]));
+  assert.deepEqual(project(base.section).entries[0].cells, {});
+  const promoted = project({...base.section, collapsed_summary: true});
+  assert.equal(promoted.entries[0].cells.value.value, 30);
+  assert.equal(promoted.entries[0].label, "North");
+  const explicit = project({...base.section, cells: {value: {value: "Custom"}}, collapsed_summary: true});
+  assert.equal(explicit.entries[0].cells.value.value, "Custom");
+  assert.equal(projectLayout({groups: [base]}, source, source, 0, 0).entries.at(-1).kind, "summary");
+});
+
+test("collapsed ancestors hide nested headings/summaries without changing child state or export order", () => {
+  const plan = {...collapsible, groups: [{id: "root", members: [0, 1, 2], depth: 0,
+    section: {...heading("Root"), collapsible: true}, summary, children: collapsible.groups}]};
+  const folded = projectLayout(plan, source, source, 0, 0, null, closed(["root", "north"]));
+  assert.deepEqual(folded.entries.map(entry => entry.kind), ["section", "grand_summary"]);
+  const reopened = projectLayout(plan, source, source, 0, 0, null, closed(["north"]));
+  assert.deepEqual(reopened.rows, [source[2]]);
+  assert.equal(reopened.entries.find(entry => entry.groupKey === "north").collapsed, true);
+  assert.deepEqual(projectLayout(plan, source, source, "all", 0).rows, source);
+});
+
+test("continuation headings can collapse back to their group slot and noncollapsible groups ignore state", () => {
+  const second = projectLayout(collapsible, source, source, 1, 1);
+  assert.equal(second.entries[0].continuation, true);
+  const folded = projectLayout(collapsible, source, source, 1, 1, null, closed(["north"], "north"));
+  assert.equal(folded.page, 0);
+  assert.equal(folded.entries[0].continuation, false);
+  const ordinary = projectLayout(layout, source, source, 0, 0, null, closed(["north"]));
+  assert.deepEqual(ordinary.rows, source);
+});
+
 test("filtering recomputes named summaries and counts without including other summaries", () => {
   const found = projectLayout(layout, source, [source[1]], 2, 10);
   assert.equal(found.page, 0);

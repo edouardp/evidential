@@ -87,6 +87,30 @@ test("display annotations break repeated-value runs without hiding summaries", (
   renderer.destroy();
 });
 
+test("folding a display section reuses data analysis and restores focus without model mutation", () => {
+  const records = [{name: "A", value: 10}, {name: "B", value: 20}];
+  const model = makeModel(records, [{name: "name"}, {name: "value", type: "number"}], {column_stats: true}, el);
+  model.data.row_layout = {version: 1, groups: [{id: "north", members: [0, 1], depth: 0, children: [],
+    section: {label: "North", collapsible: true},
+    summary: {label: "Total", position: "bottom", cells: {value: {operation: "sum", source: "value"}}}}]};
+  const renderer = new EvidentialTableRenderer(model, el);
+  const analysis = renderer._pipeline.cache.result;
+  const first = el.querySelector(".et-section-toggle");
+  first.click();
+  assert.equal(el.querySelectorAll("tbody tr").length, 1);
+  assert.equal(el.querySelector(".et-empty-body"), null);
+  assert.equal(el.querySelector(".et-section-toggle").getAttribute("aria-expanded"), "false");
+  assert.equal(document.activeElement, el.querySelector(".et-section-toggle"));
+  assert.equal(renderer._pipeline.cache.result, analysis);
+  assert.equal(analysis.stats.get("value").avg, 15);
+  assert.deepEqual(model.calls, []);
+  assert.equal(model.data.rows, records);
+  el.querySelector(".et-section-toggle").click();
+  assert.equal(el.querySelectorAll("tbody tr:not(.et-display-row)").length, 2);
+  assert.equal(el.querySelectorAll(".et-display-summary").length, 1);
+  renderer.destroy();
+});
+
 test("numeric color and chip scales use inferred ranges", () => {
   for (const viz of ["color", "chip"]) {
     const renderer = new EvidentialTableRenderer(

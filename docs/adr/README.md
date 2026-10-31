@@ -107,6 +107,7 @@ dated, immutable record of the decisions behind them.
 | [086](086-segmented-overlapping-points.md) | Segmented Overlapping Points | Accepted |
 | [087](087-dimension-grid.md) | Searchable, Cross-Filtered Dimension Grid | Accepted |
 | [088](088-measured-expanded-pages.md) | Measured Pages for Expanded Tables | Accepted |
+| [089](089-collapsible-display-sections.md) | Collapsible Display Sections | Accepted |
 
 ## Creating New ADRs
 

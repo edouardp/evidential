@@ -12,7 +12,7 @@ import builtins
 import copy
 import json
 from collections.abc import Mapping, Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from typing import Any
 
 from ._aliases import format_code
@@ -66,6 +66,8 @@ class _Annotation:
     style: Mapping[str, str] | None = None
     rule: str = "none"
     label_column: str | None = None
+    collapsible: bool = False
+    collapsed_summary: bool = False
 
 
 @dataclass(frozen=True)
@@ -133,13 +135,18 @@ class Rows:
         style: Mapping[str, str] | None = None,
         rule: str = "none",
         label_column: str | None = None,
+        collapsible: bool = False,
+        collapsed_summary: bool = False,
     ) -> Rows:
         """Show a group heading, optionally with totals or text in named columns."""
         if align not in ("left", "center"):
             raise ValueError("section align is 'left' or 'center'")
         if align == "center" and values:
             raise ValueError("a centered section cannot have summary values")
+        if align == "center" and collapsed_summary:
+            raise ValueError("collapsed_summary needs a left-aligned section, not a centered section")
         _validate_rule(rule)
+        _validate_collapse(collapsible, collapsed_summary)
         return self._replace(
             section=_Annotation(
                 label,
@@ -149,8 +156,23 @@ class Rows:
                 style=copy.deepcopy(style),
                 rule=rule,
                 label_column=label_column,
+                collapsible=collapsible,
+                collapsed_summary=collapsed_summary,
             )
         )
+
+    def collapsible(self, enabled: bool = True, *, collapsed_summary: bool | None = None) -> Rows:
+        """Make section headings toggleable, initially open; optionally show closed totals.
+
+        ``collapsed_summary=True`` uses summary values in a closed heading when
+        it has no values of its own. Details and the summary row are hidden.
+        """
+        section = self._section or _Annotation(position="section")
+        summary = section.collapsed_summary if collapsed_summary is None else collapsed_summary
+        _validate_collapse(enabled, summary)
+        if section.align == "center" and summary:
+            raise ValueError("collapsed_summary needs a left-aligned section, not a centered section")
+        return self._replace(section=replace(section, collapsible=enabled, collapsed_summary=summary))
 
     def summary(
         self,
@@ -250,6 +272,11 @@ def _validate_rule(rule: str) -> None:
         raise ValueError("row rule is 'none', 'above', 'below', or 'both'")
 
 
+def _validate_collapse(collapsible: bool, collapsed_summary: bool) -> None:
+    if not isinstance(collapsible, bool) or not isinstance(collapsed_summary, bool):
+        raise TypeError("collapsible and collapsed_summary must be booleans")
+
+
 def _compile_annotation(
     annotation: _Annotation, members: Sequence[Mapping[str, Any]], default_label: str
 ) -> dict[str, Any]:
@@ -303,6 +330,8 @@ def _compile_annotation(
         "style": dict(annotation.style or {}),
         "rule": annotation.rule,
         "label_column": annotation.label_column,
+        "collapsible": annotation.collapsible,
+        "collapsed_summary": annotation.collapsed_summary,
     }
 
 

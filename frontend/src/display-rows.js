@@ -12,6 +12,16 @@ export function renderAnnotation(entry, columns, ctx, options) {
     entry.continuation ? "et-row-continuation" : "", `et-display-rule-${entry.rule}`,
     shaded(ctx.shadingCounter.value++, options) ? "et-row-shaded" : ""];
   const tr = h("tr", {class: classes.filter(Boolean).join(" "), "data-display-id": entry.id});
+  const renderLabel = () => {
+    const label = h("span", {class: "et-display-label"});
+    if (section && entry.collapsible) {
+      label.append(h("button", {class: "et-section-toggle", type: "button", "data-section-key": entry.groupKey,
+        "aria-expanded": String(!entry.collapsed), "aria-label": `Toggle section ${entry.label}`,
+        onclick: event => { event.stopPropagation(); ctx.toggleSection(entry.groupKey); }},
+      [h("span", {class: "et-section-chevron", "aria-hidden": "true"}, entry.collapsed ? "▸" : "▾"), entry.label]));
+    } else label.append(document.createTextNode(entry.label));
+    return label;
+  };
   const applyStyle = cell => {
     for (const [key, value] of Object.entries(entry.style)) cell.style.setProperty(key.replaceAll("_", "-"), String(value));
   };
@@ -23,20 +33,22 @@ export function renderAnnotation(entry, columns, ctx, options) {
   if (section && !Object.keys(entry.cells).length) {
     const cell = h("td", {class: `et-td et-display-heading et-display-align-${entry.align}`,
       colspan: columns.length + (ctx.rowNumbers ? 1 : 0) + (options.link ? 1 : 0)},
-    h("span", {class: "et-display-label"}, entry.label));
+    renderLabel());
     indentLabel(cell);
     applyStyle(cell);
     tr.append(cell);
     return tr;
   }
   if (ctx.rowNumbers) tr.append(h("td", {class: "et-td et-row-num", "data-column-index": 0}));
-  const labelColumn = entry.labelColumn || columns.find(col => isStub(options, col))?.name || columns[0]?.name;
+  const labelColumn = columns.find(col => col.name === entry.labelColumn)?.name ||
+    columns.find(col => isStub(options, col))?.name || columns[0]?.name;
   columns.forEach((col, index) => {
     const cell = h("td", {class: `et-td${isStub(options, col) ? " et-stub" : ""}`,
       style: {textAlign: col.align || (col.type === "number" ? "right" : "left")}});
     const spec = entry.cells[col.name];
-    if (col.name === labelColumn && entry.label) {
-      cell.append(h("span", {class: "et-display-label"}, entry.label));
+    if (col.name === labelColumn && (entry.label || entry.collapsible)) {
+      if (section) cell.classList.add("et-display-label-cell");
+      cell.append(renderLabel());
       indentLabel(cell);
     }
     if (spec) {

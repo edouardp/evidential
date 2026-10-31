@@ -84,6 +84,12 @@ EvidentialTable(
   their full-table alignment. Headings with values and summaries use ordinary
   physical column indices, including their blank row-number cell, so they
   freeze at the same offsets as detail cells.
+- Sections can opt into folding with `.section(collapsible=True)` or the
+  fluent `.collapsible()`. A closed group hides its details, descendants and
+  summary row, and contributes one display slot to pagination. Optional closed
+  summary values and the centered-heading restriction are specified in
+  [ADR-089](089-collapsible-display-sections.md). Folding never filters the
+  source records used for aggregates, statistics, domains or export.
 - A dedicated group-label column can use `.repeat_values(False)` to blank
   adjacent equal values in the rendered detail order. The default and explicit
   `True` repeat values. Runs restart on every page and after annotations, so a

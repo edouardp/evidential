@@ -153,6 +153,127 @@ def _(EvidentialTable, col, detail, mo, rows):
 @app.cell
 def _(mo):
     mo.md("""
+    ## Collapsible sections
+
+    Click a heading, or focus its button and press Enter or Space. Sections
+    start open. Closing one hides its details, nested sections and summary row;
+    reopening restores them. A parent's toggle preserves the state of its
+    nested sections. Search, totals, statistics and CSV still use all matching
+    detail records, including those hidden by a closed section.
+
+    `.section(collapsible=True)` and `.section().collapsible()` are equivalent.
+    An expanded group uses one page slot per detail; a closed group uses one
+    display slot, so even a completely folded table remains navigable.
+    """)
+    return
+
+
+@app.cell
+def _(EvidentialTable, col, detail, mo, rows):
+    folding_regions = mo.ui.anywidget(
+        EvidentialTable(
+            detail,
+            columns=[col.text("country"), col.currency("arr", decimals=1), col.integer("accounts")],
+            row_layout=rows.group_by("region")
+            .section(collapsible=True, rule="below")
+            .summary("Regional average", values={"arr": "mean"})
+            .grand_summary("All regions", values={"arr": "sum", "accounts": "sum"}),
+            title="Fold away regional details and summaries",
+            subtitle="Close North America from either its first or continuation heading",
+            page_size=4,
+            section_indent=1,
+            freeze_columns=1,
+            border=False,
+            row_lines=False,
+            row_numbers=False,
+            download=True,
+        )
+    )
+    folding_regions
+    return
+
+
+@app.cell
+def _(mo):
+    mo.md("""
+    ## Summary values in a closed heading
+
+    Opt in with `.section(collapsible=True, collapsed_summary=True)` or the
+    fluent spelling below. If the heading has no `values` of its own, closing
+    the section copies its summary values into the heading. Opening it restores
+    the plain heading and the separate summary row. The group label stays the
+    heading label; the summary's label is not copied. Explicit heading values
+    always take precedence, so choose counts or totals there when appropriate.
+
+    Try searching for **Canada**, then closing its section: both the closed
+    heading and grand total still describe the matching record. Downloading
+    includes it even while the section is closed.
+    """)
+    return
+
+
+@app.cell
+def _(EvidentialTable, col, detail, mo, rows):
+    closed_totals = mo.ui.anywidget(
+        EvidentialTable(
+            detail,
+            columns=[col.text("country"), col.currency("arr", decimals=1), col.integer("accounts")],
+            row_layout=rows.group_by("region")
+            .section(rule="below")
+            .collapsible(collapsed_summary=True)
+            .summary("Regional total", values={"arr": "sum", "accounts": "sum"})
+            .grand_summary("All regions", values={"arr": "sum", "accounts": "sum"}),
+            title="Totals in closed headings",
+            page_size="all",
+            section_indent=1,
+            column_stats=True,
+            download=True,
+            border=False,
+            row_lines=False,
+        )
+    )
+    closed_totals
+    return
+
+
+@app.cell
+def _(mo):
+    mo.md("""
+    ## Nested, centered headings
+
+    This version groups by region, then country. Close a country, close its
+    region, and reopen the region: the country remains closed. Centered headings
+    keep their full-width layout, with their own summaries hidden when closed.
+    They cannot carry `collapsed_summary=True`; that combination raises a clear
+    error rather than silently changing alignment or dropping values.
+    """)
+    return
+
+
+@app.cell
+def _(EvidentialTable, col, detail, mo, rows):
+    nested_folding = mo.ui.anywidget(
+        EvidentialTable(
+            detail,
+            columns=[col.text("country"), col.currency("arr", decimals=1), col.integer("accounts")],
+            row_layout=rows.group_by("region")
+            .section(align="center", rule="below")
+            .collapsible()
+            .summary("Subtotal", values={"arr": "sum", "accounts": "sum"})
+            .grand_summary("All regions", values={"arr": "sum", "accounts": "sum"}),
+            title="Nested centered sections",
+            page_size=4,
+            border=False,
+            row_lines=False,
+        )
+    )
+    nested_folding
+    return
+
+
+@app.cell
+def _(mo):
+    mo.md("""
     ### Notes
 
     - `table.rows` contains only details; annotations live in `table.row_layout`.

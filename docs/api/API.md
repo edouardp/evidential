@@ -488,6 +488,22 @@ fields, excluding internal metadata; use `values={}` for a label-only summary.
 Multiple `group_by` fields create nested groups in first-appearance order.
 Sorting reorders details within groups, without changing the source records.
 
+Use `.section(collapsible=True)` or `.section().collapsible()` for toggleable
+headings, initially open. Closing a section hides its details, nested sections
+and its own summary row. Reopening a parent preserves its children's collapse
+states. Native heading buttons support Enter and Space. Folding does not alter
+search matches, aggregates, statistics, domains, raw data or CSV exports.
+
+For a plain heading, `.section(collapsible=True, collapsed_summary=True)` copies
+the group's summary values into its closed heading. The fluent spelling is
+`.section().collapsible(collapsed_summary=True)`. This keeps the group label and
+heading style; reopening restores the plain heading and separate summary row.
+Explicit heading values always take precedence, without merging summary fields.
+If there is no summary, nothing is copied. Centered headings can collapse, but
+`collapsed_summary=True` with `align="center"` raises a validation error because
+centered headings span the whole table. See notebook
+[`39_synthetic_rows.py`](../../notebooks/39_synthetic_rows.py) for all three variants.
+
 A `values` entry may be a built-in aggregation name (`"sum"`, `"mean"`,
 `"median"`, `"min"`, `"max"`, `"count"`, `"count_distinct"`), a portable
 `rows.aggregate("sum", "source", prefix=, suffix=, format=)` expression, a
@@ -505,6 +521,13 @@ the first one. The grand summary appears once on the final nonempty page.
 Empty search results have no annotations. CSV contains matching details in
 display order, without annotations; statistics, marks and scale domains use
 detail data exclusively.
+
+With closed sections, each closed heading uses one display slot instead of its
+hidden details. The pager labels these as items and separately reports all
+matching records, avoiding empty pages when every section is closed. Grand
+summaries still include closed groups and appear on the last display page.
+Inline toggling keeps the heading in view; expanded mode resets measured page
+history when the folded projection changes.
 
 Each annotation accepts `style={...}`, `rule="none" | "above" | "below" |
 "both"`, and `label_column=`. A label and an explicit value in the same column

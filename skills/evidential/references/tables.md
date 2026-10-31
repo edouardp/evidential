@@ -98,6 +98,17 @@ summaries retain their source scope until a Python refresh. Page size counts
 details, with continuation headings as needed. Summary rows do not participate
 in detail statistics, scale inference, raw snapshots or CSV data.
 
+Make headings interactive with `.section(collapsible=True)` or
+`.section().collapsible()`. Sections start open. Closing hides details, nested
+sections and the section's own summary row, preserving nested collapse states.
+Totals and CSV still include all matching records. A closed section occupies
+one display slot; the pager distinguishes those items from matching records.
+To copy summary values into an otherwise plain closed heading, use
+`.section(collapsible=True, collapsed_summary=True)` or
+`.section().collapsible(collapsed_summary=True)`. Explicit heading values take
+precedence. Centered headings support folding, but reject `collapsed_summary=True`.
+Notebook 39 demonstrates plain, promoted-summary and nested centered sections.
+
 Use `.summary(position="top")` for a summary before a group, or
 `.section(align="center")` for a centered heading without value cells. Use a
 bold ordinary group column with `.repeat_values(False)` when the group label

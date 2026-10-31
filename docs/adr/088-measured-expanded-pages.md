@@ -49,6 +49,10 @@ capacity. Filtering, sorting or changing the underlying projection resets this
 history. Display-row projection receives detail bounds before decorating them
 with section headings, continuations and summaries.
 
+[ADR-089](089-collapsible-display-sections.md) extends these offsets to display
+slots when groups are closed: each closed group counts as one slot while its
+heading height is measured normally. Folding resets the measured page history.
+
 Expanded navigation shows the current page and exact record range, with Previous
 and Next controls. It does not invent a total page count: unvisited pages can fit
 different numbers of records. Inline navigation retains its exact page fraction.

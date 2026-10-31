@@ -82,6 +82,21 @@ test("hold repeat interval eases from 700ms to 100ms by 3s", () => {
   assert.equal(holdInterval(10000), 100);
 });
 
+test("fully closed groups still have frozen column headers without indexed body cells", () => {
+  const scroller = dom.window.document.createElement("div");
+  scroller.innerHTML = `<table><thead><tr><th data-column-start="0">Name</th><th data-column-start="1">Value</th></tr></thead>
+    <tbody><tr><td colspan="2">Closed group</td></tr></tbody></table>`;
+  scroller.querySelector("table").getBoundingClientRect = () => ({left: 10});
+  const [name, value] = scroller.querySelectorAll("th");
+  name.getBoundingClientRect = () => ({left: 10});
+  value.getBoundingClientRect = () => ({left: 80});
+  const viewport = new TableViewport({scroller, getOptions: () => ({freeze_columns: 2})});
+  viewport.applyFrozenOffsets();
+  assert.equal(name.style.left, "0px");
+  assert.equal(value.style.left, "70px");
+  viewport.destroy();
+});
+
 test("spanning group labels freeze at their styled indentation without changing column spans", () => {
   const scroller = dom.window.document.createElement("div");
   scroller.innerHTML = `<table><tbody>

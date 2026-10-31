@@ -206,8 +206,11 @@ export class TableViewport {
     if (n <= 0) return;
     const offsets = new Map();
     const tableLeft = table.getBoundingClientRect().left;
-    for (const cell of bodyCells) {
-      const index = Number(cell.dataset.columnIndex);
+    // With every group closed there may be only spanning headings in the body.
+    // Single-column leaf headers still supply physical edges in that case.
+    const leafHeaders = [...table.querySelectorAll("thead [data-column-start]")].filter(cell => cell.colSpan === 1);
+    for (const cell of [...bodyCells, ...leafHeaders]) {
+      const index = Number(cell.dataset.columnIndex ?? cell.dataset.columnStart);
       if (index < n && !offsets.has(index)) {
         offsets.set(index, cell.getBoundingClientRect().left - tableLeft);
       }

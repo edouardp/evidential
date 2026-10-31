@@ -40,12 +40,12 @@
     "src/evidential/marks.py": "fae4e9fdc5268de682fa5ee4a1626d487c60ff9114b4d61e2a663bbe7f472488",
     "src/evidential/pivot.py": "3a06e3adf3d0c25e88efe95c391daf89780bbbfc16eac300b73df7488747e445",
     "src/evidential/query.py": "1474b03ca11f438611b59a911221cf34625621b12af3c2871ed94710d5808049",
-    "src/evidential/rows.py": "d0011886124d330e596627f9c9c39202346cd5bab6e35a0056e779f6fb3af948",
+    "src/evidential/rows.py": "82dfd8f4e7f090a601c340199479194099e6187609838f2c07af4903fa8f0a42",
     "src/evidential/rules.py": "eb0142d511b63a5b4d0725f70599084784ddb82130655c72e8ff36ce816ed104",
     "src/evidential/static/dimension-grid.css": "54f56d45e03b8af5ba1aa8f7c1153b3bc3cfcc8b195dedf347afba0686460fdc",
     "src/evidential/static/dimension-grid.js": "80cb5f93dfdc5a5dc02c5f8c1e218bd462662a00114d6c43523a58d2c0ca4095",
-    "src/evidential/static/table.css": "1f46cf280fb9e90379e9d3948cf62a1e1bd7998c13e30c48ba8e37e59149ae26",
-    "src/evidential/static/table.js": "762e74a680e47bac0e25908b03befc3c21df9514821cb1d2da86d78144a0851b",
+    "src/evidential/static/table.css": "4caa6c9f5f4f8d771d4af341419a3ca808f8362a695dc75d1f8918e783254c03",
+    "src/evidential/static/table.js": "3601f541875acd5ece94c0f1adf380b3b9a0179d5dd881288f2b90ce9b65f01d",
     "src/evidential/table.py": "3f635ffd925ec907c71a3b675d2ffaf17f9fc61e21acb46e3bbc6573bd9cb9b6",
     "uv.lock": "da72481fe29cbd2cc1636b6603f296a6567e0997e95032d2bce2f0fc2dfebfcd"
   },
@@ -113,7 +113,7 @@
     "docs/api/images/comparison-table.png": {
       "notebook": "notebooks/49_api_screenshots.py",
       "cell": "prior_comparison",
-      "sha256": "ea3e5762581256044d1a7ffd357cdf9771e51d90e1c8ec9c388065f47c75fdea"
+      "sha256": "cbf1d3b5c4adf007f7fd90c16d6c777c32cf99a7845531465ec580caf338cf6b"
     },
     "docs/api/images/rules.png": {
       "notebook": "notebooks/49_api_screenshots.py",
@@ -298,7 +298,7 @@
     "docs/img/layouts/heading-values.png": {
       "notebook": "notebooks/51_table_layouts.py",
       "cell": "layout_heading_values",
-      "sha256": "0b30461ce2200e75ec0e7174fe85a9b12ce66e9e2ec250d38173361ef507555f"
+      "sha256": "d931ccef27515d1652945fb68ae20a1788eb1773aeed01504cdd206a44cfb5ba"
     },
     "docs/img/layouts/summary-top.png": {
       "notebook": "notebooks/51_table_layouts.py",

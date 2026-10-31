@@ -34,12 +34,17 @@ function annotationEntry(kind, id, spec, members, depth, continuation = false) {
     labelColumn: spec.label_column, continuation};
 }
 
-/** Filter/sort detail records first, paginate detail records, then decorate. */
-export function projectLayout(layout, allRows, sortedRows, pageSize, pageIndex, paginate = null) {
+/** Fold the display tree, paginate details/closed groups, then add annotations. */
+export function projectLayout(layout, allRows, sortedRows, pageSize, pageIndex, paginate = null,
+  {isCollapsed = () => false, anchorGroup = null} = {}) {
   const rank = new Map(sortedRows.map((row, index) => [row, index]));
   const indices = new Map(allRows.map((row, index) => [row, index]));
-  const membersOf = group => group.members.map(index => allRows[index]).filter(row => rank.has(row))
-    .sort((a, b) => rank.get(a) - rank.get(b));
+  const memberCache = new Map();
+  const membersOf = group => {
+    if (!memberCache.has(group)) memberCache.set(group, group.members.map(index => allRows[index]).filter(row => rank.has(row))
+      .sort((a, b) => rank.get(a) - rank.get(b)));
+    return memberCache.get(group);
+  };
   const ordered = [];
   const orderGroups = groups => {
     for (const group of groups) {
@@ -49,49 +54,66 @@ export function projectLayout(layout, allRows, sortedRows, pageSize, pageIndex, 
   };
   if (layout.groups?.length) orderGroups(layout.groups);
   else for (const row of sortedRows) ordered.push(row);
-  const total = ordered.length;
+  const ordinals = new Map(ordered.map((row, index) => [row, index]));
+  const units = [], starts = new Map();
+  let collapsedGroups = 0;
+  const prepare = (groups, inset = false) => groups.flatMap(group => {
+    const members = membersOf(group);
+    if (!members.length) return [];
+    const first = units.length;
+    starts.set(group.id, first);
+    const collapsed = !!group.section?.collapsible && isCollapsed(group.id);
+    const indent = inset || (group.section && group.section.align !== "center") || group.summary?.position === "top";
+    let children = [];
+    if (collapsed) {
+      units.push({kind: "collapsed", groupKey: group.id});
+      collapsedGroups++;
+    } else if (group.children.length) children = prepare(group.children, indent);
+    else for (const row of members) units.push({kind: "data", row, depth: group.depth + 1, inset: indent,
+      index: indices.get(row), ordinal: ordinals.get(row)});
+    return [{group, members, collapsed, children, first, last: units.length - 1}];
+  });
+  const tree = prepare(layout.groups || []);
+  if (!layout.groups?.length) for (const row of ordered) units.push({kind: "data", row, depth: 0, inset: false,
+    index: indices.get(row), ordinal: ordinals.get(row)});
+  const total = units.length;
   const size = pageSize === "all" || !(Number(pageSize) > 0) ? Math.max(1, total) : Number(pageSize);
   const fixedCount = Math.max(1, Math.ceil(total / size));
-  const fixedPage = Math.min(Math.max(0, pageIndex), fixedCount - 1);
+  const requested = starts.has(anchorGroup) ? Math.floor(starts.get(anchorGroup) / size) : pageIndex;
+  const fixedPage = Math.min(Math.max(0, requested), fixedCount - 1);
   const bounds = paginate ? paginate(total) : {pageCount: fixedCount, page: fixedPage,
     start: fixedPage * size, end: Math.min(total, (fixedPage + 1) * size)};
   const {start, end} = bounds;
-  const positions = new Map(ordered.map((row, index) => [row, index]));
   const entries = [];
-  const addData = (row, depth = 0, inset = false) => {
-    const ordinal = positions.get(row);
-    if (ordinal >= start && ordinal < end) entries.push({kind: "data", row, depth, inset,
-      index: indices.get(row), ordinal});
-  };
-  const visit = (groups, inset = false) => {
-    for (const group of groups) {
-      const members = membersOf(group);
-      if (!members.length) continue;
-      let first = Infinity;
-      let last = -Infinity;
-      for (const row of members) {
-        first = Math.min(first, positions.get(row));
-        last = Math.max(last, positions.get(row));
-      }
+  const visit = groups => {
+    for (const {group, members, collapsed, children, first, last} of groups) {
       if (last < start || first >= end) continue;
-      if (group.section) entries.push(annotationEntry("section", `${group.id}:section`, group.section, members, group.depth, first < start));
+      if (group.section) {
+        const spec = collapsed && group.section.collapsed_summary && !Object.keys(group.section.cells || {}).length && group.summary
+          ? {...group.section, cells: group.summary.cells} : group.section;
+        entries.push({...annotationEntry("section", `${group.id}:section`, spec, members, group.depth, first < start),
+          groupKey: group.id, collapsible: !!group.section.collapsible, collapsed});
+      }
+      // A closed group contributes just its heading. Its summaries and children
+      // are hidden, but all matching members still feed heading/grand totals.
+      if (collapsed) continue;
       if (group.summary?.position === "top" && first >= start) {
         entries.push(annotationEntry("summary", `${group.id}:summary`, group.summary, members, group.depth));
       }
-      const indent = inset || (group.section && group.section.align !== "center") || group.summary?.position === "top";
-      if (group.children.length) visit(group.children, indent);
-      else for (const row of members) addData(row, group.depth + 1, indent);
+      if (children.length) visit(children);
+      else for (const unit of units.slice(Math.max(start, first), Math.min(end, last + 1))) entries.push(unit);
       if (group.summary?.position === "bottom" && last < end) {
         entries.push(annotationEntry("summary", `${group.id}:summary`, group.summary, members, group.depth));
       }
     }
   };
-  if (layout.groups?.length) visit(layout.groups);
-  else for (const row of ordered.slice(start, end)) addData(row);
+  if (tree.length) visit(tree);
+  else for (const unit of units.slice(start, end)) entries.push(unit);
   if (total && end === total && layout.grand_summary) {
     entries.push(annotationEntry("grand_summary", "grand-summary", layout.grand_summary, ordered, 0));
   }
-  return {...bounds, entries, rows: ordered.slice(start, end), total};
+  return {...bounds, entries, rows: units.slice(start, end).filter(unit => unit.kind === "data").map(unit => unit.row),
+    total, unitCount: end - start, matchingTotal: ordered.length, collapsedGroups};
 }
 
 /** Historical flattened inputs are reconstructed only at the display boundary. */

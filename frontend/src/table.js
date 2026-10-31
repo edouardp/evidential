@@ -55,6 +55,7 @@ export class EvidentialTableRenderer {
       search: "",
       page: 0,
       collapsed: new Set(),
+      sectionCollapsed: new Set(),
       expanded: new Set(),
       hidden: new Set(),
       statsMembers: new Map(),
@@ -226,6 +227,18 @@ export class EvidentialTableRenderer {
   }
 
   // ----------------------------------------------------------- pagination ---
+  _toggleSection(key) {
+    const collapsed = this._state.sectionCollapsed;
+    if (collapsed.has(key)) collapsed.delete(key);
+    else collapsed.add(key);
+    this._sectionAnchor = key;
+    this._groupVersion++;
+    this._resetBaselineHeight();
+    this.render();
+    const toggles = [...this.scroller.querySelectorAll("button[data-section-key]")];
+    (toggles.find(button => button.dataset.sectionKey === key) || toggles[0])?.focus({preventScroll: true});
+  }
+
   _effectivePageSize() {
     return this._pageSizeOverride ?? this.options.page_size;
   }
@@ -289,10 +302,12 @@ export class EvidentialTableRenderer {
     }
     const displayPage = rowLayout?.version && !rowLayout.legacy
       ? projectLayout(rowLayout, this.rows, processed.sorted, this._effectivePageSize(), this._state.page,
-        this._viewport.expanded ? total => this._expandedPages.project(total, this._effectivePageSize(), this._state.page) : null) : null;
+        this._viewport.expanded ? total => this._expandedPages.project(total, this._effectivePageSize(), this._state.page) : null,
+        {isCollapsed: key => this._state.sectionCollapsed.has(key), anchorGroup: this._sectionAnchor}) : null;
+    this._sectionAnchor = null;
     const pagination = displayPage || this._paginate(visibility.rows, visibility.hasGroups);
     const { rows, pageCount, page, total, start } = pagination;
-    this._pageMetrics = {count: rows.length, remaining: total - start, projection: processed};
+    this._pageMetrics = {count: displayPage?.unitCount ?? rows.length, remaining: total - start, projection: processed};
     this._state.page = page;
     this._pageCount = pageCount;
     const continuationLabel = displayPage ? null : sectionContinuation(visibility.rows, start, rows);
@@ -330,7 +345,7 @@ export class EvidentialTableRenderer {
     }
     this.scroller.replaceChildren();
     const footnotes = [];
-    const isEmpty = rows.length === 0;
+    const isEmpty = displayPage ? displayPage.entries.length === 0 : rows.length === 0;
     const axisColumns = columns.filter((col) => col.encodings && (col.scale || {}).axis);
     const hasTopAxis = !isEmpty && axisColumns.some(col => col.scale.axis_position !== "bottom");
     const hasBottomAxis = !isEmpty && axisColumns.some(col => col.scale.axis_position === "bottom");
@@ -369,6 +384,7 @@ export class EvidentialTableRenderer {
           emptyMessage: opts.empty_message || "No records",
           continuationLabel,
           displayEntries: displayPage?.entries,
+          toggleSection: key => this._toggleSection(key),
           insetGroups: new Set(visibility.rows.filter(row => row.render_type === "row_section" && row.__align !== "center")
             .map(row => row.__group_key)),
           hasTopAxis,
@@ -391,7 +407,7 @@ export class EvidentialTableRenderer {
       if (this._viewport.expanded) this._viewport.fit();
     });
 
-    this.el.dataset.rowCount = String(total);
+    this.el.dataset.rowCount = String(displayPage?.matchingTotal ?? total);
     this.el.dataset.renderCount = String((Number(this.el.dataset.renderCount) || 0) + 1);
   }
 
@@ -767,8 +783,8 @@ export class EvidentialTableRenderer {
     // something sits below the table (footnotes or a caption) the actions float
     // at the bottom-right so that content keeps its place; with nothing below,
     // the footer stays in flow so the actions do not land on the last row.
-    this.root.classList.toggle("et-float-actions", pageCount <= 1 && !!hasBelow);
-    if (pageCount > 1 || (pagination.variable && page > 0)) {
+    this.root.classList.toggle("et-float-actions", pageCount <= 1 && !pagination.collapsedGroups && !!hasBelow);
+    if (pageCount > 1 || (pagination.variable && page > 0) || pagination.collapsedGroups) {
       const left = h("div", { class: "et-page-controls" });
       const pageSize = this._effectivePageSize();
       const start = pagination.start == null ? page * pageSize + 1 : pagination.start + 1;
@@ -802,7 +818,9 @@ export class EvidentialTableRenderer {
         pageButton("‹", "prev", page === 0),
         h("span", { class: "et-page-current" }, pagination.variable ? String(page + 1) : `${page + 1}/${pageCount}`),
         pageButton("›", "next", page >= pageCount - 1),
-        h("span", { class: "et-page-info" }, `(${start}–${end} of ${total})`),
+        h("span", { class: "et-page-info" }, pagination.collapsedGroups
+          ? `(${start}–${end} of ${total} items · ${pagination.matchingTotal} matching records)`
+          : `(${start}–${end} of ${total})`),
       );
       this.footer.append(left);
     }

@@ -1213,9 +1213,24 @@ tbody tr:last-child .et-bar-center .et-bar-axis { bottom: var(--et-bar-pad, 0); 
 .et-display-row .et-td { background: var(--et-bg); border-top: none; border-bottom: none; }
 .et-display-row.et-row-shaded .et-td { background: var(--et-shading); }
 .et-display-row .et-display-heading { font-weight: 600; text-align: left; }
+.et-display-section .et-display-label-cell { font-weight: 600; }
 .et-display-row .et-display-align-center { text-align: center; }
 .et-display-heading > .et-display-label { display: inline-block; max-width: 100%; }
 .et-frozen-heading-label { position: sticky; z-index: 10; }
+.et-section-toggle {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.3em;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: inherit;
+  cursor: pointer;
+}
+.et-section-toggle:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }
+.et-section-chevron { flex: none; width: 0.75em; text-align: center; }
 .et-display-row.et-row-continuation .et-td { font-style: italic; font-weight: 500; }
 .et-root .et-display-row.et-display-rule-above .et-td,
 .et-root .et-display-row.et-display-rule-both .et-td { border-top: 1px solid var(--et-header-border); }

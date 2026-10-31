@@ -1,13 +1,14 @@
 // Fullscreen sizing and frozen-column lifecycle, supplied through explicit ports.
 import { fitMarkLabels } from "./mark-labels.js";
 import { combinePoints } from "./point-clusters.js";
-const ROW_HEIGHT = 28;
 
 export class TableViewport {
   constructor({root, dialog, button, placeholder, scroller, getOptions, rerender,
-    resetBaseline, getPageSizeOverride, setPageSizeOverride}) {
+    resetBaseline, getPageSizeOverride, setPageSizeOverride, getPageMetrics,
+    onExpand, onRestore}) {
     Object.assign(this, {root, dialog, button, placeholder, scroller, getOptions,
-      rerender, resetBaseline, getPageSizeOverride, setPageSizeOverride});
+      rerender, resetBaseline, getPageSizeOverride, setPageSizeOverride, getPageMetrics,
+      onExpand, onRestore});
     if (dialog) {
       this.dialog.addEventListener("close", () => this.restore());
       this.dialog.addEventListener("cancel", (e) => { e.preventDefault(); this.close(); });
@@ -29,12 +30,25 @@ export class TableViewport {
     this.destroyed = false;
     this.frames = new Set();
     this.observer = new ResizeObserver(() => {
-      this.applyFrozenOffsets();
-      fitMarkLabels(this.root);
-      combinePoints(this.root);
-      if (this.expanded) this.fit();
+      if (this.layoutPending) return;
+      this.layoutPending = true;
+      this.frame(() => {
+        this.layoutPending = false;
+        this.applyFrozenOffsets();
+        fitMarkLabels(this.root);
+        combinePoints(this.root);
+        if (this.expanded) this.fit();
+      });
     });
     this.observer.observe(scroller);
+    if (root) this.observer.observe(root);
+  }
+
+  observeTable(table) {
+    if (this.table === table) return;
+    if (this.table) this.observer.unobserve(this.table);
+    this.table = table;
+    if (table) this.observer.observe(table);
   }
 
   frame(callback) {
@@ -66,7 +80,10 @@ export class TableViewport {
     // Drop the inline max-height immediately so the first fit measurement sees
     // the real available height instead of the capped inline one.
     this.scroller.style.maxHeight = "none";
+    this.scroller.scrollTop = 0;
     this.resetBaseline();
+    this.onExpand?.();
+    this.rerender();
     this.frame(() => {
       this.applyFrozenOffsets();
       this.fit();
@@ -93,6 +110,7 @@ export class TableViewport {
     // Restore the notebook's configured page size and drop the fullscreen
     // height baseline so the inline table shrinks back to its natural size.
     this.resetBaseline();
+    this.onRestore?.();
     this.rerender();
     this.frame(() => this.applyFrozenOffsets());
   }
@@ -100,24 +118,58 @@ export class TableViewport {
   /** Size the fullscreen page to fit the available viewport height. */
   fit() {
     if (!this.expanded || this.fitting) return;
+    const signature = () => {
+      const table = this.scroller.querySelector("table");
+      return [this.scroller.clientHeight, this.scroller.clientWidth,
+        table?.getBoundingClientRect().height, table?.querySelector("tbody")?.getBoundingClientRect().height,
+        this.getPageSizeOverride(), this.getPageMetrics?.()?.remaining].join(":");
+    };
+    const projection = this.getPageMetrics?.()?.projection;
+    if (signature() === this.lastFit && projection === this.lastProjection) return;
     this.fitting = true;
     try {
-      for (let attempt = 0; attempt < 3; attempt++) {
-        const row = this.scroller.querySelector("tbody tr");
-        const rowHeight = row ? row.getBoundingClientRect().height : ROW_HEIGHT;
-        const head = this.scroller.querySelector("thead");
-        const headerHeight = head ? head.getBoundingClientRect().height : 0;
-        const foot = this.scroller.querySelector("tfoot");
-        const footerHeight = foot ? foot.getBoundingClientRect().height : 0;
-        const available = this.scroller.clientHeight - headerHeight - footerHeight;
-        if (available <= 0 || rowHeight <= 0) break;
-        // Leave a hair of slack so we never introduce a scrollbar.
-        const fit = Math.max(1, Math.floor((available - 2) / rowHeight));
-        if (fit === this.getPageSizeOverride()) break;
-        this.setPageSizeOverride(fit);
+      let low = 0, high = Infinity, best = null;
+      // Estimate from the whole rendered body, then bracket the largest page
+      // that actually fits. Annotation rows and variable row heights are part
+      // of the measurement. Bound work even for pathological wrapping/layouts.
+      for (let attempt = 0; attempt < 12; attempt++) {
+        const table = this.scroller.querySelector("table");
+        const body = table?.querySelector("tbody");
+        if (!body) break;
+        const height = table.getBoundingClientRect().height;
+        const bodyHeight = body.getBoundingClientRect().height;
+        const available = this.scroller.clientHeight - 2;
+        const bodyBudget = available - (height - bodyHeight);
+        if (bodyBudget <= 0 || bodyHeight <= 0) break;
+        const metrics = this.getPageMetrics?.();
+        const displayed = metrics?.count || body.children.length;
+        const remaining = metrics ? metrics.remaining || displayed : Infinity;
+        const count = Number(this.getPageSizeOverride()) || displayed;
+        if (height <= available) {
+          low = count;
+          best = count;
+          if (displayed >= remaining || high - low <= 1) break;
+        } else {
+          high = count;
+          // A single oversized record cannot be split safely.
+          if (count <= 1 || high - low <= 1) break;
+        }
+        const estimate = Math.floor(displayed * bodyBudget / bodyHeight);
+        let candidate;
+        if (!Number.isFinite(high)) candidate = Math.min(remaining, Math.max(count + 1, estimate));
+        else if (low > 0) candidate = Math.floor((low + high) / 2);
+        else candidate = Math.max(1, Math.min(high - 1, estimate));
+        if (candidate === count) break;
+        this.setPageSizeOverride(candidate);
+        this.rerender();
+      }
+      if (best != null && best !== this.getPageSizeOverride()) {
+        this.setPageSizeOverride(best);
         this.rerender();
       }
     } finally {
+      this.lastFit = signature();
+      this.lastProjection = projection;
       this.fitting = false;
     }
   }

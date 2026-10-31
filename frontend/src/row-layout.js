@@ -35,7 +35,7 @@ function annotationEntry(kind, id, spec, members, depth, continuation = false) {
 }
 
 /** Filter/sort detail records first, paginate detail records, then decorate. */
-export function projectLayout(layout, allRows, sortedRows, pageSize, pageIndex) {
+export function projectLayout(layout, allRows, sortedRows, pageSize, pageIndex, paginate = null) {
   const rank = new Map(sortedRows.map((row, index) => [row, index]));
   const indices = new Map(allRows.map((row, index) => [row, index]));
   const membersOf = group => group.members.map(index => allRows[index]).filter(row => rank.has(row))
@@ -51,10 +51,11 @@ export function projectLayout(layout, allRows, sortedRows, pageSize, pageIndex) 
   else for (const row of sortedRows) ordered.push(row);
   const total = ordered.length;
   const size = pageSize === "all" || !(Number(pageSize) > 0) ? Math.max(1, total) : Number(pageSize);
-  const pageCount = Math.max(1, Math.ceil(total / size));
-  const page = Math.min(Math.max(0, pageIndex), pageCount - 1);
-  const start = page * size;
-  const end = Math.min(total, start + size);
+  const fixedCount = Math.max(1, Math.ceil(total / size));
+  const fixedPage = Math.min(Math.max(0, pageIndex), fixedCount - 1);
+  const bounds = paginate ? paginate(total) : {pageCount: fixedCount, page: fixedPage,
+    start: fixedPage * size, end: Math.min(total, (fixedPage + 1) * size)};
+  const {start, end} = bounds;
   const positions = new Map(ordered.map((row, index) => [row, index]));
   const entries = [];
   const addData = (row, depth = 0, inset = false) => {
@@ -90,7 +91,7 @@ export function projectLayout(layout, allRows, sortedRows, pageSize, pageIndex) 
   if (total && end === total && layout.grand_summary) {
     entries.push(annotationEntry("grand_summary", "grand-summary", layout.grand_summary, ordered, 0));
   }
-  return {entries, rows: ordered.slice(start, end), total, page, pageCount, start};
+  return {...bounds, entries, rows: ordered.slice(start, end), total};
 }
 
 /** Historical flattened inputs are reconstructed only at the display boundary. */

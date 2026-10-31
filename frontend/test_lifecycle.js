@@ -7,7 +7,7 @@ import { TableViewport } from "./src/viewport.js";
 
 const dom = new JSDOM("<body></body>");
 global.window = dom.window;
-global.ResizeObserver = class { observe() {} disconnect() {} };
+global.ResizeObserver = class { observe() {} unobserve() {} disconnect() {} };
 
 test("stopping a hold disposes repeat timers and release handlers", (t) => {
   t.mock.timers.enable({ apis: ["setTimeout"] });
@@ -111,14 +111,71 @@ test("fullscreen pagination reserves space for a bottom scale outside the body",
   const scroller = dom.window.document.createElement("div");
   scroller.innerHTML = '<table><thead></thead><tbody><tr><td>A</td></tr></tbody><tfoot></tfoot></table>';
   Object.defineProperty(scroller, "clientHeight", {value: 100});
-  for (const node of scroller.querySelectorAll("thead, tbody tr, tfoot")) {
-    node.getBoundingClientRect = () => ({height: 20});
-  }
-  let size = null;
+  let size = 10, renders = 0, projection = {};
+  scroller.querySelector("tbody").getBoundingClientRect = () => ({height: size * 20});
+  scroller.querySelector("table").getBoundingClientRect = () => ({height: 40 + size * 20});
   const viewport = new TableViewport({scroller, getOptions: () => ({}),
-    getPageSizeOverride: () => size, setPageSizeOverride: value => { size = value; }, rerender() {}});
+    getPageSizeOverride: () => size, setPageSizeOverride: value => { size = value; },
+    getPageMetrics: () => ({count: size, remaining: 100, projection}), rerender() { renders++; }});
   viewport.expanded = true;
   viewport.fit();
   assert.equal(size, 2);
+  const fitted = renders;
+  viewport.fit();
+  assert.equal(renders, fitted, "unchanged geometry must not repeatedly probe an overflowing extra row");
+  projection = {};
+  viewport.fit();
+  assert.ok(renders > fitted, "a new dataset must be measured even when its initial geometry matches");
+  viewport.destroy();
+});
+
+test("fullscreen measures the entire body including tall rows and display annotations", () => {
+  const scroller = dom.window.document.createElement("div");
+  scroller.innerHTML = '<table><thead></thead><tbody></tbody></table>';
+  Object.defineProperty(scroller, "clientHeight", {value: 200});
+  let size = 10;
+  // 40px header, 60px section/summary chrome, one 10px row then 40px rows.
+  const bodyHeight = () => 60 + 10 + (size - 1) * 40;
+  scroller.querySelector("tbody").getBoundingClientRect = () => ({height: bodyHeight()});
+  scroller.querySelector("table").getBoundingClientRect = () => ({height: 40 + bodyHeight()});
+  const viewport = new TableViewport({scroller, getOptions: () => ({}),
+    getPageSizeOverride: () => size, setPageSizeOverride: value => {size = value;},
+    getPageMetrics: () => ({count: size, remaining: 100}), rerender() {}});
+  viewport.expanded = true;
+  viewport.fit();
+  assert.equal(size, 3);
+  assert.ok(40 + bodyHeight() <= 200);
+  assert.ok(40 + bodyHeight() + 40 > 200);
+  viewport.destroy();
+});
+
+test("viewport observes and releases the current table as well as its available space", t => {
+  const observed = [], released = [];
+  t.mock.method(global.ResizeObserver.prototype, "observe", el => observed.push(el));
+  t.mock.method(global.ResizeObserver.prototype, "unobserve", el => released.push(el));
+  const root = dom.window.document.createElement("div"), scroller = root.appendChild(dom.window.document.createElement("div"));
+  const first = dom.window.document.createElement("table"), second = dom.window.document.createElement("table");
+  const viewport = new TableViewport({root, scroller, getOptions: () => ({})});
+  viewport.observeTable(first);
+  viewport.observeTable(first);
+  viewport.observeTable(second);
+  assert.deepEqual(observed, [scroller, root, first, second]);
+  assert.deepEqual(released, [first]);
+  viewport.destroy();
+});
+
+test("a single oversized record stays accessible instead of fitting an empty page", () => {
+  const scroller = dom.window.document.createElement("div");
+  scroller.innerHTML = '<table><tbody></tbody></table>';
+  Object.defineProperty(scroller, "clientHeight", {value: 200});
+  let size = 10;
+  scroller.querySelector("tbody").getBoundingClientRect = () => ({height: size * 500});
+  scroller.querySelector("table").getBoundingClientRect = () => ({height: 40 + size * 500});
+  const viewport = new TableViewport({scroller, getOptions: () => ({}),
+    getPageSizeOverride: () => size, setPageSizeOverride: value => {size = value;},
+    getPageMetrics: () => ({count: size, remaining: 100}), rerender() {}});
+  viewport.expanded = true;
+  viewport.fit();
+  assert.equal(size, 1);
   viewport.destroy();
 });

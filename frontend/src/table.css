@@ -46,15 +46,17 @@
 }
 
 .et-root.et-expanded .et-body {
-  flex: 1 1 auto;
+  flex: 1 1 0;
   min-height: 0;
 }
 
 .et-root.et-expanded .et-scroller {
-  flex: 1 1 auto;
+  flex: 1 1 0;
   min-height: 0;
   max-height: none;
 }
+
+.et-root.et-expanded > :not(.et-body) { flex-shrink: 0; }
 
 /* -------------------------------------------------------------- loading --- */
 /* Fade the current data out and "Processing…" in over FADE_MS; the reveal is

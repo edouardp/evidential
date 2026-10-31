@@ -15,7 +15,7 @@ export function benchmarkRenderer(counts = [10000, 50000, 100000], repeats = 5) 
   const dom = new JSDOM("<body></body>");
   Object.assign(globalThis, {
     window: dom.window, document: dom.window.document, Node: dom.window.Node,
-    ResizeObserver: class { observe() {} disconnect() {} },
+    ResizeObserver: class { observe() {} unobserve() {} disconnect() {} },
     requestAnimationFrame: () => 0, cancelAnimationFrame: () => {},
   });
   const results = [];

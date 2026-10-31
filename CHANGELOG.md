@@ -16,6 +16,10 @@ project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+- Expanded tables fit measured pages after reserving grouped/multiline headings,
+  statistics, axes, notes and navigation. Wrapped rows and synthetic summaries
+  contribute their actual height, resizing drops stale height constraints, and
+  changing page capacity preserves consecutive record boundaries ([#3](https://github.com/edouardp/evidential/issues/3)).
 - Positioned strips share adjoining edges at fractional widths, preventing
   rounding seams between contiguous intervals while preserving genuine gaps.
 

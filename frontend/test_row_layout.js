@@ -109,3 +109,17 @@ test("large groups project without spreading arrays into function arguments", ()
   assert.equal(page.entries.length, 3);
   assert.equal(page.entries[0].label, "All (cont.)");
 });
+
+test("measured pagination projects explicit detail bounds before adding annotations", () => {
+  const bounds = {page: 1, pageCount: 2, start: 1, end: 3, variable: true};
+  const page = projectLayout(layout, source, source, 10, 1, total => {
+    assert.equal(total, 3);
+    return bounds;
+  });
+  assert.deepEqual(page.rows, source.slice(1, 3));
+  assert.equal(page.start, 1);
+  assert.equal(page.variable, true);
+  assert.ok(page.entries.some(entry => entry.kind === "section" && entry.continuation));
+  assert.deepEqual(page.entries.filter(entry => entry.kind === "data").map(entry => entry.ordinal), [1, 2]);
+  assert.equal(page.entries.at(-1).kind, "grand_summary");
+});

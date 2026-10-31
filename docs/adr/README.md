@@ -106,6 +106,7 @@ dated, immutable record of the decisions behind them.
 | [085](085-data-tooltips.md) | Data Tooltips | Accepted |
 | [086](086-segmented-overlapping-points.md) | Segmented Overlapping Points | Accepted |
 | [087](087-dimension-grid.md) | Searchable, Cross-Filtered Dimension Grid | Accepted |
+| [088](088-measured-expanded-pages.md) | Measured Pages for Expanded Tables | Accepted |
 
 ## Creating New ADRs
 

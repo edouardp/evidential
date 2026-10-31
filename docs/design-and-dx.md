@@ -399,13 +399,17 @@ the font's own figures are wanted.
 ### 4.11 The fullscreen view is a first-class mode
 
 **Chose.** A ⛶ button moves the table into a modal dialog that fills the
-viewport, recalculates how many rows fit, and restores the configured page size
-on exit.
+viewport, measures how many complete rows fit, and restores the configured
+inline page and sizing on exit.
 
 **Why.** Notebook cells are narrow; a wide table wants the browser window. The
-dialog arithmetic (measure the header and a row, divide the available height)
-means "fullscreen" shows *more data*, not just bigger data. Backdrop click,
-Escape and the × all return the table to its inline position.
+expanded body reserves all header tiers, statistics, axes, notes and controls.
+It fits the actual rendered page rather than assuming every row is the height
+of the first row. Synthetic headings and totals contribute to that measurement.
+Pages keep exact record-offset boundaries, so different capacities cannot skip
+records. Expanded navigation shows the current page and record range; inline
+pagination retains its total page count. Backdrop click, Escape and the × all
+return the table to its inline position. See [ADR-088](adr/088-measured-expanded-pages.md).
 
 ![Fullscreen: the table fills the viewport and fits the available rows](fullscreen.png)
 

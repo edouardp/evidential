@@ -11,6 +11,7 @@ global.URL = dom.window.URL;
 global.Blob = dom.window.Blob;
 global.ResizeObserver = class {
   observe() {}
+  unobserve() {}
   disconnect() {}
 };
 global.requestAnimationFrame = (cb) => setTimeout(() => cb(Date.now()), 0);
@@ -531,7 +532,7 @@ test("leaving fullscreen restores the inline height", () => {
   renderer._pageSizeOverride = 20;
   el.querySelector("dialog").append(el.querySelector(".et-root"));
   renderer.render();
-  assert.equal(renderer.scroller.style.minHeight, "600px");
+  assert.equal(renderer.scroller.style.minHeight, "", "expanded layout must be free to shrink");
 
   // Leave fullscreen: natural inline height again; must not keep 600px.
   natural = 120;
@@ -557,6 +558,36 @@ test("fullscreen page-size override applies and resets the inline size", () => {
   assert.equal(renderer._pageSizeOverride, null);
   assert.equal(renderer._effectivePageSize(), 2);
   assert.equal(el.querySelectorAll("tbody tr").length, 2);
+  renderer.destroy();
+});
+
+test("expanded page offsets reset when the projection changes without replacing source rows", () => {
+  const model = makeModel(ROWS, COLUMNS, {page_size: 2}, el);
+  const renderer = new EvidentialTableRenderer(model, el);
+  renderer._viewport.expanded = true;
+  renderer._pageSizeOverride = 1;
+  renderer.render();
+  renderer._gotoPage(1);
+  assert.equal(renderer._state.page, 1);
+  const source = model.data.rows;
+  model.data.options = {...model.data.options, column_stats: true};
+  renderer.render();
+  assert.equal(model.data.rows, source);
+  assert.equal(renderer._state.page, 0);
+  assert.equal(renderer._expandedPages.current.start, 0);
+  renderer.destroy();
+});
+
+test("closing the expanded view returns to the original inline page", () => {
+  const renderer = new EvidentialTableRenderer(makeModel(ROWS, COLUMNS, {page_size: 2}, el), el);
+  renderer._gotoPage(1);
+  assert.match(el.querySelector("tbody").textContent, /SF/);
+  renderer._viewport.toggle();
+  assert.equal(renderer._state.page, 0);
+  renderer._viewport.close();
+  assert.equal(renderer._state.page, 1);
+  assert.equal(el.querySelectorAll("tbody tr").length, 1);
+  assert.match(el.querySelector("tbody").textContent, /SF/);
   renderer.destroy();
 });
 

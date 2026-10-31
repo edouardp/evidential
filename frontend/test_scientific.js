@@ -11,7 +11,7 @@ global.window = dom.window;
 global.document = dom.window.document;
 global.Node = dom.window.Node;
 global.HTMLElement = dom.window.HTMLElement;
-global.ResizeObserver = class { observe() {} disconnect() {} };
+global.ResizeObserver = class { observe() {} unobserve() {} disconnect() {} };
 global.requestAnimationFrame = cb => setTimeout(cb, 0);
 global.cancelAnimationFrame = clearTimeout;
 

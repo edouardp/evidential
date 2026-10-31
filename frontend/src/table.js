@@ -16,6 +16,7 @@ import { RowPipeline } from "./derived.js";
 import { HoldController, bindRowSelection } from "./interactions.js";
 import { LoadingController } from "./loading.js";
 import { TableViewport } from "./viewport.js";
+import { ExpandedPages } from "./expanded-pages.js";
 import { h, inlineMarkdown, withFigure, formatRowRanges, alignStyle, isStub } from "./dom.js";
 import { hiddenColumns, visibleRows, searchRows, sortRows, paginateRows,
   computeRowspans, shaded, sectionContinuation } from "./rows.js";
@@ -62,6 +63,8 @@ export class EvidentialTableRenderer {
     this._groupVersion = 0;
     this._pageCount = 1;
     this._pageSizeOverride = null;
+    this._expandedPages = new ExpandedPages();
+    this._expandedProjection = null;
     this._holdController = new HoldController((direction) => this._advance(direction));
     this._build();
   }
@@ -130,6 +133,15 @@ export class EvidentialTableRenderer {
       resetBaseline: () => this._resetBaselineHeight(),
       getPageSizeOverride: () => this._pageSizeOverride,
       setPageSizeOverride: (value) => { this._pageSizeOverride = value; },
+      getPageMetrics: () => this._pageMetrics,
+      onExpand: () => {
+        this._inlinePage = this._state.page;
+        this._state.page = 0;
+        this._pageSizeOverride = 10;
+        this._expandedPages.reset();
+        this._expandedProjection = null;
+      },
+      onRestore: () => { this._state.page = this._inlinePage ?? 0; },
     });
 
     this.render();
@@ -219,6 +231,10 @@ export class EvidentialTableRenderer {
   }
 
   _paginate(rows, hasGroups) {
+    if (this._viewport.expanded) {
+      const page = this._expandedPages.project(rows.length, this._effectivePageSize(), this._state.page);
+      return {...page, rows: rows.slice(page.start, page.end)};
+    }
     const page = paginateRows(rows, this._effectivePageSize(), this._state.page, this.options, hasGroups);
     this._state.page = page.page;
     return page;
@@ -229,7 +245,7 @@ export class EvidentialTableRenderer {
     const opts = this.options;
     this._applyTheme();
     this.root.style.maxWidth =
-      opts.width == null
+      this._viewport.expanded || opts.width == null
         ? ""
         : typeof opts.width === "number"
           ? `${opts.width}px`
@@ -265,9 +281,18 @@ export class EvidentialTableRenderer {
     const subcolumns = layout.joins;
     const visibility = this._pipeline.visible(processed, this._groupVersion, (key) => this._isCollapsed(key));
     const rowLayout = processed.rowLayout;
+    if (this._viewport.expanded && (this._expandedProjection !== processed || this._expandedGroupVersion !== this._groupVersion)) {
+      this._expandedPages.reset();
+      this._state.page = 0;
+      this._expandedProjection = processed;
+      this._expandedGroupVersion = this._groupVersion;
+    }
     const displayPage = rowLayout?.version && !rowLayout.legacy
-      ? projectLayout(rowLayout, this.rows, processed.sorted, this._effectivePageSize(), this._state.page) : null;
-    const { rows, pageCount, page, total, start } = displayPage || this._paginate(visibility.rows, visibility.hasGroups);
+      ? projectLayout(rowLayout, this.rows, processed.sorted, this._effectivePageSize(), this._state.page,
+        this._viewport.expanded ? total => this._expandedPages.project(total, this._effectivePageSize(), this._state.page) : null) : null;
+    const pagination = displayPage || this._paginate(visibility.rows, visibility.hasGroups);
+    const { rows, pageCount, page, total, start } = pagination;
+    this._pageMetrics = {count: rows.length, remaining: total - start, projection: processed};
     this._state.page = page;
     this._pageCount = pageCount;
     const continuationLabel = displayPage ? null : sectionContinuation(visibility.rows, start, rows);
@@ -330,7 +355,7 @@ export class EvidentialTableRenderer {
           subcolumns,
           layout,
           rowNumbers: !!opts.row_numbers,
-          rowNumberBase: page * (Number(this._effectivePageSize()) || 0),
+          rowNumberBase: start,
           section,
           accordion,
           dimCount,
@@ -352,16 +377,18 @@ export class EvidentialTableRenderer {
       );
     }
     const hasBelow = Boolean(opts.caption) || footnotes.length > 0 || (opts.footnotes || []).length > 0;
-    this._renderFooter(page, pageCount, total, hasBelow);
+    this._renderFooter(page, pageCount, total, hasBelow, pagination);
     this._renderFootnotes(footnotes, opts.footnotes);
     this.caption.replaceChildren();
     if (opts.caption) this.caption.append(inlineMarkdown(opts.caption));
     this._updateBaselineHeight();
+    this._viewport.observeTable(this.scroller.querySelector("table"));
     this._tooltips.refresh();
     this._viewport.frame(() => {
       this._viewport.applyFrozenOffsets();
       fitMarkLabels(this.root);
       combinePoints(this.root);
+      if (this._viewport.expanded) this._viewport.fit();
     });
 
     this.el.dataset.rowCount = String(total);
@@ -377,6 +404,10 @@ export class EvidentialTableRenderer {
   /** Keep the table from shrinking below the tallest page seen for the
    * current page size, so live updates never change the layout. */
   _updateBaselineHeight() {
+    if (this._viewport.expanded) {
+      this._resetBaselineHeight();
+      return;
+    }
     const pageSize = this._effectivePageSize();
     if (pageSize !== this._baselinePageSize) {
       // Page size changed (e.g. entering/leaving fullscreen): drop the old
@@ -452,6 +483,7 @@ export class EvidentialTableRenderer {
 
   /** How many blank rows an empty table shows, to hold its height. */
   _emptyRowCount(opts) {
+    if (this._viewport.expanded) return Math.min(200, Number(this._effectivePageSize()) || 10);
     const configured = Number(opts.empty_rows);
     if (Number.isFinite(configured) && configured > 0) return Math.min(Math.floor(configured), 200);
     const pageSize = Number(this._effectivePageSize());
@@ -586,7 +618,10 @@ export class EvidentialTableRenderer {
     return renderStatsRow({columns, layout: ctx.layout, stats: ctx.stats,
       formatRanges: ctx.formatRanges, options: this.options, rowNumbers: ctx.rowNumbers,
       selections: this._state.statsMembers,
-      onLayout: () => this._viewport.frame(() => this._viewport.applyFrozenOffsets())});
+      onLayout: () => this._viewport.frame(() => {
+        this._viewport.applyFrozenOffsets();
+        if (this._viewport.expanded) this._viewport.fit();
+      })});
   }
 
   _renderHeader(columns, ctx) {
@@ -726,18 +761,18 @@ export class EvidentialTableRenderer {
     this.footnotesEl.append(list);
   }
 
-  _renderFooter(page, pageCount, total, hasBelow) {
+  _renderFooter(page, pageCount, total, hasBelow, pagination = {}) {
     this.footer.replaceChildren();
     // With a single page there is no pager row to hold the actions. If
     // something sits below the table (footnotes or a caption) the actions float
     // at the bottom-right so that content keeps its place; with nothing below,
     // the footer stays in flow so the actions do not land on the last row.
     this.root.classList.toggle("et-float-actions", pageCount <= 1 && !!hasBelow);
-    if (pageCount > 1) {
+    if (pageCount > 1 || (pagination.variable && page > 0)) {
       const left = h("div", { class: "et-page-controls" });
       const pageSize = this._effectivePageSize();
-      const start = page * pageSize + 1;
-      const end = Math.min(total, (page + 1) * pageSize);
+      const start = pagination.start == null ? page * pageSize + 1 : pagination.start + 1;
+      const end = pagination.end == null ? Math.min(total, (page + 1) * pageSize) : pagination.end;
 
       const pageButton = (label, direction, disabled) => {
         const button = h(
@@ -761,11 +796,11 @@ export class EvidentialTableRenderer {
         return button;
       };
 
-      // A single left-aligned run: ‹ 1/3 › (1–2 of 5). The arrows stay real
-      // buttons (same hitbox as before) but are styled as plain text.
+      // Current page and exact record range. A final page count is available
+      // only for fixed-size inline pages. Arrows keep their button hitboxes.
       left.append(
         pageButton("‹", "prev", page === 0),
-        h("span", { class: "et-page-current" }, `${page + 1}/${pageCount}`),
+        h("span", { class: "et-page-current" }, pagination.variable ? String(page + 1) : `${page + 1}/${pageCount}`),
         pageButton("›", "next", page >= pageCount - 1),
         h("span", { class: "et-page-info" }, `(${start}–${end} of ${total})`),
       );
@@ -798,6 +833,17 @@ export class EvidentialTableRenderer {
   }
 
   _gotoPage(page) {
+    if (this._viewport.expanded) {
+      this._viewport.fit();
+      const next = this._expandedPages.move(page);
+      if (!next) return;
+      this._pageSizeOverride = next.size;
+      this._state.page = next.page;
+      this.scroller.scrollTop = 0;
+      this.render();
+      this._viewport.fit();
+      return;
+    }
     const count = Math.max(1, this._pageCount || 1);
     this._state.page = Math.min(Math.max(0, page), count - 1);
     this.render();

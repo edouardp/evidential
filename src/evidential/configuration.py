@@ -75,6 +75,8 @@ class TooltipOptions(TypedDict, total=False):
     #: Hover delays in seconds; graphics default to 0, scalar text to 0.8.
     delay: float
     text_delay: float
+    #: Maximum overlapping point entries; closest to the pointer, default 10.
+    max_entries: int
 
 
 class TableOptions(TypedDict, total=False):
@@ -633,8 +635,11 @@ def validate_options(options: Mapping[str, Any], schema: Any, path: str) -> None
             raise unknown_option(name, list(fields), path)
         if not _matches(value, fields[name], f"{path}.{name}"):
             raise TypeError(f"{path}.{name} expects {fields[name]}, got {value!r}")
-        if schema is TooltipOptions and value < 0:
-            raise ValueError(f"{path}.{name} must be nonnegative (seconds)")
+        if schema is TooltipOptions:
+            if name == "max_entries" and value < 1:
+                raise ValueError(f"{path}.{name} must be a positive integer")
+            if name in {"delay", "text_delay"} and value < 0:
+                raise ValueError(f"{path}.{name} must be nonnegative (seconds)")
         if name in {"row_shading", "neutral_range"} and isinstance(value, (list, tuple)) and len(value) != 2:
             raise TypeError(f"{path}.{name} expects a pair of values")
     for name in getattr(schema, "__required_keys__", ()):

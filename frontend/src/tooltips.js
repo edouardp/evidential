@@ -4,7 +4,8 @@ import { tooltipText, tooltipValue } from "./tooltip-data.js";
 import { pointVisual } from "./point-clusters.js";
 
 const targets = new WeakMap();
-const delays = new WeakMap();
+const cellOptions = new WeakMap();
+const DEFAULT_MAX_ENTRIES = 10;
 let nextId = 0;
 
 /** Register data rather than event handlers. Weak keys leave no detached-row cache. */
@@ -50,9 +51,12 @@ export function inspectCell(cell, col, row, options, formatCode) {
   };
   targets.set(cell, {data, priority: 0, navigate: false});
   cell.dataset.etTooltipCell = "";
-  const timing = {...options.tooltips, ...col.tooltip_options};
+  const tooltipOptions = {...options.tooltips, ...col.tooltip_options};
   const graphic = Boolean(cell.querySelector(".et-marks, .et-sparkline, .et-bar-cell, .et-symbols, .et-delta"));
-  delays.set(cell, (graphic ? timing.delay ?? 0 : timing.text_delay ?? 0.8) * 1000);
+  cellOptions.set(cell, {
+    delay: (graphic ? tooltipOptions.delay ?? 0 : tooltipOptions.text_delay ?? 0.8) * 1000,
+    maxEntries: tooltipOptions.max_entries ?? DEFAULT_MAX_ENTRIES,
+  });
   const summary = marks.length ? marks.map(node => tooltipText(targets.get(node).data)).join("\n") : tooltipText(data);
   cell.setAttribute("aria-label", summary);
   if (marks.length || override != null) cell.tabIndex = 0;
@@ -127,7 +131,7 @@ export class TooltipController {
       if (event.pointerType !== "touch") return;
       const cell = event.target.closest?.("[data-et-tooltip-cell]");
       if (!cell) { this.hide(); return; }
-      const data = this.values(hitTargets(cell, event.clientX, event.clientY, event.target));
+      const data = this.values(hitTargets(cell, event.clientX, event.clientY, event.target), cell, event.clientX, event.clientY);
       this.touchInspection = {data, x: event.clientX, y: event.clientY};
     });
     on(root, "click", () => {
@@ -187,26 +191,43 @@ export class TooltipController {
     // Keyboard inspection reveals overlapping points together too.
     const nodes = (targets.get(node)?.priority || 0) >= 3
       ? hitTargets(this.keyboardCell, rect.left + rect.width / 2, rect.top + rect.height / 2, node) : [node];
-    this.show(nodes, this.keyboardCell, rect.left + rect.width / 2, rect.bottom);
+    const x = rect.left + rect.width / 2, y = rect.top + rect.height / 2;
+    this.showData(this.values(nodes, this.keyboardCell, x, y, node), this.keyboardCell, x, rect.bottom);
     this.active?.classList.remove("et-tooltip-active");
     this.active = pointVisual(node);
     this.active.classList.add("et-tooltip-active");
   }
 
-  values(nodes) {
+  values(nodes, cell, x, y, preferred) {
+    const items = nodes.map((node, index) => ({node, index, ...targets.get(node)})).filter(item => item.data);
+    const points = items.length > 0 && items.every(item => item.priority >= 3);
+    const limit = cellOptions.get(cell)?.maxEntries ?? DEFAULT_MAX_ENTRIES;
+    if (points && items.length > limit) {
+      // Rank before deduplication, so the nearest copy of a value wins. Read
+      // each box once; original centres also survive segmented point clusters.
+      for (const item of items) {
+        const rect = item.node.getBoundingClientRect();
+        x ??= rect.left + rect.width / 2;
+        y ??= rect.top + rect.height / 2;
+        item.distance = (rect.left + rect.width / 2 - x) ** 2 + (rect.top + rect.height / 2 - y) ** 2;
+      }
+      items.sort((a, b) => a.distance - b.distance || Number(b.node === preferred) - Number(a.node === preferred));
+    }
     const seen = new Set();
-    return nodes.map(node => targets.get(node)?.data).filter(data => {
-      if (!data || seen.has(tooltipText(data))) return false;
-      seen.add(tooltipText(data)); return true;
-    }).sort((a, b) => Number.isFinite(a.xValue) && Number.isFinite(b.xValue) ? a.xValue - b.xValue : 0);
+    const unique = items.filter(item => {
+      const text = tooltipText(item.data);
+      if (seen.has(text)) return false;
+      seen.add(text); return true;
+    });
+    const selected = points ? unique.slice(0, limit) : unique;
+    return selected.sort((a, b) => (Number.isFinite(a.data.xValue) && Number.isFinite(b.data.xValue)
+      ? a.data.xValue - b.data.xValue : 0) || a.index - b.index).map(item => item.data);
   }
-
-  show(nodes, anchor, x, y) { this.showData(this.values(nodes), anchor, x, y); }
 
   hover(nodes, cell, x, y) {
     this.cancelHide();
-    const values = this.values(nodes), key = JSON.stringify(values);
-    const delay = delays.get(cell) || 0;
+    const values = this.values(nodes, cell, x, y), key = JSON.stringify(values);
+    const delay = cellOptions.get(cell)?.delay || 0;
     if (!this.popup.hidden && this.anchor === cell) { this.cancelPending(); this.showData(values, cell, x, y); return; }
     if (!delay) { this.cancelPending(); this.showData(values, cell, x, y); return; }
     if (this.pending?.cell === cell && this.pending.key === key) {

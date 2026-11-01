@@ -13,6 +13,10 @@ def test_tooltip_gallery_examples_and_sources():
     overlap = definitions["overlap_table"].widget
     assert overlap.raw[0]["younger"] == overlap.raw[0]["middle"]
     assert overlap.raw[1]["younger"] != overlap.raw[1]["middle"]
+    dense = definitions["dense_table"].widget
+    assert len(dense.raw[0]["default_samples"]) == 41
+    assert dense.raw[0]["default_samples"] == dense.raw[0]["limited_samples"]
+    assert dense.columns[1]["tooltip_options"]["max_entries"] == 3
     assert definitions["stack_table"].widget.columns[-1]["fmt"] == "usd0"
     assert definitions["neutral_table"].widget.columns[-1]["encodings"][0]["diverge_at"] == "neutral"
     matches = definitions["match_table"].widget.raw[0]["form"]

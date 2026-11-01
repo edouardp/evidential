@@ -855,8 +855,11 @@ columns=[
   See [`48_dumbbell_plots.py`](../../notebooks/48_dumbbell_plots.py).
 - **Tooltips** — inspect full, comma-grouped values independently of painted
   labels. Dots under the pointer share a multiline tooltip with named series,
-  sorted by numeric x-value (declaration order breaks ties);
-  their invisible hit area is slightly larger than the visible dot. Stack
+  showing at most 10 entries nearest the cursor in screen space. The selected
+  values are sorted by numeric x-value (declaration order breaks ties).
+  Set a positive integer with `.tooltip(max_entries=20)` or a table-wide
+  `settings(tooltips={"max_entries": 20})`; the column setting takes precedence.
+  Their invisible hit area is slightly larger than the visible dot. Stack
   segments report category, amount, share and total, including hidden labels
   and both halves of a split neutral category. Ranges report endpoints and
   change; box plots report their five-number summary and outliers. Object-backed
@@ -1254,7 +1257,7 @@ other than `auto`, `merge`, `group` and `subcolumns` return a `Column`;
 | `.group(label)` / `.subcolumn(label)` | header structure (dict spelling) |
 | `.repeat_values(bool=True)` / `.hide(bool=True)` / `.sort_by(column)` | display |
 | `.info(str)` / `.footnote(column)` | tooltip / footnote |
-| `.tooltip(value=True, *, delay=None, text_delay=None)` | full values; `False` disables, `"@field"` binds text, other strings are literal; newlines and hover delays in seconds |
+| `.tooltip(value=True, *, delay=None, text_delay=None, max_entries=None)` | full values; `False` disables, `"@field"` binds text, other strings are literal; newlines, hover delays in seconds, and a positive limit on nearby point entries (default 10) |
 | `.markdown()` / `.html()` | render rich text |
 | `.link(column=, *, label=, new_tab=)` / `.image(...)` / `.logo(...)` | rich cells |
 | `.template(value, **formats)` | fill-in-the-blanks cell |

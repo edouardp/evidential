@@ -28,6 +28,10 @@ project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+- Dense point tooltips show the 10 entries nearest the pointer in screen space,
+  retaining x-value display order. `.tooltip(max_entries=...)` and table-level
+  `tooltips` options override the positive integer limit; keyboard and touch
+  inspection use the same cap. Notebooks 50 and 55 explain and demonstrate it.
 - Continued section headings keep their values, formatting, alignment and rules,
   appending only `(cont.)` to the label. Removed continuation-specific typography
   and reused the ordinary renderer for legacy section headings ([#5](https://github.com/edouardp/evidential/issues/5)).

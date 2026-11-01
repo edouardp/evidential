@@ -82,6 +82,38 @@ def test_stacks_hidden_labels_and_both_neutral_halves(page, live_server, demos):
     capture(page, "tooltips-neutral.png")
 
 
+def test_dense_points_choose_nearest_entries_and_respect_table_and_column_limits(page, live_server, demos):
+    default = demos["dense_table"]
+    overridden = EvidentialTable(
+        default.raw,
+        columns=default.columns,
+        settings={**default.options, "tooltips": {"max_entries": 5}},
+    )
+    mount(page, live_server, [("Default limit", default, []), ("Table default", overridden, [])])
+    for case, limit in [(0, 10), (1, 5)]:
+        root = page.locator(f"#case-{case}")
+        cell = root.locator("tbody td").first
+        points = cell.locator(".et-mark-point")
+        tip = root.locator(".et-tooltip")
+        for index, start in [(0, 0), (40, 41 - limit)]:
+            box = points.nth(index).bounding_box()
+            page.mouse.move(box["x"] + box["width"] / 2, box["y"] + box["height"] / 2)
+            expect(tip.locator(".et-tooltip-entry")).to_have_count(limit)
+            expect(tip.locator(".et-tooltip-value")).to_have_text(
+                [f"{49 + i / 20:g}" for i in range(start, start + limit)]
+            )
+        # A column's limit wins even when the table has another default.
+        root.locator("tbody td").nth(1).locator(".et-mark-point").nth(20).hover(force=True)
+        expect(tip.locator(".et-tooltip-entry")).to_have_count(3)
+        expect(tip.locator(".et-tooltip-value")).to_have_text(["49.95", "50", "50.05"])
+        cell.focus()
+        cell.press("End")
+        expect(tip.locator(".et-tooltip-entry")).to_have_count(limit)
+        expect(tip.locator(".et-tooltip-value").last).to_have_text("51")
+        expect(points).to_have_count(41)
+    capture(page, "tooltips-nearest-point-limit.png")
+
+
 def test_metadata_ranges_boxes_and_multiline_overrides(page, live_server, demos):
     mount(
         page,
@@ -162,9 +194,42 @@ def test_real_marimo_tooltip_notebook_renders_and_inspects(page):
         expect(stack.locator(".et-tooltip-content > .et-tooltip-value")).to_have_text("61%")
         page.locator('[data-cell-name="custom_tooltips"] .et-mark-bar').wait_for()
         page.locator('[data-cell-name="sparkline_inspection"] .et-sparkline').wait_for()
-        assert page.locator(".et-root").count() == 8
+        assert page.locator(".et-root").count() == 9
         capture(page, "tooltips-marimo.png")
     assert errors == []
+
+
+def test_graphics_gallery_point_array_has_a_bounded_sorted_tooltip(page):
+    gallery = NOTEBOOK.with_name("50_graphics_gallery.py")
+    with _server(gallery) as url:
+        page.goto(url, wait_until="networkidle")
+        root = page.locator('[data-cell-name="graphic_points"] .et-root')
+        root.scroll_into_view_if_needed()
+        # Marimo scrolls an ancestor pane; its queued scroll event dismisses
+        # tooltips. Let that event finish before starting this hover.
+        page.evaluate("() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)))")
+        dots = root.locator("tbody tr").first.locator(".et-mark-point")
+        expect(dots).to_have_count(100)
+        centers = dots.evaluate_all("""dots => dots.map(dot => {
+            const r = dot.getBoundingClientRect();
+            return {x: r.x + r.width / 2, y: r.y + r.height / 2, reach: r.width / 2 + 5};
+        })""")
+        densest_index = max(
+            range(len(centers)),
+            key=lambda index: sum(abs(dot["x"] - centers[index]["x"]) <= dot["reach"] for dot in centers),
+        )
+        densest = centers[densest_index]
+        assert sum(abs(dot["x"] - densest["x"]) <= dot["reach"] for dot in centers) > 10
+        dots.nth(densest_index).hover(force=True)
+        tip = root.locator(".et-tooltip")
+        expect(tip).to_be_visible()
+        expect(tip.locator(".et-tooltip-entry")).to_have_count(10)
+        values = [float(value.replace(",", "")) for value in tip.locator(".et-tooltip-value").all_text_contents()]
+        assert values == sorted(values)
+        bounds = tip.bounding_box()
+        assert bounds["y"] >= 0 and bounds["y"] + bounds["height"] <= page.viewport_size["height"]
+        expect(dots).to_have_count(100)
+        capture(page, "tooltips-gallery-array-limit.png")
 
 
 def test_sparkline_chooses_one_x_value_with_signed_color_and_separate_delays(page, live_server, demos):

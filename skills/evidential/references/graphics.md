@@ -132,14 +132,19 @@ All columns support `.tooltip(False)`, `.tooltip("@field")` and literal
 multiline text. Hover delays are seconds: table
 `settings(tooltips={"delay": 0.8, "text_delay": 1.5})`, or per-column
 `.tooltip(delay=0)`. Defaults are instant graphics and 0.8s for text; keyboard
-and touch inspection is immediate. Point plots can collect overlapping dots,
+and touch inspection is immediate. Point plots show the 10 entries nearest the
+pointer in screen space, then sort them by numeric x-value. Override the positive
+integer limit with `.tooltip(max_entries=20)` or table-wide
+`settings(tooltips={"max_entries": 20})`; column options take precedence.
+Point plots can collect overlapping dots,
 while stacks and strips inspect one segment. See notebook 55 for runnable examples.
 
 Opaque, differently coloured points with centres inside a bounded 1px cluster
 render as equal pie sectors automatically. Clusters recalculate on resize;
 adjacent points cannot chain into a wider cluster. Translucent and differently
-sized marks retain ordinary rendering. Every underlying value remains in the
-tooltip. Notebook 48 prints the values beside two-/three-/four-sector examples.
+sized marks retain ordinary rendering. Every underlying value remains
+inspectable through keyboard navigation, with the same per-popup limit.
+Notebook 48 prints the values beside two-/three-/four-sector examples.
 
 - `type="change"` interprets input as signed changes/outcomes by default.
   For absolute observations such as `[5, 4, 8]`, set `delta=True` to compare

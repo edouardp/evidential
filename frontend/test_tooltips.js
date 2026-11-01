@@ -177,6 +177,86 @@ test("overlapping values sort by their numeric x coordinate, with declaration-or
   controller.destroy(); root.remove();
 });
 
+function denseFixture({column = {}, table = {}, coincident = false} = {}) {
+  const root = document.createElement("div");
+  root.innerHTML = '<table><tbody><tr><td><div class="et-marks"></div></td></tr></tbody></table>';
+  document.body.append(root);
+  const cell = root.querySelector("td"), track = cell.firstChild;
+  const nodes = Array.from({length: 25}, (_, index) => {
+    // A logarithmic projection: equal screen steps represent unequal values.
+    const center = coincident ? 52 : 40 + index;
+    const node = inspectable(document.createElement("span"),
+      {name: `Point ${index}`, value: String(2 ** index), xValue: 2 ** index}, {priority: 3});
+    node.getBoundingClientRect = () => ({left: center - 5, right: center + 5, top: 9, bottom: 19, width: 10, height: 10});
+    track.append(node);
+    return node;
+  });
+  inspectCell(cell, {name: "samples", ...column}, {}, table);
+  const controller = new TooltipController(root);
+  return {root, cell, nodes, controller};
+}
+
+test("dense point tooltips default to the 10 nearest screen positions and follow the pointer", () => {
+  const {root, cell, controller} = denseFixture();
+  controller.hover(hitTargets(cell, 52, 14), cell, 52, 14);
+  assert.equal(controller.popup.querySelectorAll(".et-tooltip-entry").length, 10);
+  assert.deepEqual([...controller.popup.querySelectorAll(".et-tooltip-name")].map(node => node.textContent),
+    Array.from({length: 10}, (_, index) => `Point ${index + 7}:`));
+  controller.hover(hitTargets(cell, 58, 14), cell, 58, 14);
+  assert.deepEqual([...controller.popup.querySelectorAll(".et-tooltip-name")].map(node => node.textContent),
+    Array.from({length: 10}, (_, index) => `Point ${index + 13}:`));
+  assert.equal(cell.querySelectorAll("[data-et-tooltip]").length, 25);
+  controller.destroy(); root.remove();
+});
+
+test("table limits apply to points and column overrides win, including a limit of one", () => {
+  for (const [column, table, count] of [
+    [{}, {tooltips: {max_entries: 12}}, 12],
+    [{tooltip_options: {max_entries: 4}}, {tooltips: {max_entries: 12}}, 4],
+    [{tooltip_options: {max_entries: 1}}, {}, 1],
+    [{tooltip_options: {max_entries: 40}}, {}, 21],
+  ]) {
+    const {root, cell, controller} = denseFixture({column, table});
+    controller.hover(hitTargets(cell, 52, 14), cell, 52, 14);
+    assert.equal(controller.popup.querySelectorAll(".et-tooltip-entry").length, count);
+    controller.destroy(); root.remove();
+  }
+});
+
+test("deduplicating values does not use up the nearest-point allowance", () => {
+  const {root, cell, nodes, controller} = denseFixture({column: {tooltip_options: {max_entries: 3}}});
+  for (const node of nodes.slice(8, 14)) inspectable(node, {name: "Repeated", value: "value", xValue: 10}, {priority: 3});
+  const selected = controller.values(hitTargets(cell, 52, 14), cell, 52, 14);
+  assert.equal(selected.length, 3);
+  assert.equal(selected.filter(data => data.name === "Repeated").length, 1);
+  assert.deepEqual(selected.map(data => data.name), ["Repeated", "Point 14", "Point 15"]);
+  controller.destroy(); root.remove();
+});
+
+test("keyboard inspection keeps the focused point in a capped coincident group", () => {
+  const {root, cell, controller} = denseFixture({column: {tooltip_options: {max_entries: 3}}, coincident: true});
+  cell.dispatchEvent(new dom.window.FocusEvent("focusin", {bubbles: true}));
+  assert.equal(controller.popup.querySelectorAll(".et-tooltip-entry").length, 3);
+  cell.dispatchEvent(new dom.window.KeyboardEvent("keydown", {key: "End", bubbles: true}));
+  assert.deepEqual([...controller.popup.querySelectorAll(".et-tooltip-name")].map(node => node.textContent),
+    ["Point 0:", "Point 1:", "Point 24:"]);
+  controller.destroy(); root.remove();
+});
+
+test("touch snapshots use the nearest-point limit before a row can be replaced", t => {
+  t.mock.timers.enable({apis: ["setTimeout"]});
+  const {root, cell, nodes, controller} = denseFixture({column: {tooltip_options: {max_entries: 3}}});
+  const event = new dom.window.MouseEvent("pointerup", {bubbles: true, clientX: 52, clientY: 14});
+  Object.defineProperty(event, "pointerType", {value: "touch"});
+  nodes[12].dispatchEvent(event);
+  cell.addEventListener("click", () => { controller.refresh(); cell.replaceChildren(); });
+  nodes[12].dispatchEvent(new dom.window.MouseEvent("click", {bubbles: true}));
+  t.mock.timers.tick(1);
+  assert.deepEqual([...controller.popup.querySelectorAll(".et-tooltip-name")].map(node => node.textContent),
+    ["Point 11:", "Point 12:", "Point 13:"]);
+  controller.destroy(); root.remove();
+});
+
 test("touch pointerleave does not dismiss inspection like a mouse hover", t => {
   t.mock.timers.enable({apis: ["setTimeout"]});
   const {root, cell} = fixture();

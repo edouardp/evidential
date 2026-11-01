@@ -60,3 +60,26 @@ def test_invalid_delays_fail_in_every_public_configuration_path(value):
             settings(tooltips={key: value})
         with pytest.raises((TypeError, ValueError), match=key):
             EvidentialTable([{"value": 1}], columns=[{"name": "value", "tooltip_options": {key: value}}])
+
+
+def test_point_tooltip_limit_round_trips_and_merges_without_changing_other_options():
+    frame = settings(tooltips={"max_entries": 15, "delay": 0.2})
+    original = col.points("samples").tooltip(delay=0.8, max_entries=4)
+    changed = original.tooltip(text_delay=1.5)
+    assert original["tooltip_options"] == {"delay": 0.8, "max_entries": 4}
+    assert changed["tooltip_options"] == {"delay": 0.8, "max_entries": 4, "text_delay": 1.5}
+    for column in (changed, dict(changed)):
+        table = EvidentialTable([{"samples": [1, 2, 3]}], columns=[column], settings=frame)
+        assert table.options["tooltips"]["max_entries"] == 15
+        assert table.columns[0]["tooltip_options"]["max_entries"] == 4
+        assert table.raw == [{"samples": [1, 2, 3]}]
+
+
+@pytest.mark.parametrize("value", [0, -1, True, "10", 1.5, float("inf"), float("nan")])
+def test_point_tooltip_limit_requires_a_positive_integer_in_all_configuration_paths(value):
+    with pytest.raises((TypeError, ValueError), match="max_entries"):
+        col.points("samples").tooltip(max_entries=value)
+    with pytest.raises((TypeError, ValueError), match="max_entries"):
+        settings(tooltips={"max_entries": value})
+    with pytest.raises((TypeError, ValueError), match="max_entries"):
+        EvidentialTable([], columns=[{"name": "samples", "tooltip_options": {"max_entries": value}}])

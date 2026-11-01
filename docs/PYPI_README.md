@@ -1078,6 +1078,9 @@ columns=[
 #### Points from an array
 
 Plot every sample on one horizontal scale, with transparent marks for overlap.
+Hover shows up to **10 nearest points**, displayed in x-value order. Override
+the limit with `.tooltip(max_entries=20)` or set a table-wide default using
+`settings(tooltips={"max_entries": 20})`.
 
 ```python
 columns=[
@@ -1103,8 +1106,10 @@ split into equal sectors. The whole cluster must fit within 1px, so a chain
 of nearby points cannot collapse into one long group. Clusters recalculate
 on resize; translucent and differently sized points keep their rendering.
 
-Hover for every underlying named value, sorted by x-value, with full precision
-and readable commas. Tooltips also name stack segments and report amounts, shares and
+Hover for up to 10 nearby named values, chosen by screen distance to the
+pointer and sorted by x-value, with full precision and readable commas.
+Override the limit with `.tooltip(max_entries=20)`.
+Tooltips also name stack segments and report amounts, shares and
 totals. Sparklines inspect one observation by x-position, with signed-area
 swatches matching the fill. Newlines, keyboard inspection and touch work
 throughout. Use `settings(tooltips={"delay": 0.8, "text_delay": 1.5})` for

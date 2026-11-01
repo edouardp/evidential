@@ -3,7 +3,7 @@
   "inputs": {
     "notebooks/21_studio_dashboard.py": "8f4e85940544eac38b95c21f952659d3da97375dc584616347b24814281dc48b",
     "notebooks/49_api_screenshots.py": "219de292a242152427ca2e62163eb787c5c7355f974909eff90bd0c76ac5606b",
-    "notebooks/50_graphics_gallery.py": "e235905ba1d861ff65cca5089cce5d2f0bb28b349d8919c314267cb6921f1848",
+    "notebooks/50_graphics_gallery.py": "edc5ed4567582626c1fe3cb69db071fdc1f513d109ad0d0221f7ef2fb366d19a",
     "notebooks/51_table_layouts.py": "fc2b54717875601b8006e79bb0a5d4c1725d62453e53d2115c1ac19a745d9c95",
     "notebooks/56_dimension_grid.py": "c31b38f124c0874e9c55d0d8a72eaa7e40c92dfe725df6308fffadbbfa2f7c52",
     "notebooks/data/46_football_england_2024.json": "aa8d550e7bb3e776dfd2dbfee5dd2cd57ab14a66c5c036dd393001055b55ff03",
@@ -15,7 +15,7 @@
     "scripts/generate_readme.py": "73d9f6620f06101bde52b2d3dbe9cd99f2b33293ae9b30de2747f41c3a2cfb21",
     "src/evidential/__init__.py": "88288dad79c3c7f9ad3fae0b8baf2b93dc8240bcf23491e6e52405caa519b8e1",
     "src/evidential/_aliases.py": "5e207c4a862754e1ca9f7ea309a0e489bf158a7e380876f8edcf20eeee1438f1",
-    "src/evidential/_column.py": "e4713584d5fd07b0a73ebcbe0acbbbc805bf3c4e0a2c5d824207ca285777653e",
+    "src/evidential/_column.py": "1ae4c9a8af0c83bf29a627980643f3689292ca0591d41e662f520646ed110ce8",
     "src/evidential/_column_options.py": "89d757e915d4a5173fa19372aa9e394f3370ebbc686d85b638aa74f4434b190b",
     "src/evidential/_compat.py": "f51d6c0013acf8eb4a16bbab18adafc24846825073beeb3df9dea3ca3c6cce7c",
     "src/evidential/_distribution.py": "16278a133e89b66addd282a3209ff3c34a1bb59baff0e3fb17f2ffaacb5f4992",
@@ -29,7 +29,7 @@
     "src/evidential/client.py": "6ce1f9e0b9e5e99b1bcc94fd040a290792885b80de89260ad35c8aa72f8c5c3e",
     "src/evidential/col.py": "1d827527ab6319f5590f1dfef787eabe23a28ab8b2dd37ff4e5257fea16f456d",
     "src/evidential/comparison.py": "5389757b27d9cd42f796599792f9555efcd577d0d1b9c32437f98a0593c77ee9",
-    "src/evidential/configuration.py": "f0e41e3520c29019871ece1cb76d2ec9c847860dec7e49b84cdc294fd84cb074",
+    "src/evidential/configuration.py": "a76f08253c71412a144671e92d7795f4072ef4b583cec9fc34f8efd7aa016a2d",
     "src/evidential/data.py": "009c8807ece3c5d244f81ac37439f167ba174d440b905a568803b5b0ae63fdad",
     "src/evidential/dimension.py": "8cafeb469efa216223c8e724cfed852f5515b3fbb1fd6804d95ba2ad6f92d233",
     "src/evidential/domain.py": "9e607e105122cffb1a6cc4de27adb15bdc3f73af1184b3506302cb908bf34ba9",
@@ -45,7 +45,7 @@
     "src/evidential/static/dimension-grid.css": "54f56d45e03b8af5ba1aa8f7c1153b3bc3cfcc8b195dedf347afba0686460fdc",
     "src/evidential/static/dimension-grid.js": "80cb5f93dfdc5a5dc02c5f8c1e218bd462662a00114d6c43523a58d2c0ca4095",
     "src/evidential/static/table.css": "320269ef18f348a0d21ea957fe77edfd003dc49a8206088f8f22336739ea3fea",
-    "src/evidential/static/table.js": "72e97fb704ce65eb4b8e281f411a5d5af74a523eb0015254fe8eb0a26b5581a6",
+    "src/evidential/static/table.js": "937d75576f515b72fe3c51313929195298934b1349b838755262b3da6fe8c371",
     "src/evidential/table.py": "3f635ffd925ec907c71a3b675d2ffaf17f9fc61e21acb46e3bbc6573bd9cb9b6",
     "uv.lock": "08ebde87df2e59e3a83df5d50676751b8eb7b917b50d3aeb40e7cec06c6a1724"
   },
@@ -163,7 +163,7 @@
     "docs/img/graphics/point-overlaps.png": {
       "notebook": "notebooks/50_graphics_gallery.py",
       "cell": "graphic_point_overlaps",
-      "sha256": "f7854d318e5968e62140e3dae8663a9ba4e513e0a8f3bbb14bda68ffc2c6982e"
+      "sha256": "3e32c01b5bc449d03f530c99cb7a15ed5c2d85b4721eef2708aac06e3168ffef"
     },
     "docs/img/graphics/boxplot.png": {
       "notebook": "notebooks/50_graphics_gallery.py",
@@ -208,7 +208,7 @@
     "docs/img/graphics/sparklines.png": {
       "notebook": "notebooks/50_graphics_gallery.py",
       "cell": "graphic_sparklines",
-      "sha256": "69405629c72404149186e388bffb58e0ed52a3e50da4e39942159b3ed5df1811"
+      "sha256": "33960b8b4a0de2d09f6ee70e8c1e2af561ff52f3f47da910254d1655647591c9"
     },
     "docs/img/graphics/football-form.png": {
       "notebook": "notebooks/50_graphics_gallery.py",

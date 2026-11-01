@@ -137,7 +137,14 @@ class Column(TextStyle, Mapping[str, Any]):
         return self._with(**{key: merged or None})
 
     # -- labels and formatting -------------------------------------------
-    def tooltip(self, value: bool | str = True, *, delay: float | None = None, text_delay: float | None = None) -> Self:
+    def tooltip(
+        self,
+        value: bool | str = True,
+        *,
+        delay: float | None = None,
+        text_delay: float | None = None,
+        max_entries: int | None = None,
+    ) -> Self:
         """Inspect full values by default, hide with ``False``, or supply text.
 
         ``"@field"`` reads text from another field in the row. Literal and
@@ -145,12 +152,14 @@ class Column(TextStyle, Mapping[str, Any]):
         One override applies to the whole cell, including compound marks.
         Hover delays are in seconds. ``delay`` is for graphics, ``text_delay``
         for scalar cells; table defaults come from ``settings(tooltips=...)``.
+        Overlapping points show up to ``max_entries`` values (default 10),
+        nearest the pointer in screen space, displayed in numeric x order.
         """
         if not isinstance(value, (bool, str)):
             raise TypeError("tooltip expects True, False or text (use @field for a row binding)")
         if value == "@":
             raise ValueError("tooltip row binding needs a field name")
-        options = _clean(delay=delay, text_delay=text_delay)
+        options = _clean(delay=delay, text_delay=text_delay, max_entries=max_entries)
         validate_options(options, TooltipOptions, "tooltip")
         return self._with(tooltip=value, tooltip_options=options)
 

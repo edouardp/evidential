@@ -128,6 +128,44 @@ def overlapping_points(EvidentialTable, col, mo, tooltip_frame):
 
 
 @app.cell(hide_code=True)
+def dense_points_doc(mo):
+    mo.md("""
+    ## Dense point arrays: show the nearest values
+
+    Hover the middle of either cloud. The default tooltip shows at most **10**
+    nearby entries; the second column uses `.tooltip(max_entries=3)`. Move along
+    the cloud to inspect other values. Selection uses distance on screen, then
+    displays the chosen points in numeric x order. All source points remain
+    available through keyboard navigation and in the raw data.
+
+    A table-wide default can be set with `settings(tooltips={"max_entries": 20})`.
+    Limits must be positive integers; column settings take precedence.
+    """)
+    return
+
+
+@app.cell
+def dense_points(EvidentialTable, col, mo, tooltip_frame):
+    _samples = [49 + index / 20 for index in range(41)]
+    dense_table = mo.ui.anywidget(
+        EvidentialTable(
+            [{"default_samples": _samples, "limited_samples": _samples}],
+            columns=[
+                col.points("default_samples", title="Default · 10 entries", color="#2563eb50", size=9, outline=False)
+                .scale(domain=(0, 100), axis=True, axis_position="bottom"),
+                col.points("limited_samples", title="Override · 3 entries", color="#2563eb50", size=9, outline=False)
+                .scale(domain=(0, 100), axis=True, axis_position="bottom")
+                .tooltip(max_entries=3),
+            ],
+            settings=tooltip_frame,
+            title="Nearest points, bounded tooltips",
+        )
+    )
+    dense_table
+    return
+
+
+@app.cell(hide_code=True)
 def stacks_doc(mo):
     mo.md("""
     ## Named stack segments, including hidden labels

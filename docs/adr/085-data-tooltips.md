@@ -40,7 +40,7 @@ fallback. The controller clears presentation state on rerender and destruction.
 Names and swatches reuse mark/legend identities. Default stack inspection
 includes the category, full amount, share and total; a share-labelled or
 normalised stack leads with the named share. Both halves of a neutral category
-report its full value. Point inspection includes every dot within its small
+report its full value. Point inspection considers dots within its small
 invisible hit allowance, preferring dots to underlying connectors. Range
 inspection reports endpoints and absolute change; box plots expose their five
 numbers and outliers. Observation metadata supplies match details without
@@ -61,7 +61,19 @@ or independently declared series list is introduced.
 Picking follows the graphic's structure. Sparklines select one nearest
 observation by x-position across their full height; signed-area swatches match
 the fill above or below the reference. Stacks and categorical strips select
-one segment at a shared boundary. Point plots can collect multiple dots.
+one segment at a shared boundary. Point plots can collect multiple dots, but
+large arrays must not create unbounded lists that exceed the screen. They show
+up to **10 distinct entries** by default, selected by distance from the pointer
+to the original point centres in screen space. This respects logarithmic scales
+and remains independent of combined point glyphs. The chosen entries display in
+numeric x-value order, with declaration-order ties. Deduplication does not consume
+the limit. All original points and raw values remain available.
+
+`settings(tooltips={"max_entries": 20})` changes the table default;
+`.tooltip(max_entries=3)` overrides a column. Limits are positive integers.
+The same selection policy applies to touch inspection and keyboard inspection;
+the focused mark wins a distance tie so navigating a coincident group can reach
+every entry. Geometry is measured only for a candidate group exceeding the cap.
 
 Hover delays are seconds, configured by
 `settings(tooltips={"delay": 0.8, "text_delay": 1.5})` and overridden per column

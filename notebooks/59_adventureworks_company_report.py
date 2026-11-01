@@ -27,7 +27,19 @@ def imports():
 
     from evidential import EvidentialTable, col, label, rows
 
-    return EvidentialTable, ObservablePlot, Path, col, dt, duckdb, json, label, mo, os, rows
+    return (
+        EvidentialTable,
+        ObservablePlot,
+        Path,
+        col,
+        dt,
+        duckdb,
+        json,
+        label,
+        mo,
+        os,
+        rows,
+    )
 
 
 @app.cell(hide_code=True)
@@ -128,7 +140,12 @@ def queries(Path, dt, duckdb):
         )[0]
         return result, window
 
-    return load_adventureworks, parquet_directory, period_window, query_report, records, report_directory
+    return (
+        load_adventureworks,
+        parquet_directory,
+        query_report,
+        report_directory,
+    )
 
 
 @app.cell
@@ -173,11 +190,17 @@ def report_results(channel_picker, con, query_report, year_picker):
         if window["comparable"]
         else "Prior-year comparison unavailable: source coverage is incomplete"
     )
-    return comparison_label, period_label, report_data, window
+    return comparison_label, period_label, report_data
 
 
 @app.cell(hide_code=True)
-def executive_readout(channel_picker, comparison_label, mo, period_label, report_data):
+def executive_readout(
+    channel_picker,
+    comparison_label,
+    mo,
+    period_label,
+    report_data,
+):
     metrics = {row["metric"]: row for row in report_data["scorecard"]}
     net_sales = metrics["Net sales"]
     growth_text = (
@@ -210,7 +233,7 @@ def executive_readout(channel_picker, comparison_label, mo, period_label, report
 def tables(EvidentialTable, col, label, rows):
     def margin_column():
         return col.percent("margin", decimals=1).color(
-            scale=["#fee2e2", "#ffffff", "#dcfce7"], min=-0.25, max=0.5, midpoint=0
+            scale=["red", "#ffffff44", "green"], min=-0.3, max=0.7, midpoint=0
         )
 
     def sales_column():
@@ -394,7 +417,14 @@ def map_widget(ObservablePlot, json, report_directory):
 
 
 @app.cell
-def update_report(comparison_label, country_map, period_label, report_data, report_tables, world):
+def update_report(
+    comparison_label,
+    country_map,
+    period_label,
+    report_data,
+    report_tables,
+    world,
+):
     for name, table in report_tables.items():
         data = report_data[name]
         if name == "monthly":

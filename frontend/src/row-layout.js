@@ -31,7 +31,7 @@ function annotationEntry(kind, id, spec, members, depth, continuation = false) {
     [name, {...value, value: summaryValue(value, members)}]));
   return {kind, id, depth, label: `${spec.label}${continuation ? " (cont.)" : ""}`,
     cells, style: spec.style || {}, rule: spec.rule || "none", align: spec.align || "left",
-    labelColumn: spec.label_column, continuation};
+    labelColumn: spec.label_column, labelStyle: spec.label_style || {}, continuation};
 }
 
 /** Fold the display tree, paginate details/closed groups, then add annotations. */
@@ -71,7 +71,7 @@ export function projectLayout(layout, allRows, sortedRows, pageSize, pageIndex, 
     } else if (group.children.length) children = prepare(group.children, indent);
     else for (const row of members) units.push({kind: "data", row, depth: group.depth + 1, inset: indent,
       index: indices.get(row), ordinal: ordinals.get(row)});
-    return [{group, members, collapsed, children, first, last: units.length - 1}];
+    return [{group, members, collapsed, children, inset: indent, first, last: units.length - 1}];
   });
   const tree = prepare(layout.groups || []);
   if (!layout.groups?.length) for (const row of ordered) units.push({kind: "data", row, depth: 0, inset: false,
@@ -86,7 +86,7 @@ export function projectLayout(layout, allRows, sortedRows, pageSize, pageIndex, 
   const {start, end} = bounds;
   const entries = [];
   const visit = groups => {
-    for (const {group, members, collapsed, children, first, last} of groups) {
+    for (const {group, members, collapsed, children, inset, first, last} of groups) {
       if (last < start || first >= end) continue;
       if (group.section) {
         const spec = collapsed && group.section.collapsed_summary && !Object.keys(group.section.cells || {}).length && group.summary
@@ -97,13 +97,14 @@ export function projectLayout(layout, allRows, sortedRows, pageSize, pageIndex, 
       // A closed group contributes just its heading. Its summaries and children
       // are hidden, but all matching members still feed heading/grand totals.
       if (collapsed) continue;
+      const summaryDepth = group.depth + (inset && group.summary?.indent !== false ? 1 : 0);
       if (group.summary?.position === "top" && first >= start) {
-        entries.push(annotationEntry("summary", `${group.id}:summary`, group.summary, members, group.depth));
+        entries.push(annotationEntry("summary", `${group.id}:summary`, group.summary, members, summaryDepth));
       }
       if (children.length) visit(children);
       else for (const unit of units.slice(Math.max(start, first), Math.min(end, last + 1))) entries.push(unit);
       if (group.summary?.position === "bottom" && last < end) {
-        entries.push(annotationEntry("summary", `${group.id}:summary`, group.summary, members, group.depth));
+        entries.push(annotationEntry("summary", `${group.id}:summary`, group.summary, members, summaryDepth));
       }
     }
   };

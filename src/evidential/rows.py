@@ -68,6 +68,8 @@ class _Annotation:
     label_column: str | None = None
     collapsible: bool = False
     collapsed_summary: bool = False
+    indent: bool = True
+    label_style: Mapping[str, str] | None = None
 
 
 @dataclass(frozen=True)
@@ -135,6 +137,7 @@ class Rows:
         style: Mapping[str, str] | None = None,
         rule: str = "none",
         label_column: str | None = None,
+        label_style: Mapping[str, str] | None = None,
         collapsible: bool = False,
         collapsed_summary: bool = False,
     ) -> Rows:
@@ -156,6 +159,7 @@ class Rows:
                 style=copy.deepcopy(style),
                 rule=rule,
                 label_column=label_column,
+                label_style=copy.deepcopy(label_style),
                 collapsible=collapsible,
                 collapsed_summary=collapsed_summary,
             )
@@ -183,10 +187,17 @@ class Rows:
         style: Mapping[str, str] | None = None,
         rule: str = "above",
         label_column: str | None = None,
+        label_style: Mapping[str, str] | None = None,
+        indent: bool = True,
     ) -> Rows:
-        """Show an optional summary once per group; no summary is implicit."""
+        """Show a group summary, with its label indented like the group's details.
+
+        Set ``indent=False`` to align the label with the group's heading instead.
+        """
         if position not in ("top", "bottom"):
             raise ValueError("summary position is 'top' or 'bottom'")
+        if not isinstance(indent, bool):
+            raise TypeError("summary indent must be a boolean")
         _validate_rule(rule)
         return self._replace(
             summary=_Annotation(
@@ -196,6 +207,8 @@ class Rows:
                 style=copy.deepcopy(style),
                 rule=rule,
                 label_column=label_column,
+                label_style=copy.deepcopy(label_style),
+                indent=indent,
             )
         )
 
@@ -207,12 +220,18 @@ class Rows:
         style: Mapping[str, str] | None = None,
         rule: str = "above",
         label_column: str | None = None,
+        label_style: Mapping[str, str] | None = None,
     ) -> Rows:
         """Show one final summary, computed from detail records only."""
         _validate_rule(rule)
         return self._replace(
             grand=_Annotation(
-                label, copy.deepcopy(values), style=copy.deepcopy(style), rule=rule, label_column=label_column
+                label,
+                copy.deepcopy(values),
+                style=copy.deepcopy(style),
+                rule=rule,
+                label_column=label_column,
+                label_style=copy.deepcopy(label_style),
             )
         )
 
@@ -332,6 +351,8 @@ def _compile_annotation(
         "label_column": annotation.label_column,
         "collapsible": annotation.collapsible,
         "collapsed_summary": annotation.collapsed_summary,
+        "indent": annotation.indent,
+        "label_style": dict(annotation.label_style or {}),
     }
 
 

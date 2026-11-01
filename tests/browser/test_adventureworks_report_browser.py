@@ -29,6 +29,18 @@ def test_company_report_filters_folded_sections_and_observable_map(page, adventu
         for root in roots.all():
             root.evaluate("el => el.dataset.originalWidget = 'yes'")
         chart.evaluate("el => el.dataset.originalWidget = 'yes'")
+        for table in (markets, products):
+            detail = table.locator("tbody tr:not(.et-display-row) td").first
+            summary = table.locator(".et-display-summary td").first
+            expect(summary).to_be_visible()
+            assert summary.evaluate("el => getComputedStyle(el).paddingLeft") == detail.evaluate(
+                "el => getComputedStyle(el).paddingLeft"
+            )
+        region_label = markets.locator(".et-display-summary .et-display-label").first
+        assert region_label.evaluate("el => getComputedStyle(el).fontStyle") == "italic"
+        assert region_label.evaluate("el => getComputedStyle(el).fontWeight") == "700"
+        region_value = markets.locator(".et-display-summary .et-display-value").first
+        assert region_value.evaluate("el => getComputedStyle(el).fontStyle") == "normal"
         markets.get_by_role("button", name="Toggle section North America", exact=True).click()
         expect(markets.locator(".et-display-section").filter(has_text="North America")).to_contain_text("400")
         products.get_by_role("searchbox").fill("Road bikes")

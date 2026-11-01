@@ -145,6 +145,32 @@ def test_summary_and_grand_summary_are_optional_and_not_implicit() -> None:
     assert table.row_layout["groups"][0]["section"]["cells"] == {}
 
 
+def test_summary_indent_defaults_to_details_and_override_is_immutable() -> None:
+    base = rows.group_by("region").section().summary()
+    assert base.compile(DETAIL)["groups"][0]["summary"]["indent"] is True
+    flush = base.summary(indent=False).grand_summary()
+    assert flush.compile(DETAIL)["groups"][0]["summary"]["indent"] is False
+    assert base.compile(DETAIL)["groups"][0]["summary"]["indent"] is True
+    table = EvidentialTable(DETAIL, row_layout=flush)
+    table.set_data(DETAIL[:1])
+    assert table.row_layout["groups"][0]["summary"]["indent"] is False
+    with pytest.raises(TypeError, match="indent must be a boolean"):
+        base.summary(indent=1)  # type: ignore[arg-type]
+
+
+def test_annotation_label_styles_are_copied_separately_from_row_styles() -> None:
+    style = {"font_weight": "bold", "font_style": "italic"}
+    layout = (
+        rows.group_by("region").section(label_style=style).summary(label_style=style).grand_summary(label_style=style)
+    )
+    style["font_style"] = "normal"
+    plan = layout.compile(DETAIL)
+    annotations = [plan["groups"][0]["section"], plan["groups"][0]["summary"], plan["grand_summary"]]
+    for annotation in annotations:
+        assert annotation["label_style"] == {"font_weight": "bold", "font_style": "italic"}
+        assert annotation["style"] == {}
+
+
 def test_ungrouped_grand_summary_excludes_metadata() -> None:
     table = EvidentialTable([{"value": 10, "__row_id": 99}], row_layout=rows.Rows().grand_summary("Everything"))
     assert table.row_layout["grand_summary"]["label"] == "Everything"

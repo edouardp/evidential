@@ -110,6 +110,13 @@ To copy summary values into an otherwise plain closed heading, use
 precedence. Centered headings support folding, but reject `collapsed_summary=True`.
 Notebook 39 demonstrates plain, promoted-summary and nested centered sections.
 
+With `section_indent=1`, summary labels follow their detail indentation by
+default. `.summary(indent=False)` aligns the label with its group heading
+instead. Numeric summary cells retain their column alignment; grand totals
+remain unindented.
+Use `label_style={"font_weight": "bold", "font_style": "italic"}` on a
+section, summary or grand summary to style its label without changing values.
+
 Use `.summary(position="top")` for a summary before a group, or
 `.section(align="center")` for a centered heading without value cells. Use a
 bold ordinary group column with `.repeat_values(False)` when the group label

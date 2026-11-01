@@ -304,8 +304,12 @@ def tables(EvidentialTable, col, label, rows):
                 col.integer("customers"),
             ],
             row_layout=rows.group_by("region")
-            .section(collapsible=True, collapsed_summary=True)
-            .summary("Region total", values={"net_sales": "sum", "orders": "sum"}),
+                           .section(collapsible=True, collapsed_summary=True)
+                           .summary(
+                               "Region subtotal",
+                               values={"net_sales": "sum", "orders": "sum"},
+                               label_style={"font_weight": "bold", "font_style": "italic"},
+                           ),
             title="Territories by region",
             search=True,
             section_indent=1,

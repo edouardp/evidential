@@ -71,13 +71,20 @@ EvidentialTable(
   values and arbitrary Python annotation callbacks retain source scope until
   `set_data`; Python callbacks cannot execute during browser-only search.
 - Annotation cells have a dedicated renderer, independent `style` and `rule`,
-  and plain formatted values. They bypass detail marks, cell rules, links,
+  optional `label_style` for the label alone, and plain formatted values.
+  Label styles belong to each annotation: promoting summary values into a
+  collapsed heading retains the heading's label style. They bypass detail marks, cell rules, links,
   selection and footnotes. An explicit first-column value does not replace the
   heading label. Centered headings span the table and reject value cells.
 - Annotation rows participate in alternating shading. `rule` controls their
   horizontal rules independently; page boundary rules remain. `section_indent`
-  insets details under left-aligned headings or top summaries. Centered headings
-  leave detail labels flush left. CSV exports matching details in
+  insets details under left-aligned headings or top summaries. Group summary
+  labels follow their detail inset by default, including nested groups and
+  both summary positions; `.summary(indent=False)` instead uses the group's
+  heading depth. This is label-only presentation: numeric totals retain column
+  alignment and grand totals remain at table depth. Centered headings
+  leave detail labels flush left unless an ancestor supplies indentation.
+  CSV exports matching details in
   display order across every page, excluding annotations.
 - With `freeze_columns`, left-aligned spanning headings pin their label inside
   the full-width cell, including nested and continuation headings. The sticky

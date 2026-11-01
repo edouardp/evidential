@@ -31,6 +31,29 @@ test("annotations with cells index the row-number spacer like regular data cells
   }
 });
 
+test("summary indentation only insets the label and leaves numeric values aligned", () => {
+  const row = renderAnnotation({...heading, kind: "summary", depth: 2, cells: {sales: {value: 25}}},
+    columns, context(), {section_indent: 1});
+  assert.equal(row.cells[1].style.paddingLeft, "calc(2.25rem)");
+  assert.equal(row.cells[2].style.paddingLeft, "");
+  const disabled = renderAnnotation({...heading, kind: "summary", depth: 2, cells: {}}, columns, context(), {section_indent: 0});
+  assert.equal(disabled.cells[1].style.paddingLeft, "");
+});
+
+test("label styles affect only annotation labels, including spanning and continued headings", () => {
+  for (const kind of ["section", "summary", "grand_summary"]) {
+    for (const cells of [{}, {sales: {value: 25}}]) {
+      const row = renderAnnotation({...heading, kind, cells, continuation: true,
+        labelStyle: {font_weight: "bold", font_style: "italic"}}, columns, context(), {});
+      const label = row.querySelector(".et-display-label");
+      assert.equal(label.style.fontWeight, "bold");
+      assert.equal(label.style.fontStyle, "italic");
+      assert.ok([...row.cells].every(cell => cell.style.fontStyle === ""));
+      assert.ok([...row.querySelectorAll(".et-display-value")].every(value => value.style.fontStyle === ""));
+    }
+  }
+});
+
 test("section toggles expose state, escape labels and do not bubble into row selection", () => {
   const keys = [];
   const row = renderAnnotation({...heading, label: "<script>North</script>", collapsible: true,

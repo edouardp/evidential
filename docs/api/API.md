@@ -531,12 +531,19 @@ Inline toggling keeps the heading in view; expanded mode resets measured page
 history when the folded projection changes.
 
 Each annotation accepts `style={...}`, `rule="none" | "above" | "below" |
-"both"`, and `label_column=`. A label and an explicit value in the same column
+"both"`, `label_column=` and `label_style={...}`. The latter styles only the
+label, e.g. `label_style={"font_weight": "bold", "font_style": "italic"}`,
+leaving summary values unchanged. A label and an explicit value in the same column
 both remain visible. `section(align="center")` spans the table and rejects
 value cells. Annotations participate in alternating shading; their rules and
 styles are independent of detail cell styles, marks and row rules. Page
 boundary rules remain visible. `section_indent=1` insets detail stubs below
-left-aligned headings by one rem.
+left-aligned headings by one rem. Group summary labels follow their detail
+indentation by default, including nested groups and top summaries. Use
+`.summary(indent=False)` to align the summary label with its group heading
+instead. Only the label cell is indented; numeric totals keep their column
+alignment. Grand totals remain unindented. Centered headings leave details
+and summaries flush left, unless an ancestor section supplies an inset.
 
 `set_data` preserves the layout, or replaces it with `row_layout=...`; pass
 `row_layout=None` to clear it. The bound spelling

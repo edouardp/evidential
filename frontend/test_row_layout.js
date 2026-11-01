@@ -131,6 +131,44 @@ test("top summaries indent detail labels even without a separate section heading
   assert.ok(page.entries.filter(entry => entry.kind === "data").every(entry => entry.inset && entry.depth === 1));
 });
 
+test("summary labels follow detail indentation at each level, with a heading-aligned override", () => {
+  for (const position of ["top", "bottom"]) {
+    for (const indent of [undefined, true, false]) {
+      const group = {...layout.groups[0], summary: {...summary, position, indent}};
+      const plan = {groups: [{...group, id: "root", children: [{...group, depth: 1}]}], grand_summary: grand};
+      const page = projectLayout(plan, source, source.slice(0, 2), 0, 0);
+      const summaries = page.entries.filter(entry => entry.kind === "summary");
+      assert.deepEqual(summaries.map(entry => entry.depth).sort(), indent === false ? [0, 1] : [1, 2]);
+      assert.equal(page.entries.find(entry => entry.kind === "data").depth, 2);
+      assert.equal(page.entries.at(-1).depth, 0);
+      // Pagination and continuation headings preserve the same inset.
+      const boundary = projectLayout(plan, source, source.slice(0, 2), 1, position === "top" ? 0 : 1);
+      assert.deepEqual(boundary.entries.filter(entry => entry.kind === "summary").map(entry => entry.depth),
+        summaries.map(entry => entry.depth));
+    }
+  }
+});
+
+test("centered headings and footer-only groups leave summary labels aligned with unindented details", () => {
+  for (const section of [undefined, {...heading("North"), align: "center"}]) {
+    const plan = {groups: [{...layout.groups[0], section}]};
+    const page = projectLayout(plan, source, source, 0, 0);
+    assert.equal(page.entries.find(entry => entry.kind === "summary").depth, 0);
+    assert.equal(page.entries.find(entry => entry.kind === "data").inset, false);
+  }
+});
+
+test("label styles survive projection without changing value cells or promoted-heading styles", () => {
+  const label_style = {font_style: "italic"};
+  const group = {...layout.groups[0], section: {...heading("North"), cells: {}, collapsible: true, collapsed_summary: true},
+    summary: {...summary, label_style}};
+  const open = projectLayout({groups: [group]}, source, source, 0, 0);
+  assert.deepEqual(open.entries.find(entry => entry.kind === "summary").labelStyle, label_style);
+  const folded = projectLayout({groups: [group]}, source, source, 0, 0, null, closed(["north"]));
+  assert.deepEqual(folded.entries[0].labelStyle, {});
+  assert.equal(folded.entries[0].cells.value.value, 40);
+});
+
 test("reducers distinguish missing observations, empty sets, counts and formatted strings", () => {
   const data = [{x: null}, {x: 0}, {x: 2}, {x: 2}];
   assert.equal(summaryValue({operation: "count", source: "x"}, data), 3);

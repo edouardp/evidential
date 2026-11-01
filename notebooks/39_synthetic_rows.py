@@ -65,6 +65,12 @@ def _(mo):
     with no `values` sums each numeric column. Each annotation is optional.
     Named reducers and portable counts track browser search; arbitrary Python
     callbacks run on data refresh and retain their source scope during search.
+
+    With `section_indent=1`, summary labels line up with the indented details,
+    as in the table below. Use `.summary(..., indent=False)` to align the label
+    with its group heading instead. This works for both top and bottom summaries
+    and for nested groups. Numeric totals keep their column alignment, and the
+    grand total stays at the table's left edge.
     """)
     return
 

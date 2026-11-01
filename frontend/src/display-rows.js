@@ -15,6 +15,9 @@ export function renderAnnotation(entry, columns, ctx, options) {
   const tr = h("tr", {class: classes.filter(Boolean).join(" "), "data-display-id": entry.id});
   const renderLabel = () => {
     const label = h("span", {class: "et-display-label"});
+    for (const [key, value] of Object.entries(entry.labelStyle || {})) {
+      label.style.setProperty(key.replaceAll("_", "-"), String(value));
+    }
     if (section && entry.collapsible) {
       label.append(h("button", {class: "et-section-toggle", type: "button", "data-section-key": entry.groupKey,
         "aria-expanded": String(!entry.collapsed), "aria-label": `Toggle section ${entry.label}`,

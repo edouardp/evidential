@@ -20,6 +20,47 @@ DATA = [
 
 
 @pytest.mark.parametrize("position", ["top", "bottom"])
+@pytest.mark.parametrize("indent", [True, False])
+def test_summary_labels_follow_detail_indent_with_explicit_override(page, live_server, position, indent):
+    layout = (
+        rows.group_by("region", "category")
+        .section(collapsible=True)
+        .summary("Subtotal", values={"value": "sum"}, position=position, indent=indent)
+        .grand_summary("Grand total", values={"value": "sum"})
+    )
+    mount(
+        page,
+        live_server,
+        [
+            (
+                "Summary indentation",
+                DATA,
+                [col.text("name"), col.integer("value")],
+                {"row_layout": layout, "section_indent": 1, "row_numbers": True, "freeze_columns": 2},
+            )
+        ],
+    )
+    detail = page.locator("tbody tr:not(.et-display-row)").filter(has_text="Lamp").locator("td").nth(1)
+    summaries = page.locator(".et-display-summary").filter(has_text="30")
+    # Hardware's summary uses the same inset as its details. North's summary
+    # closes one level out. The row-number spacer and numeric total stay flush.
+    inner = summaries.first if position == "bottom" else summaries.last
+    outer = page.locator(".et-display-summary").filter(has_text="60").first
+
+    def padding(cell):
+        return cell.evaluate("el => parseFloat(getComputedStyle(el).paddingLeft)")
+
+    inset = padding(detail)
+    step = page.evaluate("parseFloat(getComputedStyle(document.documentElement).fontSize)")
+    grand = page.locator(".et-display-grand_summary td").nth(1)
+    assert padding(inner.locator("td").nth(1)) == pytest.approx(inset - (0 if indent else step))
+    assert padding(outer.locator("td").nth(1)) == pytest.approx(inset - step if indent else padding(grand))
+    assert padding(inner.locator("td").last) == padding(detail.locator("..").locator("td").last)
+    assert padding(grand) < padding(detail)
+    capture(page, f"summary-indent-{position}-{indent}.png")
+
+
+@pytest.mark.parametrize("position", ["top", "bottom"])
 @pytest.mark.parametrize("promote", [False, True])
 def test_sections_hide_their_summaries_and_optionally_promote_values(page, live_server, position, promote):
     layout = (

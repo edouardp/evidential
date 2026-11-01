@@ -140,6 +140,73 @@ def _(EvidentialTable, col, estimates, mo, settings):
 
 
 @app.cell
+def error_bar_introduction(mo):
+    mo.md("""
+    ## Bars with error bars
+
+    Add `.range("low", "high", cap="line")` **after** `.bar("estimate")`
+    to draw the uncertainty interval over the bar. Positive and negative bars
+    start at zero; the interval can be asymmetric or cross zero. Both marks
+    use the same scale, including its axis and gridlines.
+
+    ```python
+    (
+        col.bar("estimate", color="#c23e2a", format='0.0" p.p."')
+        .range("low", "high", cap="line", color="#bdbdbd", size=1.5)
+        .scale(domain=(-11, 4), axis=True, axis_position="bottom", gridlines=True)
+        .reference_line(0, color="#111111")
+    )
+    ```
+
+    The illustrative estimates and bounds below are already in **percentage
+    points**: `3.3` means 3.3 p.p., not 330%. Supply your own calculated bounds;
+    Evidential renders them without calculating statistical uncertainty.
+    """)
+    return
+
+
+@app.cell
+def error_bar_values():
+    error_bar_data = [
+        {"topic": "I Health, Education, and Welfare", "estimate": 3.3, "low": 3.1, "high": 3.6},
+        {"topic": "A General Economics and Teaching", "estimate": 3.0, "low": 2.8, "high": 3.2},
+        {"topic": "H Public", "estimate": 2.7, "low": 2.5, "high": 2.9},
+        {"topic": "R Urban", "estimate": 1.0, "low": 0.9, "high": 1.2},
+        {"topic": "J Labor and Demographic", "estimate": -0.2, "low": -0.5, "high": 0.1},
+        {"topic": "O Development, Innovation", "estimate": -0.6, "low": -0.9, "high": -0.4},
+        {"topic": "L Industrial Organization", "estimate": -3.9, "low": -4.2, "high": -3.7},
+        {"topic": "G Financial", "estimate": -9.8, "low": -10.1, "high": -9.6},
+    ]
+    return (error_bar_data,)
+
+
+@app.cell
+def error_bar_example(EvidentialTable, col, error_bar_data, mo):
+    error_bar_table = EvidentialTable(
+        error_bar_data,
+        title="Differences in topic shares",
+        subtitle="Estimate bars with capped uncertainty intervals",
+        caption="Illustrative data. Estimates and bounds are supplied in percentage points.",
+        columns=[
+            col.text("topic", title="JEL topic").align("right"),
+            col.bar("estimate", title="Difference (p.p.)", color="#c23e2a", format='0.0" p.p."', size=0.65)
+            .range("low", "high", cap="line", color="#bdbdbd", size=1.5)
+            .scale(domain=(-11, 4), axis=True, axis_position="bottom", gridlines=True)
+            .reference_line(0, color="#111111"),
+        ],
+        border=False,
+        row_lines=True,
+        row_shading=False,
+        search=False,
+        sortable=False,
+        page_size="all",
+        width=1050,
+    )
+    mo.ui.anywidget(error_bar_table)
+    return (error_bar_table,)
+
+
+@app.cell
 def _(mo):
     mo.md("""
     ## A stack and a categorical strip

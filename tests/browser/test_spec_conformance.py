@@ -9,6 +9,7 @@ from math import log10
 from pathlib import Path
 
 import pytest
+from paint_helpers import assert_colors, painted_colors
 from playwright.sync_api import expect
 
 from evidential import EvidentialTable, col, domain, grouped_records, label
@@ -303,9 +304,8 @@ def test_shared_domains_match_bar_geometry_color_axes_and_pagination(page, live_
     assert bars.last.evaluate("el => el.style.width") == "10%"
     assert page.locator(".et-axis").first.inner_text() == page.locator(".et-axis").last.inner_text()
     colors = page.locator("tbody tr td:nth-last-child(-n+2)")
-    assert colors.nth(0).evaluate("el => getComputedStyle(el).backgroundColor") == colors.nth(1).evaluate(
-        "el => getComputedStyle(el).backgroundColor"
-    )
+    fills = painted_colors(page, colors.all())
+    assert_colors([fills[0]], [fills[1]])
     page.get_by_role("button", name="Next page", exact=True).click()
     assert bars.first.evaluate("el => el.style.width") == "50%"
     page.get_by_role("searchbox").fill("North")
@@ -326,9 +326,7 @@ def test_shared_domain_demo_renders_cross_encoding_colors(page, live_server):
     page.locator("section").evaluate_all("nodes => nodes.forEach(el => el.style.width = '950px')")
     heat = page.locator("#case-1 tbody tr").first.locator("td:nth-child(3)")
     rect = page.locator("#case-1 .et-sparkline-change rect").nth(3)
-    assert heat.evaluate("el => getComputedStyle(el).backgroundColor") == rect.evaluate(
-        "el => getComputedStyle(el).fill"
-    )
+    assert_colors(painted_colors(page, [heat]), painted_colors(page, [rect], center=True))
     capture(page, "shared-domains.png")
 
 
@@ -1230,10 +1228,7 @@ def test_display_annotations_keep_their_own_style_and_skip_mark_bindings(page, l
     assert page.locator(".et-display-row .et-marks").count() == 0
     assert page.locator(".et-marks").count() == 2
     assert "27 products" in page.locator(".et-display-summary").inner_text()
-    assert (
-        page.locator(".et-display-summary td").first.evaluate("el => getComputedStyle(el).backgroundColor")
-        == "rgb(238, 238, 238)"
-    )
+    assert_colors(painted_colors(page, [page.locator(".et-display-summary td").first]), [[238, 238, 238]])
     assert (
         page.locator(".et-display-grand_summary td").first.evaluate("el => getComputedStyle(el).borderBottomWidth")
         == "1px"

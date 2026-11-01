@@ -28,6 +28,11 @@ project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+- Translucent cell colors blend over row stripes and hover tints, including
+  RGBA/eight-digit hex gradient stops, direct styles, highlights and row colors.
+  Frozen cells retain these layers over an opaque backing, and selection tint
+  stays above the fill. Notebook 12 compares opaque, 80%-opaque and transparent
+  neutral colors.
 - Dense point tooltips show the 10 entries nearest the pointer in screen space,
   retaining x-value display order. `.tooltip(max_entries=...)` and table-level
   `tooltips` options override the positive integer limit; keyboard and touch

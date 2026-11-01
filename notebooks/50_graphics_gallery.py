@@ -474,6 +474,10 @@ def graphic_color_doc(mo):
     #### Color scale
 
     Encode the score as a background colour while keeping its numeric value.
+    Color stops can include alpha: `["red", "#ffffffcc", "blue"]` uses white at
+    80% opacity, allowing 20% of the row stripe to show through at the neutral
+    value. Text and marks keep their own opacity. See the comparison in
+    [notebook 12](notebooks/12_color_scales.py).
     """)
     return
 

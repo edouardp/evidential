@@ -6,6 +6,7 @@ Run with ``make test-browser`` (or ``uv run pytest -m browser tests/browser``).
 from __future__ import annotations
 
 import pytest
+from paint_helpers import assert_colors, painted_colors
 
 pytestmark = pytest.mark.browser
 
@@ -302,13 +303,8 @@ def test_display_features(page, live_server):
     # delta chip
     assert page.locator("#features .et-delta-chip").count() >= 1
     # row conditional colour on the New York row (last after asc sort)
-    background = (
-        page.locator("#features tbody tr")
-        .nth(2)
-        .locator("td")
-        .first.evaluate("el => getComputedStyle(el).backgroundColor")
-    )
-    assert background == "rgb(254, 249, 195)"
+    cell = page.locator("#features tbody tr").nth(2).locator("td").first
+    assert_colors(painted_colors(page, [cell]), [[254, 249, 195]])
 
 
 def render_subcolumns(page, live_server):
@@ -425,19 +421,15 @@ def test_economist_notebook_recreation_renders_transcribed_data(page, live_serve
     assert cell_text(page, "#economist", 33, 5) == "161"
     assert cell_text(page, "#economist", 5, 1) == "nil"
     assert page.locator("#economist .et-th-group").nth(1).locator("br").count() == 1
-    assert (
-        page.locator("#economist tbody tr")
-        .nth(9)
-        .locator("td")
-        .nth(1)
-        .evaluate("el => getComputedStyle(el).backgroundColor")
-        == "rgb(255, 193, 174)"
-    )
-    assert (
-        page.locator("#economist tbody tr")
-        .first.locator("td")
-        .first.evaluate("el => getComputedStyle(el).backgroundColor")
-        == "rgb(213, 231, 239)"
+    assert_colors(
+        painted_colors(
+            page,
+            [
+                page.locator("#economist tbody tr").nth(9).locator("td").nth(1),
+                page.locator("#economist tbody tr").first.locator("td").first,
+            ],
+        ),
+        [[255, 193, 174], [213, 231, 239]],
     )
     screenshot = tmp_path / "economist-subcolumns.png"
     page.locator(".economist-recreation").screenshot(path=str(screenshot))

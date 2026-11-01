@@ -105,6 +105,13 @@ comparison = EvidentialTable(
 colors a decreasing connector and `direction_marker=True` adds its chevron.
 Points support `outline=False` or a CSS outline color. Keep glyph styling
 separate from `.cell_style(...)`, which styles the surrounding cell.
+Cell fills accept RGBA or eight-digit hex alpha. For example,
+`.color(scale=["red", "#ffffffcc", "blue"], min=-1, max=1, midpoint=0)`
+keeps the endpoints opaque and makes the white neutral 80% opaque. Alpha
+interpolates between stops. Stripes and hover tints show through the cell fill;
+text and marks retain their own opacity. Frozen cells use an opaque backing
+under the same layers, and selection tint stays above the fill. Notebook 12
+compares opaque, partially transparent and transparent neutrals.
 
 For several scalar point series, pass the fields or their display-name mapping
 directly: `col.points({"target": "Target", "actual": "Actual"}, connect=True)`.

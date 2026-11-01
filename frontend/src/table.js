@@ -43,7 +43,7 @@ export function fontSizeValue(value) {
   }
   return text;
 }
-import { colorStylesFromHex, resolveColor } from "./color.js";
+import { colorStylesFromHex, resolveColor, setCellBackground } from "./color.js";
 
 export class EvidentialTableRenderer {
   constructor(model, el) {
@@ -723,7 +723,7 @@ export class EvidentialTableRenderer {
         String((ctx.rowNumberBase || 0) + index + 1),
       );
       if (rowColorStyles) {
-        numberCell.style.backgroundColor = rowColorStyles.backgroundColor;
+        setCellBackground(numberCell, rowColorStyles.backgroundColor);
         numberCell.style.color = rowColorStyles.color;
       }
       tr.append(numberCell);

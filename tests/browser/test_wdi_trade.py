@@ -5,6 +5,7 @@ from pathlib import Path
 
 import duckdb
 import pytest
+from paint_helpers import painted_colors
 from test_spec_conformance import capture, mount
 
 pytestmark = pytest.mark.browser
@@ -55,8 +56,9 @@ def test_trade_demo_uses_shared_zero_compact_amounts_and_surplus_deficit_colors(
         assert rows.nth(0).locator("td").nth(column_index["exports_imports_ratio"]).inner_text() == "724.9%"
         assert rows.nth(1).locator("td").nth(column_index["net_exports"]).inner_text() == "-1.5T"
         for column in (column_index["exports_imports_ratio"], column_index["net_exports"]):
-            surplus = rows.nth(0).locator("td").nth(column).evaluate("el => getComputedStyle(el).backgroundColor")
-            deficit = rows.nth(1).locator("td").nth(column).evaluate("el => getComputedStyle(el).backgroundColor")
+            surplus, deficit = painted_colors(
+                page, [rows.nth(0).locator("td").nth(column), rows.nth(1).locator("td").nth(column)]
+            )
             assert surplus != deficit
         assert rows.nth(2).locator("td").nth(column_index["exports_imports_ratio"]).inner_text() == "–"
         assert rows.nth(2).locator("td").nth(column_index["net_exports"]).inner_text() == "–"

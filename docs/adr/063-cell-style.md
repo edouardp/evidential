@@ -46,6 +46,19 @@ col.bar("return_pct", fmt="num1", color="#2563eb", label=True) \
 - A mark's own `color=`/`fill` is untouched: the bar fill and the cell
   background are separate properties.
 
+Cell backgrounds use a separate CSS paint layer above the row tint. The order
+from back to front is the table surface, the stripe/hover/summary tint, the
+winning cell fill, and the selection wash. Color visualization, row colors,
+column highlights, `cell_style` and style rules all write the same cell-fill
+property, preserving their existing precedence. A higher-priority translucent
+fill replaces the lower-priority fill rather than stacking both.
+
+RGBA and eight-digit hex colors preserve alpha, including interpolated gradient
+stops. An 80%-opaque white neutral exposes 20% of the row stripe. Text and marks
+are separate foreground content and do not inherit fill opacity. Frozen cells
+use the same layers over an opaque surface, preventing scrolled text from
+showing through. No new opacity option or data transformation is introduced.
+
 ### Consequences
 
 - Good, because one value can now be text, bar, label, and conditional

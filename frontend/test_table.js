@@ -117,8 +117,9 @@ test("numeric color and chip scales use inferred ranges", () => {
       makeModel([{ x: 1 }, { x: 10 }], [{ name: "x", type: "number", viz, color_options: { color_scale: "green" } }], {}, el), el,
     );
     const targets = [...el.querySelectorAll(viz === "chip" ? ".et-chip" : "tbody td")];
-    assert.ok(targets[0].style.backgroundColor);
-    assert.notEqual(targets[0].style.backgroundColor, targets[1].style.backgroundColor);
+    const fills = targets.map(target => viz === "chip" ? target.style.backgroundColor : target.style.getPropertyValue("--et-cell-fill"));
+    assert.ok(fills[0]);
+    assert.notEqual(fills[0], fills[1]);
     renderer.destroy();
   }
 });
@@ -148,7 +149,7 @@ test("styles and footnotes compose with nulls, substitutions and templates", () 
     ],
   }, el), el);
   const cells = [...el.querySelectorAll("tbody td")];
-  assert.ok(cells.every((cell) => cell.style.backgroundColor === "red"));
+  assert.ok(cells.every((cell) => cell.style.getPropertyValue("--et-cell-fill") === "red"));
   assert.ok(cells.every((cell) => cell.querySelector(".et-footnote-mark")));
   assert.match(cells[1].textContent, /none/);
   assert.match(cells[2].textContent, /hello/);
@@ -855,7 +856,7 @@ test("row_conditional_colors tints the whole row", () => {
     el,
   );
   const cell = el.querySelector("tbody .et-td");
-  assert.equal(cell.style.backgroundColor, "rgb(255, 0, 0)");
+  assert.equal(cell.style.getPropertyValue("--et-cell-fill"), "rgb(255, 0, 0)");
   renderer.destroy();
 });
 
@@ -1014,7 +1015,7 @@ test("a column highlight paints the header and every cell", () => {
   const th = el.querySelectorAll("thead tr:last-child th")[1];
   assert.equal(th.style.backgroundColor, "rgb(253, 232, 208)");
   const td = el.querySelectorAll("tbody tr td")[1];
-  assert.equal(td.style.backgroundColor, "rgb(253, 232, 208)");
+  assert.equal(td.style.getPropertyValue("--et-cell-fill"), "rgb(253, 232, 208)");
   // The unhighlighted column is untouched.
   assert.equal(el.querySelectorAll("tbody tr td")[2].style.backgroundColor, "");
   renderer.destroy();
@@ -2611,8 +2612,8 @@ test("cell_style sets cell chrome and a per-row background", () => {
   ];
   const renderer = new EvidentialTableRenderer(makeModel(rows, columns, { page_size: 10 }, el), el);
   const cells = [...el.querySelectorAll("tbody td")];
-  assert.notEqual(cells[0].style.backgroundColor, "");
-  assert.notEqual(cells[0].style.backgroundColor, cells[1].style.backgroundColor);
+  assert.notEqual(cells[0].style.getPropertyValue("--et-cell-fill"), "");
+  assert.notEqual(cells[0].style.getPropertyValue("--et-cell-fill"), cells[1].style.getPropertyValue("--et-cell-fill"));
   assert.equal(cells[0].style.border, "1px solid red");
   renderer.destroy();
 });
@@ -2700,7 +2701,7 @@ test("tableau colour names resolve in cell chrome and highlights", () => {
   const cell = el.querySelector("tbody td");
   // #1f77b4 / C1=#ff7f0e / #2ca02c, as jsdom normalises them.
   assert.equal(cell.style.color, "rgb(31, 119, 180)");
-  assert.equal(cell.style.backgroundColor, "rgb(44, 160, 44)");
+  assert.equal(cell.style.getPropertyValue("--et-cell-fill"), "rgb(44, 160, 44)");
   const header = el.querySelector("th");
   assert.equal(header.style.backgroundColor, "rgb(255, 127, 14)");
   renderer.destroy();

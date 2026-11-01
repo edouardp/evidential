@@ -2,7 +2,7 @@ import { alignStyle, h, optString, inlineMarkdown, withFigure, isStub } from "./
 import { formatValue } from "./format.js";
 import { formattedText } from "./formatted-text.js";
 import { withDecimals, indentForCell } from "./rows.js";
-import { calculateColorStyles, contrastTextColor, resolveColor } from "./color.js";
+import { calculateColorStyles, contrastTextColor, resolveColor, setCellBackground } from "./color.js";
 import { renderBar, renderDelta, renderMarks, renderSparkline, renderSymbols } from "./visualizations.js";
 import { inspectCell } from "./tooltips.js";
 
@@ -68,6 +68,7 @@ export function decorateCell(td, col, row, ctx, rowIndex, style, includeFootnote
   }
   if (style) {
     for (const [property, propertyValue] of Object.entries(style)) {
+      if (["background", "background-color"].includes(property) && setCellBackground(td, propertyValue)) continue;
       td.style.setProperty(property, propertyValue);
     }
   }
@@ -117,17 +118,17 @@ export function renderCell({row, col, index, ctx, rowIndex, options: opts, toggl
     }
   }
   if (rowColorStyles) {
-    td.style.backgroundColor = rowColorStyles.backgroundColor;
+    setCellBackground(td, rowColorStyles.backgroundColor);
     td.style.color = rowColorStyles.color;
   }
   // A column highlight is a vertical band: it wins over row colours.
-  if (col.highlight) td.style.backgroundColor = resolveColor(col.highlight);
+  if (col.highlight) setCellBackground(td, col.highlight);
   // Cell chrome (`cell_style=`): independent of the marks that sit on it.
   const cellStyle = col.cell_style || {};
   if (cellStyle.background_column && row[cellStyle.background_column] != null) {
-    td.style.backgroundColor = resolveColor(String(row[cellStyle.background_column]));
+    setCellBackground(td, String(row[cellStyle.background_column]));
   } else if (cellStyle.background) {
-    td.style.backgroundColor = resolveColor(cellStyle.background);
+    setCellBackground(td, cellStyle.background);
   }
   if (cellStyle.color) td.style.color = resolveColor(cellStyle.color);
   if (cellStyle.border) td.style.border = cellStyle.border;
@@ -278,7 +279,7 @@ export function renderCell({row, col, index, ctx, rowIndex, options: opts, toggl
   }
 
   if (vizStyles) {
-    td.style.backgroundColor = vizStyles.backgroundColor;
+    setCellBackground(td, vizStyles.backgroundColor);
     td.style.color = vizStyles.color;
     td.classList.add("et-color-cell");
   }

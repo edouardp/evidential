@@ -1,5 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import { JSDOM } from "jsdom";
 import {
   createColorScale,
   getColorForValue,
@@ -10,6 +11,8 @@ import {
   COLOR_SCALES,
   COLORMAPS,
   resolveColor,
+  setCellBackground,
+  chroma,
 } from "./src/color.js";
 
 test("named colour scales: presets, matplotlib colormaps and names", () => {
@@ -61,6 +64,36 @@ test("diverging scale anchors the midpoint", () => {
   });
   assert.equal(scale.kind, "diverging");
   assert.equal(getColorForValue(0, scale), "#ffffff");
+});
+
+test("diverging palettes and explicit stops interpolate alpha through an 80%-opaque neutral", () => {
+  for (const options of [
+    {colorPalette: ["red", "#ffffffcc", "blue"], min: -1, max: 1, midpoint: 0},
+    {colorStops: [{value: -1, color: "red"}, {value: 0, color: "rgba(255,255,255,0.8)"}, {value: 1, color: "blue"}]},
+  ]) {
+    const scale = createColorScale([], options);
+    for (const [value, alpha] of [[-1, 1], [-0.5, 0.9], [0, 0.8], [0.5, 0.9], [1, 1]]) {
+      const fill = getColorForValue(value, scale);
+      assert.ok(Math.abs(chroma(fill).alpha() - alpha) < 0.005);
+      assert.equal(colorStylesFromHex(fill).backgroundColor, fill);
+    }
+  }
+});
+
+test("cell backgrounds use a separate validated layer without changing text or opacity", () => {
+  const document = new JSDOM('<table><tbody><tr><td style="color: black">0</td></tr></tbody></table>').window.document;
+  const cell = document.querySelector("td");
+  assert.equal(setCellBackground(cell, "#ffffffcc"), true);
+  assert.equal(cell.style.getPropertyValue("--et-cell-fill"), "rgba(255, 255, 255, 0.8)");
+  assert.equal(cell.style.backgroundColor, "");
+  assert.equal(cell.style.color, "black");
+  assert.equal(cell.style.opacity, "");
+  assert.equal(setCellBackground(cell, "not-a-color"), false);
+  assert.equal(cell.style.getPropertyValue("--et-cell-fill"), "rgba(255, 255, 255, 0.8)");
+  assert.equal(setCellBackground(cell, "transparent"), true);
+  assert.equal(cell.style.getPropertyValue("--et-cell-fill"), "transparent");
+  setCellBackground(cell, "");
+  assert.equal(cell.style.getPropertyValue("--et-cell-fill"), "");
 });
 
 test("contrast-aware cell styles", () => {

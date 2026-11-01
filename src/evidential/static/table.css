@@ -365,11 +365,20 @@
 
 /* ----------------------------------------------------------------- rows --- */
 .et-td {
+  --et-cell-fill: transparent;
+  --et-row-tint: transparent;
+  --et-selection-tint: transparent;
   /* Evidence: py-1, first column pl-1 pr-3, others pl-1.5 pr-3. */
   padding: 0.25rem 0.75rem 0.25rem 0.375rem;
   border-bottom: 1px solid var(--et-row-border);
   vertical-align: middle;
-  background: var(--et-bg);
+  /* One paint order for all cells, including frozen columns: selection over
+     the cell's color over the row tint. Alpha never fades text or graphics. */
+  background-color: var(--et-bg);
+  background-image:
+    linear-gradient(var(--et-selection-tint), var(--et-selection-tint)),
+    linear-gradient(var(--et-cell-fill, transparent), var(--et-cell-fill, transparent)),
+    linear-gradient(var(--et-row-tint), var(--et-row-tint));
 }
 .et-td:first-child { padding-left: 0.25rem; }
 /* Shared-header sub-columns retain separate widths and alignment. */
@@ -379,17 +388,17 @@
 /* Outer rules remain visible even when detail row separators are disabled. */
 .et-table tbody > tr:first-child > .et-td { border-top: 1px solid var(--et-border); }
 .et-table tbody > tr:last-child > .et-td { border-bottom: 1px solid var(--et-border); }
-.et-row-shaded .et-td { background: var(--et-shading); }
-.et-row:hover .et-td { background: var(--et-hover); }
+.et-row-shaded .et-td { --et-row-tint: var(--et-shading); }
+.et-row:hover .et-td { --et-row-tint: var(--et-hover); }
 .et-row-total .et-td {
   font-weight: 600;
-  background: var(--et-total-bg);
+  --et-row-tint: var(--et-total-bg);
   color: var(--et-total-text, inherit);
   border-top: 1px solid var(--et-border);
 }
 .et-row-subtotal .et-td {
   font-weight: 600;
-  background: var(--et-subtotal-bg);
+  --et-row-tint: var(--et-subtotal-bg);
 }
 .et-row-subtotal.et-row-collapsible { cursor: pointer; }
 .et-row-link { cursor: pointer; }
@@ -397,11 +406,8 @@
 .et-row-selectable { cursor: pointer; }
 .et-row.et-row-selected .et-td,
 .et-row.et-row-selected:hover .et-td {
-  background-color: var(--et-bg);
-  background-image: linear-gradient(
-    color-mix(in srgb, var(--et-accent) 16%, transparent),
-    color-mix(in srgb, var(--et-accent) 16%, transparent)
-  );
+  --et-row-tint: transparent;
+  --et-selection-tint: color-mix(in srgb, var(--et-accent) 16%, transparent);
 }
 .et-null { color: var(--et-muted); opacity: 0.75; }
 .et-negative { color: var(--et-negative); }
@@ -913,7 +919,7 @@ tbody tr:last-child .et-bar-center .et-bar-axis { bottom: var(--et-bar-pad, 0); 
   text-align: left;
   border-top: 1px solid var(--et-header-border);
   border-bottom: 1px solid var(--et-header-border);
-  background: var(--et-subtotal-bg);
+  --et-row-tint: var(--et-subtotal-bg);
 }
 .et-row-section .et-section-center { text-align: center; }
 /* A blank spacer row (`spacer_row`): a gap with no rule. */
@@ -1002,28 +1008,9 @@ tbody tr:last-child .et-bar-center .et-bar-axis { bottom: var(--et-bar-pad, 0); 
 .et-color-cell { position: relative; }
 
 /* ------------------------------------------------------------ frozen ----- */
-/* Frozen columns need an opaque backdrop, otherwise scrolled content shows
-   through. Apply the row tint as a gradient over the opaque surface: a
-   translucent `background-color` would let the scrolled cells bleed through,
-   and `background: <colour>, <colour>` is invalid (only the final layer may be
-   a colour), so it silently computes to transparent. */
+/* Frozen columns keep the same paint layers, over an opaque surface so
+   horizontally scrolled content cannot bleed through translucent fills. */
 .et-frozen { background-color: var(--et-surface) !important; }
-.et-row-total .et-frozen {
-  background-color: var(--et-surface) !important;
-  background-image: linear-gradient(var(--et-total-bg), var(--et-total-bg)) !important;
-}
-.et-row-subtotal .et-frozen {
-  background-color: var(--et-surface) !important;
-  background-image: linear-gradient(var(--et-subtotal-bg), var(--et-subtotal-bg)) !important;
-}
-.et-row-shaded .et-frozen {
-  background-color: var(--et-surface) !important;
-  background-image: linear-gradient(var(--et-shading), var(--et-shading)) !important;
-}
-.et-row:hover .et-frozen {
-  background-color: var(--et-surface) !important;
-  background-image: linear-gradient(var(--et-hover), var(--et-hover)) !important;
-}
 .et-frozen-last { box-shadow: 2px 0 4px -2px rgba(0, 0, 0, 0.25); }
 
 /* --------------------------------------------------- column statistics -- */
@@ -1205,8 +1192,8 @@ tbody tr:last-child .et-bar-center .et-bar-axis { bottom: var(--et-bar-pad, 0); 
 .et-dialog::backdrop { background: rgba(15, 23, 42, 0.55); }
 
 /* Display annotations are separate from data cells and follow the stripe cycle. */
-.et-display-row .et-td { background: var(--et-bg); border-top: none; border-bottom: none; }
-.et-display-row.et-row-shaded .et-td { background: var(--et-shading); }
+.et-display-row .et-td { --et-row-tint: transparent; border-top: none; border-bottom: none; }
+.et-display-row.et-row-shaded .et-td { --et-row-tint: var(--et-shading); }
 .et-display-row .et-display-heading { font-weight: 600; text-align: left; }
 .et-display-section .et-display-label-cell { font-weight: 600; }
 .et-display-row .et-display-align-center { text-align: center; }

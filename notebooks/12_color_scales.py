@@ -121,9 +121,7 @@ def _(EvidentialTable, col, connection, mo):
                     scale="purple", scale_column="other", min=0, max=100
                 ),
                 # per-row colours (conditional_colors names the hex column)
-                col.number("conditional", fmt="num0", title="Conditional colors").color(
-                    conditional_colors="band"
-                ),
+                col.number("conditional", fmt="num0", title="Conditional colors").color(conditional_colors="band"),
                 col.auto("other").hide(),
                 col.auto("band").hide(),
             ],
@@ -184,6 +182,72 @@ def _(EvidentialTable, col, connection, mo):
     )
     names
     return
+
+
+@app.cell(hide_code=True)
+def transparency_doc(mo):
+    mo.md("""
+    ## Translucent colors preserve row stripes
+
+    Give individual color stops an alpha value. White at **80% opacity** is
+    `rgba(255,255,255,0.8)` or `#ffffffcc`; fully transparent white is `#ffffff00`.
+    The red and blue endpoints below stay opaque. Intermediate colors interpolate
+    alpha too: halfway to the 80%-opaque neutral they are 90% opaque.
+
+    ```python
+    col.number("value").color(
+        scale=["red", "#ffffffcc", "blue"], min=-1, max=1, midpoint=0
+    )
+    ```
+
+    Compare the two zero rows: opaque white hides the stripe, 80%-opaque white
+    lets 20% of it show through, and transparent white exposes the whole stripe.
+    The last column uses `.cell_style(background="#ffffffcc")` instead of a
+    gradient. Text and graphical marks keep their own opacity. Hover a row to
+    see the row highlight through the fill as well.
+    """)
+    return
+
+
+@app.cell
+def transparent_colors(EvidentialTable, col, mo):
+    _values = [
+        ("Negative", -1),
+        ("Halfway", -0.5),
+        ("Neutral A", 0),
+        ("Neutral B", 0),
+        ("Halfway", 0.5),
+        ("Positive", 1),
+    ]
+    _rows = [{"case": name, **dict.fromkeys(["opaque", "soft", "clear", "fixed"], value)} for name, value in _values]
+    transparency_table = EvidentialTable(
+        _rows,
+        columns=[
+            col.text("case"),
+            col.number("opaque", title="Opaque neutral", format="num1").color(
+                scale=["red", "white", "blue"], min=-1, max=1, midpoint=0
+            ),
+            col.number("soft", title="80% opaque neutral", format="num1").color(
+                scale=["red", "#ffffffcc", "blue"], min=-1, max=1, midpoint=0
+            ),
+            col.number("clear", title="Transparent neutral", format="num1").color(
+                scale=["red", "#ffffff00", "blue"], min=-1, max=1, midpoint=0
+            ),
+            col.number("fixed", title="Constant white (80%)", format="num1").cell_style(background="#ffffffcc"),
+        ],
+        title="Color fills over row stripes",
+        caption="The stripes are deliberately darker here to make the show-through easier to see.",
+        theme={"shading": "#aebdce"},
+        row_shading=True,
+        row_lines=False,
+        border=False,
+        search=False,
+        sortable=False,
+        page_size="all",
+        width=900,
+    )
+    mo.ui.anywidget(transparency_table)
+    return (transparency_table,)
 
 
 if __name__ == "__main__":

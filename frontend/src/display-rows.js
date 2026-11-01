@@ -4,6 +4,7 @@ import { formatValue } from "./format.js";
 import { formattedText } from "./formatted-text.js";
 import { shaded } from "./rows.js";
 import { decorateSubcolumn } from "./headers.js";
+import { setCellBackground } from "./color.js";
 
 export function renderAnnotation(entry, columns, ctx, options) {
   const section = entry.kind === "section";
@@ -23,7 +24,11 @@ export function renderAnnotation(entry, columns, ctx, options) {
     return label;
   };
   const applyStyle = cell => {
-    for (const [key, value] of Object.entries(entry.style)) cell.style.setProperty(key.replaceAll("_", "-"), String(value));
+    for (const [key, value] of Object.entries(entry.style)) {
+      const property = key.replaceAll("_", "-");
+      if (["background", "background-color"].includes(property) && setCellBackground(cell, String(value))) continue;
+      cell.style.setProperty(property, String(value));
+    }
   };
   const indentLabel = cell => {
     if (entry.depth && entry.align !== "center" && options.section_indent) {

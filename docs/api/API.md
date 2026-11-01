@@ -606,6 +606,12 @@ columns=[
   max=, midpoint=)`. `scale` takes a preset (`"blues"`, `"viridis"`), any of the
   matplotlib colour maps (`"RdBu"`, `"plasma"`, …), a list of stops, or
   `"@column"` to take each row's colour from another column.
+  RGBA and eight-digit hex colors preserve alpha: for example,
+  `scale=["red", "#ffffffcc", "blue"]` with `midpoint=0` uses an 80%-opaque
+  white neutral and opaque endpoints. Alpha interpolates between stops.
+  Translucent fills reveal the row stripe/hover tint underneath without fading
+  text or marks, including in frozen columns. See the comparison in
+  [`12_color_scales.py`](../../notebooks/12_color_scales.py).
 - **Chip** — `.chip(min_width=, conditional_colors=, scale=, …)`, on either a
   text or a numeric column.
 - **Delta** — `.delta(down_is_good=, neutral_range=, chip=, show_value=,
@@ -974,7 +980,10 @@ columns=[
   symmetric signed domain is also accepted; asymmetric signed bounds are rejected.
 - **Cell chrome** — `.cell_style(background=, color=, border=, padding=)` styles
   the cell independently of the marks; `background="@column"` takes a per-row
-  colour. Matching `rules` still win for the same property.
+  colour. Translucent backgrounds blend over the row tint; for example,
+  `background="rgba(255,255,255,0.8)"` reveals 20% of the row stripe.
+  Matching `rules` still win for the same property. Selection tint paints over
+  the resulting cell color.
 - **Sources** — a field name, `"@field"`, or a `lambda row: ...`. A callable is
   evaluated Python-side into a hidden helper column, so the browser (and any
   static export) only ever sees field names.

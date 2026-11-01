@@ -89,6 +89,29 @@ export function resolveColor(value) {
   return NAMED_COLORS[value.toLowerCase()] ?? value;
 }
 
+const cellColorParsers = new WeakMap();
+
+/** Paint a cell fill above its row tint, leaving the text fully opaque.
+ * Use CSS's own color parser so invalid values cannot invalidate every layer.
+ */
+export function setCellBackground(cell, color) {
+  if (color == null || color === "") {
+    cell.style.removeProperty("--et-cell-fill");
+    return true;
+  }
+  let parser = cellColorParsers.get(cell.ownerDocument);
+  if (!parser) {
+    parser = cell.ownerDocument.createElement("span").style;
+    cellColorParsers.set(cell.ownerDocument, parser);
+  }
+  parser.backgroundColor = "";
+  parser.backgroundColor = resolveColor(color);
+  const parsed = parser.backgroundColor;
+  if (!parsed) return false;
+  cell.style.setProperty("--et-cell-fill", parsed);
+  return true;
+}
+
 function resolvePalette(palette) {
   if (typeof palette !== "string") {
     return Array.isArray(palette) ? palette.map(resolveColor) : palette;

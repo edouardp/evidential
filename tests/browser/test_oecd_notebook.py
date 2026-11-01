@@ -1,6 +1,7 @@
 """The local OECD product drives the timeline, context and persistent drilldown."""
 
 import pytest
+from paint_helpers import painted_colors
 from playwright.sync_api import expect
 
 from scripts.api_screenshots import ROOT, _server
@@ -52,11 +53,11 @@ def test_year_range_country_selection_and_source_browser(page, oecd_dataset, mon
         gdp = nzl.locator("td").nth(3)
         gdp.hover()
         expect(timeline.locator(".et-tooltip")).to_contain_text("15,000,000.00")
-        colors = timeline.locator("tbody tr td:last-child").evaluate_all(
-            "els => els.map(el => getComputedStyle(el).backgroundColor)"
-        )
+        page.mouse.move(0, 0)
+        expect(timeline.locator(".et-tooltip")).to_be_hidden()
+        colors = painted_colors(page, timeline.locator("tbody tr td:last-child").all())
         assert colors[0] != colors[1]
-        assert all(color not in {"rgba(0, 0, 0, 0)", "rgb(255, 255, 255)"} for color in colors)
+        assert all(color != [255, 255, 255] for color in colors)
 
         timeline.get_by_role("searchbox").fill("United States")
         timeline.locator("tbody tr").first.click()

@@ -127,6 +127,40 @@ test("spanning group labels freeze at their styled indentation without changing 
   viewport.destroy();
 });
 
+test("spanning headings measure a frozen boundary from physical cells and clear it when unfrozen", () => {
+  const scroller = dom.window.document.createElement("div");
+  scroller.innerHTML = `<table><thead><tr>
+    <th data-column-start="0">Name</th><th data-column-start="1">Value</th></tr></thead><tbody>
+    <tr><td class="et-display-heading" colspan="2" style="padding:4px 6px 5px 20px">
+    <span class="et-display-label">North</span></td></tr></tbody></table>`;
+  scroller.querySelector("table").getBoundingClientRect = () => ({left: 10});
+  let widths = [90, 140];
+  for (const [index, cell] of [...scroller.querySelectorAll("th")].entries()) {
+    cell.getBoundingClientRect = () => ({left: 10 + (index ? widths[0] : 0),
+      right: 10 + widths[0] + (index ? widths[1] : 0)});
+  }
+  const options = {freeze_columns: 1};
+  const viewport = new TableViewport({scroller, getOptions: () => options});
+  const label = scroller.querySelector(".et-display-label");
+  viewport.applyFrozenOffsets();
+  assert.equal(label.style.getPropertyValue("--et-heading-frozen-width"), "90px");
+  assert.equal(label.style.getPropertyValue("--et-heading-frozen-left"), "20px");
+  assert.equal(label.style.getPropertyValue("--et-heading-frozen-top"), "4px");
+  assert.equal(label.style.getPropertyValue("--et-heading-frozen-bottom"), "5px");
+  options.freeze_columns = 2;
+  viewport.applyFrozenOffsets();
+  assert.equal(label.style.getPropertyValue("--et-heading-frozen-width"), "230px");
+  widths = [100, 160];
+  viewport.applyFrozenOffsets();
+  assert.equal(label.style.getPropertyValue("--et-heading-frozen-width"), "260px");
+  options.freeze_columns = 0;
+  viewport.applyFrozenOffsets();
+  assert.equal(label.style.getPropertyValue("--et-heading-frozen-width"), "");
+  assert.ok(!label.classList.contains("et-frozen-heading-label"));
+  assert.equal(label.parentElement.colSpan, 2);
+  viewport.destroy();
+});
+
 test("freezing keeps header and footer axes aligned with their physical columns", () => {
   const scroller = dom.window.document.createElement("div");
   scroller.innerHTML = `<table><thead>

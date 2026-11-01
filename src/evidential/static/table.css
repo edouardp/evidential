@@ -1013,7 +1013,8 @@ tbody tr:last-child .et-bar-center .et-bar-axis { bottom: var(--et-bar-pad, 0); 
 /* Frozen columns keep the same paint layers, over an opaque surface so
    horizontally scrolled content cannot bleed through translucent fills. */
 .et-frozen { background-color: var(--et-surface) !important; }
-.et-frozen-last { box-shadow: 2px 0 4px -2px rgba(0, 0, 0, 0.25); }
+.et-frozen-last,
+.et-frozen-heading-label::before { box-shadow: 2px 0 4px -2px rgba(0, 0, 0, 0.25); }
 
 /* --------------------------------------------------- column statistics -- */
 /* The section is bounded by the same rule that separates the header from the
@@ -1201,6 +1202,15 @@ tbody tr:last-child .et-bar-center .et-bar-axis { bottom: var(--et-bar-pad, 0); 
 .et-display-row .et-display-align-center { text-align: center; }
 .et-display-heading > .et-display-label { display: inline-block; max-width: 100%; }
 .et-frozen-heading-label { position: sticky; z-index: 10; }
+.et-frozen-heading-label::before {
+  content: "";
+  position: absolute;
+  pointer-events: none;
+  left: calc(-1 * var(--et-heading-frozen-left));
+  top: calc(-1 * var(--et-heading-frozen-top));
+  bottom: calc(-1 * var(--et-heading-frozen-bottom));
+  width: var(--et-heading-frozen-width);
+}
 .et-section-toggle {
   display: inline-flex;
   align-items: baseline;

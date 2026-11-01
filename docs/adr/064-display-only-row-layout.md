@@ -100,6 +100,11 @@ EvidentialTable(
   their full-table alignment. Headings with values and summaries use ordinary
   physical column indices, including their blank row-number cell, so they
   freeze at the same offsets as detail cells.
+  Plain left-aligned headings also draw the ordinary frozen-boundary shadow:
+  a noninteractive pseudo-element on the pinned label spans the measured
+  frozen width and the cell's full height. Its geometry contributes no layout
+  width, tracks resizing/continuation, and uses leaf headers when closed groups
+  leave no physical detail cells. Disabling freezing removes the decoration.
 - Sections can opt into folding with `.section(collapsible=True)` or the
   fluent `.collapsible()`. A closed group hides its details, descendants and
   summary row, and contributes one display slot to pagination. Optional closed

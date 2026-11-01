@@ -28,6 +28,8 @@ project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+- Spanning group headings show the same frozen-column boundary shadow as
+  detail and summary rows, including nested, continued and closed sections.
 - Group summary labels follow the detail-row indentation by default, including
   nested and top summaries. `.summary(indent=False)` keeps heading alignment;
   numeric totals and grand totals retain their existing alignment. Annotation

@@ -9,6 +9,24 @@ from evidential import col, rows
 pytestmark = pytest.mark.browser
 
 
+def assert_heading_boundary(heading, frozen_cell):
+    label = heading.locator(".et-frozen-heading-label")
+    expect(label).to_have_count(1)
+    geometry = label.evaluate("""el => {
+        const marker = getComputedStyle(el, '::before');
+        const rect = el.getBoundingClientRect();
+        return {right: rect.x + parseFloat(marker.left) + parseFloat(marker.width),
+            height: parseFloat(marker.height), shadow: marker.boxShadow, events: marker.pointerEvents};
+    }""")
+    assert geometry["right"] == pytest.approx(
+        frozen_cell.bounding_box()["x"] + frozen_cell.bounding_box()["width"], abs=1
+    )
+    assert geometry["height"] == pytest.approx(heading.bounding_box()["height"], abs=2)
+    assert geometry["shadow"] == frozen_cell.evaluate("el => getComputedStyle(el).boxShadow")
+    assert geometry["shadow"] != "none"
+    assert geometry["events"] == "none"
+
+
 @pytest.mark.parametrize("frozen", [0, 1, 2])
 def test_plain_group_heading_stays_with_frozen_details(page, live_server, frozen):
     data = [
@@ -47,6 +65,11 @@ def test_plain_group_heading_stays_with_frozen_details(page, live_server, frozen
 
     before = text_x()
     detail_before = detail.bounding_box()["x"]
+    edge = page.locator("tbody tr:not(.et-display-row) .et-frozen-last").first
+    if frozen:
+        assert_heading_boundary(heading, edge)
+    else:
+        expect(heading.locator(".et-frozen-heading-label")).to_have_count(0)
     scroller = page.locator(".et-scroller")
     assert scroller.evaluate("el => el.scrollWidth > el.clientWidth + 200")
     scroller.evaluate("el => el.scrollLeft = 250")
@@ -58,6 +81,7 @@ def test_plain_group_heading_stays_with_frozen_details(page, live_server, frozen
     assert heading.evaluate("el => getComputedStyle(el).color") == "rgb(102, 102, 102)"
     assert heading.evaluate("el => getComputedStyle(el).borderBottomWidth") == "1px"
     if frozen:
+        assert_heading_boundary(heading, edge)
         # Recalculation on resize must not measure already-sticky positions.
         page.locator(".et-root").evaluate("el => el.style.maxWidth = '400px'")
         page.wait_for_timeout(100)
@@ -65,6 +89,7 @@ def test_plain_group_heading_stays_with_frozen_details(page, live_server, frozen
         scroller.evaluate("el => el.scrollLeft = el.scrollWidth")
         assert text_x() == pytest.approx(before, abs=1)
         assert detail.bounding_box()["x"] == pytest.approx(detail_before, abs=1)
+        assert_heading_boundary(heading, edge)
     capture(page, f"frozen-group-headings-{frozen}.png")
 
 
@@ -133,6 +158,29 @@ def test_nested_and_continued_headings_and_summaries_freeze_with_row_numbers(pag
     expect(page.locator(".et-display-summary .et-row-num.et-frozen")).to_have_count(2)
     expect(page.locator(".et-display-grand_summary .et-row-num.et-frozen")).to_have_count(1)
     expect(page.locator(".et-display-row .et-marks")).to_have_count(0)
+    if not values:
+        edge = page.locator(".et-display-summary .et-frozen-last").first
+        for heading in page.locator(".et-display-heading").all():
+            assert_heading_boundary(heading, edge)
+
+
+def test_closed_group_heading_retains_the_frozen_boundary_without_detail_cells(page, live_server):
+    mount(
+        page,
+        live_server,
+        [
+            (
+                "Closed heading",
+                [{"region": "North", "name": "Item", "value": 1}],
+                [col.text("name"), col.integer("value")],
+                {"row_layout": rows.group_by("region").section(collapsible=True), "freeze_columns": 1},
+            )
+        ],
+    )
+    page.get_by_role("button", name="Toggle section North").click()
+    expect(page.locator("tbody tr:not(.et-display-row)")).to_have_count(0)
+    edge = page.locator("thead .et-frozen-last").last
+    assert_heading_boundary(page.locator(".et-display-heading"), edge)
 
 
 def test_centered_heading_keeps_its_full_table_alignment(page, live_server):

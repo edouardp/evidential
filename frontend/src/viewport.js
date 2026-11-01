@@ -196,6 +196,9 @@ export class TableViewport {
     for (const label of headingLabels) {
       label.classList.toggle("et-frozen-heading-label", n > 0);
       label.style.left = n > 0 ? window.getComputedStyle(label.parentElement).paddingLeft : "";
+      if (n <= 0) for (const name of ["width", "left", "top", "bottom"]) {
+        label.style.removeProperty(`--et-heading-frozen-${name}`);
+      }
     }
     for (const cell of [...bodyCells, ...axisCells, ...spanningCells]) {
       if (n <= 0 && !cell.classList.contains("et-frozen")) continue;
@@ -205,6 +208,7 @@ export class TableViewport {
     }
     if (n <= 0) return;
     const offsets = new Map();
+    let frozenWidth = 0;
     const tableLeft = table.getBoundingClientRect().left;
     // With every group closed there may be only spanning headings in the body.
     // Single-column leaf headers still supply physical edges in that case.
@@ -212,8 +216,20 @@ export class TableViewport {
     for (const cell of [...bodyCells, ...leafHeaders]) {
       const index = Number(cell.dataset.columnIndex ?? cell.dataset.columnStart);
       if (index < n && !offsets.has(index)) {
-        offsets.set(index, cell.getBoundingClientRect().left - tableLeft);
+        const bounds = cell.getBoundingClientRect();
+        offsets.set(index, bounds.left - tableLeft);
+        frozenWidth = Math.max(frozenWidth, (bounds.right ?? bounds.left + (bounds.width || 0)) - tableLeft);
       }
+    }
+    // The label stays intrinsic-width. Its decorative pseudo-element supplies
+    // the same full-height boundary shadow as a frozen data cell, without
+    // contributing a new cell or width constraint to the spanning heading.
+    for (const label of headingLabels) {
+      const style = window.getComputedStyle(label.parentElement);
+      label.style.setProperty("--et-heading-frozen-width", `${frozenWidth}px`);
+      label.style.setProperty("--et-heading-frozen-left", style.paddingLeft);
+      label.style.setProperty("--et-heading-frozen-top", style.paddingTop);
+      label.style.setProperty("--et-heading-frozen-bottom", style.paddingBottom);
     }
     const freeze = (cell, index, base) => {
       if (index >= n || !offsets.has(index)) return;

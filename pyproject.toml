@@ -50,6 +50,7 @@ dev = [
     "pytest-cov>=6.0",
     "ruff>=0.11",
     "scipy>=1.17.1",
+    "wigglystuff>=0.5.36",
 ]
 
 [project.urls]

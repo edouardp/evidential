@@ -57,6 +57,7 @@ explorers can require a local data bundle; their introduction describes its loca
 | [`56_dimension_grid.py`](56_dimension_grid.py) | Searchable, mouse-scrollable dimension slicers linked to Needful Things monthly sales, with multiple selection and a link to the CUR explorer. Runs offline. |
 | [`57_aws_cur_explorer.py`](57_aws_cur_explorer.py) | Real AWS CUR product explorer: nine cross-filtered dimensions, cost and charge counts, cost-driver totals with daily trends and unit-safe quantities, plus searchable individual line items. Requires `~/datasets/aws-cur-example` or `AWS_CUR_DATASET`. |
 | [`58_oecd_economic_cycles.py`](58_oecd_economic_cycles.py) | OECD recession timeline by region, annual PPP GDP and fiscal context, year range, linked quarterly growth and a unit-aware source browser. Requires `~/datasets/oecd` or `OECD_DATASET`. See the [methodology and guide](../docs/oecd-explorer.md). |
+| [`59_adventureworks_company_report.py`](59_adventureworks_company_report.py) | Seven-section company report: scorecard, monthly sales, country map, regional comparisons, product mix, customer cohorts/accounts and fulfilment. Year/channel filters update persistent Evidential tables and one wigglystuff ObservablePlot map. Requires the Parquet product in `~/datasets/adventureworks` or `ADVENTUREWORKS_DATASET`. See the [report guide](../docs/adventureworks-report.md). |
 
 `sample_data/needful_things/orders.parquet` is Evidence's demo dataset, copied
 from the published docs site.

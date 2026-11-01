@@ -671,6 +671,18 @@ wheels = [
 ]
 
 [[package]]
+name = "drawdata"
+version = "0.5.2"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "anywidget" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/73/16/d82e593e387cb80a918957c3899687276706a217f69e68ed86a2568d454d/drawdata-0.5.2.tar.gz", hash = "sha256:11fb54a2a0b188e9c49bba344e019ea0d5f89752e2510031531035892e4fa455", size = 236404, upload-time = "2026-07-15T10:21:50.752Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/64/df/f57bbf49607c0f66fd69331efae41cbc24d3d878f53d3fb0fa2d4455ec51/drawdata-0.5.2-py3-none-any.whl", hash = "sha256:e5045ed5d2128d7ef004aac9ff2195ba46d6e0711dd7adc663104f6b954eb1cf", size = 238047, upload-time = "2026-07-15T10:21:51.965Z" },
+]
+
+[[package]]
 name = "duckdb"
 version = "1.5.6"
 source = { registry = "https://pypi.org/simple" }
@@ -747,6 +759,7 @@ dev = [
     { name = "ruff" },
     { name = "scipy", version = "1.17.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.12'" },
     { name = "scipy", version = "1.18.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12'" },
+    { name = "wigglystuff" },
 ]
 
 [package.metadata]
@@ -779,6 +792,7 @@ dev = [
     { name = "pytest-cov", specifier = ">=6.0" },
     { name = "ruff", specifier = ">=0.11" },
     { name = "scipy", specifier = ">=1.17.1" },
+    { name = "wigglystuff", specifier = ">=0.5.36" },
 ]
 
 [[package]]
@@ -3404,6 +3418,19 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/bf/60/bc7a980fc78837d6ef8f5940cca4cadc433364503a4c4d42e2a7a0de3231/widgetsnbextension-4.0.16.tar.gz", hash = "sha256:adeea0ae78f0856ee4945f413299801b82a0a01416303301f39a704282a37b73", size = 1111094, upload-time = "2026-08-18T08:52:55.859Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/34/95/40e17e20046b7bc820d29d09ae84ec157ec8dd6e6f6cd722626292c31b2e/widgetsnbextension-4.0.16-py3-none-any.whl", hash = "sha256:a31a8774885b96fe825462f5d6496166f0c7cae111195b6465c801d230eb5a4e", size = 2225148, upload-time = "2026-08-18T08:52:53.736Z" },
+]
+
+[[package]]
+name = "wigglystuff"
+version = "0.5.36"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "anywidget" },
+    { name = "drawdata" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/d1/88/9676b35e72fe016052329381c28c52b0959a805096a4d8c415dff3ec1af2/wigglystuff-0.5.36.tar.gz", hash = "sha256:c9079464ed2c9eda5e94bb2fdb0d2cab77e3dfe246385077f6276ae4f043d4da", size = 1066218, upload-time = "2026-10-19T13:04:38.241Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/65/11/daa19a0ea41f4c590b313b709f3b4e5713d4cb59167bce0be45d2a3d3c0c/wigglystuff-0.5.36-py3-none-any.whl", hash = "sha256:f5fef43fda2fa26d926ffeb3202216ef1130c239cbea415ade386eccb957e95c", size = 1153282, upload-time = "2026-10-19T13:04:39.641Z" },
 ]
 
 [[package]]

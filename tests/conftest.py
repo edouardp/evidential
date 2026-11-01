@@ -111,6 +111,56 @@ def aws_cur_dataset(tmp_path):
 
 
 @pytest.fixture
+def adventureworks_dataset(tmp_path):
+    """Small Parquet product with multi-line orders, cost changes and partial years."""
+    import duckdb
+
+    directory = tmp_path / "adventureworks" / "data" / "processed" / "parquet"
+    directory.mkdir(parents=True)
+    connection = duckdb.connect()
+    statements = {
+        "SalesOrderHeader": """
+            SELECT * FROM (VALUES
+              (1, DATE '2023-01-01', DATE '2023-01-03', DATE '2023-01-05', 5, false, 1, 1, 1, 200.0, 10.0),
+              (2, DATE '2023-12-31', DATE '2024-01-02', DATE '2024-01-05', 5, true, 2, 2, 2, 100.0, 5.0),
+              (3, DATE '2024-01-01', DATE '2024-01-10', DATE '2024-01-05', 5, true, 1, 1, 1, 300.0, 15.0),
+              (4, DATE '2024-02-29', DATE '2024-03-02', DATE '2024-03-05', 5, true, 2, 2, 2, 200.0, 10.0),
+              (5, DATE '2024-12-31', DATE '2025-01-02', DATE '2025-01-05', 5, false, 3, 1, 1, 100.0, 5.0),
+              (6, DATE '2025-06-29', DATE '2025-07-01', DATE '2025-07-05', 5, true, 3, 1, 1, 50.0, 2.5),
+              (7, DATE '2024-03-01', DATE '2024-03-03', DATE '2024-03-05', 6, false, 1, 1, 1, 9000.0, 0.0),
+              (8, DATE '2023-05-31', DATE '2023-06-02', DATE '2023-06-05', 5, false, 4, 1, 1, 400.0, 20.0)
+            ) t(SalesOrderID,OrderDate,ShipDate,DueDate,Status,OnlineOrderFlag,CustomerID,TerritoryID,ShipMethodID,SubTotal,Freight)
+        """,
+        "SalesOrderDetail": """
+            SELECT * FROM (VALUES
+              (1,1,1,100.0,0.0,100.0), (1,2,2,62.5,0.2,100.0),
+              (2,1,1,100.0,0.0,100.0), (3,1,2,150.0,0.0,300.0),
+              (4,2,1,200.0,0.0,200.0), (5,1,1,100.0,0.0,100.0),
+              (6,1,1,50.0,0.0,50.0), (7,1,1,9000.0,0.0,9000.0), (8,1,1,400.0,0.0,400.0)
+            ) t(SalesOrderID,ProductID,OrderQty,UnitPrice,UnitPriceDiscount,LineTotal)
+        """,
+        "Product": """SELECT * FROM (VALUES (1,'Road bike',99.0,1),(2,'Helmet',40.0,2))
+            t(ProductID,Name,StandardCost,ProductSubcategoryID)""",
+        "ProductCostHistory": """SELECT * FROM (VALUES
+            (1,DATE '2023-01-01',DATE '2023-12-31',20.0),
+            (1,DATE '2024-01-01',NULL::DATE,80.0)) t(ProductID,StartDate,EndDate,StandardCost)""",
+        "ProductSubcategory": """SELECT * FROM (VALUES (1,'Road bikes',1),(2,'Helmets',2))
+            t(ProductSubcategoryID,Name,ProductCategoryID)""",
+        "ProductCategory": "SELECT * FROM (VALUES (1,'Bikes'),(2,'Accessories')) t(ProductCategoryID,Name)",
+        "Customer": "SELECT * FROM (VALUES (1,11),(2,NULL::INTEGER),(3,12),(4,13)) t(CustomerID,StoreID)",
+        "Store": "SELECT * FROM (VALUES (11,'Alpha Cycles'),(12,'Beta Cycles'),(13,'Dormant Cycles')) t(BusinessEntityID,Name)",
+        "SalesTerritory": """SELECT * FROM (VALUES (1,'Northwest','US','North America'),(2,'United Kingdom','GB','Europe'))
+            t(TerritoryID,Name,CountryRegionCode,"Group")""",
+        "CountryRegion": "SELECT * FROM (VALUES ('US','United States'),('GB','United Kingdom')) t(CountryRegionCode,Name)",
+        "ShipMethod": "SELECT * FROM (VALUES (1,'Ground'),(2,'Air')) t(ShipMethodID,Name)",
+    }
+    for name, statement in statements.items():
+        connection.sql(statement).write_parquet(str(directory / f"{name}.parquet"))
+    connection.close()
+    return directory.parent.parent.parent
+
+
+@pytest.fixture
 def oecd_dataset(tmp_path):
     """Quarterly GDP with gaps, a boundary-spanning run and incompatible series."""
     import datetime as dt

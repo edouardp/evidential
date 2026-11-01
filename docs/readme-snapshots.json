@@ -10,7 +10,7 @@
     "notebooks/data/50_europe_trade_2024.json": "04a22223c3b1a958255b27b41ad83ff47ca528f3f985f7db579c2e75f05f525e",
     "notebooks/sample_data/needful_things/orders.parquet": "b373511b4f7a0547b704022b055655b6d3bafc2505a2a573292b206417fe3eb4",
     "notebooks/sql/50_europe_trade.sql": "c01857da122eb48c819aa14def0bcd4f6fb2e762ea987e55271c58f509746ea6",
-    "pyproject.toml": "3952351abcc07313af282773adaed5abebc718275879d186f7fe5368c1b16705",
+    "pyproject.toml": "f77397dfe1c9c7eb971a9e37b2014300a671fef7bd28f217df5144f843914e8b",
     "scripts/api_screenshots.py": "51f148ecf55c4ea5927a34ad82691a8fc6162a46e76dfea3f6a002e600b47ee4",
     "scripts/generate_readme.py": "73d9f6620f06101bde52b2d3dbe9cd99f2b33293ae9b30de2747f41c3a2cfb21",
     "src/evidential/__init__.py": "88288dad79c3c7f9ad3fae0b8baf2b93dc8240bcf23491e6e52405caa519b8e1",
@@ -47,7 +47,7 @@
     "src/evidential/static/table.css": "320269ef18f348a0d21ea957fe77edfd003dc49a8206088f8f22336739ea3fea",
     "src/evidential/static/table.js": "72e97fb704ce65eb4b8e281f411a5d5af74a523eb0015254fe8eb0a26b5581a6",
     "src/evidential/table.py": "3f635ffd925ec907c71a3b675d2ffaf17f9fc61e21acb46e3bbc6573bd9cb9b6",
-    "uv.lock": "da72481fe29cbd2cc1636b6603f296a6567e0997e95032d2bce2f0fc2dfebfcd"
+    "uv.lock": "08ebde87df2e59e3a83df5d50676751b8eb7b917b50d3aeb40e7cec06c6a1724"
   },
   "images": {
     "docs/api/images/quickstart.png": {

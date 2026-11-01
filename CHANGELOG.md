@@ -8,6 +8,12 @@ project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- Notebook 59 builds an AdventureWorks company report from the local Parquet
+  product, with year/channel controls, sales and contribution metrics, monthly
+  comparisons, regional/product summaries, customer accounts and fulfilment.
+  Seven persistent Evidential tables are complemented by one wigglystuff
+  ObservablePlot country map. Historical cost fallbacks and partial-period
+  comparisons are disclosed in the report and covered by fixture/browser tests.
 - Collapsible display sections through `.section(collapsible=True)` or
   `.section().collapsible()`, with keyboard controls, nested-state retention,
   display-slot pagination and unchanged aggregates/exports. Closing hides the

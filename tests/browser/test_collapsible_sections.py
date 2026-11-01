@@ -52,9 +52,18 @@ def test_summary_labels_follow_detail_indent_with_explicit_override(page, live_s
 
     inset = padding(detail)
     step = page.evaluate("parseFloat(getComputedStyle(document.documentElement).fontSize)")
+    toggle = page.locator(".et-section-toggle").first
+    gutter = toggle.locator(".et-section-chevron").evaluate("el => el.getBoundingClientRect().width") + toggle.evaluate(
+        "el => parseFloat(getComputedStyle(el).columnGap)"
+    )
     grand = page.locator(".et-display-grand_summary td").nth(1)
-    assert padding(inner.locator("td").nth(1)) == pytest.approx(inset - (0 if indent else step))
-    assert padding(outer.locator("td").nth(1)) == pytest.approx(inset - step if indent else padding(grand))
+    assert padding(inner.locator("td").nth(1)) == pytest.approx(inset - (0 if indent else step + gutter), abs=0.02)
+    assert padding(outer.locator("td").nth(1)) == pytest.approx(
+        inset - step - gutter if indent else padding(grand), abs=0.02
+    )
+    # Two nested toggles each contribute their full width and gap in addition
+    # to the configured rem inset. This remains true in frozen columns.
+    assert inset == pytest.approx(step * 2 + step / 4 + gutter * 2, abs=0.03)
     assert padding(inner.locator("td").last) == padding(detail.locator("..").locator("td").last)
     assert padding(grand) < padding(detail)
     capture(page, f"summary-indent-{position}-{indent}.png")

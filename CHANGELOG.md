@@ -32,7 +32,8 @@ project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   nested and top summaries. `.summary(indent=False)` keeps heading alignment;
   numeric totals and grand totals retain their existing alignment. Annotation
   `label_style` allows label-only typography; AdventureWorks region totals use
-  bold italic labels.
+  bold italic labels. Collapsible sections reserve the twisty's width and gap
+  in their descendants' indentation, including nested headings and summaries.
 - Translucent cell colors blend over row stripes and hover tints, including
   RGBA/eight-digit hex gradient stops, direct styles, highlights and row colors.
   Frozen cells retain these layers over an opaque backing, and selection tint

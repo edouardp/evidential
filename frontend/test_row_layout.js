@@ -169,6 +169,23 @@ test("label styles survive projection without changing value cells or promoted-h
   assert.equal(folded.entries[0].cells.value.value, 40);
 });
 
+test("collapsible ancestors reserve a toggle gutter for details, child headings and summaries", () => {
+  for (const indent of [true, false]) {
+    const group = {...collapsible.groups[0], summary: {...summary, indent}};
+    const plan = {groups: [{...group, id: "root", children: [{...group, depth: 1}]}], grand_summary: grand};
+    const page = projectLayout(plan, source, source.slice(0, 2), 1, 1);
+    assert.deepEqual(page.entries.filter(entry => entry.kind === "section").map(entry => entry.toggleDepth), [0, 1]);
+    assert.ok(page.entries.filter(entry => entry.kind === "section").every(entry => entry.continuation));
+    assert.equal(page.entries.find(entry => entry.kind === "data").toggleDepth, 2);
+    assert.deepEqual(page.entries.filter(entry => entry.kind === "summary").map(entry => entry.toggleDepth),
+      indent ? [2, 1] : [1, 0]);
+    assert.equal(page.entries.at(-1).toggleDepth, 0);
+  }
+  const centered = {groups: [{...collapsible.groups[0], section: {...collapsible.groups[0].section, align: "center"}}]};
+  const page = projectLayout(centered, source, source, 0, 0);
+  assert.equal(page.entries.find(entry => entry.kind === "data").toggleDepth, 0);
+});
+
 test("reducers distinguish missing observations, empty sets, counts and formatted strings", () => {
   const data = [{x: null}, {x: 0}, {x: 2}, {x: 2}];
   assert.equal(summaryValue({operation: "count", source: "x"}, data), 3);

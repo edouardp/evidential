@@ -1,7 +1,7 @@
 import { alignStyle, h, optString, inlineMarkdown, withFigure, isStub } from "./dom.js";
 import { formatValue } from "./format.js";
 import { formattedText } from "./formatted-text.js";
-import { withDecimals, indentForCell } from "./rows.js";
+import { withDecimals, indentForCell, sectionPadding } from "./rows.js";
 import { calculateColorStyles, contrastTextColor, resolveColor, setCellBackground } from "./color.js";
 import { renderBar, renderDelta, renderMarks, renderSparkline, renderSymbols } from "./visualizations.js";
 import { inspectCell } from "./tooltips.js";
@@ -81,7 +81,7 @@ export function renderCell({row, col, index, ctx, rowIndex, options: opts, toggl
   const tdStyle = withFigure(alignStyle(col), col, opts);
   if (opts.section_indent && (ctx.displayInset || ctx.insetGroups?.has(row.__parent_key)) && !isSubtotal && !isTotal &&
       (isStub(opts, col) || (!opts.stub && index === 0))) {
-    tdStyle.paddingLeft = `calc(0.25rem + ${Math.max(0, Number(opts.section_indent)) * (Number(ctx.displayInset) || 1)}rem)`;
+    tdStyle.paddingLeft = sectionPadding(Number(ctx.displayInset) || 1, opts, ctx.displayToggleDepth);
   }
   // In accordion mode, indent dimension cells so children read as nested.
   const indent = ctx.accordion ? indentForCell(row, index, ctx) : 0;

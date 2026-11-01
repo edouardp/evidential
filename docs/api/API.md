@@ -544,6 +544,9 @@ indentation by default, including nested groups and top summaries. Use
 instead. Only the label cell is indented; numeric totals keep their column
 alignment. Grand totals remain unindented. Centered headings leave details
 and summaries flush left, unless an ancestor section supplies an inset.
+Collapsible left-aligned sections add the twisty's width and gap to the
+configured indent. Nested headings, details and summaries reserve that space
+for each ancestor; ordinary headings keep their existing spacing.
 
 `set_data` preserves the layout, or replaces it with `row_layout=...`; pass
 `row_layout=None` to clear it. The bound spelling

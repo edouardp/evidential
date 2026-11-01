@@ -318,6 +318,21 @@ test("nested layout indentation reflects each displayed group level", () => {
   renderer.destroy();
 });
 
+test("detail and summary labels share the extra inset reserved for a section toggle", () => {
+  const model = makeModel([{city: "A", value: 10}], [{name: "city"}, {name: "value"}], {section_indent: 1}, el);
+  model.data.row_layout = {version: 1, groups: [{id: "root", members: [0], depth: 0, children: [],
+    section: {label: "Root", collapsible: true},
+    summary: {label: "Subtotal", cells: {value: {value: 10}}, position: "bottom"}}]};
+  const renderer = new EvidentialTableRenderer(model, el);
+  const detail = el.querySelector("tbody tr:not(.et-display-row) td");
+  const summary = el.querySelector(".et-display-summary td");
+  assert.match(detail.style.paddingLeft, /1 \* \(var\(--et-section-chevron-width/);
+  assert.equal(summary.style.paddingLeft, detail.style.paddingLeft);
+  assert.equal(el.querySelector(".et-display-heading").style.paddingLeft, "");
+  assert.equal(el.querySelector(".et-display-summary td:last-child").style.paddingLeft, "");
+  renderer.destroy();
+});
+
 function makeModel(rows, columns, options = {}, el) {
   const data = { rows, columns, options, selected: null };
   const calls = [];

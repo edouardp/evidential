@@ -1,7 +1,15 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { sortRows, searchRows, visibleRows, paginateRows, columnStats, withDecimals, sectionContinuation } from "./src/rows.js";
+import { sortRows, searchRows, visibleRows, paginateRows, columnStats, withDecimals, sectionContinuation, sectionPadding } from "./src/rows.js";
 import { RowPipeline } from "./src/derived.js";
+
+test("section insets respect explicit spacing and add a shared toggle gutter only when present", () => {
+  assert.equal(sectionPadding(2, {section_indent: 1}), "calc(0.25rem + 2rem)");
+  assert.equal(sectionPadding(2, {section_indent: 1}, 2),
+    "calc(0.25rem + 2rem + 2 * (var(--et-section-chevron-width, 0.75em) + var(--et-section-toggle-gap, 0.3em)))");
+  assert.equal(sectionPadding(2, {section_indent: 0}, 2), undefined);
+  assert.equal(sectionPadding(0, {section_indent: 1}, 2), undefined);
+});
 
 test("numeric sorts keep missing values last in both directions, with stable ties", () => {
   const rows = Object.freeze([

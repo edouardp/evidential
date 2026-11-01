@@ -84,6 +84,12 @@ EvidentialTable(
   heading depth. This is label-only presentation: numeric totals retain column
   alignment and grand totals remain at table depth. Centered headings
   leave detail labels flush left unless an ancestor supplies indentation.
+  A collapsible left-aligned section also reserves its chevron width and gap
+  in descendants' indentation, once per ancestor. Details, child headings and
+  summaries share the same padding calculation and CSS spacing tokens, so a
+  twisty does not consume the visual indent. Plain and centered sections add
+  no toggle gutter; `section_indent=0` still disables indentation, and
+  `.summary(indent=False)` uses only ancestor gutters, like its group heading.
   CSV exports matching details in
   display order across every page, excluding annotations.
 - With `freeze_columns`, left-aligned spanning headings pin their label inside

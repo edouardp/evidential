@@ -44,8 +44,8 @@
     "src/evidential/rules.py": "eb0142d511b63a5b4d0725f70599084784ddb82130655c72e8ff36ce816ed104",
     "src/evidential/static/dimension-grid.css": "54f56d45e03b8af5ba1aa8f7c1153b3bc3cfcc8b195dedf347afba0686460fdc",
     "src/evidential/static/dimension-grid.js": "80cb5f93dfdc5a5dc02c5f8c1e218bd462662a00114d6c43523a58d2c0ca4095",
-    "src/evidential/static/table.css": "db56057ff50c4e6e64a887577cfbd62a7d8a5e92da5d0e91d8c19a5d5c238970",
-    "src/evidential/static/table.js": "5cfc0e0feb20ea7dc88ea10e5c7cc0323af0ec703290c4ac6d635bce424af9c5",
+    "src/evidential/static/table.css": "2a8ace22ca1932eef0de6eedea62376b53a51b20b74f5a7fa6eb981504e11509",
+    "src/evidential/static/table.js": "f95bbfd267d25ec8cf752f53156f4056dd33945645fcdfad2e5944416f3ecad2",
     "src/evidential/table.py": "3f635ffd925ec907c71a3b675d2ffaf17f9fc61e21acb46e3bbc6573bd9cb9b6",
     "uv.lock": "08ebde87df2e59e3a83df5d50676751b8eb7b917b50d3aeb40e7cec06c6a1724"
   },
@@ -208,7 +208,7 @@
     "docs/img/graphics/sparklines.png": {
       "notebook": "notebooks/50_graphics_gallery.py",
       "cell": "graphic_sparklines",
-      "sha256": "5a761850c9b2a4d41f134b91461a58dc0051f78619ff73d3ecdb4769cc8403c3"
+      "sha256": "85672663c470dcb712058e368af139977dfcca57e2647aac9d490db5fa47c4c6"
     },
     "docs/img/graphics/football-form.png": {
       "notebook": "notebooks/50_graphics_gallery.py",

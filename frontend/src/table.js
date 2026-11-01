@@ -538,6 +538,7 @@ export class EvidentialTableRenderer {
         for (const entry of ctx.displayEntries) {
           if (entry.kind === "data") {
             ctx.displayInset = entry.inset ? entry.depth : 0;
+            ctx.displayToggleDepth = entry.toggleDepth || 0;
             tbody.append(this._renderRow(entry.row, columns, ctx, entry.ordinal - ctx.rowNumberBase));
           } else {
             ctx.previousDetailRow = null;
@@ -545,6 +546,7 @@ export class EvidentialTableRenderer {
           }
         }
         ctx.displayInset = false;
+        ctx.displayToggleDepth = 0;
       } else rows.forEach((row, index) => tbody.append(this._renderRow(row, columns, ctx, index)));
     }
     table.append(tbody);

@@ -26,10 +26,10 @@ export function summaryValue(spec, members) {
   return value;
 }
 
-function annotationEntry(kind, id, spec, members, depth, continuation = false) {
+function annotationEntry(kind, id, spec, members, depth, continuation = false, toggleDepth = 0) {
   const cells = Object.fromEntries(Object.entries(spec.cells || {}).map(([name, value]) =>
     [name, {...value, value: summaryValue(value, members)}]));
-  return {kind, id, depth, label: `${spec.label}${continuation ? " (cont.)" : ""}`,
+  return {kind, id, depth, toggleDepth, label: `${spec.label}${continuation ? " (cont.)" : ""}`,
     cells, style: spec.style || {}, rule: spec.rule || "none", align: spec.align || "left",
     labelColumn: spec.label_column, labelStyle: spec.label_style || {}, continuation};
 }
@@ -57,21 +57,22 @@ export function projectLayout(layout, allRows, sortedRows, pageSize, pageIndex, 
   const ordinals = new Map(ordered.map((row, index) => [row, index]));
   const units = [], starts = new Map();
   let collapsedGroups = 0;
-  const prepare = (groups, inset = false) => groups.flatMap(group => {
+  const prepare = (groups, inset = false, toggleDepth = 0) => groups.flatMap(group => {
     const members = membersOf(group);
     if (!members.length) return [];
     const first = units.length;
     starts.set(group.id, first);
     const collapsed = !!group.section?.collapsible && isCollapsed(group.id);
     const indent = inset || (group.section && group.section.align !== "center") || group.summary?.position === "top";
+    const childToggleDepth = toggleDepth + (group.section?.collapsible && group.section.align !== "center" ? 1 : 0);
     let children = [];
     if (collapsed) {
       units.push({kind: "collapsed", groupKey: group.id});
       collapsedGroups++;
-    } else if (group.children.length) children = prepare(group.children, indent);
+    } else if (group.children.length) children = prepare(group.children, indent, childToggleDepth);
     else for (const row of members) units.push({kind: "data", row, depth: group.depth + 1, inset: indent,
-      index: indices.get(row), ordinal: ordinals.get(row)});
-    return [{group, members, collapsed, children, inset: indent, first, last: units.length - 1}];
+      toggleDepth: childToggleDepth, index: indices.get(row), ordinal: ordinals.get(row)});
+    return [{group, members, collapsed, children, inset: indent, toggleDepth, childToggleDepth, first, last: units.length - 1}];
   });
   const tree = prepare(layout.groups || []);
   if (!layout.groups?.length) for (const row of ordered) units.push({kind: "data", row, depth: 0, inset: false,
@@ -86,25 +87,26 @@ export function projectLayout(layout, allRows, sortedRows, pageSize, pageIndex, 
   const {start, end} = bounds;
   const entries = [];
   const visit = groups => {
-    for (const {group, members, collapsed, children, inset, first, last} of groups) {
+    for (const {group, members, collapsed, children, inset, toggleDepth, childToggleDepth, first, last} of groups) {
       if (last < start || first >= end) continue;
       if (group.section) {
         const spec = collapsed && group.section.collapsed_summary && !Object.keys(group.section.cells || {}).length && group.summary
           ? {...group.section, cells: group.summary.cells} : group.section;
-        entries.push({...annotationEntry("section", `${group.id}:section`, spec, members, group.depth, first < start),
+        entries.push({...annotationEntry("section", `${group.id}:section`, spec, members, group.depth, first < start, toggleDepth),
           groupKey: group.id, collapsible: !!group.section.collapsible, collapsed});
       }
       // A closed group contributes just its heading. Its summaries and children
       // are hidden, but all matching members still feed heading/grand totals.
       if (collapsed) continue;
       const summaryDepth = group.depth + (inset && group.summary?.indent !== false ? 1 : 0);
+      const summaryToggleDepth = group.summary?.indent !== false ? childToggleDepth : toggleDepth;
       if (group.summary?.position === "top" && first >= start) {
-        entries.push(annotationEntry("summary", `${group.id}:summary`, group.summary, members, summaryDepth));
+        entries.push(annotationEntry("summary", `${group.id}:summary`, group.summary, members, summaryDepth, false, summaryToggleDepth));
       }
       if (children.length) visit(children);
       else for (const unit of units.slice(Math.max(start, first), Math.min(end, last + 1))) entries.push(unit);
       if (group.summary?.position === "bottom" && last < end) {
-        entries.push(annotationEntry("summary", `${group.id}:summary`, group.summary, members, summaryDepth));
+        entries.push(annotationEntry("summary", `${group.id}:summary`, group.summary, members, summaryDepth, false, summaryToggleDepth));
       }
     }
   };

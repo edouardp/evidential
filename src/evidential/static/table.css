@@ -25,6 +25,8 @@
      lower it (absolutely, or relatively as `+N` / `-N` steps). */
   --et-font-size-base: 0.75rem;
   --et-font-size: var(--et-font-size-base);
+  --et-section-chevron-width: 0.75em;
+  --et-section-toggle-gap: 0.3em;
 }
 
 .et-root {
@@ -1202,7 +1204,7 @@ tbody tr:last-child .et-bar-center .et-bar-axis { bottom: var(--et-bar-pad, 0); 
 .et-section-toggle {
   display: inline-flex;
   align-items: baseline;
-  gap: 0.3em;
+  gap: var(--et-section-toggle-gap);
   padding: 0;
   border: 0;
   background: transparent;
@@ -1212,7 +1214,7 @@ tbody tr:last-child .et-bar-center .et-bar-axis { bottom: var(--et-bar-pad, 0); 
   cursor: pointer;
 }
 .et-section-toggle:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }
-.et-section-chevron { flex: none; width: 0.75em; text-align: center; }
+.et-section-chevron { flex: none; width: var(--et-section-chevron-width); text-align: center; }
 .et-root .et-display-row.et-display-rule-above .et-td,
 .et-root .et-display-row.et-display-rule-both .et-td { border-top: 1px solid var(--et-header-border); }
 .et-root .et-display-row.et-display-rule-below .et-td,

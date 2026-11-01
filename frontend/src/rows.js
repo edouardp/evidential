@@ -231,6 +231,14 @@ export function computeRowspans(rows, dimCount, top) {
   return spans;
 }
 
+/** A shared inset for detail stubs and annotation labels, including ancestor toggles. */
+export function sectionPadding(depth, options, toggleDepth = 0) {
+  if (!depth || !options.section_indent) return undefined;
+  const gutter = toggleDepth > 0
+    ? ` + ${toggleDepth} * (var(--et-section-chevron-width, 0.75em) + var(--et-section-toggle-gap, 0.3em))` : "";
+  return `calc(0.25rem + ${depth * Math.max(0, Number(options.section_indent))}rem${gutter})`;
+}
+
 /** Indent ancestor dimensions in accordion groups, leaving leaf dimensions unindented. */
 export function indentForCell(row, columnIndex, ctx) {
   if (columnIndex >= ctx.dimCount) return 0;

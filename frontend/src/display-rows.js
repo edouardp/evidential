@@ -2,7 +2,7 @@
 import { h, isStub } from "./dom.js";
 import { formatValue } from "./format.js";
 import { formattedText } from "./formatted-text.js";
-import { shaded } from "./rows.js";
+import { shaded, sectionPadding } from "./rows.js";
 import { decorateSubcolumn } from "./headers.js";
 import { setCellBackground } from "./color.js";
 
@@ -34,9 +34,8 @@ export function renderAnnotation(entry, columns, ctx, options) {
     }
   };
   const indentLabel = cell => {
-    if (entry.depth && entry.align !== "center" && options.section_indent) {
-      cell.style.paddingLeft = `calc(0.25rem + ${entry.depth * Math.max(0, Number(options.section_indent))}rem)`;
-    }
+    const padding = entry.align !== "center" && sectionPadding(entry.depth, options, entry.toggleDepth);
+    if (padding) cell.style.paddingLeft = padding;
   };
   if (section && !Object.keys(entry.cells).length) {
     const cell = h("td", {class: `et-td et-display-heading et-display-align-${entry.align}`,

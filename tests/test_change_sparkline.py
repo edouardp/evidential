@@ -93,7 +93,7 @@ def test_invalid_change_options_fail_for_builder_and_mapping(options):
         )
 
 
-@pytest.mark.parametrize("options", [{"steady": (0, 1)}, {"color_scale": "RdBu"}, {"color_domain": (-1, 1)}])
+@pytest.mark.parametrize("options", [{"steady": (0, 1)}, {"delta": True}])
 def test_change_only_options_are_not_silently_ignored_by_other_styles(options):
     with pytest.raises(ValueError, match="type='change'"):
         col.sparkline("changes", **options)

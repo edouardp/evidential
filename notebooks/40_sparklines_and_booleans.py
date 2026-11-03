@@ -171,6 +171,73 @@ def _(EvidentialTable, col, marked, mo):
 
 
 @app.cell
+def gradient_doc(mo):
+    mo.md("""
+    ## Color by y value
+
+    The usual fluent color API also works on every sparkline style:
+
+    ```python
+    col.sparkline("values", type="bar").color(
+        scale="RdBu", min=-10, max=10, midpoint=0,
+    )
+    ```
+
+    Bars and dots look up their own y value. Each line segment, and its area
+    fill, takes the color of its starting observation. Missing values leave
+    gaps. Without fixed bounds, all matching rows supply the gradient's range
+    before pagination. Reuse `.domain(...)` to share a range and palette with
+    other columns.
+
+    A data object's `color` overrides the lookup; the last row highlights one
+    observation in purple. Visible markers may also use `marker_color=`.
+    Change sparklines still map their entire `steady` interval to the middle
+    color. Other styles use the normal linear or diverging lookup; an explicit
+    `stops=[{"value": ..., "color": ...}, ...]` works just as it does for cells.
+    """)
+    return
+
+
+@app.cell
+def gradient_data():
+    gradient_rows = [
+        {"series": "Rising", "values": [-10, -7, -2, 0, 3, 8, 10]},
+        {"series": "Falling", "values": [10, 8, 3, 0, -2, -7, -10]},
+        {"series": "Gaps and override", "values": [
+            {"x": 0, "y": -10}, {"x": 1, "y": -4}, None,
+            {"x": 3, "y": 0, "color": "#7c3aed"}, {"x": 4, "y": 5}, {"x": 5, "y": 10},
+        ]},
+    ]
+    return (gradient_rows,)
+
+
+@app.cell
+def gradient_sparklines(EvidentialTable, col, gradient_rows, mo):
+    gradient_table = mo.ui.anywidget(EvidentialTable(
+        gradient_rows,
+        title="One y-value gradient, five sparkline styles",
+        subtitle="Red for low values, gray at zero, blue for high values; purple overrides one observation",
+        border=False,
+        row_lines=False,
+        columns=[
+            col.text("series"),
+            col.sparkline("values", title="Bars", type="bar", width=150, height=30)
+                .color(scale=["#b2182b", "#b8bcc2", "#2166ac"], min=-10, max=10, midpoint=0),
+            col.sparkline("values", title="Points", type="points", width=150, height=30)
+                .color(scale=["#b2182b", "#b8bcc2", "#2166ac"], min=-10, max=10, midpoint=0),
+            col.sparkline("values", title="Line", type="line", markers=True, width=150, height=30)
+                .color(scale=["#b2182b", "#b8bcc2", "#2166ac"], min=-10, max=10, midpoint=0),
+            col.sparkline("values", title="Area", type="area", width=150, height=30)
+                .color(scale=["#b2182b", "#b8bcc2", "#2166ac"], min=-10, max=10, midpoint=0),
+            col.sparkline("values", title="Change", type="change", steady=(-1, 1), width=150, height=30)
+                .color(scale=["#b2182b", "#b8bcc2", "#2166ac"], min=-10, max=10),
+        ],
+    ))
+    gradient_table
+    return (gradient_table,)
+
+
+@app.cell
 def _(mo):
     mo.md("""
     ## Booleans as a symbol and label

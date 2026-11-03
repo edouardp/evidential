@@ -594,7 +594,8 @@ EvidentialTable(
 
 Place the region total above its detail rows. A summary can act as the group
 heading without an additional section row. Indent the product names beneath
-that summary with `section_indent=1`.
+that summary with `section_indent=1`, and use `indent=False` on this summary
+to keep its heading role. Ordinary summary labels follow the details' indent.
 
 ```python
 EvidentialTable(
@@ -608,6 +609,7 @@ EvidentialTable(
         label=lambda group: f"{group[0]['region']} total",
         values={"units": "sum", "sales": "sum"},
         position="top",
+        indent=False,
         rule="below",
     ),
 )
@@ -624,7 +626,9 @@ EvidentialTable(
 #### Summary footers and subtotals
 
 Put a subtotal after each region, with a heading before the indented details.
-Headings and subtotal labels stay aligned at the left edge.
+Subtotal labels follow the detail indentation by default; headings stay at
+the left edge. Use `.summary(..., indent=False)` to align a subtotal with its
+heading instead.
 
 ```python
 EvidentialTable(
@@ -962,14 +966,19 @@ columns=[
 #### Sparklines
 
 Show a series as a line, area, bars, points or increase/steady/decrease marks.
+Use `.color(scale="viridis", min=0, max=12)` to color observations by their
+y value with the same gradient API as cell backgrounds. Bars and dots use
+their own value; line/area segments use their starting observation.
 
 ```python
 columns=[
     col.text("series"),
     col.sparkline("line", type="line", width=110, height=30),
     col.sparkline("area", type="area", fit_to_data=True, width=110, height=30),
-    col.sparkline("bar", type="bar", width=110, height=30),
-    col.sparkline("points", type="points", width=110, height=30, markers=True),
+    col.sparkline("bar", type="bar", width=110, height=30)
+        .color(scale="viridis", min=0, max=12),
+    col.sparkline("points", type="points", width=110, height=30, markers=True)
+        .color(scale="viridis", min=0, max=12),
     col.sparkline("change", type="change", width=110, height=30),
 ]
 ```

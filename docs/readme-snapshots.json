@@ -3,8 +3,8 @@
   "inputs": {
     "notebooks/21_studio_dashboard.py": "8f4e85940544eac38b95c21f952659d3da97375dc584616347b24814281dc48b",
     "notebooks/49_api_screenshots.py": "219de292a242152427ca2e62163eb787c5c7355f974909eff90bd0c76ac5606b",
-    "notebooks/50_graphics_gallery.py": "3a50a56c2e6bf60f0a0a95e62a79abda05f90b803bb28eb33dd919c144e7e718",
-    "notebooks/51_table_layouts.py": "fc2b54717875601b8006e79bb0a5d4c1725d62453e53d2115c1ac19a745d9c95",
+    "notebooks/50_graphics_gallery.py": "04393667db2b128bc172b9d3ee110ef48306c30861af788cb6d5ed01dd07964d",
+    "notebooks/51_table_layouts.py": "5f4d375309eef793c8c756761e67c9127db0ac554e2405234a85cd81ee1b9930",
     "notebooks/56_dimension_grid.py": "c31b38f124c0874e9c55d0d8a72eaa7e40c92dfe725df6308fffadbbfa2f7c52",
     "notebooks/data/46_football_england_2024.json": "aa8d550e7bb3e776dfd2dbfee5dd2cd57ab14a66c5c036dd393001055b55ff03",
     "notebooks/data/50_europe_trade_2024.json": "04a22223c3b1a958255b27b41ad83ff47ca528f3f985f7db579c2e75f05f525e",
@@ -15,21 +15,21 @@
     "scripts/generate_readme.py": "73d9f6620f06101bde52b2d3dbe9cd99f2b33293ae9b30de2747f41c3a2cfb21",
     "src/evidential/__init__.py": "88288dad79c3c7f9ad3fae0b8baf2b93dc8240bcf23491e6e52405caa519b8e1",
     "src/evidential/_aliases.py": "5e207c4a862754e1ca9f7ea309a0e489bf158a7e380876f8edcf20eeee1438f1",
-    "src/evidential/_column.py": "1ae4c9a8af0c83bf29a627980643f3689292ca0591d41e662f520646ed110ce8",
-    "src/evidential/_column_options.py": "89d757e915d4a5173fa19372aa9e394f3370ebbc686d85b638aa74f4434b190b",
+    "src/evidential/_column.py": "00443024ad303027cf68ce94d2f939f3c84c263d61e0dba82e5936754bcddf5e",
+    "src/evidential/_column_options.py": "2e7d648d098095b0cec2c862c73f8555f05bfd203a9702595748e9aa00cd4c8d",
     "src/evidential/_compat.py": "f51d6c0013acf8eb4a16bbab18adafc24846825073beeb3df9dea3ca3c6cce7c",
     "src/evidential/_distribution.py": "16278a133e89b66addd282a3209ff3c34a1bb59baff0e3fb17f2ffaacb5f4992",
-    "src/evidential/_domain.py": "a0d1e3b1989cdfe2c7ce41b94b58a84113ef6c33375947f6983adc17a63a3102",
+    "src/evidential/_domain.py": "ec2fa800dbaef12543cc06a5a9e3b4ce54710ffea7adb245efeb8d0247ebd155",
     "src/evidential/_label.py": "dc5e285f2a3f8ed85a0c36ed107986205b4e75df04ba3e812cf348d5db46b83d",
     "src/evidential/_netscape.py": "4f02d582fa4f80567ea60b3c569a9734246a0de6fd923a5f8a1a10a02e1e7152",
     "src/evidential/_row_layout.py": "da35fc68f39c8d6223a6d027cbe41d957fdd0452cd8b3be288799e903a55ee21",
-    "src/evidential/_sparkline.py": "c4a18a514e70a95b09250a672dca81e1f39891bfa9db4a8c8bdd07ec6018de96",
+    "src/evidential/_sparkline.py": "4ff523756d129cc98404681aaef6d292a0b74f82b990ef42b78c1d8ba5ba73a2",
     "src/evidential/_text_style.py": "99f38816be21786b8d72e4f19ed1a2a63ee5e4db15f536774ed29f9f9482d005",
     "src/evidential/aggregations.py": "649223990959cba7a9606025e83d2634d9f7a3ac185b4561097c87489bb52f9e",
     "src/evidential/client.py": "6ce1f9e0b9e5e99b1bcc94fd040a290792885b80de89260ad35c8aa72f8c5c3e",
     "src/evidential/col.py": "1d827527ab6319f5590f1dfef787eabe23a28ab8b2dd37ff4e5257fea16f456d",
     "src/evidential/comparison.py": "5389757b27d9cd42f796599792f9555efcd577d0d1b9c32437f98a0593c77ee9",
-    "src/evidential/configuration.py": "a76f08253c71412a144671e92d7795f4072ef4b583cec9fc34f8efd7aa016a2d",
+    "src/evidential/configuration.py": "91ffbedcaa3bbd159976ba1d15de208e87f72cb4339052a897027ecf88070ef6",
     "src/evidential/data.py": "009c8807ece3c5d244f81ac37439f167ba174d440b905a568803b5b0ae63fdad",
     "src/evidential/dimension.py": "8cafeb469efa216223c8e724cfed852f5515b3fbb1fd6804d95ba2ad6f92d233",
     "src/evidential/domain.py": "9e607e105122cffb1a6cc4de27adb15bdc3f73af1184b3506302cb908bf34ba9",
@@ -45,7 +45,7 @@
     "src/evidential/static/dimension-grid.css": "54f56d45e03b8af5ba1aa8f7c1153b3bc3cfcc8b195dedf347afba0686460fdc",
     "src/evidential/static/dimension-grid.js": "80cb5f93dfdc5a5dc02c5f8c1e218bd462662a00114d6c43523a58d2c0ca4095",
     "src/evidential/static/table.css": "37d306e54a48ce45908c0c40f11acca987f42b9a729564eba80f38b3f3505067",
-    "src/evidential/static/table.js": "c0f27ae51a5196b375a8a80b96871bef336d0bdb4dea424017dc4831dd459bef",
+    "src/evidential/static/table.js": "a967a9121ef0c4502d467f2112e6ddbb051d9f89131dc27831abad20f314eb91",
     "src/evidential/table.py": "3f635ffd925ec907c71a3b675d2ffaf17f9fc61e21acb46e3bbc6573bd9cb9b6",
     "uv.lock": "08ebde87df2e59e3a83df5d50676751b8eb7b917b50d3aeb40e7cec06c6a1724"
   },
@@ -208,27 +208,27 @@
     "docs/img/graphics/sparklines.png": {
       "notebook": "notebooks/50_graphics_gallery.py",
       "cell": "graphic_sparklines",
-      "sha256": "c5c1e488e4e26fa571f48f3226575ed295d2dadf47b5d553b102222f75af7a0a"
+      "sha256": "c98dcbfd3570674899943a96bc7aa666c1cb4b7540095affd145419589b09642"
     },
     "docs/img/graphics/football-form.png": {
       "notebook": "notebooks/50_graphics_gallery.py",
       "cell": "graphic_football_form",
-      "sha256": "4fbe46e163b9d4265e68187d2053561fcd5a06e9ac411244035d2496643dccd9"
+      "sha256": "e40a918be01aed243a0b3465defa6c1cb5432014187eaf88981916028d70d158"
     },
     "docs/img/graphics/symbols.png": {
       "notebook": "notebooks/50_graphics_gallery.py",
       "cell": "graphic_symbols",
-      "sha256": "b29ba87f6a9b50625d7c6845c159e6a64b55f69f9a6cf789e6fc64fcd485fca1"
+      "sha256": "57a5f1001f491a0e7f67abfbbf1f426a1ef662abe627c3e00ef269f90303744e"
     },
     "docs/img/graphics/boolean-icons.png": {
       "notebook": "notebooks/50_graphics_gallery.py",
       "cell": "graphic_boolean_icons",
-      "sha256": "5a0b0651ab8dd86c9863af5d50e25982e5e2774b5e2533b5645775a614b03ff1"
+      "sha256": "d6c322666aca668d528a8c19b8f260e10a75f5fbe930b9238c8ce9e4f5c73020"
     },
     "docs/img/graphics/reference.png": {
       "notebook": "notebooks/50_graphics_gallery.py",
       "cell": "graphic_reference",
-      "sha256": "b095e67aee4a0febb9195f0aeafc9ed2ae89634c1cdfcb8eb5626ac0150156a7"
+      "sha256": "7b1fba03251905935e063c478c078a04eb604cc294983211f64dc26b772335a7"
     },
     "docs/img/studio-table.png": {
       "notebook": "notebooks/21_studio_dashboard.py",
@@ -303,7 +303,7 @@
     "docs/img/layouts/summary-top.png": {
       "notebook": "notebooks/51_table_layouts.py",
       "cell": "layout_summary_top",
-      "sha256": "17603e113fea10e9b5eeca0c35fde8ebb2105d9cbe331835575e38f952de0346"
+      "sha256": "9697a320588fdf8e099f3ee076e713d4d1f4fead98f14a56d49d8c21cad474a1"
     },
     "docs/img/layouts/summary-bottom.png": {
       "notebook": "notebooks/51_table_layouts.py",
@@ -333,7 +333,7 @@
     "docs/img/dimension-grid.png": {
       "notebook": "notebooks/56_dimension_grid.py",
       "cell": "orders_grid",
-      "sha256": "7a5be8784722399673c35434418c43c286b95ec0493fa8f2bf3a2d07addfea41"
+      "sha256": "372e961117283ba05c9598f1c5f36c50ac845e1230b6a4360c650eeace2fa30a"
     }
   }
 }

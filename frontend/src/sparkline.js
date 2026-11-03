@@ -4,16 +4,19 @@ import { observationTooltip, tooltipValue } from "./tooltip-data.js";
 import { numeric } from "./mark-data.js";
 import { sparklinePoints } from "./sparkline-data.js";
 import { renderChangeSparkline } from "./change-sparkline.js";
+import { observationColor, resolveColor } from "./color.js";
+import { sparklineColorScale } from "./sparkline-colors.js";
 
 export { sparklinePoints } from "./sparkline-data.js";
 
-export function renderSparkline(col, value, changeColor, sharedRange) {
+export function renderSparkline(col, value, preparedColor, sharedRange) {
   const opts = col.sparkline_options || {};
   const points = sparklinePoints(value, opts);
   const present = points.filter(point => point[1] != null);
   if (!present.length) return h("span", { class: "et-null" }, "–");
 
-  if (opts.type === "change") return renderChangeSparkline(points, opts, changeColor);
+  const lookup = preparedColor || sparklineColorScale(col, present.map(point => point[1]), sharedRange);
+  if (opts.type === "change") return renderChangeSparkline(points, opts, lookup);
 
   const width = opts.width || 64;
   const height = opts.height || 18;
@@ -48,7 +51,9 @@ export function renderSparkline(col, value, changeColor, sharedRange) {
     source,
   }));
 
-  const color = opts.color || "var(--et-accent, #2563eb)";
+  const color = resolveColor(opts.color) || "var(--et-accent, #2563eb)";
+  const pointColor = point => observationColor(point.source) || lookup?.(point.raw[1]) || color;
+  const multicolor = !!lookup || present.some(point => observationColor(point[2]));
   const svgNS = "http://www.w3.org/2000/svg";
   const svg = document.createElementNS(svgNS, "svg");
   svg.setAttribute("class", "et-sparkline");
@@ -96,9 +101,10 @@ export function renderSparkline(col, value, changeColor, sharedRange) {
       rect.setAttribute("width", String(barWidth));
       rect.setAttribute("height", String(Math.max(1, Math.abs(baseline - point.y))));
       rect.setAttribute("rx", "0.5");
-      rect.setAttribute("fill", color);
+      const fill = pointColor(point);
+      rect.setAttribute("fill", fill);
       rect.append(tooltip(point.raw));
-      inspectable(rect, observationTooltip(point.raw[0], point.raw[1], opts.y_fmt, point.source, color,
+      inspectable(rect, observationTooltip(point.raw[0], point.raw[1], opts.y_fmt, point.source, fill,
         [opts.x, opts.y, "x", "y", "value"]), {priority: 2});
       svg.append(rect);
     });
@@ -112,22 +118,27 @@ export function renderSparkline(col, value, changeColor, sharedRange) {
       } else segment.push(point);
     }
     if (segment.length) segments.push(segment);
-    for (const run of segments) {
+    const runs = multicolor ? segments.flatMap(run => run.length === 1 ? [run]
+      : run.slice(0, -1).map((point, index) => [point, run[index + 1]])) : segments;
+    for (const run of runs) {
+      // Each interval belongs to its starting observation. Color lookup uses
+      // that observation's y, rather than its screen x or the area baseline.
+      const stroke = pointColor(run[0]);
       const linePoints = run.map((point) => `${point.x},${point.y}`).join(" ");
       if (type === "area") {
-        if (opts.signed) {
+        if (opts.signed && !lookup && !observationColor(run[0].source)) {
           // Split the fill at the reference (zero by default).
           const split = baselineCrossings(run, baseline);
           addArea(svgNS, svg, split, baseline, (point) => Math.min(point.y, baseline), color);
           addArea(svgNS, svg, split, baseline, (point) => Math.max(point.y, baseline), "var(--et-negative, #dc2626)");
         } else {
-          addArea(svgNS, svg, run, baseline, (point) => point.y, color);
+          addArea(svgNS, svg, run, baseline, (point) => point.y, stroke);
         }
       }
       const poly = document.createElementNS(svgNS, "polyline");
       poly.setAttribute("points", linePoints);
       poly.setAttribute("fill", "none");
-      poly.setAttribute("stroke", color);
+      poly.setAttribute("stroke", stroke);
       poly.setAttribute("stroke-width", "1.25");
       poly.setAttribute("stroke-linejoin", "round");
       poly.setAttribute("stroke-linecap", "round");
@@ -138,15 +149,17 @@ export function renderSparkline(col, value, changeColor, sharedRange) {
     if (point.y == null) return;
     const isEnd = index === 0 || index === scaled.length - 1;
     const visible = showMarkers && (!endsOnly || isEnd);
-    const perPoint = point.source && typeof point.source === "object" ? point.source.color : null;
+    const perPoint = observationColor(point.source);
+    const markerColor = perPoint || resolveColor(opts.marker_color) || pointColor(point);
     const dot = document.createElementNS(svgNS, "circle");
     dot.setAttribute("cx", String(point.x));
     dot.setAttribute("cy", String(point.y));
     dot.setAttribute("r", visible ? "2.2" : "2.5");
-    dot.setAttribute("fill", visible ? (perPoint || opts.marker_color || color) : "transparent");
+    dot.setAttribute("fill", visible ? markerColor : "transparent");
     dot.append(tooltip(point.raw));
-    const tooltipColor = type === "area" && opts.signed
-      ? point.raw[1] < (reference ?? 0) ? "var(--et-negative, #dc2626)" : color : perPoint || opts.marker_color || color;
+    const tooltipColor = type === "area" && opts.signed && !lookup && !perPoint && !visible
+      ? point.raw[1] < (reference ?? 0) ? "var(--et-negative, #dc2626)" : color
+      : visible ? markerColor : pointColor(point);
     inspectable(dot, observationTooltip(point.raw[0], point.raw[1], opts.y_fmt, point.source, tooltipColor,
       [opts.x, opts.y, "x", "y", "value"]), {priority: 3});
     svg.append(dot);

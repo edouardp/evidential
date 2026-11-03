@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { JSDOM } from "jsdom";
 import { sparklinePoints } from "./src/sparkline-data.js";
 import { renderSparkline } from "./src/sparkline.js";
-import { prepareChangeScales } from "./src/change-sparkline.js";
+import { prepareSparklineScales } from "./src/sparkline-colors.js";
 import { RowPipeline } from "./src/derived.js";
 
 const dom = new JSDOM("<!doctype html>");
@@ -49,7 +49,7 @@ test("steady thresholds and inferred gradients use differences rather than absol
   const opts = {...options, steady: [-1, 1], color_scale: ["red", "gray", "blue"]};
   const column = {name: "series", viz: "sparkline", sparkline_options: opts};
   const rows = [{series: [100, 104, 103]}, {series: [1000, 996, 997]}];
-  const scale = prepareChangeScales([column], rows).get(column);
+  const scale = prepareSparklineScales([column], rows).get(column);
   assert.equal(scale(-4), "#ff0000");
   assert.equal(scale(4), "#0000ff");
   const marks = [...renderSparkline(column, rows[0].series, scale).querySelectorAll("rect")];
@@ -63,7 +63,7 @@ test("shared domains pool computed differences consistently with rendered change
   const rows = [{series: [100, 103, 101]}, {series: [1000, 1001]}];
   const prepared = new RowPipeline().get({rows, columns: [column], options: {}, search: "", hidden: new Set(), sort: null});
   assert.deepEqual(prepared.ranges.get(column), {min: -2, max: 3, shared: true});
-  const scale = prepared.changeScales.get(column);
+  const scale = prepared.sparklineScales.get(column);
   const marks = [...renderSparkline(column, rows[0].series, scale).querySelectorAll("rect")];
   assert.deepEqual(marks.map(mark => mark.getAttribute("fill")), [scale(3), scale(-2)]);
 });

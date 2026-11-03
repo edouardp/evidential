@@ -8,6 +8,12 @@ project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- Every sparkline style supports y-value gradients through the usual
+  `.color(scale=..., min=..., max=..., midpoint=...)` and `.color(stops=...)`
+  API. Bars/points use their own y; line/area intervals use their starting
+  observation. Explicit observation colors override gradients, including
+  change markers, with matching tooltip swatches. Notebook 40 compares all
+  five styles; the README gallery shows gradient bars and points.
 - Notebook 59 builds an AdventureWorks company report from the local Parquet
   product, with year/channel controls, sales and contribution metrics, monthly
   comparisons, regional/product summaries, customer accounts and fulfilment.

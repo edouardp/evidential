@@ -157,8 +157,18 @@ Notebook 48 prints the values beside two-/three-/four-sector examples.
   For absolute observations such as `[5, 4, 8]`, set `delta=True` to compare
   adjacent values. The first comparison stays blank; missing values break
   adjacency. `steady=(low, high)` is inclusive and defaults to `(0, 0)`.
-- Change gradients use `color_scale` and `color_domain`; the steady interval
-  anchors the palette midpoint even on asymmetric domains.
+- All sparkline styles accept `.color(scale="viridis", min=..., max=...)`,
+  `.color(scale=[...], midpoint=0)`, or explicit `.color(stops=[...])` using y.
+  This colors the graphic, not the cell background. Inferred bounds pool
+  matching details before pagination. Color bounds alone do not change geometry.
+  A shared `.domain(...)` can also share the palette.
+- Each line/area interval takes its starting observation's color. An observation
+  `color` key overrides lookup for every style; `marker_color` overrides lookup
+  for visible markers. Missing observations leave gaps.
+- Change gradients keep the whole steady interval at the palette midpoint,
+  even on asymmetric domains. Fixed bounds must contain it. Explicit stops
+  instead define a direct y lookup. Legacy `color_scale`/`color_domain` options
+  remain supported; use fluent `.color()` in new examples.
 - A signed area can use `reference=1, signed=True` to fill above/below a 100%
   baseline. Format fractions with `y_fmt="pct1"`. Share/fix domains explicitly
   when multiple rows need comparable vertical geometry.

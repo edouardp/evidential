@@ -2,7 +2,8 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { JSDOM } from "jsdom";
 import { renderSparkline } from "./src/sparkline.js";
-import { changeState, changeColorScale, prepareChangeScales } from "./src/change-sparkline.js";
+import { changeState, changeColorScale } from "./src/change-sparkline.js";
+import { prepareSparklineScales } from "./src/sparkline-colors.js";
 import { RowPipeline } from "./src/derived.js";
 
 global.document = new JSDOM("<!doctype html><body></body>").window.document;
@@ -81,7 +82,7 @@ test("auto color bounds are shared across matching rows and independent physical
   const a = {name: "changes", viz: "sparkline", sparkline_options: {type: "change", color_scale: ["red", "gray", "blue"]}};
   const b = {...a, sparkline_options: {...a.sparkline_options, color_domain: [-1, 1]}};
   const rows = [{changes: [-2, 1]}, {changes: [2, 8]}, {render_type: "row_total", changes: [-1000, 1000]}];
-  const scales = prepareChangeScales([a, b], rows);
+  const scales = prepareSparklineScales([a, b], rows);
   assert.equal(scales.get(a)(8), "#0000ff");
   assert.notEqual(scales.get(a)(1), scales.get(b)(1));
   const first = renderSparkline(a, rows[0].changes, scales.get(a));
@@ -90,8 +91,8 @@ test("auto color bounds are shared across matching rows and independent physical
   const pipeline = new RowPipeline();
   const args = {rows, columns: [a], options: {page_size: 1}, search: "", hidden: new Set(), sort: null};
   const prepared = pipeline.get(args);
-  assert.equal(prepared.changeScales.get(a)(8), "#0000ff");
-  assert.equal(pipeline.get(args).changeScales, prepared.changeScales);
+  assert.equal(prepared.sparklineScales.get(a)(8), "#0000ff");
+  assert.equal(pipeline.get(args).sparklineScales, prepared.sparklineScales);
 });
 
 test("long sequences and tiny dimensions stay finite and each mark stays within its slot", () => {

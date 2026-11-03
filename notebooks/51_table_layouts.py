@@ -381,7 +381,8 @@ def layout_summary_top_doc(mo):
 
     Place the region total above its detail rows. A summary can act as the group
     heading without an additional section row. Indent the product names beneath
-    that summary with `section_indent=1`.
+    that summary with `section_indent=1`, and use `indent=False` on this summary
+    to keep its heading role. Ordinary summary labels follow the details' indent.
     """)
     return
 
@@ -399,6 +400,7 @@ def layout_summary_top(EvidentialTable, con, layout_frame, layout_columns, rows)
             label=lambda group: f"{group[0]['region']} total",
             values={"units": "sum", "sales": "sum"},
             position="top",
+            indent=False,
             rule="below",
         ),
     )
@@ -411,7 +413,9 @@ def layout_summary_bottom_doc(mo):
     #### Summary footers and subtotals
 
     Put a subtotal after each region, with a heading before the indented details.
-    Headings and subtotal labels stay aligned at the left edge.
+    Subtotal labels follow the detail indentation by default; headings stay at
+    the left edge. Use `.summary(..., indent=False)` to align a subtotal with its
+    heading instead.
     """)
     return
 

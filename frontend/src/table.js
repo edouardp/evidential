@@ -288,7 +288,7 @@ export class EvidentialTableRenderer {
       rowLayout: this.model.get("row_layout"),
       search: this._state.search, hidden: hiddenColumns(this.columns, this._state.hidden), sort: this._state.sort,
     });
-    const { columns, hasGroups, dimCount, ranges, formatRanges, decimals, colorScales, changeScales, stats } = processed;
+    const { columns, hasGroups, dimCount, ranges, formatRanges, decimals, colorScales, sparklineScales, stats } = processed;
     this._renderTitle(columns);
     const layout = headerLayout(columns);
     const subcolumns = layout.joins;
@@ -365,7 +365,7 @@ export class EvidentialTableRenderer {
           ranges,
           formatRanges,
           colorScales,
-          changeScales,
+          sparklineScales,
           hasGroups,
           subcolumns,
           layout,

@@ -8,7 +8,7 @@ from typing import Any
 
 from ._aliases import alias
 from ._domain import domain_spec
-from ._sparkline import normalize_sparkline_options
+from ._sparkline import normalize_sparkline_colors, normalize_sparkline_options
 from .configuration import COLOR_SCALES, ColumnOptions, validate_options
 
 # Evidence `contentType` → (viz, sparkline type)
@@ -131,6 +131,8 @@ def _normalize_column_options(data: dict[str, Any]) -> dict[str, Any]:
         spark.setdefault("fit_to_data", data.pop("spark_y_scale"))
     if spark:
         data["sparkline_options"] = normalize_sparkline_options(spark)
+    if data.get("viz") == "sparkline" and color:
+        data["color_options"] = normalize_sparkline_colors(data.get("sparkline_options") or {}, color)
 
     bar = dict(data.get("bar_options") or {})
     for camel, snake in (

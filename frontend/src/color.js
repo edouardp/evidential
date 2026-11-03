@@ -89,6 +89,12 @@ export function resolveColor(value) {
   return NAMED_COLORS[value.toLowerCase()] ?? value;
 }
 
+/** Structured observations may override a numeric color encoding. */
+export function observationColor(source) {
+  return source && typeof source === "object" && !Array.isArray(source) && typeof source.color === "string"
+    ? resolveColor(source.color) || null : null;
+}
+
 const cellColorParsers = new WeakMap();
 
 /** Paint a cell fill above its row tint, leaving the text fully opaque.

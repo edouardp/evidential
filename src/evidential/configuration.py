@@ -260,7 +260,8 @@ class SparklineOptions(TypedDict, total=False):
     delta: bool | None
     #: Inclusive hold-steady range for change sparklines; defaults to (0, 0).
     steady: tuple[float, float] | None
-    #: Optional continuous palette, with its midpoint anchored to the steady range.
+    #: Optional y-value palette; fluent declarations should prefer .color(scale=...).
+    #: For change sparklines the whole steady interval anchors the midpoint.
     color_scale: str | Sequence[str] | None
     #: Fixed magnitude endpoints; automatic domains use all matching rows.
     color_domain: tuple[float, float] | None

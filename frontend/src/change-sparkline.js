@@ -1,7 +1,6 @@
-import { createColorScale, getColorForValue, resolveColor, buildDomainColorScale } from "./color.js";
+import { createColorScale, getColorForValue, resolveColor, observationColor } from "./color.js";
 import { inspectable } from "./tooltips.js";
 import { observationTooltip } from "./tooltip-data.js";
-import { sparklinePoints } from "./sparkline-data.js";
 
 /** The inclusive steady interval is categorical; magnitude only determines color. */
 export function changeState(value, steady = [0, 0]) {
@@ -9,7 +8,7 @@ export function changeState(value, steady = [0, 0]) {
 }
 
 /** Anchor the entire neutral interval at 0.5, with independent ramps either side. */
-export function changeColorScale(opts, values) {
+export function changeColorScale(opts, values, mode = "lch") {
   const steady = opts.steady || [0, 0];
   if (!opts.color_scale) {
     const colors = {down: "var(--et-negative, #dc2626)", steady: "#b8bcc2", up: "var(--et-accent, #2563eb)"};
@@ -24,40 +23,13 @@ export function changeColorScale(opts, values) {
   }
   [min, max] = opts.color_domain || [min, max];
   const palette = Array.isArray(opts.color_scale) ? opts.color_scale.map(resolveColor) : opts.color_scale;
-  const scale = createColorScale([], {colorPalette: palette, min: 0, max: 1});
+  const scale = createColorScale([], {colorPalette: palette, min: 0, max: 1, mode});
   return value => {
     let at = 0.5;
     if (value < steady[0]) at = min < steady[0] ? 0.5 * (value - min) / (steady[0] - min) : 0;
     else if (value > steady[1]) at = max > steady[1] ? 0.5 + 0.5 * (value - steady[1]) / (max - steady[1]) : 1;
     return getColorForValue(Math.max(0, Math.min(1, at)), scale);
   };
-}
-
-/** Build once per matching dataset, before pagination; each physical column has its own scale. */
-export function prepareChangeScales(columns, rows, ranges) {
-  const scales = new Map();
-  for (const column of columns) {
-    const opts = column.sparkline_options || {};
-    if (column.viz !== "sparkline" || opts.type !== "change") continue;
-    const shared = ranges?.get(column);
-    const domain = typeof column.domain === "object" ? column.domain : {};
-    if (shared?.shared && (domain.palette || opts.color_scale)) {
-      const scale = buildDomainColorScale(domain, shared, domain.palette || opts.color_scale);
-      scales.set(column, value => getColorForValue(value, scale));
-      continue;
-    }
-    const values = [];
-    if (opts.color_scale && !opts.color_domain) {
-      for (const row of rows) {
-        if (row.render_type && row.render_type !== "cell_data") continue;
-        for (const [, value] of sparklinePoints(row[column.name], opts)) {
-          if (value != null) values.push(value);
-        }
-      }
-    }
-    scales.set(column, changeColorScale(opts, values));
-  }
-  return scales;
 }
 
 /** Equal rectangles: steady is centered; up/down shift by half a rectangle height. */
@@ -91,9 +63,10 @@ export function renderChangeSparkline(points, opts, colorForValue) {
     rect.setAttribute("width", String(slot * 0.7));
     rect.setAttribute("height", String(rectHeight));
     rect.setAttribute("rx", String(Math.min(0.6, slot * 0.35)));
-    rect.setAttribute("fill", colors(value));
+    const color = observationColor(source) || colors(value);
+    rect.setAttribute("fill", color);
     rect.setAttribute("data-state", state);
-    const data = observationTooltip(x, value, opts.y_fmt, source, colors(value), [opts.x, opts.y, "x", "y", "value"]);
+    const data = observationTooltip(x, value, opts.y_fmt, source, color, [opts.x, opts.y, "x", "y", "value"]);
     data.details.push({name: "Change", value: state});
     inspectable(rect, data, {priority: 2});
     svg.append(rect);

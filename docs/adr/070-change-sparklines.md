@@ -38,6 +38,11 @@ shared by the factory, fluent method and configuration schema. Change-only
 settings cannot silently affect another style; incompatible geometry settings
 are rejected. Palette lists and pairs are copied before storage.
 
+[ADR-090](090-sparkline-y-color-encodings.md) extends gradients to every style
+through the shared `.color()` API, preserving change neutral-band semantics.
+`delta` and `steady` remain change-only; the original gradient keywords stay
+supported as compatibility declarations.
+
 By default, input observations are changes or signed outcomes. Optional
 `delta=True` accepts absolute measurements instead and computes each observation
 minus its immediate predecessor. The first slot has no comparison and remains

@@ -43,8 +43,13 @@ def test_layout_notebook_renders_notes_shading_summaries_and_nested_headers(page
             assert root.locator("tbody tr:not(.et-display-row) td:first-child").evaluate_all(
                 "els => els.every(el => parseFloat(getComputedStyle(el).paddingLeft) > 10)"
             )
-            assert root.locator("tbody tr.et-display-row td:first-child").evaluate_all(
-                "els => els.every(el => parseFloat(getComputedStyle(el).paddingLeft) < 10)"
+            assert root.locator(
+                "tbody tr.et-display-section td:first-child, tbody tr.et-display-grand_summary td:first-child"
+            ).evaluate_all("els => els.every(el => parseFloat(getComputedStyle(el).paddingLeft) < 10)")
+            summaries = root.locator("tbody tr.et-display-summary td:first-child")
+            assert summaries.evaluate_all(
+                "(els, inset) => els.every(el => (parseFloat(getComputedStyle(el).paddingLeft) > 10) === inset)",
+                name != "summary_top",
             )
         assert (
             table("headings_centered")

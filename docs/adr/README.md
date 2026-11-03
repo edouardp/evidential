@@ -108,6 +108,7 @@ dated, immutable record of the decisions behind them.
 | [087](087-dimension-grid.md) | Searchable, Cross-Filtered Dimension Grid | Accepted |
 | [088](088-measured-expanded-pages.md) | Measured Pages for Expanded Tables | Accepted |
 | [089](089-collapsible-display-sections.md) | Collapsible Display Sections | Accepted |
+| [090](090-sparkline-y-color-encodings.md) | Sparkline Y-Value Color Encodings | Accepted |
 
 ## Creating New ADRs
 

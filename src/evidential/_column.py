@@ -14,7 +14,7 @@ from typing import Any, Literal, Self
 from ._aliases import alias, format_code
 from ._column_options import _normalize_column_options
 from ._domain import domain_spec
-from ._sparkline import normalize_sparkline_options
+from ._sparkline import normalize_sparkline_colors, normalize_sparkline_options
 from ._text_style import TextStyle
 from .configuration import Relative, SparklineType, TooltipOptions, validate_options
 
@@ -560,12 +560,13 @@ class Column(TextStyle, Mapping[str, Any]):
         max: float | None = None,
         midpoint: float | None = None,
     ) -> Self:
-        """Shade each cell with a background colour for its value.
+        """Shade cells, or color sparkline observations by their y value.
 
         :param scale: a named preset (``"green"``, ``"blue"``, ``"red"``,
             ``"orange"``, ``"purple"``, ``"grey"``/``"gray"``), a list of colours,
             or ``"@column"`` to colour each cell from that column's values.
         :param conditional_colors: a rule column name supplying per-row colours.
+        :param stops: explicit value/color stops, also supported for sparkline y values.
         :param scale_column: take the scale range from another column.
         :param min: lower bound of the scale.
         :param max: upper bound of the scale.
@@ -575,23 +576,27 @@ class Column(TextStyle, Mapping[str, Any]):
 
             col.number("rating").color(scale="green", min=6, max=10)
             col.chip("status").color(scale="@status_color")
+            col.sparkline("history", type="bar").color(scale="viridis", min=0, max=100)
         """
         if isinstance(scale, str) and scale.startswith("@"):
             # `scale="@column"` colours each cell from that column's values.
             conditional_colors, scale = scale[1:], None
-        return self._with(
-            viz="color",
-            **_merge_options(
-                "color_options",
-                color_scale=scale,
-                color_stops=stops,
-                conditional_colors=_field(conditional_colors),
-                scale_column=_field(scale_column),
-                min=min,
-                max=max,
-                midpoint=midpoint,
-            ),
+        colors = _merge_options(
+            "color_options",
+            color_scale=scale,
+            color_stops=stops,
+            conditional_colors=_field(conditional_colors),
+            scale_column=_field(scale_column),
+            min=min,
+            max=max,
+            midpoint=midpoint,
         )
+        if self._spec.get("viz") == "sparkline":
+            colors["color_options"] = normalize_sparkline_colors(
+                self._spec.get("sparkline_options") or {},
+                {**dict(self._spec.get("color_options") or {}), **(colors.get("color_options") or {})},
+            )
+        return self._with(viz="sparkline" if self._spec.get("viz") == "sparkline" else "color", **colors)
 
     def delta(
         self,
@@ -669,10 +674,10 @@ class Column(TextStyle, Mapping[str, Any]):
         :param delta: for change sparklines, compare adjacent observations. The first
             slot and comparisons beside missing observations stay blank. Default False.
         :param steady: inclusive change interval rendered at the center; defaults to (0, 0).
-        :param color_scale: optional change gradient (named palette or color list).
-            The whole steady interval maps to the palette midpoint.
-        :param color_domain: fixed change gradient endpoints, containing the steady
-            interval. Otherwise all matching rows supply shared bounds.
+        :param color_scale: optional y-value gradient; prefer chaining ``.color(scale=...)``.
+            For change sparklines the whole steady interval maps to the palette midpoint.
+        :param color_domain: fixed gradient endpoints; prefer ``.color(min=..., max=...)``.
+            Otherwise all matching rows supply bounds before pagination.
 
         Example::
 
@@ -700,7 +705,9 @@ class Column(TextStyle, Mapping[str, Any]):
                 color_domain=color_domain,
             ),
         }
-        return self._with(viz="sparkline", sparkline_options=normalize_sparkline_options(options))
+        options = normalize_sparkline_options(options)
+        colors = normalize_sparkline_colors(options, self._spec.get("color_options") or {})
+        return self._with(viz="sparkline", sparkline_options=options, color_options=colors or None)
 
     def chip(
         self,
@@ -1416,8 +1423,8 @@ def sparkline(
     :param signed: split an area fill at the zero baseline into up/down colours.
     :param delta: change-only adjacent differences; defaults to precomputed changes.
     :param steady: inclusive hold-steady interval for change rectangles (default 0..0).
-    :param color_scale: named palette or color list for change magnitude.
-    :param color_domain: fixed gradient endpoints; the steady interval anchors the midpoint.
+    :param color_scale: named palette or color list for y values; prefer ``.color(scale=...)``.
+    :param color_domain: fixed gradient endpoints; prefer ``.color(min=..., max=...)``.
     :param title: header text.
 
     See :meth:`Column.sparkline` for the same options on the chain.

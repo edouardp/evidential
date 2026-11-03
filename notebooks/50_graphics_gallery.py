@@ -569,6 +569,9 @@ def graphic_sparklines_doc(mo):
     #### Sparklines
 
     Show a series as a line, area, bars, points or increase/steady/decrease marks.
+    Use `.color(scale="viridis", min=0, max=12)` to color observations by their
+    y value with the same gradient API as cell backgrounds. Bars and dots use
+    their own value; line/area segments use their starting observation.
     """)
     return
 
@@ -599,8 +602,10 @@ def graphic_sparklines(EvidentialTable, col, frame):
             col.text("series"),
             col.sparkline("line", type="line", width=110, height=30),
             col.sparkline("area", type="area", fit_to_data=True, width=110, height=30),
-            col.sparkline("bar", type="bar", width=110, height=30),
-            col.sparkline("points", type="points", width=110, height=30, markers=True),
+            col.sparkline("bar", type="bar", width=110, height=30)
+                .color(scale="viridis", min=0, max=12),
+            col.sparkline("points", type="points", width=110, height=30, markers=True)
+                .color(scale="viridis", min=0, max=12),
             col.sparkline("change", type="change", width=110, height=30),
         ],
         settings=frame("Sparkline types", 900),

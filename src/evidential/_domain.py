@@ -158,7 +158,7 @@ def resolve_domains(columns: Sequence[Mapping[str, Any]]) -> list[dict[str, Any]
                 )
                 if local != group[shared]:
                     raise ValueError(f"Conflicting {shared} for shared domain {name!r}")
-            if "palette" in group and spark.get("type") == "change" and spark.get("color") is not None:
+            if "palette" in group and col.get("viz") == "sparkline" and spark.get("color") is not None:
                 raise ValueError("A shared palette conflicts with a constant sparkline color")
             if "palette" in group and color.get("scale_mode", "lch") != "lch":
                 raise ValueError("Shared palettes use lch interpolation; remove the per-column scale_mode")

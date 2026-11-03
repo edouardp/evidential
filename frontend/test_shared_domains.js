@@ -6,7 +6,7 @@ import { RowPipeline } from "./src/derived.js";
 import { marksDomain, renderMarks } from "./src/visualizations.js";
 import { buildColorVizScale, getColorForValue } from "./src/color.js";
 import { renderSparkline } from "./src/sparkline.js";
-import { prepareChangeScales } from "./src/change-sparkline.js";
+import { prepareSparklineScales } from "./src/sparkline-colors.js";
 
 global.document = new JSDOM("<!doctype html><body></body>").window.document;
 global.Node = document.defaultView.Node;
@@ -74,7 +74,7 @@ test("heatmap and change sparkline share a whole steady interval and the same co
   const heat = {name: "b", viz: "color", domain: spec};
   const rows = [{a: [-4, 0.2, 1, 8], b: 0.2}];
   const ranges = applySharedDomains([spark, heat], rows, new Map());
-  const color = prepareChangeScales([spark], rows, ranges).get(spark);
+  const color = prepareSparklineScales([spark], rows, ranges).get(spark);
   const heatScale = buildColorVizScale(heat, ranges.get(heat));
   for (const value of [-4, -0.5, 0, 0.2, 0.5, 4, 8]) assert.equal(color(value), getColorForValue(value, heatScale));
   assert.equal(color(0.2), "#808080");

@@ -20,7 +20,7 @@ export function sparklinePoints(value, opts) {
       const keys = Object.keys(item);
       const yField = yKey || ["y", "value"].find(key => key in item) || keys.find((key) => _isNumeric(item[key]));
       const xField =
-        xKey || ["x", "date"].find(key => key in item) || keys.find((key) => key !== yField && !_isNumeric(item[key]));
+        xKey || ["x", "date"].find(key => key in item) || keys.find((key) => key !== yField && key !== "color" && !_isNumeric(item[key]));
       x = xField ? item[xField] : index;
       y = numeric(yField ? item[yField] : null);
     } else {

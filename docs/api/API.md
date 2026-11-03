@@ -651,6 +651,39 @@ columns=[
   is shared by both builders and the configuration schema. Import it with
   `from evidential import SparklineType` when annotating your own helpers.
 
+  Every style accepts the usual fluent gradient API. It colors the graphic by
+  each observation's **y value**, rather than shading the table cell:
+
+  ```python
+  col.sparkline("history", type="bar").color(scale="viridis", min=0, max=100)
+  col.sparkline("history", type="area").color(
+      scale=["#b2182b", "#b8bcc2", "#2166ac"], min=-10, max=10, midpoint=0,
+  )
+  col.sparkline("history", type="points").color(stops=[
+      {"value": -10, "color": "red"},
+      {"value": 0, "color": "#ffffffcc"},
+      {"value": 10, "color": "blue"},
+  ])
+  ```
+
+  `min`/`max` fix color bounds without changing geometry. Omitted bounds use all
+  matching detail observations before pagination; filtering recomputes them.
+  Values beyond fixed endpoints clamp to their colors. Constant inferred series
+  without an explicit midpoint use the palette midpoint. Named palettes, diverging midpoints, alpha colors
+  and explicit stops reuse the scalar cell-color lookup. `.domain(...)` shares
+  coordinates and optional palettes with other columns, including heatmaps.
+
+  Bars and dots use their own observation color. Each line segment and its area
+  fill uses the starting observation's color; missing observations leave gaps.
+  A structured observation's `color` overrides lookup for every style. Visible
+  markers use observation color, then `marker_color`, then gradient or overall
+  color. Tooltips use matching swatches. Explicit colors/gradients override the
+  default signed-area fills; area opacity is unchanged. Constant `color=` and
+  gradient settings are mutually exclusive. Row-level `scale_column` and
+  `conditional_colors` do not apply to sparkline arrays. Existing sparkline
+  `color_scale=`/`color_domain=` options remain supported; prefer `.color(...)`
+  for new examples and do not supply conflicting declarations.
+
   `type="change"` draws one equal rectangle per observation, with an ordinal
   position even for structured/date input. Values are changes or signed outcomes:
   up above `steady`, down below it, centered within its inclusive range (default
@@ -671,9 +704,8 @@ columns=[
   # Absolute revenue: 5 → 4 is a decrease, even though both values are positive.
   col.sparkline("revenue", type="change", delta=True)
   # Continuous change: keep the whole neutral range gray, even on an asymmetric domain.
-  col.sparkline(
-      "changes", type="change", steady=(-0.5, 0.5),
-      color_scale=["#b2182b", "#b8bcc2", "#2166ac"], color_domain=(-4, 8),
+  col.sparkline("changes", type="change", steady=(-0.5, 0.5)).color(
+      scale=["#b2182b", "#b8bcc2", "#2166ac"], min=-4, max=8,
   )
   ```
 
@@ -689,6 +721,11 @@ columns=[
   Change-only settings are validated for factories, refinements and mappings.
   `color` and `color_scale` are mutually exclusive. Marker, signed-area and
   fit-to-data settings do not apply to change rectangles.
+
+  `.color(...)` preserves the change sparkline's steady-band mapping. Bounds
+  must contain the band and an explicit midpoint must match its center.
+  Explicit `stops=` instead defines a direct lookup at the supplied y values,
+  taking precedence over the automatic neutral-band mapping.
 
   [Notebook 46](../../notebooks/46_change_sparklines.py) queries the local
   football results dataset: search teams, select a year and competition, then
@@ -739,8 +776,8 @@ member preserve them.
   disables it. Without a setting, bars and zero-based area/bar sparklines
   include zero. Explicit bounds remain fixed.
 - `.palette("Blues")` or `.palette(["red", "gray", "blue"])` shares the color
-  mapping for heatmaps, numeric chips and change sparklines. Bar/line fill colors
-  remain independent styling choices.
+  mapping for heatmaps, numeric chips and every sparkline style. Scalar bar/line
+  mark fill colors remain independent styling choices.
 - `.midpoint(0)` anchors a diverging palette. A shared palette also shares any
   member's explicitly configured color midpoint.
 

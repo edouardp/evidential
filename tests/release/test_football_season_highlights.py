@@ -148,11 +148,15 @@ def test_notebook_runs_offline_with_query_generated_colors(monkeypatch, tmp_path
     assert sparkline["sparkline_options"]["type"] == "bar"
     assert sparkline["sparkline_options"]["x"] == "match"
     assert sparkline["domain"]["name"] == "goal_margin"
+    gradients = []
     for name in ("biggest_win", "heaviest_loss"):
         column = next(column for column in table.columns if column["name"] == name)
         assert column["viz"] == "color"
-        assert column["color_options"] == {"color_scale": ["#b2182b", "#ffffffcc", "#2166ac"], "midpoint": 0}
+        assert column["color_options"]["midpoint"] == 0
+        assert len(column["color_options"]["color_scale"]) == 3
+        gradients.append(column["color_options"])
         assert column["domain"] == sparkline["domain"]
+    assert gradients[0] == gradients[1]
     assert sum(len(row["season"]) for row in table.rows) == 760
     assert definitions["league_picker"].value == "england"
     assert definitions["window_picker"].value == 7

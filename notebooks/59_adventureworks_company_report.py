@@ -304,12 +304,12 @@ def tables(EvidentialTable, col, label, rows):
                 col.integer("customers"),
             ],
             row_layout=rows.group_by("region")
-                           .section(collapsible=True, collapsed_summary=True)
-                           .summary(
-                               "Region subtotal",
-                               values={"net_sales": "sum", "orders": "sum"},
-                               label_style={"font_weight": "bold", "font_style": "italic"},
-                           ),
+            .section(collapsible=True, collapsed_summary=True, rule="above")
+            .summary(
+                "Region subtotal",
+                values={"net_sales": "sum", "orders": "sum"},
+                label_style={"font_weight": "bold", "font_style": "italic"},
+            ),
             title="Territories by region",
             search=True,
             section_indent=1,
@@ -338,8 +338,12 @@ def tables(EvidentialTable, col, label, rows):
                 ),
             ],
             row_layout=rows.group_by("category")
-            .section(collapsible=True, collapsed_summary=True)
-            .summary("Category total", values={"net_sales": "sum", "units": "sum"}),
+            .section(collapsible=True, collapsed_summary=True, rule="above")
+            .summary(
+                "Category total",
+                values={"net_sales": "sum", "units": "sum"},
+                label_style={"font_weight": "bold", "font_style": "italic"},
+            ),
             title="Product portfolio",
             search=True,
             section_indent=1,

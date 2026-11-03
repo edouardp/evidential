@@ -4,6 +4,7 @@ from pathlib import Path
 
 import duckdb
 import pytest
+from paint_helpers import painted_colors
 from playwright.sync_api import expect
 
 from scripts.api_screenshots import _server
@@ -19,6 +20,10 @@ def test_sql_colors_render_twenty_teams_and_explain_highlighted_matches(page, mo
         root = page.locator(".et-root")
         expect(root.locator("tbody tr")).to_have_count(20, timeout=30_000)
         expect(root.locator("tbody .et-sparkline rect")).to_have_count(760)
+        first_cells = root.locator("tbody tr").first.locator("td")
+        win_color, loss_color = painted_colors(page, [first_cells.nth(7), first_cells.nth(8)])
+        assert win_color[2] > win_color[0]  # Blue for the biggest win.
+        assert loss_color[0] > loss_color[2]  # Red for the heaviest loss.
         assert root.locator('tbody rect[fill="#2166ac"]').count() >= 20
         assert root.locator('tbody rect[fill="#b2182b"]').count() >= 20
         row = root.locator("tbody tr").filter(has_text="Nottingham Forest")

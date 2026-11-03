@@ -35,6 +35,8 @@ def introduction(mo):
     vertical scale. **Blue** highlights that team's biggest win; **red** highlights
     its heaviest loss; the remaining matches are muted gray. Tied extremes are
     all highlighted. Hover a bar for the date, opponent, venue, score and highlight.
+    The biggest-win and heaviest-loss cells use matching blue/red background
+    gradients, with stronger margins receiving stronger colors on the same scale.
 
     The query calculates the extremes and puts a `color` on each observation.
     There is no special maximum/minimum setting in the sparkline renderer:
@@ -175,6 +177,7 @@ def matching_data(
 
 @app.cell
 def season_table(EvidentialTable, col, mo):
+    result_colors = ["#b2182b88", "#ffffff44", "#2166ac88"]
     season_highlights = mo.ui.anywidget(
         EvidentialTable(
             [],
@@ -194,8 +197,8 @@ def season_table(EvidentialTable, col, mo):
                 col.integer("losses"),
                 col.integer("match_points"),
                 col.integer("goal_difference", title="GD"),
-                col.integer("biggest_win"),
-                col.integer("heaviest_loss"),
+                col.integer("biggest_win").color(scale=result_colors, midpoint=0).domain("goal_margin"),
+                col.integer("heaviest_loss").color(scale=result_colors, midpoint=0).domain("goal_margin"),
                 col.sparkline(
                     "season",
                     type="bar",

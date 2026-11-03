@@ -13,7 +13,9 @@ project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   SQL window functions assign per-observation colors, including tied extremes;
   a raw 380-match snapshot lets the same query run offline. League, year and
   July–June/calendar-year selectors discover available data and update the same
-  table; recorded dates and match counts disclose partial coverage.
+  table; recorded dates and match counts disclose partial coverage. Matching
+  background gradients shade biggest-win and heaviest-loss cells using the
+  shared goal-margin domain.
 - Every sparkline style supports y-value gradients through the usual
   `.color(scale=..., min=..., max=..., midpoint=...)` and `.color(stops=...)`
   API. Bars/points use their own y; line/area intervals use their starting

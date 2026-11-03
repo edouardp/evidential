@@ -6,6 +6,8 @@ project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## Unreleased
 
+## 0.2.2 (2026-11-04)
+
 ### Added
 
 - Notebook 60 shows 20 Premier League teams from the complete 2024/25 season,
@@ -22,6 +24,8 @@ project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   observation. Explicit observation colors override gradients, including
   change markers, with matching tooltip swatches. Notebook 40 compares all
   five styles; the README gallery shows gradient bars and points.
+- Notebook 37 demonstrates signed bars with capped error bars, including
+  asymmetric intervals and intervals crossing zero on a shared scale.
 - Notebook 59 builds an AdventureWorks company report from the local Parquet
   product, with year/channel controls, sales and contribution metrics, monthly
   comparisons, regional/product summaries, customer accounts and fulfilment.

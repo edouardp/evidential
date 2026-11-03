@@ -95,3 +95,21 @@ Source: **football-data / worldclubratings.com**, distributed under the
 [Open Data Commons Attribution License 1.0](https://opendatacommons.org/licenses/by/1-0/).
 The source covers top domestic divisions and selected international
 competitions; domestic cup fixtures are not comprehensively included.
+
+### A complete league season
+
+`60_football_england_2024_25.json` contains the 380 raw England top-division
+league fixtures between 1 July 2024 and 30 June 2025, extracted from the same
+local results Parquet on 4 November 2026. It has 20 teams with 38 appearances
+each. Cup/international fixtures and missing scores are excluded. Each match
+appears once, with its home/away identifiers and final score; no highlight
+colors or derived team summaries are stored.
+
+Notebook 60 runs [`60_football_season_highlights.sql`](../sql/60_football_season_highlights.sql)
+against this snapshot when `FOOTBALL_PARQUET` (or the default local file) is
+absent. The same query runs against the local product when present. It creates
+both team perspectives, finds positive maxima and negative minima per team,
+colors every tied extreme and collects ordered sparkline observations.
+Match points are `3 × wins + draws`, without administrative adjustments; rows
+are ordered by match points, goal difference, then team name. Source and license
+are the same football-data / worldclubratings.com attribution above.

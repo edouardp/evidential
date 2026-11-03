@@ -64,6 +64,10 @@ silently.
 - Multicolor lines/areas need a primitive per interval; uniform runs retain
   their compact representation. Domain inference stores just the extrema.
 - Notebook 40 compares all styles; notebook 50 generates the README examples.
+- Notebook 60 shows explicit observation colors produced in SQL: windowed
+  team maxima/minima highlight every tied biggest win/heaviest loss in a full
+  football season's bar sparklines. Its offline snapshot stores raw fixtures,
+  so the same query computes colors on either data source at execution time.
 
 ## More Information
 

@@ -8,6 +8,10 @@ project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- Notebook 60 shows 20 Premier League teams from the complete 2024/25 season,
+  with bar sparklines highlighting each team's biggest win and heaviest loss.
+  SQL window functions assign per-observation colors, including tied extremes;
+  a raw 380-match snapshot lets the same query run offline.
 - Every sparkline style supports y-value gradients through the usual
   `.color(scale=..., min=..., max=..., midpoint=...)` and `.color(stops=...)`
   API. Bars/points use their own y; line/area intervals use their starting

@@ -3,8 +3,8 @@ WITH season_matches AS (
     SELECT home, away, home_ident, away_ident, CAST(date AS DATE) AS match_date, gh, ga
     FROM games
     WHERE competition = $competition AND level = 'national'
-      AND CAST(date AS DATE) >= make_date($season_start, 7, 1)
-      AND CAST(date AS DATE) < make_date($season_start + 1, 7, 1)
+      AND CAST(date AS DATE) >= make_date($season_start, $start_month, 1)
+      AND CAST(date AS DATE) < make_date($season_start + 1, $start_month, 1)
       AND gh IS NOT NULL AND ga IS NOT NULL
       AND home_ident IS NOT NULL AND away_ident IS NOT NULL
 ), perspectives AS (

@@ -68,6 +68,10 @@ silently.
   team maxima/minima highlight every tied biggest win/heaviest loss in a full
   football season's bar sparklines. Its offline snapshot stores raw fixtures,
   so the same query computes colors on either data source at execution time.
+  Available league/year windows are discovered from scored national fixtures;
+  July–June/calendar-year controls update the existing widget in a separate
+  reactive cell. Recorded coverage is displayed instead of implying that every
+  selectable date window is a complete official season.
 
 ## More Information
 

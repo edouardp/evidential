@@ -105,6 +105,11 @@ each. Cup/international fixtures and missing scores are excluded. Each match
 appears once, with its home/away identifiers and final score; no highlight
 colors or derived team summaries are stored.
 
+With the local product, the notebook discovers league/year choices from scored
+national fixtures. The offline snapshot offers only its recorded England
+windows. July–June and calendar-year choices are explicit date boundaries,
+not provider season identifiers; partial windows show their actual coverage.
+
 Notebook 60 runs [`60_football_season_highlights.sql`](../sql/60_football_season_highlights.sql)
 against this snapshot when `FOOTBALL_PARQUET` (or the default local file) is
 absent. The same query runs against the local product when present. It creates

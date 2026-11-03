@@ -9,6 +9,7 @@ import pytest
 ROOT = Path(__file__).resolve().parents[2]
 NOTEBOOK = ROOT / "notebooks/60_football_season_highlights.py"
 SQL = (ROOT / "notebooks/sql/60_football_season_highlights.sql").read_text()
+PERIODS_SQL = (ROOT / "notebooks/sql/60_football_available_periods.sql").read_text()
 SNAPSHOT = ROOT / "notebooks/data/60_football_england_2024_25.json"
 
 
@@ -33,6 +34,7 @@ def season():
             ("Alpha", "Beta", "2024-12-01", 99, 0, "cup", "national"),
             ("Alpha", "Beta", "2024-12-02", 99, 0, "england", "international"),
             ("Alpha", "Beta", "2024-12-03", None, 0, "england", "national"),
+            ("Alpha", "Beta", "2024-11-01", 8, 0, "france", "national"),
         ]
         connection.executemany(
             "INSERT INTO games VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
@@ -44,8 +46,12 @@ def season():
         yield connection
 
 
-def query(connection, year=2024):
-    return connection.execute(SQL, {"season_start": year, "competition": "england"}).to_arrow_table().to_pylist()
+def query(connection, year=2024, league="england", start_month=7):
+    return (
+        connection.execute(SQL, {"season_start": year, "competition": league, "start_month": start_month})
+        .to_arrow_table()
+        .to_pylist()
+    )
 
 
 def test_sql_colors_all_tied_extremes_and_orders_the_original_matches(season):
@@ -87,6 +93,30 @@ def test_draw_only_winless_and_unbeaten_teams_do_not_get_false_highlights(season
     assert teams["Unbeaten"]["season"][0]["highlight"] == "Biggest win"
 
 
+def test_discovery_and_queries_respect_league_year_and_window_convention(season):
+    periods = season.execute(PERIODS_SQL).to_arrow_table().to_pylist()
+    england = [period for period in periods if period["competition"] == "england"]
+    assert {(period["start_month"], period["season_start"]) for period in england} == {
+        (7, 2023),
+        (7, 2024),
+        (7, 2025),
+        (1, 2024),
+        (1, 2025),
+    }
+    july = next(period for period in england if period["start_month"] == 7 and period["season_start"] == 2024)
+    assert july["match_count"] == 8
+    assert str(july["first_match"]) == "2024-07-01" and str(july["last_match"]) == "2025-06-30"
+    french = query(season, league="france")
+    assert {row["team"] for row in french} == {"Alpha", "Beta"}
+    assert next(row for row in french if row["team"] == "Alpha")["biggest_win"] == 8
+    calendar = next(row for row in query(season, start_month=1) if row["team"] == "Alpha")
+    assert calendar["biggest_win"] == 99
+    assert calendar["season"][0]["match"].startswith("2024-06-30")
+    assert all(point["match"].startswith("2024-") for point in calendar["season"])
+    assert calendar["season"][0]["color"] == "#2166ac"
+    assert calendar["season"][1]["color"] == "#a7b4c2"  # The July 4–0 is no longer the maximum.
+
+
 def test_real_snapshot_has_twenty_complete_teams_and_keeps_raw_fixtures():
     with duckdb.connect() as connection:
         connection.read_json(str(SNAPSHOT)).create_view("games")
@@ -119,3 +149,7 @@ def test_notebook_runs_offline_with_query_generated_colors(monkeypatch, tmp_path
     assert sparkline["sparkline_options"]["x"] == "match"
     assert sparkline["domain"]["name"] == "goal_margin"
     assert sum(len(row["season"]) for row in table.rows) == 760
+    assert definitions["league_picker"].value == "england"
+    assert definitions["window_picker"].value == 7
+    assert definitions["year_picker"].value == 2024
+    assert table.options["title"] == "England · 2024/25"

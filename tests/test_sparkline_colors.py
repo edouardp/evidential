@@ -7,6 +7,47 @@ import pytest
 from evidential import EvidentialTable, col, domain
 
 
+@pytest.mark.parametrize("opacity", [0, 0.4, 1, (0, 0.6), (0.2, 0.8)])
+def test_area_opacity_is_shared_by_factory_fluent_and_mapping(opacity):
+    options = {"type": "area", "fill_opacity": opacity}
+    for column in (
+        col.sparkline("series", type="area", fill_opacity=opacity),
+        col.array("series").sparkline(**options),
+        {"name": "series", "viz": "sparkline", "sparkline_options": options},
+    ):
+        table = EvidentialTable([{"series": [0, 3, -2]}], columns=[column])
+        assert table.columns[0]["sparkline_options"] == options
+
+
+@pytest.mark.parametrize("opacity", [-0.1, 1.1, math.nan, math.inf, True, (), (0,), (0, 1, 0), (-1, 1), (0, 2), "fade"])
+def test_invalid_area_opacity_fails_on_both_paths(opacity):
+    with pytest.raises((ValueError, TypeError)):
+        col.sparkline("series", type="area", fill_opacity=opacity)
+    with pytest.raises((ValueError, TypeError)):
+        EvidentialTable(
+            [{"series": [1]}],
+            columns=[
+                {
+                    "name": "series",
+                    "viz": "sparkline",
+                    "sparkline_options": {"type": "area", "fill_opacity": opacity},
+                }
+            ],
+        )
+
+
+@pytest.mark.parametrize("style", ["line", "bar", "points", "change"])
+def test_fill_opacity_is_area_only(style):
+    with pytest.raises(ValueError, match="fill_opacity requires"):
+        col.sparkline("series", type=style, fill_opacity=0.4)
+
+
+def test_changing_area_style_requires_removing_area_only_options():
+    area = col.sparkline("series", type="area", fill_opacity=(0, 0.5))
+    with pytest.raises(ValueError, match="fill_opacity requires"):
+        area.sparkline(type="line")
+
+
 @pytest.mark.parametrize("style", ["line", "area", "bar", "points", "change"])
 def test_fluent_factory_and_mapping_gradients_share_one_color_declaration(style):
     colors = {"color_scale": ["red", "gray", "blue"], "min": -4, "max": 9, "midpoint": 0}

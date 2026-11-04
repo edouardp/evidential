@@ -207,7 +207,8 @@ export function createColorScale(values, options) {
   if (stops) {
     const stopColors = stops.map((s) => s.color);
     const stopValues = stops.map((s) => s.value);
-    const scale = chroma.scale(stopColors).domain(stopValues).mode(mode);
+    // Chroma's quantized cache can conflate close stops used for thresholds.
+    const scale = chroma.scale(stopColors).domain(stopValues).mode(mode).cache(false);
     return {
       scale,
       kind: "stops",

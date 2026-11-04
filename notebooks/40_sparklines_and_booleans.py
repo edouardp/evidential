@@ -22,7 +22,7 @@ app = marimo.App(width="full")
 def _():
     import marimo as mo
 
-    from evidential import EvidentialTable, col, settings
+    from evidential import EvidentialTable, col
 
     return EvidentialTable, col, mo
 
@@ -183,14 +183,15 @@ def gradient_doc(mo):
     )
     ```
 
-    Bars and dots look up their own y value. Each line segment, and its area
-    fill, takes the color of its starting observation. Missing values leave
-    gaps. Without fixed bounds, all matching rows supply the gradient's range
+    Bars and dots look up their own y value. Lines and areas use a vertical
+    gradient: the color at a given height is the same everywhere in the chart,
+    including along a slope between observations. Missing values leave gaps. Without fixed bounds, all matching rows supply the gradient's range
     before pagination. Reuse `.domain(...)` to share a range and palette with
     other columns.
 
-    A data object's `color` overrides the lookup; the last row highlights one
-    observation in purple. Visible markers may also use `marker_color=`.
+    A data object's `color` overrides bars, dots and change markers; the last
+    row highlights one observation in purple. It never colors an outgoing line
+    segment. For a line/area, enable markers to show an observation's color. Visible markers may also use `marker_color=`.
     Change sparklines still map their entire `steady` interval to the middle
     color. Other styles use the normal linear or diverging lookup; an explicit
     `stops=[{"value": ..., "color": ...}, ...]` works just as it does for cells.
@@ -227,14 +228,139 @@ def gradient_sparklines(EvidentialTable, col, gradient_rows, mo):
                 .color(scale=["#b2182b", "#b8bcc2", "#2166ac"], min=-10, max=10, midpoint=0),
             col.sparkline("values", title="Line", type="line", markers=True, width=150, height=30)
                 .color(scale=["#b2182b", "#b8bcc2", "#2166ac"], min=-10, max=10, midpoint=0),
-            col.sparkline("values", title="Area", type="area", width=150, height=30)
+            col.sparkline("values", title="Area", type="area", fill_opacity=0.5, width=150, height=30)
                 .color(scale=["#b2182b", "#b8bcc2", "#2166ac"], min=-10, max=10, midpoint=0),
             col.sparkline("values", title="Change", type="change", steady=(-1, 1), width=150, height=30)
                 .color(scale=["#b2182b", "#b8bcc2", "#2166ac"], min=-10, max=10),
         ],
     ))
     gradient_table
-    return (gradient_table,)
+    return
+
+
+@app.cell
+def vertical_area_doc(mo):
+    mo.md("""
+    ## Vertical area colors: fades, thresholds and anomalies
+
+    These illustrative series show four uses of the same vertical paint. A
+    constant green outline with `fill_opacity=(0, 0.65)` fades from transparent
+    at the baseline to 65% opacity at the edge. The baseline is `reference=`
+    (zero by default), clamped to the plotted range with `fit_to_data=True`.
+
+    `.color(stops=...)` gives explicit colors at y values. Closely spaced stops
+    make the transition at 40 sharp, so only the portion **above** 40 is red.
+    Likewise, anomaly fills can switch at zero or use several severity bands.
+    Alpha in a stop is preserved; `fill_opacity` multiplies it. The plain area
+    default is 0.22 opacity; a color gradient defaults to 1 so its alpha stops
+    determine the fill. `fill_opacity` only affects the area, never its outline.
+
+    Color bounds do not constrain height: an anomaly of 3 with color endpoints
+    -1 and 1 still plots at 3, using the endpoint color at 1. The last column
+    demonstrates this clamping with a transparent zero stop.
+    """)
+    return
+
+
+@app.cell
+def vertical_area_data():
+    area_profiles = [
+        {"series": "Coastal", "stock": [2952, 3150, 3070, 3290, 3210, 3380, 3731, 3450, 3372],
+         "threshold": [0, 27, 19, 35, 24, 45, 29, 53, 31, 41, 20],
+         "anomaly": [0, 0.7, 1.5, 0.4, -0.8, -2.4, -0.5, 0.6, 2.8, 1.2, -0.3]},
+        {"series": "Inland", "stock": [3120, 3240, 3190, 3350, 3310, 3430, 3490, 3280, 3400],
+         "threshold": [12, 36, 43, 25, 39, 47, 21, 32, 46, 28, 17],
+         "anomaly": [1.2, -0.2, -1.8, -0.4, 1.1, 2.2, 0.3, -1.3, -0.5, 1.8, 0.8]},
+        {"series": "Highland", "stock": [3080, 3200, None, 3310, 3420, 3350, 3550, 3460, 3510],
+         "threshold": [7, 28, 38, None, 44, 23, 34, 48, 30, 40, 24],
+         "anomaly": [-1.5, 0.2, 2.4, None, 0.5, -0.7, -2.1, -0.2, 1.7, 0.6, -0.9]},
+    ]
+    return (area_profiles,)
+
+
+@app.cell
+def vertical_area_sparklines(EvidentialTable, area_profiles, col, mo):
+    vertical_area_table = mo.ui.anywidget(EvidentialTable(
+        area_profiles,
+        title="Color follows height, not the next observation",
+        subtitle="Illustrative series · stock-style fade, threshold at 40, signed bands, and clamped alpha gradient",
+        border=False,
+        row_lines=False,
+        columns=[
+            col.text("series"),
+            col.sparkline("stock", title="Baseline fade", type="area", color="#00a878",
+                          fit_to_data=True, fill_opacity=(0, 0.65), width=150, height=36),
+            col.sparkline("threshold", title="Above 40", type="area", fill_opacity=0.7, width=150, height=36)
+                .color(stops=[
+                    {"value": 0, "color": "#20af4b"},
+                    {"value": 40, "color": "#20af4b"},
+                    {"value": 40.001, "color": "#ed1c24"},
+                    {"value": 60, "color": "#ed1c24"},
+                ]),
+            col.sparkline("anomaly", title="Severity bands", type="area", reference=0,
+                          fill_opacity=0.8, width=150, height=36)
+                .color(stops=[
+                    {"value": -3, "color": "#e66b13"}, {"value": -1, "color": "#e66b13"},
+                    {"value": -0.999, "color": "#ffe49a"}, {"value": -0.001, "color": "#ffe49a"},
+                    {"value": 0, "color": "#cae9c2"}, {"value": 0.999, "color": "#cae9c2"},
+                    {"value": 1, "color": "#6dc3cd"}, {"value": 3, "color": "#6dc3cd"},
+                ]),
+            col.sparkline("anomaly", title="Clamped gradient", type="area", reference=0, width=150, height=36)
+                .color(stops=[
+                    {"value": -1, "color": "#ff7f50"},
+                    {"value": 0, "color": "#ffffff00"},
+                    {"value": 1, "color": "#4682b4"},
+                ]),
+        ],
+    ))
+    vertical_area_table
+    return
+
+
+@app.cell
+def fade_threshold_doc(mo):
+    mo.md("""
+    ## Transparent to green, then red above 40
+
+    This area uses one vertical gradient: transparent green at zero, fully
+    opaque green at 40, then red above 40. The very small interval from 40 to
+    40.001 makes the switch sharp. Only the portion of a peak above that height
+    is red; everything below it still fades from transparent to green.
+
+    ```python
+    col.sparkline("threshold", type="area").color(stops=[
+        {"value": 0, "color": "#20af4b00"},
+        {"value": 40, "color": "#20af4b"},
+        {"value": 40.001, "color": "#ed1c24"},
+        {"value": 60, "color": "#ed1c24"},
+    ])
+    ```
+    """)
+    return
+
+
+@app.cell
+def fade_threshold_sparklines(EvidentialTable, area_profiles, col, mo):
+    fade_threshold_table = mo.ui.anywidget(EvidentialTable(
+        area_profiles,
+        title="Transparent → green → red",
+        subtitle="Illustrative series · green reaches full opacity at 40; peaks turn red above 40",
+        border=False,
+        row_lines=False,
+        stretch=False,
+        columns=[
+            col.text("series"),
+            col.sparkline("threshold", title="Fade, then threshold", type="area", width=240, height=48)
+                .color(stops=[
+                    {"value": 0, "color": "#20af4b00"},
+                    {"value": 40, "color": "#20af4b"},
+                    {"value": 40.001, "color": "#ed1c24"},
+                    {"value": 60, "color": "#ed1c24"},
+                ]),
+        ],
+    ))
+    fade_threshold_table
+    return
 
 
 @app.cell

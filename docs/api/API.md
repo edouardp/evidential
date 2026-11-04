@@ -628,7 +628,7 @@ columns=[
   show_symbol=, symbol_position=)`. Green for up, red for down, a grey dash
   inside `neutral_range`.
 - **Sparkline** — `.sparkline(type="line"|"area"|"bar"|"points"|"change", x=, y=,
-  color=, fit_to_data=, y_fmt=, width=, height=, markers=, marker_color=, signed=,
+  color=, fit_to_data=, y_fmt=, width=, height=, markers=, marker_color=, signed=, fill_opacity=,
   reference=, reference_color=, delta=, steady=, color_scale=, color_domain=)`
   over an array column. `type="points"` draws only markers; `markers=True` adds a
   dot at every point and `markers="ends"` only the endpoints; a per-point
@@ -673,13 +673,37 @@ columns=[
   and explicit stops reuse the scalar cell-color lookup. `.domain(...)` shares
   coordinates and optional palettes with other columns, including heatmaps.
 
-  Bars and dots use their own observation color. Each line segment and its area
-  fill uses the starting observation's color; missing observations leave gaps.
-  A structured observation's `color` overrides lookup for every style. Visible
-  markers use observation color, then `marker_color`, then gradient or overall
-  color. Tooltips use matching swatches. Explicit colors/gradients override the
-  default signed-area fills; area opacity is unchanged. Constant `color=` and
-  gradient settings are mutually exclusive. Row-level `scale_column` and
+  Bars and dots use their own observation color. Lines and areas use a
+  **vertical gradient in data-y space**: the color at any height is the same
+  across the chart, including between observations. A peak above a threshold
+  can have a red tip while the area below the threshold stays green. Missing
+  observations leave gaps. Closely spaced explicit stops make sharp bands.
+  A structured observation's `color` overrides bars, dots and change markers;
+  for lines/areas it applies only to visible markers, never outgoing intervals.
+  Visible markers use observation color, then `marker_color`, then gradient or
+  overall color. Tooltips use matching swatches. Gradients override the default
+  signed-area fills.
+
+  Area-only `fill_opacity=` accepts an opacity from 0 to 1 or a
+  `(baseline_opacity, edge_opacity)` pair. The pair ramps from the baseline
+  (`reference`, zero by default, clamped to the plotted range) toward both ends
+  of the plotted y range. It leaves the outline unchanged and multiplies any
+  alpha in the color lookup. Plain areas default to 0.22 opacity; gradient
+  areas default to 1, preserving their declared alpha stops.
+
+  ```python
+  # A solid green outline, transparent at the baseline, stronger toward the edge.
+  col.sparkline("history", type="area", color="#00a878", fill_opacity=(0, 0.6))
+  # Transparent to green up to 40, then red above it.
+  col.sparkline("history", type="area").color(stops=[
+      {"value": 0, "color": "#20af4b00"},
+      {"value": 40, "color": "#20af4b"},
+      {"value": 40.001, "color": "#ed1c24"},
+      {"value": 60, "color": "#ed1c24"},
+  ])
+  ```
+
+  Constant `color=` and gradient settings are mutually exclusive. Row-level `scale_column` and
   `conditional_colors` do not apply to sparkline arrays. Existing sparkline
   `color_scale=`/`color_domain=` options remain supported; prefer `.color(...)`
   for new examples and do not supply conflicting declarations.
@@ -1279,7 +1303,7 @@ other than `auto`, `merge`, `group` and `subcolumns` return a `Column`;
 | `col.color(name, *, title=, **options)` | colour scale |
 | `col.chip(name, *, min_width=, conditional_colors=, scale=, min=, max=, midpoint=, **extra)` | pill |
 | `col.delta(name, *, down_is_good=, neutral_range=, chip=)` | change indicator |
-| `col.sparkline(name, *, type="line"\|"area"\|"bar"\|"points"\|"change", x=, y=, color=, fit_to_data=, reference=, reference_color=, y_fmt=, width=, height=, markers=, marker_color=, signed=, delta=, steady=, color_scale=, color_domain=, title=)` | trend |
+| `col.sparkline(name, *, type="line"\|"area"\|"bar"\|"points"\|"change", x=, y=, color=, fit_to_data=, reference=, reference_color=, y_fmt=, width=, height=, markers=, marker_color=, signed=, fill_opacity=, delta=, steady=, color_scale=, color_domain=, title=)` | trend |
 | `col.symbols(name, *, symbol=, shape=, empty=, max=, image=, color=, empty_color=, size=, gap=, align=, title=)` | repeated symbols |
 | `col.rating(name, *, max=5, symbol="★", empty="☆", color="#f59e0b")` | star rating |
 | `col.repeat(name, **options)` | alias for `symbols` |

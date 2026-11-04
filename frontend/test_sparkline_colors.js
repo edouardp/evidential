@@ -28,33 +28,50 @@ test("bars and points look up their own y, including explicit observation color 
   }
 });
 
-test("line intervals and area fills take the starting observation's color without bridging missing values", () => {
+test("continuous lines/areas use one vertical y gradient per run without bridging gaps", () => {
   for (const type of ["line", "area"]) {
     const col = column(type);
     const source = [{x: 0, y: -4}, {x: 10, y: 0, color: "tab:green"}, {x: 20, y: 8},
       {x: 30, y: null}, {x: 40, y: 8}, {x: 50, y: 0}];
     const svg = renderSparkline(col, source);
     const lines = [...svg.querySelectorAll("polyline")];
-    assert.deepEqual(lines.map(line => line.getAttribute("stroke")), ["#ff0000", "#2ca02c", "#0000ff"]);
-    assert.ok(lines.every(line => line.getAttribute("points").split(" ").length === 2));
-    assert.equal(svg.querySelectorAll("polygon").length, type === "area" ? 3 : 0);
+    assert.deepEqual(lines.map(line => line.getAttribute("points").split(" ").length), [3, 2]);
+    assert.equal(lines[0].getAttribute("stroke"), lines[1].getAttribute("stroke"));
+    assert.match(lines[0].getAttribute("stroke"), /^url\(#et-sparkline-gradient-/);
+    const gradient = svg.querySelector("linearGradient");
+    assert.equal(gradient.getAttribute("gradientUnits"), "userSpaceOnUse");
+    assert.equal(gradient.getAttribute("y1"), "28.5");
+    assert.equal(gradient.getAttribute("y2"), "1.5");
+    assert.equal(gradient.firstElementChild.getAttribute("stop-color"), "#ff0000");
+    assert.equal(gradient.lastElementChild.getAttribute("stop-color"), "#0000ff");
+    const midpoint = [...gradient.children].find(stop => Number(stop.getAttribute("offset")) === 1 / 3);
+    assert.equal(midpoint.getAttribute("stop-color"), "#808080");
+    assert.equal(svg.querySelectorAll("polygon").length, type === "area" ? 2 : 0);
     if (type === "area") {
-      assert.deepEqual([...svg.querySelectorAll("polygon")].map(area => area.getAttribute("fill")),
-        ["#ff0000", "#2ca02c", "#0000ff"]);
-      assert.ok([...svg.querySelectorAll("polygon")].every(area => area.getAttribute("opacity") === "0.22"));
+      const areas = [...svg.querySelectorAll("polygon")];
+      assert.equal(areas[0].getAttribute("fill"), areas[1].getAttribute("fill"));
+      assert.match(areas[0].getAttribute("fill"), /^url\(#/);
+      assert.ok(areas.every(area => area.getAttribute("opacity") === "1"));
     }
+    // No green outgoing interval or invisible green tooltip swatch.
+    assert.equal(inspectionData(svg.querySelectorAll("circle")[1]).color, "#808080");
     assert.doesNotMatch(svg.outerHTML, /NaN|Infinity/);
   }
 });
 
-test("per-observation colors also work without a gradient, and do not become x labels", () => {
+test("explicit observation colors belong to discrete marks, not outgoing intervals", () => {
   const source = [{y: 1, color: "red"}, {y: 2, color: "blue"}, {y: 3, color: "green"}];
   assert.deepEqual(sparklinePoints(source, {}).map(([x]) => x), [0, 1, 2]);
   for (const type of ["bar", "points", "change", "line", "area"]) {
-    const svg = renderSparkline(column(type, {color_options: {}}), source);
-    const marks = [...svg.querySelectorAll(type === "points" ? "circle" : ["line", "area"].includes(type) ? "polyline" : "rect")];
-    assert.equal(marks[0].getAttribute(["line", "area"].includes(type) ? "stroke" : "fill"), "red");
-    assert.equal(marks[1].getAttribute(["line", "area"].includes(type) ? "stroke" : "fill"), "blue");
+    const continuous = ["line", "area"].includes(type);
+    const svg = renderSparkline(column(type, {color_options: {}, sparkline_options: {type, markers: true}}), source);
+    const marks = [...svg.querySelectorAll(continuous || type === "points" ? "circle" : "rect")];
+    assert.equal(marks[0].getAttribute("fill"), "red");
+    assert.equal(marks[1].getAttribute("fill"), "blue");
+    if (continuous) {
+      assert.equal(svg.querySelectorAll("polyline").length, 1);
+      assert.match(svg.querySelector("polyline").getAttribute("stroke"), /--et-accent/);
+    }
   }
 });
 
@@ -107,7 +124,8 @@ test("shared domains reuse a scalar palette and inferred bounds even with hidden
 test("marker overrides and signed area defaults retain their precedence while gradients use y values", () => {
   const col = column("area", {sparkline_options: {type: "area", signed: true, markers: true, marker_color: "black"}});
   const svg = renderSparkline(col, values);
-  assert.deepEqual([...svg.querySelectorAll("polygon")].map(area => area.getAttribute("fill")), ["#ff0000", "#808080"]);
+  assert.equal(svg.querySelectorAll("polygon").length, 1);
+  assert.match(svg.querySelector("polygon").getAttribute("fill"), /^url\(#/);
   assert.ok([...svg.querySelectorAll("circle")].every(dot => dot.getAttribute("fill") === "black"));
   const plain = renderSparkline({...col, color_options: {}, sparkline_options: {type: "area", signed: true}}, values);
   assert.equal(plain.querySelectorAll("polygon").length, 2);
@@ -131,4 +149,54 @@ test("gradient bounds affect only color, not bar geometry or the explicit refere
     ["x", "y", "width", "height"].map(name => rect.getAttribute(name)));
   assert.deepEqual(attributes(renderSparkline(col, [-10, 0, 20])),
     attributes(renderSparkline({...col, color_options: {}}, [-10, 0, 20])));
+});
+
+test("vertical paints clamp independently of geometry and retain narrow threshold anchors", () => {
+  const col = column("area", {color_options: {color_stops: [
+    {value: -1, color: "#00800000"}, {value: 0.4, color: "green"},
+    {value: 0.40001, color: "red"}, {value: 1, color: "red"},
+  ]}});
+  const svg = renderSparkline(col, [-3, 3]);
+  const gradient = svg.querySelector("linearGradient");
+  assert.equal(gradient.firstElementChild.getAttribute("stop-opacity"), "0");
+  assert.equal(gradient.lastElementChild.getAttribute("stop-color"), "#ff0000");
+  assert.equal(gradient.lastElementChild.getAttribute("stop-opacity"), "1");
+  const anchors = [...gradient.children].filter(stop => {
+    const value = Number(stop.getAttribute("offset")) * 6 - 3;
+    return Math.abs(value - 0.4) < 0.00002;
+  });
+  assert.deepEqual(anchors.map(stop => stop.getAttribute("stop-color")), ["#008000", "#ff0000"]);
+  assert.equal(gradient.getAttribute("y1"), "28.5");
+  assert.equal(gradient.getAttribute("y2"), "1.5");
+  // Observed +/-3 remain at the chart extrema; color endpoints do not clip them.
+  assert.equal(svg.querySelector("polyline").getAttribute("points"), "1.5,28.5 98.5,1.5");
+});
+
+test("area opacity ramps from the reference toward both edges while the outline stays solid", () => {
+  const svg = renderSparkline(column("area", {color_options: {}, sparkline_options: {
+    type: "area", color: "green", reference: 1, fill_opacity: [0, 0.6], width: 100, height: 30,
+  }}), [-3, 0, 5]);
+  assert.equal(svg.querySelector("polyline").getAttribute("stroke"), "green");
+  const stops = [...svg.querySelectorAll("stop")];
+  assert.equal(stops[0].getAttribute("stop-opacity"), "0.6");
+  assert.equal(stops.at(-1).getAttribute("stop-opacity"), "0.6");
+  assert.equal(stops.find(stop => stop.getAttribute("offset") === "0.5").getAttribute("stop-opacity"), "0");
+  // A fixed opacity multiplies alpha in a color lookup, instead of replacing it.
+  const alpha = renderSparkline(column("area", {color_options: {color_scale: ["#00ff0080", "#0000ff80"], min: 0, max: 5},
+    sparkline_options: {type: "area", fill_opacity: 0.5}}), [0, 5]);
+  const fillId = alpha.querySelector("polygon").getAttribute("fill").slice(5, -1);
+  assert.equal(Number(alpha.querySelector(`[id="${fillId}"] stop`).getAttribute("stop-opacity")), 0.25);
+});
+
+test("gradient ids remain unique across widgets and constant, horizontal, and isolated runs stay finite", () => {
+  const ids = new Set();
+  for (const values of [[3, 3], [-3, null, 3], [0], [3, null, 3]]) {
+    const svg = renderSparkline(column("area"), values);
+    assert.doesNotMatch(svg.outerHTML, /NaN|Infinity/);
+    for (const gradient of svg.querySelectorAll("linearGradient")) {
+      assert.ok(!ids.has(gradient.id));
+      ids.add(gradient.id);
+    }
+    assert.equal(svg.querySelectorAll("polyline").length, values.includes(null) ? 2 : 1);
+  }
 });

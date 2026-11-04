@@ -162,9 +162,17 @@ Notebook 48 prints the values beside two-/three-/four-sector examples.
   This colors the graphic, not the cell background. Inferred bounds pool
   matching details before pagination. Color bounds alone do not change geometry.
   A shared `.domain(...)` can also share the palette.
-- Each line/area interval takes its starting observation's color. An observation
-  `color` key overrides lookup for every style; `marker_color` overrides lookup
-  for visible markers. Missing observations leave gaps.
+- Lines/areas use a vertical gradient in data-y space, including between
+  observations. Explicit alpha stops allow transparent baselines; closely spaced
+  stops create sharp threshold bands. Colors beyond fixed endpoints clamp
+  without clipping the data. Missing observations leave gaps.
+- An observation `color` key overrides bars, dots and change markers. For
+  lines/areas it colors visible markers only, never an outgoing interval.
+  `marker_color` overrides lookup for visible markers, after observation colors.
+- Area-only `fill_opacity=0.5` sets a fixed opacity; `fill_opacity=(0, 0.6)`
+  fades from transparent at the reference/zero baseline toward 60% opacity at
+  each plotted y edge, leaving the outline unchanged. It multiplies color-stop
+  alpha. Plain fills default to 0.22; gradients default to 1 to honor alpha.
 - Change gradients keep the whole steady interval at the palette midpoint,
   even on asymmetric domains. Fixed bounds must contain it. Explicit stops
   instead define a direct y lookup. Legacy `color_scale`/`color_domain` options

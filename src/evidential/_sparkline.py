@@ -16,6 +16,14 @@ def normalize_sparkline_options(options: Mapping[str, Any]) -> dict[str, Any]:
     if "reference_color" in spec and "reference" not in spec:
         raise ValueError("sparkline reference_color requires reference")
     change = spec.get("type", "line") == "change"
+    if "fill_opacity" in spec:
+        if spec.get("type", "line") != "area":
+            raise ValueError("sparkline fill_opacity requires type='area'")
+        opacity = spec["fill_opacity"]
+        values = (opacity,) if isinstance(opacity, (int, float)) else opacity
+        if any(isinstance(value, bool) or not math.isfinite(value) or not 0 <= value <= 1 for value in values):
+            raise ValueError("sparkline fill_opacity must contain finite opacities between 0 and 1")
+        spec["fill_opacity"] = opacity if isinstance(opacity, (int, float)) else tuple(opacity)
     if not change and {"delta", "steady"}.intersection(spec):
         raise ValueError("delta and steady require sparkline type='change'")
     if change and "reference" in spec:

@@ -17,7 +17,8 @@ export function sparklineColorScale(column, values = [], sharedRange, defaultPal
     const scale = buildDomainColorScale({...domain, midpoint: domain.midpoint ?? colors.midpoint}, sharedRange,
       palette || defaultPalette, colors.scale_mode);
     const constant = !domain.neutral_range && sharedRange.min === sharedRange.max;
-    return value => getColorForValue(constant ? (scale.minValue + scale.maxValue) / 2 : value, scale);
+    return colorLookup(scale, constant, domain.neutral_range
+      ? [sharedRange.min, ...domain.neutral_range, sharedRange.max] : undefined);
   }
   if (change && !colors.color_stops) {
     const steady = opts.steady || [0, 0];
@@ -33,7 +34,15 @@ export function sparklineColorScale(column, values = [], sharedRange, defaultPal
     colorStops: colors.color_stops, min, max, midpoint: colors.midpoint, mode: colors.scale_mode});
   if (!scale) return null;
   const constant = !colors.color_stops && min == null && max == null && values.length && values.every(value => value === values[0]);
-  return value => getColorForValue(constant ? (scale.minValue + scale.maxValue) / 2 : value, scale);
+  return colorLookup(scale, constant);
+}
+
+/** Keep palette anchors available to the SVG painter, including narrow bands. */
+function colorLookup(scale, constant, anchors) {
+  const lookup = value => getColorForValue(constant ? (scale.minValue + scale.maxValue) / 2 : value, scale);
+  lookup.breakpoints = anchors || (scale.domain.length === scale.colorPalette.length ? scale.domain
+    : scale.colorPalette.map((_, index) => scale.minValue + index / (scale.colorPalette.length - 1) * (scale.maxValue - scale.minValue)));
+  return lookup;
 }
 
 /** Cache inferred color bounds over matching detail rows, before pagination. */

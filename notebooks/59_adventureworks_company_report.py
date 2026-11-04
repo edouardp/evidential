@@ -328,12 +328,14 @@ def tables(EvidentialTable, col, label, rows):
                 col.percent("discount_rate", decimals=1),
                 col.sparkline(
                     "monthly_sales",
+                    type="area",
                     x="date",
                     y="value",
                     y_fmt="usd0",
                     width=110,
                     height=24,
                     color="#39799b",
+                    fill_opacity=(0, 0.6),
                     title="Monthly sales",
                 ),
             ],
@@ -506,8 +508,9 @@ def product_introduction(mo):
     ## 4 · Product portfolio and pricing
 
     Category sections contain subcategory detail. Sales shares use the complete
-    selection, not just the visible page. Sparklines run oldest to newest across
-    the selected months; their vertical scales fit each subcategory, so compare
+    selection, not just the visible page. Area sparklines run oldest to newest
+    across the selected months, fading from transparent at zero toward blue
+    beneath a solid outline. Their vertical scales fit each subcategory, so compare
     their shape rather than their height. Zero means no sales in an observed
     month. Discounts are the reduction from pre-discount line value, not a
     reduction from the current product list price.

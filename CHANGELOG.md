@@ -13,6 +13,18 @@ project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   Inputs, editable controls and graphic tooltip inspection keep their own keys;
   an active tooltip consumes the first Escape before the modal closes.
 
+### Fixed
+
+- Line and area sparkline colors now follow a continuous vertical y-value
+  gradient instead of solid outgoing intervals. Alpha stops, clamped endpoints,
+  sharp threshold bands and gaps are preserved; observation colors apply to
+  individual markers. Area-only `fill_opacity` accepts a fixed opacity or a
+  `(baseline, edge)` fade, leaving the outline unchanged. Closely spaced
+  explicit color stops no longer collide in the color lookup's cache.
+  Notebook 40 demonstrates fades, severity bands and transparent-to-green areas
+  that turn red above 40; the README sparkline example is updated.
+  The AdventureWorks Product portfolio uses blue baseline-fade area sparklines.
+
 ## 0.2.2 (2026-11-04)
 
 ### Added

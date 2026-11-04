@@ -966,13 +966,16 @@ columns=[
 Show a series as a line, area, bars, points or increase/steady/decrease marks.
 Use `.color(scale="viridis", min=0, max=12)` to color observations by their
 y value with the same gradient API as cell backgrounds. Bars and dots use
-their own value; line/area segments use their starting observation.
+their own value; lines and areas use a continuous vertical gradient.
+For a solid outline and a baseline fade, use `fill_opacity=(0, 0.5)`.
 
 ```python
 columns=[
     col.text("series"),
-    col.sparkline("line", type="line", width=110, height=30),
-    col.sparkline("area", type="area", fit_to_data=True, width=110, height=30),
+    col.sparkline("line", type="line", width=110, height=30)
+        .color(scale="viridis", min=0, max=12),
+    col.sparkline("area", type="area", color="#00a878", fill_opacity=(0, 0.6),
+                  fit_to_data=True, width=110, height=30),
     col.sparkline("bar", type="bar", width=110, height=30)
         .color(scale="viridis", min=0, max=12),
     col.sparkline("points", type="points", width=110, height=30, markers=True)

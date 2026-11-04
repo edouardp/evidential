@@ -6,6 +6,7 @@ import { sparklinePoints } from "./sparkline-data.js";
 import { renderChangeSparkline } from "./change-sparkline.js";
 import { observationColor, resolveColor } from "./color.js";
 import { sparklineColorScale } from "./sparkline-colors.js";
+import { verticalGradient } from "./sparkline-gradient.js";
 
 export { sparklinePoints } from "./sparkline-data.js";
 
@@ -53,7 +54,6 @@ export function renderSparkline(col, value, preparedColor, sharedRange) {
 
   const color = resolveColor(opts.color) || "var(--et-accent, #2563eb)";
   const pointColor = point => observationColor(point.source) || lookup?.(point.raw[1]) || color;
-  const multicolor = !!lookup || present.some(point => observationColor(point[2]));
   const svgNS = "http://www.w3.org/2000/svg";
   const svg = document.createElementNS(svgNS, "svg");
   svg.setAttribute("class", "et-sparkline");
@@ -87,6 +87,13 @@ export function renderSparkline(col, value, preparedColor, sharedRange) {
   }
 
   const type = opts.type || "line";
+  const gradientGeometry = {min, max, origin, top: pad, bottom: height - pad};
+  const stroke = lookup && (type === "line" || type === "area")
+    ? verticalGradient(svg, lookup, gradientGeometry) : color;
+  const fillOpacity = opts.fill_opacity ?? (lookup ? 1 : 0.22);
+  const areaPaint = fill => lookup && fillOpacity === 1 ? stroke
+    : lookup || Array.isArray(fillOpacity)
+      ? verticalGradient(svg, lookup || (() => fill), {...gradientGeometry, opacity: fillOpacity}) : fill;
   const showMarkers = !!opts.markers || type === "points";
   const endsOnly = opts.markers === "ends";
   if (type === "bar") {
@@ -118,21 +125,21 @@ export function renderSparkline(col, value, preparedColor, sharedRange) {
       } else segment.push(point);
     }
     if (segment.length) segments.push(segment);
-    const runs = multicolor ? segments.flatMap(run => run.length === 1 ? [run]
-      : run.slice(0, -1).map((point, index) => [point, run[index + 1]])) : segments;
-    for (const run of runs) {
-      // Each interval belongs to its starting observation. Color lookup uses
-      // that observation's y, rather than its screen x or the area baseline.
-      const stroke = pointColor(run[0]);
+    // Every contiguous run uses the same y-space paint, including across gaps.
+    const signed = opts.signed && !lookup;
+    const fill = type === "area" ? areaPaint(color) : null;
+    const negativeFill = type === "area" && signed ? areaPaint("var(--et-negative, #dc2626)") : null;
+    const opacity = lookup || Array.isArray(fillOpacity) ? 1 : fillOpacity;
+    for (const run of segments) {
       const linePoints = run.map((point) => `${point.x},${point.y}`).join(" ");
       if (type === "area") {
-        if (opts.signed && !lookup && !observationColor(run[0].source)) {
+        if (signed) {
           // Split the fill at the reference (zero by default).
           const split = baselineCrossings(run, baseline);
-          addArea(svgNS, svg, split, baseline, (point) => Math.min(point.y, baseline), color);
-          addArea(svgNS, svg, split, baseline, (point) => Math.max(point.y, baseline), "var(--et-negative, #dc2626)");
+          addArea(svgNS, svg, split, baseline, (point) => Math.min(point.y, baseline), fill, opacity);
+          addArea(svgNS, svg, split, baseline, (point) => Math.max(point.y, baseline), negativeFill, opacity);
         } else {
-          addArea(svgNS, svg, run, baseline, (point) => point.y, stroke);
+          addArea(svgNS, svg, run, baseline, (point) => point.y, fill, opacity);
         }
       }
       const poly = document.createElementNS(svgNS, "polyline");
@@ -157,9 +164,9 @@ export function renderSparkline(col, value, preparedColor, sharedRange) {
     dot.setAttribute("r", visible ? "2.2" : "2.5");
     dot.setAttribute("fill", visible ? markerColor : "transparent");
     dot.append(tooltip(point.raw));
-    const tooltipColor = type === "area" && opts.signed && !lookup && !perPoint && !visible
+    const tooltipColor = type === "area" && opts.signed && !lookup && !visible
       ? point.raw[1] < (reference ?? 0) ? "var(--et-negative, #dc2626)" : color
-      : visible ? markerColor : pointColor(point);
+      : visible ? markerColor : type === "bar" ? pointColor(point) : lookup?.(point.raw[1]) || color;
     inspectable(dot, observationTooltip(point.raw[0], point.raw[1], opts.y_fmt, point.source, tooltipColor,
       [opts.x, opts.y, "x", "y", "value"]), {priority: 3});
     svg.append(dot);
@@ -182,7 +189,7 @@ function baselineCrossings(points, baseline) {
 }
 
 /** Add an area polygon under a sparkline, following a per-point baseline clip. */
-function addArea(svgNS, svg, scaled, baseline, clip, fill) {
+function addArea(svgNS, svg, scaled, baseline, clip, fill, opacity) {
   const area = document.createElementNS(svgNS, "polygon");
   const points = scaled.map((point) => `${point.x},${clip(point)}`).join(" ");
   area.setAttribute(
@@ -190,6 +197,6 @@ function addArea(svgNS, svg, scaled, baseline, clip, fill) {
     `${points} ${scaled[scaled.length - 1].x},${baseline} ${scaled[0].x},${baseline}`,
   );
   area.setAttribute("fill", fill);
-  area.setAttribute("opacity", "0.22");
+  area.setAttribute("opacity", String(opacity));
   svg.append(area);
 }

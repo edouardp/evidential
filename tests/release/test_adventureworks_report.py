@@ -117,6 +117,11 @@ def test_notebook_executes_with_real_widget_types_and_local_map_geometry(adventu
         assert definitions["default_year"] == 2024
         assert len(definitions["report_tables"]) == 7
         assert all(table.rows for table in definitions["report_tables"].values())
+        monthly = next(
+            column for column in definitions["report_tables"]["products"].columns if column["name"] == "monthly_sales"
+        )
+        assert monthly["sparkline_options"]["type"] == "area"
+        assert monthly["sparkline_options"]["fill_opacity"] == (0, 0.6)
         assert definitions["country_map"].__class__.__name__ == "ObservablePlot"
         assert definitions["country_map"].version == "0.6.17"
         world = json.loads((NOTEBOOK.parent / "sample_data/adventureworks/world-110m.geojson").read_text())

@@ -1,5 +1,6 @@
 """The full company report updates stable tables and its Observable Plot map."""
 
+import re
 from pathlib import Path
 
 import pytest
@@ -24,6 +25,12 @@ def test_company_report_filters_folded_sections_and_observable_map(page, adventu
         expect(scorecard.locator("tbody tr").first).to_contain_text("$600")
         expect(chart.locator('svg[width="1050"]')).to_be_visible(timeout=60_000)
         expect(chart.locator(".observable-plot-error")).not_to_be_visible()
+        spark = products.locator("tbody .et-sparkline").first
+        expect(spark.locator("polygon")).to_have_attribute("fill", re.compile(r"url\(#et-sparkline-gradient-"))
+        expect(spark.locator("polyline")).to_have_attribute("stroke", "#39799b")
+        stops = spark.locator("linearGradient stop")
+        expect(stops.first).to_have_attribute("stop-opacity", "0")
+        expect(stops.last).to_have_attribute("stop-opacity", "0.6")
         roots = page.locator(".et-root")
         expect(roots).to_have_count(7)
         for root in roots.all():

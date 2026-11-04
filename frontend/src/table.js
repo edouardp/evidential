@@ -115,7 +115,7 @@ export class EvidentialTableRenderer {
     // table is expanded (the dialog also closes on Esc and a backdrop click).
     this.closeBtn = h("button", {
       class: "et-text-btn et-close-btn", type: "button",
-      title: "Close expanded table", "aria-label": "Close expanded table",
+      title: "Close expanded table (Esc)", "aria-label": "Close expanded table",
       onclick: () => this._viewport.close(),
     });
     this.closeBtn.textContent = "✕";
@@ -143,6 +143,7 @@ export class EvidentialTableRenderer {
         this._expandedProjection = null;
       },
       onRestore: () => { this._state.page = this._inlinePage ?? 0; },
+      advancePage: direction => this._advance(direction),
     });
 
     this.render();
@@ -797,6 +798,8 @@ export class EvidentialTableRenderer {
             type: "button",
             disabled,
             "aria-label": direction === "next" ? "Next page" : "Previous page",
+            title: this._viewport.expanded
+              ? direction === "next" ? "Next page (→)" : "Previous page (←)" : null,
           },
           label,
         );

@@ -45,6 +45,10 @@ def _(mo):
     These map to Evidence's DataTable props: `rowNumbers`, `compact`,
     `rowShading`, `rowLines`, `sort`, `freezeColumns`, `rowConditionalColors`,
     `headerColor`, `emptyMessage`, `link`, and the title/info props.
+
+    Expand a table, then use **Left/Right arrows** for previous/next pages and
+    **Escape** to return to its inline view. Inputs and graphic inspection keep
+    their own keys; Escape dismisses an active tooltip before closing the table.
     """)
     return
 

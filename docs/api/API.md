@@ -1341,6 +1341,12 @@ other than `auto`, `merge`, `group` and `subcolumns` return a `Column`;
 `header_color`, `header_font_color`, `total_row_color`, `total_font_color`,
 `background_color`, `theme`, `color_scale`.
 
+In an expanded table, **Left/Right arrows** show the previous/next page and
+**Escape** closes the expanded view, restoring its inline page and Expand-button
+focus. Inputs and graphic tooltip inspection retain their own arrow keys;
+modified shortcuts are unchanged. Escape dismisses an active tooltip first.
+These page shortcuts apply only inside the expanded dialog, not to inline tables.
+
 ### Module functions
 
 Data sources and constructors: `EvidentialTable`, `LiveEvidentialTable`,

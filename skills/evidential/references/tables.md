@@ -31,6 +31,11 @@ needed. Avoid turning missing values into zero or formatting them in SQL just
 to draw a table. `.raw` is a detached normalized snapshot; it does not reflect
 browser search, sorting or pagination, and does not rerun a live query.
 
+Expanded tables support Left/Right arrows for previous/next measured pages and
+Escape to restore the inline view. Inputs, editable controls and graphic tooltip
+inspection keep their own keys; an active tooltip consumes the first Escape.
+These shortcuts are scoped to the expanded dialog and need no custom binding.
+
 ## Hierarchy and annotations
 
 `col.group` adds a spanner above its children and can nest to multiple levels.

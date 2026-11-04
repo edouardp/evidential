@@ -5,11 +5,30 @@ import { combinePoints } from "./point-clusters.js";
 export class TableViewport {
   constructor({root, dialog, button, placeholder, scroller, getOptions, rerender,
     resetBaseline, getPageSizeOverride, setPageSizeOverride, getPageMetrics,
-    onExpand, onRestore}) {
+    onExpand, onRestore, advancePage}) {
     Object.assign(this, {root, dialog, button, placeholder, scroller, getOptions,
       rerender, resetBaseline, getPageSizeOverride, setPageSizeOverride, getPageMetrics,
-      onExpand, onRestore});
+      onExpand, onRestore, advancePage});
+    this.onKeyDown = event => {
+      if (this.destroyed || !this.expanded || !this.dialog?.open || !this.advancePage || event.defaultPrevented ||
+        event.altKey || event.ctrlKey || event.metaKey || event.shiftKey || event.isComposing ||
+        !["ArrowLeft", "ArrowRight"].includes(event.key)) return;
+      // Inputs and composite widgets own their arrows. Graphic inspection
+      // handles its keys on the root first and stops them before this dialog.
+      if (event.target?.closest?.('input, textarea, select, [contenteditable]:not([contenteditable="false"]), ' +
+        '[role="textbox"], [role="searchbox"], [role="combobox"], [role="slider"], [role="spinbutton"], ' +
+        '[role="listbox"], [role="menu"], [role="menubar"], [role="tablist"], [role="radiogroup"]')) return;
+      event.preventDefault();
+      event.stopPropagation();
+      const moved = this.advancePage(event.key === "ArrowRight" ? "next" : "prev");
+      // Paging can replace a focused row or page button. Keep subsequent
+      // key presses in the modal instead of dropping focus onto the document.
+      if (moved && !this.dialog.contains(this.dialog.ownerDocument.activeElement)) {
+        this.dialog.focus({preventScroll: true});
+      }
+    };
     if (dialog) {
+      this.dialog.addEventListener("keydown", this.onKeyDown);
       this.dialog.addEventListener("close", () => this.restore());
       this.dialog.addEventListener("cancel", (e) => { e.preventDefault(); this.close(); });
       // Clicking the backdrop (the dialog element itself, outside the content)
@@ -63,6 +82,7 @@ export class TableViewport {
     this.destroyed = true;
     this.expanded = false;
     this.observer.disconnect();
+    this.dialog?.removeEventListener("keydown", this.onKeyDown);
     for (const id of this.frames) cancelAnimationFrame(id);
     this.frames.clear();
   }
@@ -84,6 +104,7 @@ export class TableViewport {
     this.resetBaseline();
     this.onExpand?.();
     this.rerender();
+    this.dialog.focus({preventScroll: true});
     this.frame(() => {
       this.applyFrozenOffsets();
       this.fit();
@@ -106,12 +127,12 @@ export class TableViewport {
     this.button.title = "Expand table";
     this.button.setAttribute("aria-label", "Expand table");
     this.button.setAttribute("aria-expanded", "false");
-    this.button.focus({ preventScroll: true });
     // Restore the notebook's configured page size and drop the fullscreen
     // height baseline so the inline table shrinks back to its natural size.
     this.resetBaseline();
     this.onRestore?.();
     this.rerender();
+    this.button.focus({ preventScroll: true });
     this.frame(() => this.applyFrozenOffsets());
   }
 

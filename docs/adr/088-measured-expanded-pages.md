@@ -57,6 +57,16 @@ Expanded navigation shows the current page and exact record range, with Previous
 and Next controls. It does not invent a total page count: unvisited pages can fit
 different numbers of records. Inline navigation retains its exact page fraction.
 
+Expanded dialogs handle unmodified Left/Right arrows through the same measured
+Previous/Next operation, including boundary clamping. The listener is scoped to
+the open dialog and removed on disposal. Inputs, editable content, composite
+controls and graphic tooltip inspection keep their own arrow behavior; handled
+events, modifier combinations and IME composition are left alone. Expansion
+focuses the dialog so paging works immediately. If paging removes the focused
+row/button, focus falls back to the dialog. Native Escape closes the modal and
+restores the inline page and Expand-button focus after rendering. An active
+tooltip may consume the first Escape before the modal receives the next one.
+
 ### Consequences
 
 - Good, because variable-height data and synthetic rows no longer overflow an

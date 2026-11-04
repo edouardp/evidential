@@ -6,6 +6,13 @@ project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## Unreleased
 
+### Added
+
+- Expanded tables support Left/Right arrows for previous/next pages. Escape
+  closes the dialog and restores the inline page and Expand-button focus.
+  Inputs, editable controls and graphic tooltip inspection keep their own keys;
+  an active tooltip consumes the first Escape before the modal closes.
+
 ## 0.2.2 (2026-11-04)
 
 ### Added

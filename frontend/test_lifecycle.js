@@ -48,6 +48,65 @@ test("viewport disposal cancels pending layout work", (t) => {
   assert.equal(viewport.frames.size, 0);
 });
 
+test("expanded dialog arrows page locally and detach their handler on disposal", () => {
+  const document = dom.window.document;
+  const dialog = document.createElement("dialog"), scroller = document.createElement("div");
+  dialog.append(scroller);
+  document.body.append(dialog);
+  dialog.open = true;
+  const directions = [];
+  const viewport = new TableViewport({dialog, scroller, getOptions: () => ({}),
+    advancePage: direction => { directions.push(direction); return false; }});
+  const press = (target, key, options = {}) => {
+    const event = new window.KeyboardEvent("keydown", {key, bubbles: true, cancelable: true, ...options});
+    target.dispatchEvent(event);
+    return event.defaultPrevented;
+  };
+  assert.equal(press(dialog, "ArrowRight"), false);
+  viewport.expanded = true;
+  assert.equal(press(dialog, "ArrowRight"), true);
+  assert.equal(press(dialog, "ArrowLeft"), true);
+  assert.deepEqual(directions, ["next", "prev"]);
+  for (const options of [{altKey: true}, {ctrlKey: true}, {metaKey: true}, {shiftKey: true}, {isComposing: true}]) {
+    assert.equal(press(dialog, "ArrowRight", options), false);
+  }
+  assert.equal(press(document.body, "ArrowRight"), false);
+  assert.equal(press(dialog, "Escape"), false); // Native cancel owns modal Escape.
+  dialog.open = false;
+  assert.equal(press(dialog, "ArrowRight"), false);
+  dialog.open = true;
+  viewport.destroy();
+  assert.equal(press(dialog, "ArrowRight"), false);
+  assert.deepEqual(directions, ["next", "prev"]);
+  dialog.remove();
+});
+
+test("expanded shortcuts respect editable, composite and already-handled arrow keys", () => {
+  const document = dom.window.document;
+  const dialog = document.createElement("dialog"), scroller = document.createElement("div");
+  dialog.append(scroller);
+  document.body.append(dialog);
+  dialog.open = true;
+  let pages = 0;
+  const viewport = new TableViewport({dialog, scroller, getOptions: () => ({}), advancePage: () => { pages++; }});
+  viewport.expanded = true;
+  for (const markup of ['<input>', '<textarea></textarea>', '<select><option>One</option></select>',
+    '<div contenteditable="true"><span>Editing</span></div>',
+    ...["combobox", "slider", "spinbutton", "textbox", "searchbox", "listbox", "menu", "menubar", "tablist", "radiogroup"]
+      .map(role => `<div role="${role}"><span>Value</span></div>`)]) {
+    scroller.innerHTML = markup;
+    const target = scroller.querySelector("span") || scroller.firstElementChild;
+    const event = new window.KeyboardEvent("keydown", {key: "ArrowRight", bubbles: true, cancelable: true});
+    target.dispatchEvent(event);
+    assert.equal(event.defaultPrevented, false, markup);
+  }
+  scroller.addEventListener("keydown", event => event.preventDefault(), {once: true});
+  scroller.dispatchEvent(new window.KeyboardEvent("keydown", {key: "ArrowRight", bubbles: true, cancelable: true}));
+  assert.equal(pages, 0);
+  viewport.destroy();
+  dialog.remove();
+});
+
 test("frozen offsets use physical columns and preserve nested header heights", () => {
   const scroller = dom.window.document.createElement("div");
   scroller.innerHTML = `<table><thead>

@@ -967,7 +967,7 @@ Show a series as a line, area, bars, points or increase/steady/decrease marks.
 Use `.color(scale="viridis", min=0, max=12)` to color observations by their
 y value with the same gradient API as cell backgrounds. Bars and dots use
 their own value; lines and areas use a continuous vertical gradient.
-For a solid outline and a baseline fade, use `fill_opacity=(0, 0.5)`.
+For a solid outline and a baseline fade, use `fill_opacity=(0, 0.6)`.
 
 ```python
 columns=[
@@ -987,6 +987,49 @@ columns=[
 ![Sparklines](docs/img/graphics/sparklines.png)
 
 [Notebook source: `graphic_sparklines`](notebooks/50_graphics_gallery.py)
+
+<!-- /notebook -->
+
+<!-- notebook: notebooks/50_graphics_gallery.py#graphic_sparkline_areas -->
+
+#### Area sparklines: fades, thresholds and clamping
+
+`fill_opacity=(0, 0.6)` fades an area from transparent at its baseline to
+60% opacity at the edge, keeping a solid outline. A fixed value such as
+`fill_opacity=0.5` sets one opacity throughout the fill.
+
+Use `.color(stops=...)` for a vertical color gradient with alpha: the middle
+column fades from transparent at zero to green at 40, then turns red above
+40. Closely spaced stops at 40 and 40.001 make that transition sharp. Only
+the part of each peak above the threshold is red.
+
+The last column uses a transparent zero and color bounds of **−1 to +1**.
+An anomaly of +3 still plots at +3, using the color at +1; values below −1
+use its endpoint color. Color bounds control color, independently of height.
+`reference=0` sets the fill baseline; use another value for another baseline.
+Gradient fills preserve their alpha stops; `fill_opacity` multiplies that alpha.
+
+```python
+columns=[
+    col.text("series"),
+    col.sparkline("readings", title="Baseline fade", type="area", color="#00a878",
+                  fill_opacity=(0, 0.6), width=180, height=26),
+    col.sparkline("readings", title="Green to 40, then red", type="area", width=180, height=26)
+        .color(stops=[
+            {"value": 0, "color": "#20af4b00"},
+            {"value": 40, "color": "#20af4b"},
+            {"value": 40.001, "color": "#ed1c24"},
+            {"value": 60, "color": "#ed1c24"},
+        ]),
+    col.sparkline("anomalies", title="Color clamped at ±1", type="area", reference=0,
+                  y_fmt="num1", width=180, height=26)
+        .color(scale=["#e66b13", "#ffffff00", "#39799b"], min=-1, max=1, midpoint=0),
+]
+```
+
+![Area sparklines: fades, thresholds and clamping](docs/img/graphics/sparkline-areas.png)
+
+[Notebook source: `graphic_sparkline_areas`](notebooks/50_graphics_gallery.py)
 
 <!-- /notebook -->
 

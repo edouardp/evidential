@@ -572,7 +572,7 @@ def graphic_sparklines_doc(mo):
     Use `.color(scale="viridis", min=0, max=12)` to color observations by their
     y value with the same gradient API as cell backgrounds. Bars and dots use
     their own value; lines and areas use a continuous vertical gradient.
-    For a solid outline and a baseline fade, use `fill_opacity=(0, 0.5)`.
+    For a solid outline and a baseline fade, use `fill_opacity=(0, 0.6)`.
     """)
     return
 
@@ -612,6 +612,65 @@ def graphic_sparklines(EvidentialTable, col, frame):
             col.sparkline("change", type="change", width=110, height=30),
         ],
         settings=frame("Sparkline types", 900),
+    )
+    return
+
+
+@app.cell(hide_code=True)
+def graphic_sparkline_areas_doc(mo):
+    mo.md(r"""
+    #### Area sparklines: fades, thresholds and clamping
+
+    `fill_opacity=(0, 0.6)` fades an area from transparent at its baseline to
+    60% opacity at the edge, keeping a solid outline. A fixed value such as
+    `fill_opacity=0.5` sets one opacity throughout the fill.
+
+    Use `.color(stops=...)` for a vertical color gradient with alpha: the middle
+    column fades from transparent at zero to green at 40, then turns red above
+    40. Closely spaced stops at 40 and 40.001 make that transition sharp. Only
+    the part of each peak above the threshold is red.
+
+    The last column uses a transparent zero and color bounds of **−1 to +1**.
+    An anomaly of +3 still plots at +3, using the color at +1; values below −1
+    use its endpoint color. Color bounds control color, independently of height.
+    `reference=0` sets the fill baseline; use another value for another baseline.
+    Gradient fills preserve their alpha stops; `fill_opacity` multiplies that alpha.
+    """)
+    return
+
+
+@app.cell
+def graphic_sparkline_areas(EvidentialTable, col, frame):
+    _rows = [
+        {
+            "series": "Sensor A",
+            "readings": [0, 27, 19, 35, 24, 45, 29, 53, 31, 41, 20],
+            "anomalies": [0, 0.7, 1.5, 0.4, -0.8, -2.4, -0.5, 0.6, 3, 1.2, -0.3],
+        },
+        {
+            "series": "Sensor B",
+            "readings": [12, 36, 43, 25, 39, 47, 21, 32, 46, 28, 17],
+            "anomalies": [1.2, -0.2, -3, -0.4, 1.1, 2.2, 0.3, -1.3, -0.5, 1.8, 0.8],
+        },
+    ]
+    EvidentialTable(
+        _rows,
+        columns=[
+            col.text("series"),
+            col.sparkline("readings", title="Baseline fade", type="area", color="#00a878",
+                          fill_opacity=(0, 0.6), width=180, height=26),
+            col.sparkline("readings", title="Green to 40, then red", type="area", width=180, height=26)
+                .color(stops=[
+                    {"value": 0, "color": "#20af4b00"},
+                    {"value": 40, "color": "#20af4b"},
+                    {"value": 40.001, "color": "#ed1c24"},
+                    {"value": 60, "color": "#ed1c24"},
+                ]),
+            col.sparkline("anomalies", title="Color clamped at ±1", type="area", reference=0,
+                          y_fmt="num1", width=180, height=26)
+                .color(scale=["#e66b13", "#ffffff00", "#39799b"], min=-1, max=1, midpoint=0),
+        ],
+        settings=frame("Area sparkline colors", 900),
     )
     return
 

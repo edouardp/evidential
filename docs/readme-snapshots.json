@@ -3,7 +3,7 @@
   "inputs": {
     "notebooks/21_studio_dashboard.py": "8f4e85940544eac38b95c21f952659d3da97375dc584616347b24814281dc48b",
     "notebooks/49_api_screenshots.py": "219de292a242152427ca2e62163eb787c5c7355f974909eff90bd0c76ac5606b",
-    "notebooks/50_graphics_gallery.py": "b33965f9534e613139688de378b3651bf0309a651cc67b898dd537e14b48c855",
+    "notebooks/50_graphics_gallery.py": "bdbd83babf0181bb66b9744cfe5633b05418e5ece502228d33540deb3a8c5b73",
     "notebooks/51_table_layouts.py": "5f4d375309eef793c8c756761e67c9127db0ac554e2405234a85cd81ee1b9930",
     "notebooks/56_dimension_grid.py": "c31b38f124c0874e9c55d0d8a72eaa7e40c92dfe725df6308fffadbbfa2f7c52",
     "notebooks/data/46_football_england_2024.json": "aa8d550e7bb3e776dfd2dbfee5dd2cd57ab14a66c5c036dd393001055b55ff03",
@@ -11,7 +11,7 @@
     "notebooks/sample_data/needful_things/orders.parquet": "b373511b4f7a0547b704022b055655b6d3bafc2505a2a573292b206417fe3eb4",
     "notebooks/sql/50_europe_trade.sql": "c01857da122eb48c819aa14def0bcd4f6fb2e762ea987e55271c58f509746ea6",
     "pyproject.toml": "f77397dfe1c9c7eb971a9e37b2014300a671fef7bd28f217df5144f843914e8b",
-    "scripts/api_screenshots.py": "51f148ecf55c4ea5927a34ad82691a8fc6162a46e76dfea3f6a002e600b47ee4",
+    "scripts/api_screenshots.py": "1b01a650ceacfae52e3e0207cf7f6857c27f6e45b9ac52f4518b931729826af2",
     "scripts/generate_readme.py": "73d9f6620f06101bde52b2d3dbe9cd99f2b33293ae9b30de2747f41c3a2cfb21",
     "src/evidential/__init__.py": "88288dad79c3c7f9ad3fae0b8baf2b93dc8240bcf23491e6e52405caa519b8e1",
     "src/evidential/_aliases.py": "5e207c4a862754e1ca9f7ea309a0e489bf158a7e380876f8edcf20eeee1438f1",
@@ -208,27 +208,32 @@
     "docs/img/graphics/sparklines.png": {
       "notebook": "notebooks/50_graphics_gallery.py",
       "cell": "graphic_sparklines",
-      "sha256": "ded56ce7da5df694cce52e48970181ef922ea7f7331ad8a5151a3feb00a1f55e"
+      "sha256": "7b8cb17075133b408619d475ff4faa2e3666bc4cfa49fe9badf39261ed655196"
+    },
+    "docs/img/graphics/sparkline-areas.png": {
+      "notebook": "notebooks/50_graphics_gallery.py",
+      "cell": "graphic_sparkline_areas",
+      "sha256": "15f513ede6656fbbb992213de11bf4ca354654919c3c52c03e64479857b1be0c"
     },
     "docs/img/graphics/football-form.png": {
       "notebook": "notebooks/50_graphics_gallery.py",
       "cell": "graphic_football_form",
-      "sha256": "4fbe46e163b9d4265e68187d2053561fcd5a06e9ac411244035d2496643dccd9"
+      "sha256": "e40a918be01aed243a0b3465defa6c1cb5432014187eaf88981916028d70d158"
     },
     "docs/img/graphics/symbols.png": {
       "notebook": "notebooks/50_graphics_gallery.py",
       "cell": "graphic_symbols",
-      "sha256": "b29ba87f6a9b50625d7c6845c159e6a64b55f69f9a6cf789e6fc64fcd485fca1"
+      "sha256": "57a5f1001f491a0e7f67abfbbf1f426a1ef662abe627c3e00ef269f90303744e"
     },
     "docs/img/graphics/boolean-icons.png": {
       "notebook": "notebooks/50_graphics_gallery.py",
       "cell": "graphic_boolean_icons",
-      "sha256": "5a0b0651ab8dd86c9863af5d50e25982e5e2774b5e2533b5645775a614b03ff1"
+      "sha256": "ddb1b387739a2ff11910ff05f35539431673e83f21af58212543076bcc9eb195"
     },
     "docs/img/graphics/reference.png": {
       "notebook": "notebooks/50_graphics_gallery.py",
       "cell": "graphic_reference",
-      "sha256": "b095e67aee4a0febb9195f0aeafc9ed2ae89634c1cdfcb8eb5626ac0150156a7"
+      "sha256": "e4b2eb09d9a3ea1502cc9f38f3b984ff457310e17c83bd4e21eae918135a8229"
     },
     "docs/img/studio-table.png": {
       "notebook": "notebooks/21_studio_dashboard.py",

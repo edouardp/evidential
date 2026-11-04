@@ -79,3 +79,22 @@ def test_symbol_gallery_distinguishes_circles_from_centered_squares():
     assert circles["title"] == "Circles"
     assert squares["symbol_options"]["shape"] == "square"
     assert squares["align"] == "center"
+
+
+def test_area_gallery_exercises_both_sides_of_thresholds_and_color_bounds():
+    outputs, _ = runpy.run_path(str(GALLERY_NOTEBOOK))["app"].run()
+    table = next(
+        output
+        for output in outputs
+        if isinstance(output, EvidentialTable) and output.options["title"] == "Area sparkline colors"
+    )
+    _, fade, threshold, anomalies = table.columns
+    assert fade["sparkline_options"]["fill_opacity"] == (0, 0.6)
+    stops = threshold["color_options"]["color_stops"]
+    limit = stops[1]["value"]
+    assert stops[0]["color"].endswith("00")
+    assert all(min(row["readings"]) < limit < max(row["readings"]) for row in table.raw)
+    colors = anomalies["color_options"]
+    assert min(value for row in table.raw for value in row["anomalies"]) < colors["min"]
+    assert max(value for row in table.raw for value in row["anomalies"]) > colors["max"]
+    assert anomalies["sparkline_options"]["reference"] == colors["midpoint"] == 0

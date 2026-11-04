@@ -88,6 +88,7 @@ GALLERY: list[tuple[Path, str]] = [
     (GALLERY_OUT / "chip.png", "graphic_chip"),
     (GALLERY_OUT / "delta.png", "graphic_delta"),
     (GALLERY_OUT / "sparklines.png", "graphic_sparklines"),
+    (GALLERY_OUT / "sparkline-areas.png", "graphic_sparkline_areas"),
     (GALLERY_OUT / "football-form.png", "graphic_football_form"),
     (GALLERY_OUT / "symbols.png", "graphic_symbols"),
     (GALLERY_OUT / "boolean-icons.png", "graphic_boolean_icons"),

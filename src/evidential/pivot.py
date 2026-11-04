@@ -38,6 +38,51 @@ def _label(combo: Sequence[Any]) -> str:
     return " · ".join("" if value is None else str(value) for value in combo)
 
 
+def _pivot_columns(
+    dims: list[str],
+    pivoted: list[tuple[str, str, str]],
+    parsed_measures: list[tuple[str, str]],
+    dimension_config: Mapping[str, Mapping[str, Any]] | None,
+    measure_config: Mapping[str, Mapping[str, Any]] | None,
+    measures_first: bool,
+) -> list[dict[str, Any]]:
+    # ---- columns -----------------------------------------------------------
+    columns: list[dict[str, Any]] = []
+    for dim in dims:
+        overrides = dict((dimension_config or {}).get(dim, {}))
+        overrides.pop("name", None)  # a col.* builder carries its name; the key is the name
+        overrides.setdefault("type", "string")
+        overrides.setdefault("align", "left")
+        columns.append(make_column(dim, **overrides))
+
+    def make_measure_column(name: str, group: str, alias: str) -> dict[str, Any]:
+        overrides = dict((measure_config or {}).get(alias, {}))
+        overrides.pop("name", None)
+        overrides.setdefault("type", "number")
+        overrides.setdefault("align", "right")
+        overrides.setdefault("column_group", group)
+        return make_column(name, **rebind_measure(overrides, alias, name))
+
+    if measures_first:
+        # Group by measure: Sales > 2021 | 2022 | Total
+        for alias, _ in parsed_measures:
+            for name, _group, headline in pivoted:
+                if headline == alias:
+                    columns.append(make_measure_column(name, alias, alias))
+    else:
+        # Group by pivot value: 2021 > Sales | Orders, then Total > Sales | Orders
+        groups: list[str] = []
+        for _, group, _ in pivoted:
+            if group not in groups:
+                groups.append(group)
+        for group in groups:
+            for name, column_group, alias in pivoted:
+                if column_group == group:
+                    columns.append(make_measure_column(name, group, alias))
+
+    return columns
+
+
 def pivot_table(
     connection: Any,
     sql: str,
@@ -193,39 +238,7 @@ def pivot_table(
         for hidden in weight_aliases.values():
             row.pop(hidden, None)
 
-    # ---- columns -----------------------------------------------------------
-    columns: list[dict[str, Any]] = []
-    for dim in dims:
-        overrides = dict((dimension_config or {}).get(dim, {}))
-        overrides.pop("name", None)  # a col.* builder carries its name; the key is the name
-        overrides.setdefault("type", "string")
-        overrides.setdefault("align", "left")
-        columns.append(make_column(dim, **overrides))
-
-    def make_measure_column(name: str, group: str, alias: str) -> dict[str, Any]:
-        overrides = dict((measure_config or {}).get(alias, {}))
-        overrides.pop("name", None)
-        overrides.setdefault("type", "number")
-        overrides.setdefault("align", "right")
-        overrides.setdefault("column_group", group)
-        return make_column(name, **rebind_measure(overrides, alias, name))
-
-    if measures_first:
-        # Group by measure: Sales > 2021 | 2022 | Total
-        for alias, _ in parsed_measures:
-            for name, _group, headline in pivoted:
-                if headline == alias:
-                    columns.append(make_measure_column(name, alias, alias))
-    else:
-        # Group by pivot value: 2021 > Sales | Orders, then Total > Sales | Orders
-        groups: list[str] = []
-        for _, group, _ in pivoted:
-            if group not in groups:
-                groups.append(group)
-        for group in groups:
-            for name, column_group, alias in pivoted:
-                if column_group == group:
-                    columns.append(make_measure_column(name, group, alias))
+    columns = _pivot_columns(dims, pivoted, parsed_measures, dimension_config, measure_config, measures_first)
 
     table_options.setdefault("show_total_row", total)
     table_options.setdefault("collapsible", subtotals)

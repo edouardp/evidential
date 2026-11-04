@@ -8,6 +8,10 @@ project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- Enforce a Python McCabe complexity ceiling of 20. Configuration aliases,
+  canonical validation, label/mark/domain checks and pivot column assembly use
+  focused helpers; raw mark encodings are normalized once during table assembly.
+
 - Expanded tables support Left/Right arrows for previous/next pages. Escape
   closes the dialog and restores the inline page and Expand-button focus.
   Inputs, editable controls and graphic tooltip inspection keep their own keys;

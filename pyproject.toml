@@ -75,8 +75,11 @@ line-length = 120
 exclude = [".git", "__pycache__", ".venv", "dist", "frontend", "notebooks", "node_modules", "*.md"]
 
 [tool.ruff.lint]
-select = ["E", "W", "F", "I", "B", "C4", "UP"]
+select = ["E", "W", "F", "I", "B", "C4", "C901", "UP"]
 ignore = ["E501"]
+
+[tool.ruff.lint.mccabe]
+max-complexity = 20
 
 [tool.ruff.lint.isort]
 known-first-party = ["evidential"]

@@ -15,8 +15,7 @@ from collections.abc import Iterable, Mapping, Sequence
 from decimal import Decimal
 from typing import Any
 
-from ._column_options import _normalize_column_options
-from .configuration import ColumnOptions, validate_options
+from ._column_options import canonicalize_column_options, validate_canonical_column
 
 __all__ = [
     "make_column",
@@ -57,6 +56,12 @@ def jsonify(value: Any) -> Any:
 
 def make_column(name: str, *, type: str = "string", **overrides: Any) -> dict[str, Any]:
     """Return a column definition in the widget's wire format."""
+    return _make_canonical_column(canonicalize_column_options({"name": name, "type": type, **overrides}))
+
+
+def _make_canonical_column(spec: dict[str, Any]) -> dict[str, Any]:
+    """Apply wire defaults and validate a declaration whose aliases are resolved."""
+    name, type = spec["name"], spec.get("type", "string")
     column: dict[str, Any] = {
         "name": name,
         "title": None,
@@ -92,8 +97,8 @@ def make_column(name: str, *, type: str = "string", **overrides: Any) -> dict[st
         # Background highlight for the whole column (header + cells).
         "highlight": None,
     }
-    column.update(_normalize_column_options({"name": name, "type": type, **overrides}))
-    validate_options(column, ColumnOptions, "column")
+    column.update(spec)
+    validate_canonical_column(column)
     return {k: v for k, v in column.items() if v is not None or k in {"name", "type"}}
 
 

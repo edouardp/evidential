@@ -10,13 +10,20 @@ from typing import Any, Unpack
 import anywidget
 import traitlets
 
-from ._column_options import _normalize_column_options
+from ._column_options import _normalize_column_options, canonicalize_column_options
 from ._domain import resolve_domains
 from ._netscape import _NetscapeHTML
 from ._netscape import render as _netscape_html
 from ._row_layout import display_records, split_legacy, unwrap_view
 from .configuration import TABLE_DEFAULTS, TableOptions, unknown_option, validate_options
-from .data import _merge_column_config, apply_blank_predicates, infer_columns, jsonify, make_column, normalize_data
+from .data import (
+    _make_canonical_column,
+    _merge_column_config,
+    apply_blank_predicates,
+    infer_columns,
+    jsonify,
+    normalize_data,
+)
 from .marks import apply_hidden_columns, resolve_encodings
 from .rows import Rows, RowView
 from .rules import resolve_rules
@@ -68,36 +75,16 @@ def _flatten_columns(columns: Iterable[Any]) -> Iterator[Any]:
             yield item
 
 
-def _coerce_column(column: str | Mapping[str, Any]) -> dict[str, Any]:
+def _column_declaration(column: Any, inferred: Mapping[str, dict[str, Any]]) -> dict[str, Any]:
     if isinstance(column, str):
-        return make_column(column)
-    data = dict(column)
-    data = _normalize_column_options(data)
-    name = data.pop("name", None)
+        return dict(inferred.get(column, {"name": column}))
+    data = canonicalize_column_options(dict(column))
+    name = data.get("name")
     if not name:
         raise ValueError(f"column definition is missing a name: {column!r}")
-    type_ = data.pop("type", "string")
-    return make_column(str(name), type=type_, **data)
-
-
-def _with_inferred(column: Any, inferred_by_name: Mapping[str, dict[str, Any]]) -> Any:
-    """Resolve a spec that does not say what a column is to its inferred definition.
-
-    `col.auto("x")` (and a bare name) carries no ``type``, so it takes the type,
-    format, alignment and ``info`` inferred from the data, then applies its own
-    options over them.
-    """
-    if isinstance(column, str):
-        return inferred_by_name.get(column, column)
-    if isinstance(column, Mapping) and not column.get("type"):
-        base = inferred_by_name.get(str(column.get("name")))
-        if base is not None:
-            merged = dict(base)
-            # Normalize first: aliases (`redNegatives` → `red_negatives`) must win
-            # over the inferred base's explicit ``False`` defaults.
-            merged.update(_normalize_column_options(dict(column)))
-            return merged
-    return column
+    data["name"] = str(name)
+    base = inferred.get(str(name), {}) if not data.get("type") else {}
+    return {**base, **data}
 
 
 def _coerce_columns(
@@ -106,23 +93,17 @@ def _coerce_columns(
     inferred: Iterable[Mapping[str, Any]] | None = None,
 ) -> list[dict[str, Any]]:
     inferred_by_name = {str(column["name"]): dict(column) for column in (inferred or [])}
-    columns = list(_flatten_columns(columns)) if columns is not None else []
-    result = [_coerce_column(_with_inferred(column, inferred_by_name)) for column in columns]
-    normalized_config = {
-        name: _normalize_column_options({"name": name, **config}) for name, config in (column_config or {}).items()
+    declarations = [_column_declaration(column, inferred_by_name) for column in _flatten_columns(columns or [])]
+    config = {
+        name: _normalize_column_options({"name": name, **values}) for name, values in (column_config or {}).items()
     }
-    merged = _merge_column_config(result, normalized_config)
-    # Template columns (cols_merge*) may not exist in the data; synthesise them.
-    if column_config:
-        existing = {column["name"] for column in merged}
-        for name, config in column_config.items():
-            if name in existing or not isinstance(config, Mapping):
-                continue
-            if config.get("template"):
-                merged.append(_coerce_column({"name": name, **config}))
-    # column_config overrides bypass _coerce_column, so normalise them too, and
-    # drop Python callables (e.g. `blank`) that can't cross the JSON boundary.
-    return [_normalize_column_options({k: v for k, v in dict(column).items() if not callable(v)}) for column in merged]
+    merged = _merge_column_config(declarations, config)
+    existing = {column["name"] for column in merged}
+    merged.extend(values for name, values in config.items() if name not in existing and values.get("template"))
+    return [
+        _make_canonical_column({key: value for key, value in column.items() if not callable(value)})
+        for column in merged
+    ]
 
 
 def _center_chips(

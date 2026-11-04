@@ -35,6 +35,29 @@ def _position(value: str) -> str:
     return canonical
 
 
+def _validate_label_spec(spec: dict[str, Any]) -> dict[str, Any] | None:
+    alias(spec, "format", "fmt")
+    if spec.get("align") not in (None, "begin", "center", "end"):
+        raise ValueError("label align is 'begin', 'center' or 'end'")
+    if spec.get("overflow") not in (None, "hide", "show"):
+        raise ValueError("label overflow is 'hide' or 'show'")
+    if spec.get("source") is not None:
+        spec["source"] = _source(spec["source"])
+    if spec.get("position") is not None:
+        spec["position"] = _position(spec["position"])
+    if spec.get("min_width") is not None and (not math.isfinite(spec["min_width"]) or spec["min_width"] < 0):
+        raise ValueError("label min_width must be finite and nonnegative")
+    if sum(key in spec for key in ("source", "text", "value")) > 1:
+        raise ValueError("label needs only one of source, text or value")
+    validate_options(spec, EncodingLabel, "label")
+    if spec.get("auto"):
+        if spec.get("position", "outside_end") not in LABEL_POSITIONS[:4]:
+            raise ValueError("auto label position must specify inside/outside and start/end")
+        if spec.get("overflow") == "show":
+            raise ValueError("auto label placement cannot use overflow='show'")
+    return spec or None
+
+
 def _label_spec(
     value: Any = None,
     *,
@@ -64,75 +87,45 @@ def _label_spec(
     mapping (``label={"source": "@x", "prefix": "$"}``) is the same as the
     fluent form. ``.label(...)`` is unambiguous: ``source=`` vs ``text=``.
     """
-    spec: dict[str, Any] = {}
+    if value is False:
+        return None
+    spec = {key: item for key, item in value.items() if item is not None} if isinstance(value, Mapping) else {}
     if isinstance(value, Mapping):
-        spec.update({key: item for key, item in value.items() if item is not None})
         value = None
-    if source is not None:
-        spec["source"] = _source(source)
-    if text is not None:
-        spec["text"] = text
+    spec.update(
+        {
+            key: item
+            for key, item in (
+                ("source", _source(source)),
+                ("text", text),
+                ("position", position),
+                ("align", align),
+                ("format", format_code(format, fmt)),
+                ("prefix", prefix),
+                ("suffix", suffix),
+                ("overflow", overflow),
+                ("min_width", min_width),
+                ("color", color),
+                ("font", font),
+                ("font_weight", font_weight),
+                ("font_style", font_style),
+                ("figure_style", figure_style),
+                ("auto", auto),
+            )
+            if item is not None
+        }
+    )
     if literal is not None:
         spec["text"] = literal
     if value is True:
         spec["value"] = True
-    elif value is False:
-        return None
     elif isinstance(value, str):
-        if value.startswith("@"):
-            spec["source"] = value[1:]
-        else:
-            spec["text"] = value
+        spec["source" if value.startswith("@") else "text"] = _source(value) if value.startswith("@") else value
     elif value is not None:
         raise TypeError(f"label expects True, False, '@field', a string or a mapping, got {value!r}")
-    if position is not None:
-        position = _position(position)
-        spec["position"] = position
-    if align is not None:
-        if align not in ("begin", "center", "end"):
-            raise ValueError("label align is 'begin', 'center' or 'end'")
-        spec["align"] = align
-    for key, item in (("format", format_code(format, fmt)), ("prefix", prefix), ("suffix", suffix)):
-        if item is not None:
-            spec[key] = item
     if share:
         spec["share"] = True
-    if overflow is not None:
-        if overflow not in ("hide", "show"):
-            raise ValueError("label overflow is 'hide' or 'show'")
-        spec["overflow"] = overflow
-    if min_width is not None:
-        if not math.isfinite(min_width) or min_width < 0:
-            raise ValueError("label min_width must be finite and nonnegative")
-        spec["min_width"] = min_width
-    if color is not None:
-        spec["color"] = color
-    for key, item in (
-        ("font", font),
-        ("font_weight", font_weight),
-        ("font_style", font_style),
-        ("figure_style", figure_style),
-    ):
-        if item is not None:
-            spec[key] = item
-    if auto is not None:
-        spec["auto"] = auto
-    alias(spec, "format", "fmt")
-    if spec.get("source") is not None:
-        spec["source"] = _source(spec["source"])
-    if spec.get("position") is not None:
-        spec["position"] = _position(spec["position"])
-    if spec.get("min_width") is not None and (not math.isfinite(spec["min_width"]) or spec["min_width"] < 0):
-        raise ValueError("label min_width must be finite and nonnegative")
-    if sum(key in spec for key in ("source", "text", "value")) > 1:
-        raise ValueError("label needs only one of source, text or value")
-    validate_options(spec, EncodingLabel, "label")
-    if spec.get("auto"):
-        if spec.get("position", "outside_end") not in LABEL_POSITIONS[:4]:
-            raise ValueError("auto label position must specify inside/outside and start/end")
-        if spec.get("overflow") == "show":
-            raise ValueError("auto label placement cannot use overflow='show'")
-    return spec or None
+    return _validate_label_spec(spec)
 
 
 class Label(TextStyle, Mapping[str, Any]):

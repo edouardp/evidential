@@ -111,6 +111,79 @@ _ENCODING_KEYS = (
 _ANONYMOUS = itertools.count()
 
 
+_ALLOWED_ENCODINGS = {
+    "bar": {*_BAR_STYLE_KEYS, "color_negative_column", "side", "size", "valign"},
+    "point": {"outline", "size", "valign"},
+    "points": {"outline", "size", "valign", "sources", "names", "palette", "connect"},
+    "range": {
+        "high",
+        "cap",
+        "direction_marker",
+        "color_negative",
+        "color_negative_column",
+        "size",
+        "overflow",
+        "fill",
+        "valign",
+    },
+    "strip": {"colors", "strip_labels", "segmented"},
+    "stacked_bar": {"size", "diverge_at", "neutral"},
+    "boxplot": {"parts", "outliers", "whisker"},
+    "distribution": {"distribution"},
+}
+
+
+def _validate_point_sources(encoding: dict[str, Any]) -> None:
+    fields = encoding.get("sources")
+    if fields is not None:
+        if not isinstance(fields, Sequence) or isinstance(fields, (str, bytes)) or not fields:
+            raise ValueError("points sources must be a nonempty list of field names")
+        if not all(isinstance(name, str) and name for name in fields) or len(set(fields)) != len(fields):
+            raise ValueError("points sources must be distinct nonempty field names")
+        encoding["sources"] = list(fields)
+        names = encoding.get("names")
+        if names is not None:
+            if not isinstance(names, Mapping) or not all(
+                key in fields and isinstance(value, str) for key, value in names.items()
+            ):
+                raise ValueError("points names must map source fields to display strings")
+            encoding["names"] = dict(names)
+        palette = encoding.get("palette")
+        if isinstance(palette, str):
+            if palette.lower() not in (*COLOR_SCALES, "tab10"):
+                raise ValueError(f"Unknown points palette {palette!r}")
+            encoding["palette"] = palette.lower()
+        elif palette is not None:
+            if (
+                not isinstance(palette, Sequence)
+                or not palette
+                or not all(isinstance(color, str) and color.strip() for color in palette)
+            ):
+                raise ValueError("points palette must be a named palette or a nonempty list of colors")
+            encoding["palette"] = list(palette)
+    elif any(key in encoding for key in ("palette", "names", "connect")):
+        raise ValueError("points palette, names and connect need a field list or mapping")
+
+
+def _validate_mark_style(kind: str, encoding: Mapping[str, Any]) -> None:
+    size = encoding.get("size")
+    if size is not None:
+        if not isinstance(size, (int, float)) or isinstance(size, bool) or not math.isfinite(size) or size <= 0:
+            raise ValueError(f"{kind} size must be finite and positive")
+        if kind in ("bar", "stacked_bar") and size > 1:
+            raise ValueError(f"{kind} height (size) is a fraction in (0, 1]")
+    outline = encoding.get("outline")
+    if outline is not None:
+        if kind not in ("point", "points"):
+            raise ValueError("outline is only supported for point and points marks")
+        if not isinstance(outline, bool) and not (isinstance(outline, str) and outline.strip()):
+            raise ValueError("point outline must be True, False, or a color string")
+    if encoding.get("side") is not None and encoding["side"] not in ("left", "right"):
+        raise ValueError(f"side must be 'left' or 'right', got {encoding['side']!r}")
+    if encoding.get("overflow") not in (None, "clip", "arrow"):
+        raise ValueError("range overflow is 'clip' or 'arrow'")
+
+
 def _canonical_encoding(
     kind: str,
     source: Any,
@@ -136,45 +209,8 @@ def _canonical_encoding(
         encoding["color_column"] = color[1:]
     elif color is not None:
         encoding["color"] = color
-    for key in (
-        "color_column",
-        "color_negative",
-        "color_negative_column",
-        "size",
-        "outline",
-        "side",
-        "valign",
-        "cap",
-        "direction_marker",
-        "overflow",
-        "fill",
-        "fit_to_data",
-        "background",
-        "hide_labels",
-        "center",
-        "pad",
-        "direction",
-        "reference",
-        "reference_color",
-        "reference_label",
-        "colors",
-        "segmented",
-        "strip_labels",
-        "parts",
-        "outliers",
-        "whisker",
-        "diverge_at",
-        "neutral",
-        "x",
-        "y",
-        "style",
-        "distribution",
-        "sources",
-        "names",
-        "palette",
-        "connect",
-    ):
-        if style.get(key) is not None:
+    for key in _ENCODING_KEYS:
+        if key not in {"kind", "source", "high", "label", "color"} and style.get(key) is not None:
             encoding[key] = style.pop(key)
     leftover = {key: value for key, value in style.items() if value is not None}
     if leftover:
@@ -184,29 +220,9 @@ def _canonical_encoding(
         encoding["color_negative_column"] = negative_color[1:]
         encoding.pop("color_negative")
     common = {"kind", "source", "label", "color", "color_column"}
-    allowed = {
-        "bar": {*_BAR_STYLE_KEYS, "color_negative_column", "side", "size", "valign"},
-        "point": {"outline", "size", "valign"},
-        "points": {"outline", "size", "valign", "sources", "names", "palette", "connect"},
-        "range": {
-            "high",
-            "cap",
-            "direction_marker",
-            "color_negative",
-            "color_negative_column",
-            "size",
-            "overflow",
-            "fill",
-            "valign",
-        },
-        "strip": {"colors", "strip_labels", "segmented"},
-        "stacked_bar": {"size", "diverge_at", "neutral"},
-        "boxplot": {"parts", "outliers", "whisker"},
-        "distribution": {"distribution"},
-    }
-    if kind not in allowed:
+    if kind not in _ALLOWED_ENCODINGS:
         raise ValueError(f"Unknown mark kind {kind!r}")
-    irrelevant = set(encoding) - common - allowed[kind]
+    irrelevant = set(encoding) - common - _ALLOWED_ENCODINGS[kind]
     if "outline" in irrelevant:
         raise ValueError("outline is only supported for point and points marks")
     if irrelevant:
@@ -214,51 +230,8 @@ def _canonical_encoding(
     if kind == "range" and high is None:
         raise TypeError("range expects two endpoints: col.range(low, high)")
     if kind == "points":
-        fields = encoding.get("sources")
-        if fields is not None:
-            if not isinstance(fields, Sequence) or isinstance(fields, (str, bytes)) or not fields:
-                raise ValueError("points sources must be a nonempty list of field names")
-            if not all(isinstance(name, str) and name for name in fields) or len(set(fields)) != len(fields):
-                raise ValueError("points sources must be distinct nonempty field names")
-            encoding["sources"] = list(fields)
-            names = encoding.get("names")
-            if names is not None:
-                if not isinstance(names, Mapping) or not all(
-                    key in fields and isinstance(value, str) for key, value in names.items()
-                ):
-                    raise ValueError("points names must map source fields to display strings")
-                encoding["names"] = dict(names)
-            palette = encoding.get("palette")
-            if isinstance(palette, str):
-                if palette.lower() not in (*COLOR_SCALES, "tab10"):
-                    raise ValueError(f"Unknown points palette {palette!r}")
-                encoding["palette"] = palette.lower()
-            elif palette is not None:
-                if (
-                    not isinstance(palette, Sequence)
-                    or not palette
-                    or not all(isinstance(color, str) and color.strip() for color in palette)
-                ):
-                    raise ValueError("points palette must be a named palette or a nonempty list of colors")
-                encoding["palette"] = list(palette)
-        elif any(key in encoding for key in ("palette", "names", "connect")):
-            raise ValueError("points palette, names and connect need a field list or mapping")
-    size = encoding.get("size")
-    if size is not None:
-        if not isinstance(size, (int, float)) or isinstance(size, bool) or not math.isfinite(size) or size <= 0:
-            raise ValueError(f"{kind} size must be finite and positive")
-        if kind in ("bar", "stacked_bar") and size > 1:
-            raise ValueError(f"{kind} height (size) is a fraction in (0, 1]")
-    outline = encoding.get("outline")
-    if outline is not None:
-        if kind not in ("point", "points"):
-            raise ValueError("outline is only supported for point and points marks")
-        if not isinstance(outline, bool) and not (isinstance(outline, str) and outline.strip()):
-            raise ValueError("point outline must be True, False, or a color string")
-    if encoding.get("side") is not None and encoding["side"] not in ("left", "right"):
-        raise ValueError(f"side must be 'left' or 'right', got {encoding['side']!r}")
-    if encoding.get("overflow") not in (None, "clip", "arrow"):
-        raise ValueError("range overflow is 'clip' or 'arrow'")
+        _validate_point_sources(encoding)
+    _validate_mark_style(kind, encoding)
     label_spec = _label_spec(label, position=label_position, **(label_options or {}))
     if label_spec:
         if label_spec.get("auto") and kind != "bar":
@@ -786,6 +759,50 @@ def resolve_encodings(
     return resolved, hidden
 
 
+def _validate_row_encoding(
+    encoding: Mapping[str, Any],
+    row: Mapping[str, Any],
+    hidden: Mapping[str, Sequence[Any]],
+    index: int,
+    scale: Mapping[str, Any],
+) -> None:
+    source = encoding["source"]
+    value = hidden[source][index] if source in hidden else row.get(source)
+    kind = encoding["kind"]
+    if kind == "points" and encoding.get("sources"):
+        if scale.get("transform") == "log":
+            for field in encoding["sources"]:
+                observed = row.get(field)
+                if observed is not None and float(observed) <= 0:
+                    raise ValueError(f"a log scale needs positive values in {field!r}")
+        return
+    if kind == "distribution":
+        validate_curve(value, encoding["distribution"], source=source, log=scale.get("transform") == "log")
+        return
+    if kind == "strip" and isinstance(value, list) and value:
+        last = value[-1]
+        if isinstance(last, Mapping) and last.get("position") is not None and last.get("end") is None:
+            domain = scale.get("domain") or (None, None)
+            if domain[1] is None:
+                raise ValueError("a change-point strip needs an explicit terminal bound: scale(domain=(lo, hi))")
+    if value is None:
+        return
+    if kind == "stacked_bar" or encoding.get("side"):
+        if float(value) < 0:
+            raise ValueError(f"{kind} source {source!r} requires nonnegative magnitudes")
+    if scale.get("transform") != "log":
+        return
+    fields = [source, encoding.get("high"), *(encoding.get("parts") or {}).values()]
+    values = [hidden[field][index] if field in hidden else row.get(field) for field in fields if field]
+    if kind == "points":
+        values = [
+            item.get("value", item.get("x", item.get("y"))) if isinstance(item, Mapping) else item for item in value
+        ]
+    for observed in values:
+        if observed is not None and float(observed) <= 0:
+            raise ValueError(f"a log scale needs positive values in {source!r}")
+
+
 def _validate_encoding_data(
     column: Mapping[str, Any], rows: Sequence[Mapping[str, Any]], hidden: Mapping[str, Sequence[Any]]
 ) -> None:
@@ -819,44 +836,7 @@ def _validate_encoding_data(
         if row.get("render_type") not in (None, "cell_data"):
             continue
         for encoding in encodings:
-            source = encoding["source"]
-            value = hidden[source][index] if source in hidden else row.get(source)
-            kind = encoding["kind"]
-            if kind == "points" and encoding.get("sources"):
-                if scale.get("transform") == "log":
-                    for field in encoding["sources"]:
-                        observed = row.get(field)
-                        if observed is not None and float(observed) <= 0:
-                            raise ValueError(f"a log scale needs positive values in {field!r}")
-                continue
-            if kind == "distribution":
-                validate_curve(value, encoding["distribution"], source=source, log=scale.get("transform") == "log")
-                continue
-            if kind == "strip" and isinstance(value, list) and value:
-                last = value[-1]
-                if isinstance(last, Mapping) and last.get("position") is not None and last.get("end") is None:
-                    domain = scale.get("domain") or (None, None)
-                    if domain[1] is None:
-                        raise ValueError(
-                            "a change-point strip needs an explicit terminal bound: scale(domain=(lo, hi))"
-                        )
-            if value is None:
-                continue
-            if kind == "stacked_bar" or encoding.get("side"):
-                if float(value) < 0:
-                    raise ValueError(f"{kind} source {source!r} requires nonnegative magnitudes")
-            if scale.get("transform") != "log":
-                continue
-            fields = [source, encoding.get("high"), *(encoding.get("parts") or {}).values()]
-            values = [hidden[field][index] if field in hidden else row.get(field) for field in fields if field]
-            if kind == "points":
-                values = [
-                    item.get("value", item.get("x", item.get("y"))) if isinstance(item, Mapping) else item
-                    for item in value
-                ]
-            for observed in values:
-                if observed is not None and float(observed) <= 0:
-                    raise ValueError(f"a log scale needs positive values in {source!r}")
+            _validate_row_encoding(encoding, row, hidden, index, scale)
 
 
 def apply_hidden_columns(rows: list[dict[str, Any]], hidden: Mapping[str, Sequence[Any]]) -> None:

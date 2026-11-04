@@ -50,5 +50,15 @@ public types for editor assistance.
 
 ## More Information
 
+The 2026-11-04 review separates compatibility conversion in
+`canonicalize_column_options` from validation of merged declarations in
+`validate_canonical_column`. Column assembly applies inference and configuration
+overrides before final validation, without cycling raw mark declarations through
+the full normalizer repeatedly. Common mark style, point sources, row-coordinate
+constraints, labels and shared-domain members have focused validators.
+Ruff enforces a McCabe complexity ceiling of 20 across maintained Python code.
+Public fluent/mapping behavior and precedence are covered by API and operation-count
+regressions; compatibility aliases remain supported.
+
 - Extends [ADR-003](003-evidence-compatible-api.md) and
   [ADR-036](036-persistent-column-configuration.md).

@@ -82,6 +82,34 @@ def _merge_setting(group: dict[str, Any], key: str, value: Any) -> None:
     group[key] = value
 
 
+def _validate_domain_member(group: Mapping[str, Any], col: Mapping[str, Any]) -> None:
+    name = group["name"]
+    color = col.get("color_options") or {}
+    spark = col.get("sparkline_options") or {}
+    for shared, local in (
+        ("palette", color.get("color_scale")),
+        ("midpoint", color.get("midpoint")),
+        ("palette", spark.get("color_scale")),
+    ):
+        if local is None or shared not in group:
+            continue
+        local = local.lower() if isinstance(local, str) else list(local) if isinstance(local, (tuple, list)) else local
+        if local != group[shared]:
+            raise ValueError(f"Conflicting {shared} for shared domain {name!r}")
+    if "palette" in group and col.get("viz") == "sparkline" and spark.get("color") is not None:
+        raise ValueError("A shared palette conflicts with a constant sparkline color")
+    if "palette" in group and color.get("scale_mode", "lch") != "lch":
+        raise ValueError("Shared palettes use lch interpolation; remove the per-column scale_mode")
+    if "palette" in group and color.get("conditional_colors") is not None:
+        raise ValueError("A shared palette conflicts with conditional cell colors")
+    if (col.get("bar_options") or {}).get("center") or any(
+        enc.get("center") or enc.get("side") or enc.get("diverge_at") for enc in col.get("encodings") or []
+    ):
+        bounds = group.get("bounds")
+        if bounds and bounds[0] < 0 and bounds[0] != -bounds[1]:
+            raise ValueError("Centered bars need symmetric shared bounds or (0, magnitude)")
+
+
 def resolve_domains(columns: Sequence[Mapping[str, Any]]) -> list[dict[str, Any]]:
     """Merge named declarations once; reject contradictory per-column settings."""
     groups: dict[str, dict[str, Any]] = {}
@@ -140,36 +168,7 @@ def resolve_domains(columns: Sequence[Mapping[str, Any]]) -> list[dict[str, Any]
             if "midpoint" in group and group["midpoint"] != sum(neutral) / 2:
                 raise ValueError("Shared domain midpoint must match the steady interval's center")
         for col in columns_in_group:
-            color = col.get("color_options") or {}
-            spark = col.get("sparkline_options") or {}
-            for shared, local in (
-                ("palette", color.get("color_scale")),
-                ("midpoint", color.get("midpoint")),
-                ("palette", spark.get("color_scale")),
-            ):
-                if local is None or shared not in group:
-                    continue
-                local = (
-                    local.lower()
-                    if isinstance(local, str)
-                    else list(local)
-                    if isinstance(local, (tuple, list))
-                    else local
-                )
-                if local != group[shared]:
-                    raise ValueError(f"Conflicting {shared} for shared domain {name!r}")
-            if "palette" in group and col.get("viz") == "sparkline" and spark.get("color") is not None:
-                raise ValueError("A shared palette conflicts with a constant sparkline color")
-            if "palette" in group and color.get("scale_mode", "lch") != "lch":
-                raise ValueError("Shared palettes use lch interpolation; remove the per-column scale_mode")
-            if "palette" in group and color.get("conditional_colors") is not None:
-                raise ValueError("A shared palette conflicts with conditional cell colors")
-            if (col.get("bar_options") or {}).get("center") or any(
-                enc.get("center") or enc.get("side") or enc.get("diverge_at") for enc in col.get("encodings") or []
-            ):
-                bounds = group.get("bounds")
-                if bounds and bounds[0] < 0 and bounds[0] != -bounds[1]:
-                    raise ValueError("Centered bars need symmetric shared bounds or (0, magnitude)")
+            _validate_domain_member(group, col)
     return [
         {**col, "domain": dict(groups[domain_spec(col["domain"])["name"]])}
         if col.get("domain") is not None

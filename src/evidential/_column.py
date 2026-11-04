@@ -843,7 +843,7 @@ class ColumnGroup(Sequence[Column]):
 
     def __init__(self, kind: str, label: str | Sequence[str], members: Sequence[Column]) -> None:
         self._kind = kind
-        self._label = label
+        self._label = copy_spec(label)
         self._members = tuple(members)
 
     @property
@@ -854,7 +854,7 @@ class ColumnGroup(Sequence[Column]):
     @property
     def label(self) -> str | Sequence[str]:
         """The shared header label."""
-        return self._label
+        return copy_spec(self._label)
 
     @property
     def members(self) -> tuple[Column, ...]:

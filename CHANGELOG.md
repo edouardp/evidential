@@ -8,6 +8,16 @@ project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- Resume a successfully uploaded release with `make release-resume VERSION=...`.
+  Local version/commit receipts prevent accidental republishing; finalization
+  safely retries branch/tag pushes and GitHub release creation using the upstream
+  remote and only the selected version's changelog notes.
+
+- Add frontend ESLint and strict JSDoc boundary checks to local lint/pre-commit.
+  Coverage gates include Python branches and frontend source branches; shared
+  contracts and pagination invariants complement line coverage. A local WebKit
+  matrix and real-browser benchmark exercise fitting, clusters and layout.
+
 - Separate page plans, table/row DOM, mark glyphs and coordinate scales into
   focused frontend modules. Grouped pagination retains prepared memberships,
   collapse slots and aggregate values; warm pages visit only overlapping groups.

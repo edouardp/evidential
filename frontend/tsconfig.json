@@ -1,0 +1,13 @@
+{
+  "compilerOptions": {
+    "allowJs": true,
+    "checkJs": false,
+    "strict": true,
+    "noEmit": true,
+    "target": "ES2022",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "skipLibCheck": true
+  },
+  "include": ["src/urls.js", "src/csv.js", "src/aggregates.js", "src/mark-scales.js", "type_contracts.js"]
+}

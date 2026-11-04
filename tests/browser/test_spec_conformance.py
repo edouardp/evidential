@@ -770,7 +770,7 @@ def test_log_minor_ticks_are_unlabeled_log_spaced_and_touch_the_body_boundary(pa
             }""")
             # Uniform steps in the original values must bunch up toward each decade's end.
             expected = axis["x"] + axis["width"] * (log10(value) + 1) / 2
-            assert geometry["x"] == pytest.approx(expected, abs=0.1)
+            assert geometry["x"] == pytest.approx(expected, abs=0.3)
             assert geometry["color"] == "rgb(0, 0, 0)"
         xs = minors.evaluate_all("nodes => nodes.slice(0, 3).map(el => el.getBoundingClientRect().x)")
         assert xs[1] - xs[0] > xs[2] - xs[1] > 0

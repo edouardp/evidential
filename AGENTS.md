@@ -10,9 +10,16 @@ Every check is defined twice, and the two must stay in sync:
   `make lint` (or `make format` to auto-fix).
 
 The gates are: **ruff** (lint + format), **bandit**, **pip-audit**, **pyrefly**
-(types), **shellcheck**, **checkmake** (Makefile), **rumdl** (markdown) and
+(types), **ESLint**, **TypeScript** (checked JavaScript boundaries),
+**shellcheck**, **checkmake** (Makefile), **rumdl** (markdown) and
 **readme-check** (notebook documentation and screenshot provenance).
 `make validate` runs the gates plus `marimo check`, the test suites and a build.
+
+Python coverage includes branches and requires 90%. Frontend source coverage
+requires 95% lines and 85% branches. `make test-browser-matrix` runs Chromium and
+WebKit locally (`uv run playwright install webkit` installs the second engine).
+Use `make benchmark-browser` for frame-inclusive label/clustering/layout work;
+jsdom timings exclude those browser costs. See [ADR-092](docs/adr/092-frontend-quality-and-browser-measurement.md).
 
 ## Tests
 
@@ -62,6 +69,10 @@ documented in [docs/RELEASE_PROCESS.md](docs/RELEASE_PROCESS.md). In short:
   and `../gamr`. Run `make validate` and `make check` from a clean tracked
   checkout before publishing. GitHub Actions is not used. If CI/CD is added,
   use Buildkite.
+- A successful upload records its version and commit in the Git directory.
+  After a push/tag/GitHub failure use `make release-resume VERSION=X.Y.Z`;
+  it performs no upload or credential lookup. Never rerun a bump to recover
+  an already published version. See [ADR-093](docs/adr/093-resumable-release-finalization.md).
 
 `tests/release/test_release.py` keeps the metadata, changelog entry, release
 script and local gates in place — in particular, the `version` in `pyproject.toml` must

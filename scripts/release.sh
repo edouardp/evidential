@@ -5,16 +5,22 @@ set -euo pipefail
 if [[ $# -eq 0 ]]; then
     echo "Usage: $0 <patch|minor|major>" >&2
     echo "       $0 --version <X.Y.Z|X.Y.ZaN|X.Y.ZbN|X.Y.ZrcN>" >&2
+    echo "       $0 --resume <VERSION>" >&2
     exit 2
 fi
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+if [[ "${1:-}" == "--resume" ]]; then
+    [[ $# -eq 2 ]] || { echo "ERROR: --resume requires VERSION" >&2; exit 2; }
+    exec bash "$SCRIPT_DIR/finish-release.sh" "$2"
+fi
 source "$SCRIPT_DIR/publish-guard.sh"
 cd "$ROOT"
 
 CURRENT=$(grep '^version' pyproject.toml | head -1 | sed 's/.*"\(.*\)"/\1/')
 RESOLVED=$(python3 "$SCRIPT_DIR/release_version.py" "$CURRENT" "$@")
-read -r NEW RELEASE_KIND <<< "$RESOLVED"
+read -r NEW _ <<< "$RESOLVED"
+python3 "$SCRIPT_DIR/release_state.py" pending "$(git rev-parse --git-path evidential-release.json)"
 
 if git show-ref --verify --quiet "refs/tags/v$NEW"; then
     echo "ERROR: Tag v$NEW already exists." >&2
@@ -68,16 +74,7 @@ make validate
 # retrieve the token through the project-managed keyring CLI.
 make pypi
 
-echo "==> Tagging v$NEW"
-git push
-git tag "v$NEW"
-git push origin "v$NEW"
-
-echo "==> Creating GitHub release"
-GH_RELEASE_ARGS=(release create "v$NEW" --title "v$NEW" --notes-file CHANGELOG.md)
-if [[ "$RELEASE_KIND" == "prerelease" ]]; then
-    GH_RELEASE_ARGS+=(--prerelease)
+if ! bash "$SCRIPT_DIR/finish-release.sh" "$NEW"; then
+    echo "ERROR: Upload succeeded; resume with make release-resume VERSION=$NEW. Do not upload again." >&2
+    exit 1
 fi
-gh "${GH_RELEASE_ARGS[@]}"
-
-echo "==> Released evidential v$NEW"

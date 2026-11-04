@@ -6,6 +6,11 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 source "$SCRIPT_DIR/publish-guard.sh"
 cd "$ROOT"
 
+VERSION=$(grep '^version' pyproject.toml | head -1 | sed 's/.*"\(.*\)"/\1/')
+COMMIT=$(git rev-parse HEAD)
+RECEIPT=$(git rev-parse --git-path evidential-release.json)
+python3 "$SCRIPT_DIR/release_state.py" publish "$RECEIPT" "$VERSION"
+
 "$SCRIPT_DIR/check-keyring.sh"
 make readme-check
 make check
@@ -20,3 +25,5 @@ export UV_PUBLISH_TOKEN
 
 echo "==> Publishing to PyPI"
 uv publish dist/*
+unset UV_PUBLISH_TOKEN
+python3 "$SCRIPT_DIR/release_state.py" record "$RECEIPT" "$VERSION" "$COMMIT"

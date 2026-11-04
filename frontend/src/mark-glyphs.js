@@ -325,7 +325,7 @@ function drawStrip(enc, view) {
 }
 
 function drawRange(enc, view) {
-  const {col, row, track, pos, span, format, labelFor, context} = view;
+  const {col, row, track, pos, format, labelFor, context} = view;
   const value = numeric(row[enc.source]);
   if (value == null) return;
   const low = value;

@@ -21,6 +21,14 @@ else
     uv run ruff format --check .
 fi
 
+echo "=== frontend lint ==="
+if [[ -n "$FIX" ]]; then
+    npm --prefix frontend run lint:fix
+else
+    npm --prefix frontend run lint
+fi
+npm --prefix frontend run typecheck
+
 echo "=== bandit ==="
 uv run bandit -r -c .bandit -q src/evidential
 

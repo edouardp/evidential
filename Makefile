@@ -61,7 +61,11 @@ frontend-dev: ## Rebuild the bundle on every change
 
 .PHONY: frontend-test
 frontend-test: ## Run the JavaScript formatting/colour/renderer tests
-	cd frontend && node --test test_*.js
+	cd frontend && npm run coverage
+
+.PHONY: frontend-lint
+frontend-lint: ## Lint all frontend JavaScript and type-check boundary contracts
+	cd frontend && npm run lint && npm run typecheck
 
 .PHONY: frontend-check
 frontend-check: ## Verify committed renderer assets match a fresh build
@@ -127,7 +131,7 @@ studio-validate: ## Validate the committed Studio views against their notebook
 # ============================================================================
 
 .PHONY: lint
-lint: ## Run all lint gates (ruff, bandit, pip-audit, pyrefly, shellcheck, checkmake, rumdl)
+lint: ## Run Python/frontend lint, types, security, shell, Makefile, markdown and provenance gates
 	./scripts/lint.sh
 
 .PHONY: format
@@ -160,11 +164,18 @@ markdown-lint: ## Lint documentation markdown with rumdl
 
 .PHONY: test-python
 test-python: ## Run the Python test suite with coverage
-	uv run pytest --cov=evidential --cov-report=term-missing --cov-fail-under=80
+	uv run pytest --cov=evidential --cov-branch --cov-report=term-missing --cov-fail-under=90
 
 .PHONY: test-browser
 test-browser: frontend-build ## Run real-browser functional tests (Playwright + installed Edge/Chrome)
 	EVIDENTIAL_REQUIRE_BROWSER=1 uv run pytest -m browser -v tests/browser
+
+.PHONY: test-browser-webkit
+test-browser-webkit: frontend-build ## Run the functional suite with WebKit (playwright install webkit)
+	EVIDENTIAL_BROWSER=webkit EVIDENTIAL_REQUIRE_BROWSER=1 uv run pytest -m browser -v tests/browser
+
+.PHONY: test-browser-matrix
+test-browser-matrix: test-browser test-browser-webkit ## Exercise Chromium and WebKit locally
 
 .PHONY: test
 test: test-python frontend-test ## Run Python and JavaScript tests
@@ -177,6 +188,10 @@ benchmark: ## Profile table navigation and grouped summary overrides
 	node frontend/benchmark.js
 	node frontend/benchmark.js --layout
 	uv run --locked python scripts/benchmark_aggregations.py
+
+.PHONY: benchmark-browser
+benchmark-browser: frontend-build ## Measure real browser frames, label fitting, clustering and layout
+	uv run python -m scripts.benchmark_browser
 
 # ============================================================================
 # Dependencies
@@ -222,6 +237,11 @@ else
 	@CHOICE=$$(uv run scripts/chooser.py --title "Release type?" patch minor major 3>&1 1>&2) || exit 1; \
 	./scripts/release.sh $$CHOICE
 endif
+
+.PHONY: release-resume
+release-resume: ## Finish an uploaded release without rebuilding or publishing (VERSION=X.Y.Z)
+	@test -n "$(VERSION)" || { echo "Set VERSION to the uploaded version"; exit 1; }
+	./scripts/release.sh --resume "$(VERSION)"
 
 .PHONY: release-patch
 release-patch: ## Release a patch version (bug fixes)

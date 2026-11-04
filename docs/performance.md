@@ -37,6 +37,20 @@ bounded value/heading visits rather than these machine-dependent timings.
 
 Reproduce with `node frontend/benchmark.js --layout`.
 
+## Browser frames, automatic labels and point clustering
+
+`make benchmark-browser` serves the committed bundle and measures real Chromium
+pages with 20 rows, automatically positioned bar labels and overlapping points.
+It keeps ResizeObserver and animation frames enabled. Dataset construction and
+transfer are excluded; each operation waits through three animation frames,
+including fitting, cluster calculation and layout. This is not GPU paint timing.
+
+On 2026-11-04, Chromium 156 reported median navigation of 49.0, 50.6 and 51.0 ms
+for 10,000, 50,000 and 100,000 source records. All scenarios rendered 20 fitted
+labels and 20 point composites. Most of that interval is the deliberate frame
+wait, so compare it separately from the pure projection measurements above.
+Use `uv run python -m scripts.benchmark_browser --engine webkit` for WebKit.
+
 ## Python summary overrides
 
 Each group contains ten detail rows; two measures use sum and mean overrides.

@@ -42,7 +42,7 @@ def test_release_script_bumps_checks_and_publishes() -> None:
     script = ROOT / "scripts" / "release.sh"
     assert script.exists()
     assert os.access(script, os.X_OK)
-    text = script.read_text()
+    text = script.read_text() + (ROOT / "scripts/finish-release.sh").read_text()
     for token in (
         "pyproject.toml",
         "CHANGELOG.md",

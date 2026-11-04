@@ -71,7 +71,10 @@ def test_stacks_hidden_labels_and_both_neutral_halves(page, live_server, demos):
     expect(root.locator(".et-tooltip-name")).to_have_text("Storage:")
     last = root.locator(".et-mark-stack-seg").last
     assert last.locator(".et-mark-stack-label").evaluate("el => getComputedStyle(el).visibility") == "hidden"
-    last.hover(force=True)
+    # This segment is narrower than one CSS pixel: keyboard inspection must
+    # reach it even when a real pointer is rounded onto an adjacent segment.
+    root.locator("tbody td").last.focus()
+    root.locator("tbody td").last.press("End")
     expect(root.locator(".et-tooltip-name")).to_have_text("Other:")
     expect(root.locator(".et-tooltip-detail")).to_have_text(["Value: $1", "Total: $2,018"])
     neutral = page.locator("#case-1")
@@ -95,17 +98,31 @@ def test_dense_points_choose_nearest_entries_and_respect_table_and_column_limits
         cell = root.locator("tbody td").first
         points = cell.locator(".et-mark-point")
         tip = root.locator(".et-tooltip")
-        for index, start in [(0, 0), (40, 41 - limit)]:
+        for index, direction in [(0, -1), (40, 1)]:
             box = points.nth(index).bounding_box()
-            page.mouse.move(box["x"] + box["width"] / 2, box["y"] + box["height"] / 2)
+            # Move beyond the dense run's endpoint, avoiding subpixel pointer
+            # rounding changing which near-identical coordinate is nearest.
+            page.mouse.move(box["x"] + box["width"] / 2 + direction * 2, box["y"] + box["height"] / 2)
+            start = 0 if index == 0 else 41 - limit
             expect(tip.locator(".et-tooltip-entry")).to_have_count(limit)
             expect(tip.locator(".et-tooltip-value")).to_have_text(
                 [f"{49 + i / 20:g}" for i in range(start, start + limit)]
             )
         # A column's limit wins even when the table has another default.
-        root.locator("tbody td").nth(1).locator(".et-mark-point").nth(20).hover(force=True)
+        page.evaluate(
+            "document.addEventListener('pointermove', e => window.lastPointer = {x:e.clientX, y:e.clientY}, {once:true})"
+        )
+        override_points = root.locator("tbody td").nth(1).locator(".et-mark-point")
+        override_points.nth(20).hover(force=True)
         expect(tip.locator(".et-tooltip-entry")).to_have_count(3)
-        expect(tip.locator(".et-tooltip-value")).to_have_text(["49.95", "50", "50.05"])
+        # Subpixel point centres can round to a different physical pointer
+        # coordinate in each engine. Verify nearest values at the actual event.
+        expected = override_points.evaluate_all("""nodes => nodes.map((node,index) => {
+            const r = node.getBoundingClientRect();
+            return {index, distance:Math.hypot(r.x+r.width/2-window.lastPointer.x, r.y+r.height/2-window.lastPointer.y)};
+        }).sort((a,b) => a.distance-b.distance).slice(0,3).sort((a,b) => a.index-b.index)
+          .map(item => String(Number((49+item.index/20).toFixed(2))))""")
+        expect(tip.locator(".et-tooltip-value")).to_have_text(expected)
         cell.focus()
         cell.press("End")
         expect(tip.locator(".et-tooltip-entry")).to_have_count(limit)

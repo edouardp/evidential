@@ -81,6 +81,13 @@ src/evidential/        Python package (the anywidget)
 frontend/src/               frontend sources
   index.js                  re-exports table.js
   table.js                  renderer + render() entry
+  render-plan.js            pure page/header/axis/context plan
+  table-body.js, row-dom.js  physical table and detail row DOM
+  row-layout.js             retained group memberships, slots and annotations
+  mark-glyphs.js             per-kind mark drawing and dispatch
+  mark-scales.js             coordinate domains, positions and ticks
+  aggregates.js             portable display-summary reducers
+  urls.js, csv.js            safe navigation and raw CSV boundaries
   dimension-grid.js          virtualized dimension slicer + render() entry
   headers.js                column ordering, shared headers and member layout
   format.js                 formatValue on top of ssf
@@ -475,10 +482,15 @@ flowchart TD
 
 ### 6.2 Visualisations
 
-`table.js` orchestrates the widget. Pure row processing lives in `rows.js`,
-cell formatting/decorating in `cells.js`, and the visualizations below in
-`visualizations.js`. Loading, hold-repeat, and viewport controllers own their
-timers and observers. See [ADR-037](adr/037-renderer-module-boundaries.md).
+`table.js` orchestrates widget state and lifecycle. `render-plan.js` describes a
+page without DOM writes; `table-body.js` and `row-dom.js` construct its table and
+detail cells. `row-layout.js` retains group memberships, collapse slots and
+aggregate cells across page changes. `cells.js` handles cell formatting and
+decoration. `visualizations.js` composes tracks and guides, `mark-glyphs.js`
+dispatches individual mark kinds, and `mark-scales.js` owns coordinates/ticks.
+Loading, hold-repeat and viewport controllers own their timers and observers.
+See [ADR-037](adr/037-renderer-module-boundaries.md) and
+[ADR-039](adr/039-derived-data-cache-and-group-index.md).
 
 - **Bar** (`renderBar` in `visualizations.js`). The bar is a positioned div behind a right-aligned
   label. The cell pulls into the cell padding with negative margins and the
@@ -715,10 +727,11 @@ validates its projections. See [marimo-studio.md](marimo-studio.md) and
 
 - **A new format code or special formatter** — add it in `format.js`
   (`formatValue`'s special cases), and add a JS test.
-- **A new visualisation** — add a `_renderX(col, value)` method in `table.js`,
-  dispatch it in the cell pipeline (§6.1), and document the column option in
-  `README.md` and `_normalize_column_options` if it has Evidence-style flat
-  aliases.
+- **A new mark** — add its validator/builder in `marks.py`, its per-kind drawing
+  function and registry entry in `mark-glyphs.js`, and domain contributions in
+  `mark-data.js`. Keep orchestration out of the renderer. Add unit and browser
+  geometry/inspection tests and a notebook-backed README example. Flat Evidence
+  aliases belong in `_column_options.py`.
 - **A new table/column option** — add it to `_OPTION_KEYS`/`_OPTION_DEFAULTS`
   (table options) or to `make_column` (column options), document it, and add a
   notebook demo. No frontend change is needed if the option is pure CSS/data.
@@ -744,7 +757,13 @@ validates its projections. See [marimo-studio.md](marimo-studio.md) and
 | `live.py` | `LiveEvidentialTable`, `query_values` |
 | `duck.py` | DuckDB connections, S3, S3 Tables |
 | `_compat.py` | soft Arrow/pandas detection |
-| `table.js` | renderer, pipeline, interaction, fullscreen, CSV |
+| `table.js` | widget state, pipeline orchestration and lifecycle |
+| `render-plan.js` | pure pagination, header/axis and render-context plan |
+| `table-body.js`, `row-dom.js` | physical table and detail row DOM |
+| `row-layout.js` | retained display groups/slots/aggregates, page annotations |
+| `mark-glyphs.js`, `mark-scales.js` | individual mark drawing and coordinate scales |
+| `aggregates.js` | portable summary operations, shared fixtures with Python |
+| `urls.js`, `csv.js` | supported navigation targets and raw CSV serialization |
 | `rows.js` | pure searching, sorting, grouping, pagination, statistics |
 | `headers.js` | column ordering, nested spanners, shared sub-column headers and member decoration |
 | `footnotes.js` | adaptive symbol selection and final cell mark labeling |

@@ -14,6 +14,32 @@ const layout = {version: 1, groups: [
   {id: "south", members: [2], depth: 0, children: [], section: heading("South"), summary},
 ], grand_summary: grand};
 
+test("pagination invariants hold across group sizes, filtering, ordering and page boundaries", () => {
+  for (let size = 1; size <= 24; size++) {
+    const records = Array.from({length: size}, (_, value) => ({name: String(value), value}));
+    const groups = [0, 1, 2].map(group => ({id: String(group), depth: 0, children: [],
+      members: records.flatMap((_, index) => index % 3 === group ? [index] : []),
+      section: heading(String(group)), summary}));
+    for (const filtered of [records, records.filter(row => row.value % 2), [...records].reverse()]) {
+      const expected = groups.flatMap(group => filtered.filter(row => group.members.includes(row.value)));
+      for (let pageSize = 1; pageSize <= 7; pageSize++) {
+        const prepared = new LayoutProjection({groups, grand_summary: grand}, records, filtered);
+        const pages = Array.from({length: Math.ceil(expected.length / pageSize) || 1}, (_, page) => prepared.page(pageSize, page));
+        assert.deepEqual(pages.flatMap(page => page.rows), expected);
+        for (const entry of pages.flatMap(page => page.entries)) {
+          if (entry.kind === "section") {
+            const members = groups.find(group => group.id === entry.groupKey).members;
+            const total = filtered.filter(row => members.includes(row.value)).reduce((sum, row) => sum + row.value, 0);
+            assert.equal(entry.cells.value.value, total);
+          }
+        }
+        assert.equal(pages.flatMap(page => page.entries).filter(entry => entry.kind === "summary").length,
+          groups.filter(group => filtered.some(row => group.members.includes(row.value))).length);
+      }
+    }
+  }
+});
+
 test("warm pages reuse members, slots and aggregate values without scanning the dataset", () => {
   let reads = 0;
   const data = Array.from({length: 10000}, (_, index) => ({name: String(index), get value() { reads++; return index; }}));

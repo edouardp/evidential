@@ -46,8 +46,11 @@ A Homebrew Python upgrade left the global wrapper pointing at a removed
 interpreter and broke the first patch upload. A credential-free `--help`
 preflight now verifies the managed CLI starts before version edits or builds;
 it does not read credentials or validate the stored token. The release
-then pushes the branch, tags and pushes the version to origin, and creates a
-GitHub release, marked as a prerelease when appropriate.
+then pushes the branch and version tag to its configured upstream remote, and
+creates a GitHub release, marked as a prerelease when appropriate.
+Successful uploads now record a local version/commit receipt; post-upload work
+is idempotently resumable with `make release-resume VERSION=...`, as described in
+[ADR-093](093-resumable-release-finalization.md).
 
 ### Consequences
 

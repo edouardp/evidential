@@ -55,7 +55,8 @@ def test_wheel_horizontal_navigation_search_and_keyboard(page, live_server):
     page.mouse.wheel(0, 1100)
     page.wait_for_function("document.querySelector('.edg-list').scrollTop > 500")
     assert dimension.locator(".edg-row").count() < 30
-    assert "Category 0," not in dimension.locator(".edg-row").first.get_attribute("aria-label")
+    # Scroll position updates before the virtual-list scroll callback in WebKit.
+    expect(dimension.locator(".edg-row").first).not_to_have_attribute("aria-label", "Dimension 0: Category 0, 230")
     page.get_by_role("button", name="Next dimensions", exact=True).click()
     page.wait_for_function("document.querySelector('.edg-track').scrollLeft > 100")
     page.get_by_role("button", name="Previous dimensions", exact=True).click()

@@ -110,6 +110,8 @@ dated, immutable record of the decisions behind them.
 | [089](089-collapsible-display-sections.md) | Collapsible Display Sections | Accepted |
 | [090](090-sparkline-y-color-encodings.md) | Sparkline Y-Value Color Encodings | Accepted |
 | [091](091-runtime-boundary-contracts.md) | Explicit Runtime Boundary Contracts | Accepted |
+| [092](092-frontend-quality-and-browser-measurement.md) | Frontend Quality Gates and Browser Measurements | Accepted |
+| [093](093-resumable-release-finalization.md) | Resumable Release Finalization | Accepted |
 
 ## Creating New ADRs
 

@@ -17,6 +17,8 @@ ROOT = Path(__file__).resolve().parents[2]
 STAGES = (
     "uv run ruff check",
     "uv run ruff format",
+    "npm --prefix frontend run lint",
+    "npm --prefix frontend run typecheck",
     "uv run bandit",
     "uv run pip-audit",
     "uv run pyrefly",
@@ -30,7 +32,7 @@ STAGES = (
 def run_lint(tmp_path: Path, *, fail_stage: str = "", fix: bool = False) -> subprocess.CompletedProcess[str]:
     bin_dir = tmp_path / "bin"
     bin_dir.mkdir()
-    for command in ("uv", "uvx", "shellcheck", "checkmake"):
+    for command in ("uv", "uvx", "shellcheck", "checkmake", "npm"):
         executable = bin_dir / command
         executable.write_text(
             "#!/usr/bin/env bash\n"

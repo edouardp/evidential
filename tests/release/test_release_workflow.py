@@ -22,7 +22,15 @@ def release_repo(tmp_path):
     repository = tmp_path / "repo"
     scripts = repository / "scripts"
     scripts.mkdir(parents=True)
-    for name in ("release.sh", "release_version.py", "publish.sh", "publish-guard.sh", "check-keyring.sh"):
+    for name in (
+        "release.sh",
+        "release_version.py",
+        "release_state.py",
+        "finish-release.sh",
+        "publish.sh",
+        "publish-guard.sh",
+        "check-keyring.sh",
+    ):
         shutil.copy2(ROOT / "scripts" / name, scripts / name)
     (repository / "pyproject.toml").write_text('[project]\nname = "evidential"\nversion = "0.1.0"\n')
     (repository / "uv.lock").write_text('version = "0.1.0"\n')
@@ -75,11 +83,28 @@ elif name == "uv" and args[:5] == ["run", "--frozen", "python", "-m", "keyring"]
     print("" if os.environ.get("RELEASE_TEST_EMPTY_TOKEN") else "fake-release-test-token")
 elif name == "uv" and args[:1] == ["publish"]:
     assert os.environ.get("UV_PUBLISH_TOKEN") == "fake-release-test-token"
+elif name == "gh" and args[:2] == ["release", "list"]:
+    path = Path(".git/fake-github-release")
+    if path.exists():
+        print(path.read_text())
+elif name == "gh" and args[:2] == ["release", "create"]:
+    assert Path(args[args.index("--notes-file")+1]).read_text() == "Release notes.\\n"
+    Path(".git/fake-github-release").write_text(args[2])
 """
     for name in ("make", "uv", "uvx", "gh", "editor"):
         executable = bin_dir / name
         executable.write_text(fake)
         executable.chmod(0o755)
+    real_git = shutil.which("git")
+    git_wrapper = bin_dir / "git"
+    git_wrapper.write_text(
+        "#!/usr/bin/env python3\nimport os, sys\n"
+        'stage = os.environ.get("RELEASE_TEST_GIT_FAIL", "")\n'
+        'if stage and " ".join(sys.argv[1:]).startswith(stage):\n'
+        '    print("simulated git failure", file=sys.stderr)\n    sys.exit(19)\n'
+        f"os.execv({real_git!r}, [{real_git!r}, *sys.argv[1:]])\n"
+    )
+    git_wrapper.chmod(0o755)
     # A dangling global wrapper reproduces the Homebrew interpreter failure.
     (bin_dir / "keyring").write_text("#!/missing/python3.14\n")
     (bin_dir / "keyring").chmod(0o755)
@@ -136,7 +161,7 @@ def test_release_bumps_changelog_validates_publishes_tags_and_creates_github_rel
     assert calls.index(["make", "validate"]) < calls.index(["make", "check"])
     upload = next(call for call in calls if call[:2] == ["uv", "publish"])
     assert set(upload[2:]) == {f"dist/evidential-{version}.tar.gz", f"dist/evidential-{version}-py3-none-any.whl"}
-    github = next(call for call in calls if call[0] == "gh")
+    github = next(call for call in calls if call[:3] == ["gh", "release", "create"])
     assert github[:4] == ["gh", "release", "create", f"v{version}"]
     assert ("--prerelease" in github) is prerelease
     assert git(repository, "log", "-1", "--pretty=%s") == f"Release v{version}"
@@ -238,3 +263,93 @@ def test_empty_token_is_never_sent_to_pypi(release_repo):
 def test_build_prunes_previous_distributions_before_building():
     result = subprocess.run(["make", "--dry-run", "build"], cwd=ROOT, check=True, text=True, capture_output=True)
     assert result.stdout.index("rm -rf dist/") < result.stdout.index("uv build")
+
+
+@pytest.mark.parametrize(
+    "git_failure,github_failure",
+    [
+        ("push origin HEAD:", ""),
+        ("tag v0.1.1", ""),
+        ("push origin refs/tags/", ""),
+        ("", "gh release list"),
+        ("", "gh release create"),
+    ],
+)
+def test_resume_after_upload_never_rebuilds_bumps_or_republishes(release_repo, git_failure, github_failure):
+    repository, _, env = release_repo
+    env["RELEASE_TEST_GIT_FAIL"] = git_failure
+    result, calls = run_release(release_repo, "patch", fail=github_failure)
+    assert result.returncode != 0 and "release-resume VERSION=0.1.1" in result.stderr
+    receipt = json.loads((repository / ".git/evidential-release.json").read_text())
+    assert receipt == {"version": "0.1.1", "commit": git(repository, "rev-parse", "HEAD"), "completed": False}
+    published_calls = len(calls)
+    commit = git(repository, "rev-parse", "HEAD")
+    env.pop("RELEASE_TEST_GIT_FAIL")
+    resumed, calls = run_release(release_repo, "--resume", "0.1.1")
+    assert resumed.returncode == 0, resumed.stderr
+    resumed_calls = calls[published_calls:]
+    assert not any(call[0] in {"uv", "uvx", "make", "editor"} for call in resumed_calls)
+    assert git(repository, "rev-parse", "HEAD") == commit
+    assert git(repository, "rev-parse", "v0.1.1") == commit
+    assert json.loads((repository / ".git/evidential-release.json").read_text())["completed"] is True
+    assert sum(call[:2] == ["uv", "publish"] for call in calls) == 1
+    # Repeating finalization is safe even if GitHub already created the release.
+    before = len(calls)
+    repeated, calls = run_release(release_repo, "--resume", "0.1.1")
+    assert repeated.returncode == 0, repeated.stderr
+    assert calls[before:][0][:3] == ["gh", "release", "list"]
+    assert not any(call[:3] == ["gh", "release", "create"] for call in calls[before:])
+
+
+def test_pending_upload_blocks_a_second_bump_and_resume_rejects_another_head(release_repo):
+    repository, _, _ = release_repo
+    result, calls = run_release(release_repo, "patch", fail="gh release create")
+    assert result.returncode != 0
+    before = len(calls)
+    blocked, calls = run_release(release_repo, "patch")
+    assert blocked.returncode != 0 and "release-resume" in blocked.stderr
+    assert len(calls) == before
+    git(repository, "commit", "--allow-empty", "-m", "Another commit")
+    rejected, calls = run_release(release_repo, "--resume", "0.1.1")
+    assert rejected.returncode != 0 and "does not match" in rejected.stderr
+    assert len(calls) == before
+
+
+def test_resume_refuses_missing_receipt_or_conflicting_tags(release_repo):
+    repository, _, _ = release_repo
+    result, calls = run_release(release_repo, "--resume", "0.1.0")
+    assert result.returncode != 0 and "No successful-upload receipt" in result.stderr
+    assert not calls
+    run_release(release_repo, "patch", fail="gh release create")
+    git(repository, "tag", "-d", "v0.1.1")
+    git(repository, "tag", "v0.1.1", "HEAD~1")
+    rejected, _ = run_release(release_repo, "--resume", "0.1.1")
+    assert rejected.returncode != 0 and "points at another commit" in rejected.stderr
+
+
+def test_finalization_uses_the_branch_upstream_remote(release_repo):
+    repository, _, _ = release_repo
+    git(repository, "remote", "rename", "origin", "publish")
+    result, _ = run_release(release_repo, "patch")
+    assert result.returncode == 0, result.stderr
+    assert git(repository, "ls-remote", "publish", "refs/tags/v0.1.1").split()[0] == git(
+        repository, "rev-parse", "HEAD"
+    )
+
+
+@pytest.mark.parametrize("matching", [False, True])
+def test_remote_annotated_tag_is_checked_by_commit_and_never_overwritten(release_repo, matching):
+    repository, _, env = release_repo
+    env["RELEASE_TEST_GIT_FAIL"] = "push origin HEAD:"
+    failed, _ = run_release(release_repo, "patch")
+    assert failed.returncode != 0
+    env.pop("RELEASE_TEST_GIT_FAIL")
+    git(repository, "tag", "-a", "v0.1.1", "-m", "Existing remote tag", "HEAD" if matching else "HEAD~1")
+    git(repository, "push", "origin", "refs/tags/v0.1.1")
+    original = git(repository, "ls-remote", "origin", "refs/tags/v0.1.1")
+    git(repository, "tag", "-d", "v0.1.1")
+    resumed, _ = run_release(release_repo, "--resume", "0.1.1")
+    assert (resumed.returncode == 0) is matching, resumed.stderr
+    if not matching:
+        assert "Remote tag" in resumed.stderr and "another commit" in resumed.stderr
+    assert git(repository, "ls-remote", "origin", "refs/tags/v0.1.1") == original

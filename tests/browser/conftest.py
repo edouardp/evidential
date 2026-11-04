@@ -1,8 +1,8 @@
 """Fixtures for real-browser functional tests.
 
 These tests serve the repository over HTTP (so the bundled ESM module loads)
-and drive a Chromium-based browser through Playwright. They use an installed
-Edge/Chrome when available, so no browser download is required.
+and drive the selected Playwright engine. Chromium prefers installed Edge/Chrome;
+set EVIDENTIAL_BROWSER=webkit (or firefox) to exercise another installed engine.
 """
 
 from __future__ import annotations
@@ -39,15 +39,18 @@ def live_server():
         thread.join(timeout=5)
 
 
-def _launch(playwright, *, required=False):
+def _launch(playwright, *, required=False, engine="chromium"):
     """Prefer an installed browser so tests need no `playwright install`."""
-    for kwargs in ({"channel": "msedge"}, {"channel": "chrome"}, {}):
+    if engine not in {"chromium", "webkit", "firefox"}:
+        raise ValueError(f"Unsupported browser engine: {engine}")
+    choices = ({"channel": "msedge"}, {"channel": "chrome"}, {}) if engine == "chromium" else ({},)
+    for kwargs in choices:
         try:
-            return playwright.chromium.launch(headless=True, **kwargs)
+            return getattr(playwright, engine).launch(headless=True, **kwargs)
         except Exception:  # pragma: no cover - depends on the machine
             continue
     if required:
-        pytest.fail("A Chromium browser is required; run uv run playwright install chromium")
+        pytest.fail(f"A {engine} browser is required; run uv run playwright install {engine}")
     return None
 
 
@@ -56,9 +59,10 @@ def browser():
     from playwright.sync_api import sync_playwright
 
     with sync_playwright() as playwright:
-        browser = _launch(playwright, required=os.environ.get("EVIDENTIAL_REQUIRE_BROWSER") == "1")
+        engine = os.environ.get("EVIDENTIAL_BROWSER", "chromium")
+        browser = _launch(playwright, required=os.environ.get("EVIDENTIAL_REQUIRE_BROWSER") == "1", engine=engine)
         if browser is None:
-            pytest.skip("No Chromium-based browser (msedge/chrome/chromium) available")
+            pytest.skip(f"No {engine} browser available")
         yield browser
         browser.close()
 

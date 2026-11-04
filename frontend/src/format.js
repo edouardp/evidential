@@ -325,7 +325,6 @@ export function formatValue(value, formatCode, opts = {}) {
       return formatQuarter(processed, true) ?? fallbackValue;
     }
 
-    const isDate = isDateFormatCode(actual);
     actual = FORMAT_PRESETS[actual] || actual;
     actual = actual.replace(/'/g, '"');
 

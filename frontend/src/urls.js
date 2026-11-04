@@ -1,6 +1,10 @@
+// @ts-check
 const navigationProtocols = new Set(["http:", "https:", "mailto:", "tel:"]);
 
-/** Validate using the browser's URL parser, including whitespace normalization. */
+/** Validate using the browser's URL parser, including whitespace normalization.
+ * @param {unknown} value
+ * @param {string | undefined} [base]
+ */
 export function navigationUrl(value, base = globalThis.document?.baseURI) {
   if (value == null || value === "") return null;
   const text = String(value).trim();

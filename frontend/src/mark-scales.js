@@ -1,6 +1,11 @@
+// @ts-check
 // Shared coordinate domains, transforms and ticks.
 import {numeric} from "./mark-data.js";
 
+/** @param {import('./contracts.js').ScaleColumn} col
+ * @param {{min: number, max: number, shared?: boolean} | null} range
+ * @returns {import('./contracts.js').MarkDomain}
+ */
 export function marksDomain(col, range) {
   const scale = col.scale || {};
   if (range?.shared) return {lo: range.min, hi: range.max, span: (range.max - range.min) || 1, transform: scale.transform};
@@ -22,7 +27,9 @@ export function marksDomain(col, range) {
   return { lo, hi, span: (hi - lo) || 1, transform: scale.transform };
 }
 
-/** Round tick values spanning ``lo..hi`` (for an axis or gridlines). */
+/** Round tick values spanning ``lo..hi`` (for an axis or gridlines).
+ * @param {number} lo @param {number} hi @param {number} [count] @param {string | null} [transform]
+ */
 export function niceTicks(lo, hi, count = 4, transform = null) {
   if (!isFinite(lo) || !isFinite(hi) || hi <= lo) return [];
   if (transform === "log" && lo > 0) {
@@ -47,7 +54,9 @@ export function niceTicks(lo, hi, count = 4, transform = null) {
   return ticks;
 }
 
-/** Log decades/endpoints are labeled; subdivisions reveal logarithmic spacing. */
+/** Log decades/endpoints are labeled; subdivisions reveal logarithmic spacing.
+ * @param {number} lo @param {number} hi @param {number} [count] @param {string | null} [transform]
+ */
 export function axisTicks(lo, hi, count = 4, transform = null) {
   if (transform !== "log") return niceTicks(lo, hi, count, transform).map(value => ({value, major: true}));
   if (!(lo > 0) || !Number.isFinite(hi) || hi <= lo) return [];
@@ -61,27 +70,30 @@ export function axisTicks(lo, hi, count = 4, transform = null) {
   return [...ticks.values()].sort((a, b) => a.value - b.value);
 }
 
-/** A position function mapping a value in ``lo..hi`` to 0..100 (percent). */
+/** A position function mapping a value in ``lo..hi`` to 0..100 (percent).
+ * @param {number} lo @param {number} hi @param {string | null} transform @param {boolean} [reverse]
+ */
 export function scalePosition(lo, hi, transform, reverse = false) {
   const position = markScale(lo, hi, transform);
-  return value => {
+  return (/** @type {unknown} */ value) => {
     const pct = position(value);
     return pct == null ? null : reverse ? 100 - pct : pct;
   };
 }
 
+/** @param {number} lo @param {number} hi @param {string | null} transform */
 function markScale(lo, hi, transform) {
   if (transform === "log" && lo > 0 && hi > lo) {
     const l0 = Math.log(lo);
     const lspan = (Math.log(hi) - l0) || 1;
-    return (value) => {
+    return (/** @type {unknown} */ value) => {
       const num = numeric(value);
       if (num == null || num <= 0) return null;
       return ((Math.log(num) - l0) / lspan) * 100;
     };
   }
   const span = (hi - lo) || 1;
-  return (value) => {
+  return (/** @type {unknown} */ value) => {
     const num = numeric(value);
     return num != null ? ((num - lo) / span) * 100 : null;
   };

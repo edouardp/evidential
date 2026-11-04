@@ -34,6 +34,20 @@ repos:
 
   - repo: local
     hooks:
+      - id: frontend-lint
+        name: frontend-lint (ESLint)
+        entry: npm --prefix frontend run lint
+        language: system
+        pass_filenames: false
+        always_run: true
+
+      - id: frontend-types
+        name: frontend-types (checked JavaScript boundaries)
+        entry: npm --prefix frontend run typecheck
+        language: system
+        pass_filenames: false
+        always_run: true
+
       - id: pip-audit
         name: pip-audit (dependency audit)
         entry: uv run pip-audit

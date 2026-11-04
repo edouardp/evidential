@@ -13,6 +13,7 @@ make release-patch                 # bug fixes and documentation
 make release-minor                 # new features
 make release-major                 # breaking changes
 make release VERSION=0.2.0rc1       # exact stable, alpha, beta or RC version
+make release-resume VERSION=0.2.0rc1 # finish a successful upload; never upload again
 ```
 
 Exact versions accept `X.Y.Z`, `X.Y.ZaN`, `X.Y.ZbN` and `X.Y.ZrcN`, matching
@@ -123,19 +124,29 @@ A dirty worktree or missing upstream must be resolved before release. Commit
 or stash intended work, including untracked files, and check `git status`.
 The release script stages only `pyproject.toml`, `uv.lock` and `CHANGELOG.md`.
 
-If the version commit exists but upload never started, do not rerun the bump
-command: that would increment the version again. After fixing and committing
-the issue, use `make pypi` to publish the current version, then finish the
-branch push, version tag and GitHub release manually. For the failed stable
-`0.1.1` attempt, those final steps are:
+After a successful upload, `publish.sh` writes a credential-free receipt under
+the Git directory (`git rev-parse --git-path evidential-release.json`). It binds
+the version to the exact published commit. Branch push, tag push and GitHub
+release creation can then be retried safely:
 
 ```bash
-make pypi
-git push
-git tag v0.1.1
-git push origin v0.1.1
-gh release create v0.1.1 --title v0.1.1 --notes-file CHANGELOG.md
+make release-resume VERSION=0.2.3
 ```
+
+Resume requires a clean checkout at that commit and matching version metadata.
+It follows the branch's upstream remote, accepts existing tags only if they
+point at the published commit, and skips an existing GitHub release. Notes
+contain only the selected changelog section. It never bumps, builds, retrieves
+credentials or uploads. A pending receipt blocks another release bump or upload;
+a completed receipt prevents republishing the same version. Repeating resume
+after completion is safe. Receipts are local to this checkout, not committed.
+
+If the version commit exists but upload never started, do not rerun the bump
+command. Fix and commit the issue, run `make pypi`, then `make release-resume
+VERSION=X.Y.Z`. An interrupted or partial upload, a lost receipt, a fresh clone
+or a release made before receipts existed needs manual reconciliation with PyPI
+first. The upload and local receipt cannot be atomic: termination between those
+steps must never be treated as evidence that uploading again is safe.
 
 An error such as `keyring: ...python3.14: bad interpreter` means a global
 wrapper points at a removed Python, not that the stored token was rejected.
@@ -158,5 +169,6 @@ contents.
 
 - [Contributor guide](../AGENTS.md).
 - [ADR-080: House release commands](adr/080-house-release-commands.md).
+- [ADR-093: Resumable release finalization](adr/093-resumable-release-finalization.md).
 - [ADR-034: Build backend](adr/034-uv-build-backend.md).
 - [ADR-079: Notebook-generated README](adr/079-notebook-generated-readme.md).

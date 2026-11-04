@@ -133,7 +133,8 @@ class DimensionGrid(anywidget.AnyWidget):
             },
             selected=dict(selected or {}),
         )
-        self._refresh()
+        if not self.facets:
+            self._refresh()
 
     def _validate_records(self, records: list[dict[str, Any]]) -> list[dict[str, Any]]:
         for row in records:
@@ -251,8 +252,13 @@ class DimensionGrid(anywidget.AnyWidget):
             name: [value for value in values if _key(value) in domains[name]] for name, values in self.selected.items()
         }
         self._records, self._domains = records, domains
-        self.selected = selected
-        self._refresh()
+        previous = dict(self.selected)
+        with self.hold_sync():
+            self.selected = selected
+            # Changed selections refresh through the observer; unchanged ones
+            # still need a refresh because the source records may have changed.
+            if self.selected == previous:
+                self._refresh()
 
     def clear(self) -> None:
         """Clear all selections; local search text is independent of selection."""

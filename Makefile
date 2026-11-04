@@ -175,6 +175,7 @@ test-all: test ## Alias for test
 .PHONY: benchmark
 benchmark: ## Profile table navigation and grouped summary overrides
 	node frontend/benchmark.js
+	node frontend/benchmark.js --layout
 	uv run --locked python scripts/benchmark_aggregations.py
 
 # ============================================================================

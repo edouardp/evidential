@@ -3,7 +3,7 @@ import { orderedColumns } from "./headers.js";
 import { calculateVizRanges, calculateFormatRanges, buildColorVizScale } from "./color.js";
 import { applySharedDomains } from "./shared-domains.js";
 import { prepareSparklineScales } from "./sparkline-colors.js";
-import { projectLegacy } from "./row-layout.js";
+import { LayoutProjection, projectLegacy } from "./row-layout.js";
 
 /** One current dataset projection per widget; pagination/selection do not invalidate it. */
 export class RowPipeline {
@@ -43,12 +43,13 @@ export class RowPipeline {
       }
     }
     const result = {
-      columns, sorted, ranges, formatRanges, decimals, colorScales,
+      columns, sourceColumns: allColumns, sorted, ranges, formatRanges, decimals, colorScales,
       sparklineScales: prepareSparklineScales(columns, sorted, ranges, options.color_scale), sourceRows: rows, rowLayout,
       hasGroups: !!rowLayout?.legacy || rows.some((row) => row.render_type && row.render_type !== "cell_data"),
       dimCount: (rowLayout?.legacy || []).reduce((max, token) => Math.max(max, token.row?.__level || 0),
         rows.reduce((max, row) => Math.max(max, row.__level ?? 0), 0)),
       stats: options.column_stats ? columnStats(columns, rows) : null,
+      displayProjection: rowLayout?.version && !rowLayout.legacy ? new LayoutProjection(rowLayout, rows, sorted) : null,
     };
     this.cache = {key, result};
     this.visibility = null;
@@ -61,6 +62,7 @@ export class RowPipeline {
       ? projectLegacy(result.rowLayout, result.sourceRows, result.sorted, isCollapsed)
       : visibleRows(result.sorted, isCollapsed);
     this.visibility = {result, groupVersion, rows,
+      insetGroups: new Set(rows.filter(row => row.render_type === "row_section" && row.__align !== "center").map(row => row.__group_key)),
       hasGroups: rows.some((row) => row.render_type && row.render_type !== "cell_data")};
     return this.visibility;
   }

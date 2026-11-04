@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { projectLayout, projectLegacy, summaryValue } from "./src/row-layout.js";
+import { LayoutProjection, projectLayout, projectLegacy, summaryValue } from "./src/row-layout.js";
 import { RowPipeline } from "./src/derived.js";
 
 const sum = {operation: "sum", source: "value"};
@@ -13,6 +13,52 @@ const layout = {version: 1, groups: [
   {id: "north", members: [0, 1], depth: 0, children: [], section: heading("North"), summary},
   {id: "south", members: [2], depth: 0, children: [], section: heading("South"), summary},
 ], grand_summary: grand};
+
+test("warm pages reuse members, slots and aggregate values without scanning the dataset", () => {
+  let reads = 0;
+  const data = Array.from({length: 10000}, (_, index) => ({name: String(index), get value() { reads++; return index; }}));
+  const spec = {groups: [{id: "all", members: data.map((_, index) => index), depth: 0, children: [], section: heading("All"), summary}]};
+  const prepared = new LayoutProjection(spec, data, data);
+  const first = prepared.page(20, 0);
+  assert.equal(first.entries[0].cells.value.value, 49995000);
+  const slots = prepared.folded;
+  reads = 0;
+  const second = prepared.page(20, 1);
+  assert.equal(reads, 0);
+  assert.equal(prepared.folded, slots);
+  assert.equal(second.rows[0], data[20]);
+  assert.equal(second.entries[0].cells, first.entries[0].cells);
+});
+
+test("page annotation work is bounded by overlapping groups", () => {
+  let headings = 0;
+  const data = Array.from({length: 1000}, (_, value) => ({value}));
+  const spec = {groups: data.map((_, index) => ({id: String(index), members: [index], depth: 0, children: [],
+    section: {get label() { headings++; return String(index); }, cells: {}}}))};
+  const prepared = new LayoutProjection(spec, data, data);
+  prepared.page(10, 0);
+  headings = 0;
+  assert.equal(prepared.page(10, 50).rows[0], data[500]);
+  assert.equal(headings, 10);
+});
+
+test("collapse revisions rebuild slots while dataset revisions replace the prepared projection", () => {
+  const records = [{name: "A", value: 1}, {name: "B", value: 2}];
+  const spec = {version: 1, groups: [{id: "a", members: [0, 1], depth: 0, children: [],
+    section: {...heading("A"), collapsible: true}}]};
+  const pipeline = new RowPipeline();
+  const args = {rows: records, columns: [{name: "name"}, {name: "value", type: "number"}], options: {},
+    search: "", hidden: new Set(), sort: null, rowLayout: spec};
+  const prepared = pipeline.get(args).displayProjection;
+  assert.equal(prepared.page(1, 0).total, 2);
+  assert.equal(prepared.page(1, 0, null, {revision: 1, isCollapsed: () => true}).total, 1);
+  assert.equal(pipeline.get(args).displayProjection, prepared);
+  const filtered = pipeline.get({...args, search: "B"}).displayProjection;
+  assert.notEqual(filtered, prepared);
+  assert.deepEqual(filtered.page(10, 0).rows, [records[1]]);
+  pipeline.clear();
+  assert.notEqual(pipeline.get(args).displayProjection, prepared);
+});
 
 test("pagination counts detail records and keeps summaries with their final member", () => {
   const first = projectLayout(layout, source, source, 1, 0);

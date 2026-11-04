@@ -46,6 +46,15 @@ dispose timers, observers, and scheduled layout frames when the widget closes.
 
 ### Consequences
 
+The 2026-11-04 review adds `render-plan.js` for one-page presentation decisions,
+`table-body.js` for physical table/axis DOM, and `row-dom.js` for ordinary and
+legacy-compatible row DOM. Mutable writing state is local to body construction;
+the plan and source records are not modified. `mark-scales.js` owns coordinate
+transforms/ticks, while `mark-glyphs.js` dispatches to focused renderers per mark
+kind. `visualizations.js` composes the shared track, guides and accessibility
+description. Imports use these owning modules instead of unrelated forwarding
+exports. The renderer retains interaction and lifecycle orchestration.
+
 - Good, because pure row functions and lifecycles can be tested independently.
 - Good, because cell content branches retain common final decoration.
 - Bad, because maintainers must understand the explicit module interfaces.

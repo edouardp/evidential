@@ -4,30 +4,27 @@
 // from Python and renders a sortable, searchable, formattable table with
 // conditional visualizations, collapsible groups, frozen columns, pagination,
 // CSV export, and a fullscreen dialog.
-import { footnoteMark, labelFootnotes } from "./footnotes.js";
+import { footnoteMark } from "./footnotes.js";
 import { fitMarkLabels } from "./mark-labels.js";
 import { projectLayout, projectLegacy } from "./row-layout.js";
-import { renderAnnotation } from "./display-rows.js";
 import { renderStatsRow } from "./statistics.js";
-import { renderHeader, headerLayout, decorateSubcolumn, orderedColumns } from "./headers.js";
-import { renderColumnSizing } from "./column-sizing.js";
+import { renderHeader, orderedColumns } from "./headers.js";
 import { renderLegends } from "./legends.js";
 import { RowPipeline } from "./derived.js";
-import { HoldController, bindRowSelection } from "./interactions.js";
+import { HoldController } from "./interactions.js";
 import { LoadingController } from "./loading.js";
 import { TableViewport } from "./viewport.js";
 import { ExpandedPages } from "./expanded-pages.js";
+import { renderTable } from "./table-body.js";
+import { buildRenderPlan } from "./render-plan.js";
 import { navigationUrl } from "./urls.js";
 import { serializeCsv } from "./csv.js";
-import { h, inlineMarkdown, withFigure, formatRowRanges, alignStyle, isStub } from "./dom.js";
+import { h, inlineMarkdown, formatRowRanges, isStub } from "./dom.js";
 import { hiddenColumns, visibleRows, searchRows, sortRows, paginateRows,
-  computeRowspans, shaded, sectionContinuation } from "./rows.js";
-import { renderCell } from "./cells.js";
+ } from "./rows.js";
 import { TooltipController } from "./tooltips.js";
 import { combinePoints } from "./point-clusters.js";
-import { formatTitle, formatValue } from "./format.js";
-import { formattedText } from "./formatted-text.js";
-import { axisTicks, marksDomain, scalePosition } from "./visualizations.js";
+import { formatTitle } from "./format.js";
 
 /** Map a `font_size` to a CSS value.
  *
@@ -45,7 +42,7 @@ export function fontSizeValue(value) {
   }
   return text;
 }
-import { colorStylesFromHex, resolveColor, setCellBackground } from "./color.js";
+import { resolveColor } from "./color.js";
 
 export class EvidentialTableRenderer {
   constructor(model, el) {
@@ -291,39 +288,28 @@ export class EvidentialTableRenderer {
       rowLayout: this.model.get("row_layout"),
       search: this._state.search, hidden: hiddenColumns(this.columns, this._state.hidden), sort: this._state.sort,
     });
-    const { columns, hasGroups, dimCount, ranges, formatRanges, decimals, colorScales, sparklineScales, stats } = processed;
+    const { columns } = processed;
     this._renderTitle(columns);
-    const layout = headerLayout(columns);
-    const subcolumns = layout.joins;
     const visibility = this._pipeline.visible(processed, this._groupVersion, (key) => this._isCollapsed(key));
-    const rowLayout = processed.rowLayout;
     if (this._viewport.expanded && (this._expandedProjection !== processed || this._expandedGroupVersion !== this._groupVersion)) {
       this._expandedPages.reset();
       this._state.page = 0;
       this._expandedProjection = processed;
       this._expandedGroupVersion = this._groupVersion;
     }
-    const displayPage = rowLayout?.version && !rowLayout.legacy
-      ? projectLayout(rowLayout, this.rows, processed.sorted, this._effectivePageSize(), this._state.page,
-        this._viewport.expanded ? total => this._expandedPages.project(total, this._effectivePageSize(), this._state.page) : null,
-        {isCollapsed: key => this._state.sectionCollapsed.has(key), anchorGroup: this._sectionAnchor}) : null;
+    const plan = buildRenderPlan(processed, visibility, {
+      options: opts, pageSize: this._effectivePageSize(), pageIndex: this._state.page,
+      expandedPage: this._viewport.expanded ? total => this._expandedPages.project(total, this._effectivePageSize(), this._state.page) : null,
+      isCollapsed: key => this._state.sectionCollapsed.has(key), revision: this._groupVersion, anchorGroup: this._sectionAnchor,
+      selected: opts.select ? this.model.get("selected") : null, emptyRows: this._emptyRowCount(opts),
+      paginate: (rows, hasGroups) => this._paginate(rows, hasGroups), toggleSection: key => this._toggleSection(key),
+    });
     this._sectionAnchor = null;
-    const pagination = displayPage || this._paginate(visibility.rows, visibility.hasGroups);
-    const { rows, pageCount, page, total, start } = pagination;
-    this._pageMetrics = {count: displayPage?.unitCount ?? rows.length, remaining: total - start, projection: processed};
+    const {rows, pageCount, page, total, start} = plan.pagination;
+    this._pageMetrics = {count: plan.context.displayEntries ? plan.pagination.unitCount : rows.length,
+      remaining: total - start, projection: processed};
     this._state.page = page;
     this._pageCount = pageCount;
-    const continuationRow = displayPage ? null : sectionContinuation(visibility.rows, start, rows);
-
-    // Section-style groups merge each group's dimension cell across its rows.
-    // Count levels over all rows (not just the page) so a fully collapsed table
-    // still knows how many dimensions it has.
-    const section = opts.group_type === "section" && hasGroups && dimCount > 0;
-    // Accordion groups indent child/parent dimension cells (Evidence parity).
-    const accordion = hasGroups && !section && dimCount > 0;
-    const rowspans = section
-      ? computeRowspans(rows, dimCount, opts.subtotal_position !== "bottom")
-      : null;
 
     // Oblique headings need a taller header and a little right padding.
     let obliqueAngle = null;
@@ -347,56 +333,21 @@ export class EvidentialTableRenderer {
       this.root.style.removeProperty("--et-th-oblique-height");
     }
     this.scroller.replaceChildren();
-    const footnotes = [];
-    const isEmpty = displayPage ? displayPage.entries.length === 0 : rows.length === 0;
-    const axisColumns = columns.filter((col) => col.encodings && (col.scale || {}).axis);
-    const hasTopAxis = !isEmpty && axisColumns.some(col => col.scale.axis_position !== "bottom");
-    const hasBottomAxis = !isEmpty && axisColumns.some(col => col.scale.axis_position === "bottom");
-    // With columns configured, an empty table keeps its headers and shows blank
-    // placeholder rows under a translucent message overlay, so it holds its size
-    // while a filter or selection is pending. Without columns there is nothing
-    // to draw, so fall back to a plain message.
+    const {footnotes, isEmpty} = plan.context;
     if (isEmpty && !columns.length) {
-      this.scroller.append(
-        h("div", { class: "et-empty" }, [h("span", {}, opts.empty_message || "No records")]),
-      );
+      this.scroller.append(h("div", {class: "et-empty"}, [h("span", {}, opts.empty_message || "No records")]));
     } else {
-      this.scroller.append(
-        this._renderTable(columns, rows, {
-          columns: this.columns,
-          options: opts,
-          ranges,
-          formatRanges,
-          colorScales,
-          sparklineScales,
-          hasGroups,
-          subcolumns,
-          layout,
-          rowNumbers: !!opts.row_numbers,
-          rowNumberBase: start,
-          section,
-          accordion,
-          dimCount,
-          rowspans,
-          footnotes,
-          decimals,
-          stats,
-          selected: opts.select ? this.model.get("selected") : null,
-          isEmpty,
-          emptyRows: isEmpty ? this._emptyRowCount(opts) : 0,
-          emptyMessage: opts.empty_message || "No records",
-          continuationRow,
-          displayEntries: displayPage?.entries,
-          toggleSection: key => this._toggleSection(key),
-          insetGroups: new Set(visibility.rows.filter(row => row.render_type === "row_section" && row.__align !== "center")
-            .map(row => row.__group_key)),
-          hasTopAxis,
-          hasBottomAxis,
-        }),
-      );
+      this.scroller.append(renderTable(columns, rows, plan.context, {
+        header: this._renderHeader(columns, plan.context),
+        statistics: !isEmpty && plan.context.stats ? this._renderStatsRow(columns, plan.context) : null,
+        model: this.model, isCollapsed: key => this._isCollapsed(key),
+        toggleGroup: (key, focus) => this._toggleGroup(key, focus),
+        findSelectedRow: key => [...this.scroller.querySelectorAll("tr.et-row-selectable")]
+          .find(row => row.dataset.selectKey === String(key)),
+      }));
     }
     const hasBelow = Boolean(opts.caption) || footnotes.length > 0 || (opts.footnotes || []).length > 0;
-    this._renderFooter(page, pageCount, total, hasBelow, pagination);
+    this._renderFooter(page, pageCount, total, hasBelow, plan.pagination);
     this._renderFootnotes(footnotes, opts.footnotes);
     this.caption.replaceChildren();
     if (opts.caption) this.caption.append(inlineMarkdown(opts.caption));
@@ -410,7 +361,7 @@ export class EvidentialTableRenderer {
       if (this._viewport.expanded) this._viewport.fit();
     });
 
-    this.el.dataset.rowCount = String(displayPage?.matchingTotal ?? total);
+    this.el.dataset.rowCount = String(plan.pagination.matchingTotal ?? total);
     this.el.dataset.renderCount = String((Number(this.el.dataset.renderCount) || 0) + 1);
   }
 
@@ -511,128 +462,6 @@ export class EvidentialTableRenderer {
     return 10;
   }
 
-  _renderTable(columns, rows, ctx) {
-    const opts = this.options;
-    const table = h("table", { class: `et-table${ctx.hasTopAxis ? " et-has-top-axis" : ""}` });
-    const sizing = renderColumnSizing(columns, {rowNumbers: ctx.rowNumbers, link: !!opts.link});
-    if (sizing) table.append(sizing);
-    const thead = this._renderHeader(columns, ctx);
-    if (!ctx.isEmpty && ctx.stats) thead.append(this._renderStatsRow(columns, ctx));
-    if (ctx.hasTopAxis) this._appendTopAxis(thead, columns, ctx);
-    table.append(thead);
-    const tbody = h("tbody");
-    ctx.shadingCounter = { value: 0 };
-    ctx.previousDetailRow = null;
-    if (ctx.isEmpty) {
-      // A placeholder body: the message overlay is a `::after` on the tbody, so
-      // it covers the rows but not the header.
-      tbody.classList.add("et-empty-body");
-      tbody.dataset.emptyMessage = ctx.emptyMessage;
-      for (let i = 0; i < ctx.emptyRows; i++) {
-        tbody.append(this._renderPlaceholderRow(columns, ctx));
-      }
-    } else {
-      if (ctx.continuationRow) {
-        // A section that spans pages repeats its label at the top of the page.
-        const heading = this._renderRow(ctx.continuationRow, columns, ctx, 0);
-        heading.classList.add("et-row-continuation");
-        tbody.append(heading);
-      }
-      if (ctx.displayEntries) {
-        for (const entry of ctx.displayEntries) {
-          if (entry.kind === "data") {
-            ctx.displayInset = entry.inset ? entry.depth : 0;
-            ctx.displayToggleDepth = entry.toggleDepth || 0;
-            tbody.append(this._renderRow(entry.row, columns, ctx, entry.ordinal - ctx.rowNumberBase));
-          } else {
-            ctx.previousDetailRow = null;
-            tbody.append(renderAnnotation(entry, columns, ctx, opts));
-          }
-        }
-        ctx.displayInset = false;
-        ctx.displayToggleDepth = 0;
-      } else rows.forEach((row, index) => tbody.append(this._renderRow(row, columns, ctx, index)));
-    }
-    table.append(tbody);
-    if (ctx.hasBottomAxis) table.append(h("tfoot", {}, this._renderAxisRow(columns, ctx, "bottom")));
-    labelFootnotes(table, ctx.footnotes.length, opts);
-    return table;
-  }
-
-  /** Unscaled labels stay at the body's first line while scaled labels move up. */
-  _appendTopAxis(thead, columns, ctx) {
-    const covered = new Set();
-    if (!ctx.stats) {
-      for (const cell of thead.querySelector(".et-header-leaves").children) {
-        const start = Number(cell.dataset.columnStart);
-        const first = start - (ctx.rowNumbers ? 1 : 0);
-        const members = columns.slice(Math.max(0, first), first + cell.colSpan);
-        const hasAxis = first >= 0 && members.some(col => col.encodings && col.scale?.axis && col.scale.axis_position !== "bottom");
-        if (hasAxis) continue;
-        cell.rowSpan = 2;
-        for (let index = start; index < start + cell.colSpan; index++) covered.add(index);
-      }
-    }
-    thead.append(this._renderAxisRow(columns, ctx, "top", covered));
-  }
-
-  /** A tick axis for the marks columns that ask for one (`scale(axis=True)`). */
-  _renderAxisRow(columns, ctx, position, covered = new Set()) {
-    const opts = this.options;
-    const tr = h("tr", { class: `et-axis-row et-axis-row-${position}` });
-    if (ctx.rowNumbers && !covered.has(0)) tr.append(h("td", { class: "et-td et-row-num", "data-column-index": 0 }));
-    for (const [index, col] of columns.entries()) {
-      if (covered.has(index + (ctx.rowNumbers ? 1 : 0))) continue;
-      const scale = col.scale || {};
-      const cell = h("td", { class: `et-td${isStub(opts, col) ? " et-stub" : ""}` });
-      decorateSubcolumn(cell, col, index, ctx);
-      tr.append(cell);
-      if (!col.encodings || !scale.axis || (scale.axis_position || "top") !== position) {
-        continue;
-      }
-      cell.classList.add("et-axis-cell");
-      const { lo, hi } = marksDomain(col, ctx.ranges.get(col) || ctx.ranges.get(col.name));
-      const pos = scalePosition(lo, hi, scale.transform, (col.encodings || []).some(enc => enc.kind === "bar" && enc.direction === "left"));
-      const axis = h("div", { class: "et-axis" });
-      for (const {value: tick, major} of axisTicks(lo, hi, 4, scale.transform)) {
-        const raw = pos(tick);
-        if (raw == null) continue;
-        const pct = Math.max(0, Math.min(100, raw));
-        const label = major ? formatValue(tick, col.fmt || (Number.isInteger(tick) ? "num0" : "num"), {
-          type: col.type,
-          range: ctx.formatRanges.get(col.name),
-          fallback: String(tick),
-        }) : "";
-        axis.append(h("span", { class: `et-axis-tick${major ? "" : " et-axis-tick-minor"}`,
-          "aria-hidden": major ? null : "true", style: { left: `${pct}%` } }, formattedText(label)));
-      }
-      cell.append(axis);
-    }
-    if (opts.link) tr.append(h("td", { class: "et-td" }));
-    return tr;
-  }
-
-  /** A blank row; its cells keep the column alignment and borders. */
-  _renderPlaceholderRow(columns, ctx) {
-    const opts = this.options;
-    const tr = h("tr", { class: "et-row et-row-placeholder" });
-    let first = null;
-    if (ctx.rowNumbers) {
-      first = h("td", { class: "et-td et-row-num", "data-column-index": 0 });
-      tr.append(first);
-    }
-    for (const [index, col] of columns.entries()) {
-      const td = h("td", { class: "et-td", style: withFigure(alignStyle(col), col, opts) });
-      if (!first) first = td;
-      decorateSubcolumn(td, col, index, ctx);
-      tr.append(td);
-    }
-    if (opts.link) tr.append(h("td", { class: "et-td et-td-chevron" }));
-    // One non-breaking space gives the empty row the normal line height.
-    if (first) first.append(document.createTextNode("\u00a0"));
-    return tr;
-  }
-
   _renderStatsRow(columns, ctx) {
     return renderStatsRow({columns, layout: ctx.layout, stats: ctx.stats,
       formatRanges: ctx.formatRanges, options: this.options, rowNumbers: ctx.rowNumbers,
@@ -664,94 +493,6 @@ export class EvidentialTableRenderer {
     }
     this._state.page = 0;
     this.render();
-  }
-
-  _renderRow(row, columns, ctx, index) {
-    const opts = this.options;
-    if (row.render_type === "row_section" && row.__combined) {
-      // Render explicit section values in ordinary cells beside the label.
-      row = {...row, render_type: "row_subtotal", __level: 0,
-        [columns[0]?.name]: row.__label};
-    } else if (["row_total", "row_subtotal"].includes(row.render_type) && row.__label && columns[0] && row[columns[0].name] == null) {
-      row = {...row, [columns[0].name]: row.__label};
-    }
-    const renderType = row.render_type || "cell_data";
-    if (renderType !== "cell_data") ctx.previousDetailRow = null;
-    if (renderType === "row_section") {
-      const colSpan = columns.length + (ctx.rowNumbers ? 1 : 0) + (opts.link ? 1 : 0);
-      const label = row.__label ?? (columns[0] ? row[columns[0].name] : "");
-      const align = row.__align === "center" ? "center" : "left";
-      // A section row takes part in the alternating shading pattern.
-      const shadedSection = shaded(ctx.shadingCounter.value++, opts);
-      return h("tr", { class: `et-row et-row-section${shadedSection ? " et-row-shaded" : ""}` }, [
-        h("td", { class: `et-td et-section-cell et-section-${align}`, colspan: colSpan }, String(label ?? "")),
-      ]);
-    }
-    if (renderType === "row_spacer") {
-      const colSpan = columns.length + (ctx.rowNumbers ? 1 : 0) + (opts.link ? 1 : 0);
-      const style =
-        row.__height == null
-          ? {}
-          : { height: typeof row.__height === "number" ? `${row.__height}px` : String(row.__height) };
-      return h("tr", { class: "et-row et-row-spacer" }, [
-        h("td", { class: "et-td et-spacer-cell", colspan: colSpan, style }),
-      ]);
-    }
-    const isTotal = renderType === "row_total";
-    const isSubtotal = renderType === "row_subtotal";
-    const isCollapsed = isSubtotal && row.__group_key && this._isCollapsed(row.__group_key);
-    const hasLink = opts.link && navigationUrl(row[opts.link]);
-    const rowColorValue = opts.row_conditional_colors ? row[opts.row_conditional_colors] : null;
-    const rowColorStyles =
-      typeof rowColorValue === "string" ? colorStylesFromHex(rowColorValue) : null;
-
-    const tr = h("tr", {
-      class: [
-        "et-row",
-        isTotal ? "et-row-total" : "",
-        isSubtotal ? "et-row-subtotal" : "",
-        row.__combined ? "et-row-combined" : "",
-        hasLink ? "et-row-link" : "",
-        isSubtotal ? "et-row-collapsible" : "",
-        (renderType === "cell_data" || row.__combined) && shaded(ctx.shadingCounter.value++, opts) ? "et-row-shaded" : "",
-      ].filter(Boolean).join(" "),
-    });
-    if (hasLink) tr.addEventListener("click", () => { window.location.href = hasLink; });
-
-    bindRowSelection(tr, row, ctx.selected, opts, this.model, (key) =>
-      [...this.scroller.querySelectorAll("tr.et-row-selectable")]
-        .find((row) => row.dataset.selectKey === String(key)));
-
-    if (ctx.rowNumbers) {
-      const numberCell = h(
-        "td",
-        { class: "et-td et-row-num", "data-column-index": 0 },
-        String((ctx.rowNumberBase || 0) + index + 1),
-      );
-      if (rowColorStyles) {
-        setCellBackground(numberCell, rowColorStyles.backgroundColor);
-        numberCell.style.color = rowColorStyles.color;
-      }
-      tr.append(numberCell);
-    }
-
-    const rowIndex = index;
-    columns.forEach((col, columnIndex) => {
-      const cell = renderCell({row, col, index: columnIndex, ctx, rowIndex, options: opts,
-        toggleGroup: (key, focus) => this._toggleGroup(key, focus), isCollapsed, rowColorStyles});
-      if (cell) {
-        decorateSubcolumn(cell, col, columnIndex, ctx);
-        tr.append(cell);
-      }
-    });
-
-    if (opts.link) {
-      const chevTd = h("td", { class: "et-td et-td-chevron" });
-      if (hasLink) chevTd.append(h("span", { class: "et-row-chevron" }, "›"));
-      tr.append(chevTd);
-    }
-    ctx.previousDetailRow = renderType === "cell_data" ? row : null;
-    return tr;
   }
 
   /** Render the footer notes collected while building rows, plus any static

@@ -8,6 +8,12 @@ project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- Separate page plans, table/row DOM, mark glyphs and coordinate scales into
+  focused frontend modules. Grouped pagination retains prepared memberships,
+  collapse slots and aggregate values; warm pages visit only overlapping groups.
+  DimensionGrid data replacements compute facets once and synchronize selection
+  and facet changes together.
+
 - Enforce a Python McCabe complexity ceiling of 20. Configuration aliases,
   canonical validation, label/mark/domain checks and pivot column assembly use
   focused helpers; raw mark encodings are normalized once during table assembly.

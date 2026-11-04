@@ -33,7 +33,7 @@
     "src/evidential/comparison.py": "b2f182404d4f20df94af5e9cde61d2b3b8ea0d6d7bed690c26c19312f9a0d70f",
     "src/evidential/configuration.py": "1be28b652cfc9412bd2140564561b1377a9069e2862cb6637328eb5a8e2722ec",
     "src/evidential/data.py": "b47ee55fbb1c45f45937c51214cdd920efd7f3a00c3ad166d261df334be8230f",
-    "src/evidential/dimension.py": "8cafeb469efa216223c8e724cfed852f5515b3fbb1fd6804d95ba2ad6f92d233",
+    "src/evidential/dimension.py": "17c5eec76b4434bebfcf34b52aef655bcb99e6253ed9a3a7d12384d4a22ad70b",
     "src/evidential/domain.py": "9e607e105122cffb1a6cc4de27adb15bdc3f73af1184b3506302cb908bf34ba9",
     "src/evidential/duck.py": "fed7bbdc25492a8457ca7b1ba4903dacacf9cb2643a789f2c66d018b8449c8b3",
     "src/evidential/grouped.py": "65da5eba306f3280a3af99c3cb8398a46a8211b542d2fb1b6fb5f7734a1c65a2",
@@ -47,7 +47,7 @@
     "src/evidential/static/dimension-grid.css": "54f56d45e03b8af5ba1aa8f7c1153b3bc3cfcc8b195dedf347afba0686460fdc",
     "src/evidential/static/dimension-grid.js": "80cb5f93dfdc5a5dc02c5f8c1e218bd462662a00114d6c43523a58d2c0ca4095",
     "src/evidential/static/table.css": "37d306e54a48ce45908c0c40f11acca987f42b9a729564eba80f38b3f3505067",
-    "src/evidential/static/table.js": "c021c956f7014765b06f81be0034c6157d8da498e4a8eca32a21b216d455495e",
+    "src/evidential/static/table.js": "28ed5a3c1bcdf9ceede3fc322250a752800f227324f11a0f52afa881cbda3e37",
     "src/evidential/table.py": "6af1f26253d72967bcf9298c14502af94431427eb97ddae43e3d5cb1d40ed017",
     "uv.lock": "08ebde87df2e59e3a83df5d50676751b8eb7b917b50d3aeb40e7cec06c6a1724"
   },
@@ -115,7 +115,7 @@
     "docs/api/images/comparison-table.png": {
       "notebook": "notebooks/49_api_screenshots.py",
       "cell": "prior_comparison",
-      "sha256": "cbf1d3b5c4adf007f7fd90c16d6c777c32cf99a7845531465ec580caf338cf6b"
+      "sha256": "ea3e5762581256044d1a7ffd357cdf9771e51d90e1c8ec9c388065f47c75fdea"
     },
     "docs/api/images/rules.png": {
       "notebook": "notebooks/49_api_screenshots.py",
@@ -165,7 +165,7 @@
     "docs/img/graphics/point-overlaps.png": {
       "notebook": "notebooks/50_graphics_gallery.py",
       "cell": "graphic_point_overlaps",
-      "sha256": "f7854d318e5968e62140e3dae8663a9ba4e513e0a8f3bbb14bda68ffc2c6982e"
+      "sha256": "04128cfc514aa0fdba8787ab0cc0d5fd69c1da3318700aae286b62586666e904"
     },
     "docs/img/graphics/boxplot.png": {
       "notebook": "notebooks/50_graphics_gallery.py",
@@ -210,7 +210,7 @@
     "docs/img/graphics/sparklines.png": {
       "notebook": "notebooks/50_graphics_gallery.py",
       "cell": "graphic_sparklines",
-      "sha256": "7b8cb17075133b408619d475ff4faa2e3666bc4cfa49fe9badf39261ed655196"
+      "sha256": "ded56ce7da5df694cce52e48970181ef922ea7f7331ad8a5151a3feb00a1f55e"
     },
     "docs/img/graphics/sparkline-areas.png": {
       "notebook": "notebooks/50_graphics_gallery.py",

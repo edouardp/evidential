@@ -1,7 +1,8 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { JSDOM } from "jsdom";
-import { renderMarks, marksDomain, renderSparkline, axisTicks, niceTicks } from "./src/visualizations.js";
+import {renderMarks, renderSparkline} from "./src/visualizations.js";
+import {marksDomain, axisTicks, niceTicks} from "./src/mark-scales.js";
 import { calculateVizRanges } from "./src/color.js";
 import { sortRows, searchRows, paginateRows, sectionContinuation } from "./src/rows.js";
 import { fitMarkLabels } from "./src/mark-labels.js";

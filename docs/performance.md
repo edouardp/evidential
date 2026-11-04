@@ -24,6 +24,19 @@ the relevant projection. A regression test counts value reads during page
 navigation so this property does not depend on machine speed. A separate test
 checks decimal alignment with 200,000 records without an argument-limit error.
 
+## Grouped display projection
+
+The 2026-11-04 review measured one display group, a sum in its heading and
+20 visible records. Rebuilding the full projection on each page took 2.2,
+11.7 and 21.6 ms for 10,000, 50,000 and 100,000 records respectively.
+Retaining the prepared group tree, display slots and aggregate values reduces
+warm page projection to below 0.1 ms in the same local experiment. Initial
+preparation still scans the data (about 33 ms for 100,000 records here).
+These measurements exclude DOM construction, layout and paint. Tests enforce
+bounded value/heading visits rather than these machine-dependent timings.
+
+Reproduce with `node frontend/benchmark.js --layout`.
+
 ## Python summary overrides
 
 Each group contains ten detail rows; two measures use sum and mean overrides.

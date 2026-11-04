@@ -43,6 +43,18 @@ ancestors once, then retrieves descendants directly for each subtotal.
 
 ### Consequences
 
+The 2026-11-04 review extends the dataset projection with a retained
+`LayoutProjection`. It prepares group membership/order once, rebuilds display
+slots only for a new collapse revision, and caches aggregate cells by annotation
+and member set. Pagination slices those slots and uses binary search to visit
+only overlapping group ranges. Filtering, sorting and data/configuration changes
+replace the prepared projection; disposal drops it. Operation-count regressions
+verify that warm pages do not rescan records or unrelated groups.
+
+DimensionGrid initialization and data replacement perform one facet pass.
+Changed selections refresh through their observer; unchanged selections trigger
+one explicit refresh. Selection and facet updates share one `hold_sync` batch.
+
 - Good, because page navigation no longer scans the full dataset.
 - Good, because descendant lookup scales with rows and hierarchy depth rather
   than the product of rows and subtotal count.

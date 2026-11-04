@@ -2,7 +2,8 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { JSDOM } from "jsdom";
 import { readDensity, projectBand, renderDensityBand } from "./src/density-band.js";
-import { renderMarks, scalePosition } from "./src/visualizations.js";
+import {renderMarks} from "./src/visualizations.js";
+import {scalePosition} from "./src/mark-scales.js";
 import { calculateVizRanges } from "./src/color.js";
 
 global.document = new JSDOM("<!doctype html><body></body>").window.document;

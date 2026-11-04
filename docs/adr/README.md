@@ -109,6 +109,7 @@ dated, immutable record of the decisions behind them.
 | [088](088-measured-expanded-pages.md) | Measured Pages for Expanded Tables | Accepted |
 | [089](089-collapsible-display-sections.md) | Collapsible Display Sections | Accepted |
 | [090](090-sparkline-y-color-encodings.md) | Sparkline Y-Value Color Encodings | Accepted |
+| [091](091-runtime-boundary-contracts.md) | Explicit Runtime Boundary Contracts | Accepted |
 
 ## Creating New ADRs
 

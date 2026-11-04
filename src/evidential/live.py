@@ -38,24 +38,16 @@ Either way, values are bound as SQL parameters (never spliced into the SQL).
 
 from __future__ import annotations
 
-import re
 import weakref
 from collections.abc import Iterable, Mapping, Sequence
 from typing import Any
 
 import traitlets
 
+from ._sql import bind_parameters
 from .table import EvidentialTable
 
 __all__ = ["LiveEvidentialTable", "query_values"]
-
-# `${name}`, `$name` and `{name}` placeholders in plain string SQL.
-_PARAM_RE = re.compile(r"\$\{(\w+)\}|\$(\w+)|\{(\w+)\}")
-_SQL_LITERAL_RE = re.compile(
-    r"'(?:''|[^'])*'|\"(?:\"\"|[^\"])*\"|--[^\n]*|/\*.*?\*/|"
-    r"\$(?P<tag>[A-Za-z_]\w*|)\$.*?\$(?P=tag)\$",
-    re.DOTALL,
-)
 
 
 def _value_of(control: Any) -> Any:
@@ -149,24 +141,7 @@ class LiveEvidentialTable(EvidentialTable):
             return "".join(parts), values
         # Plain string: replace `$name` / `{name}` with `?` and bind positionally.
         resolved = {name: _value_of(control) for name, control in params.items()}
-        positional: list[Any] = []
-
-        def replace(match: re.Match[str]) -> str:
-            name = match.group(1) or match.group(2) or match.group(3)
-            if name not in resolved:
-                raise KeyError(f"Unknown SQL parameter {name!r}; known parameters: {sorted(resolved)}")
-            positional.append(resolved[name])
-            return "?"
-
-        source = str(template)
-        parts = []
-        last = 0
-        for literal in _SQL_LITERAL_RE.finditer(source):
-            parts.append(_PARAM_RE.sub(replace, source[last : literal.start()]))
-            parts.append(literal.group())
-            last = literal.end()
-        parts.append(_PARAM_RE.sub(replace, source[last:]))
-        return "".join(parts), positional
+        return bind_parameters(str(template), resolved)
 
     def _iter_controls(self) -> Iterable[Any]:
         yield from self._params.values()

@@ -15,6 +15,12 @@ project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+- Reject executable cell, row and information-link URLs; copy nested reusable
+  column configuration; quote SQL identifiers and respect escaped SQL literals
+  and nested comments during live parameter binding. Portable summaries now share
+  Python/browser contracts for ISO-date extrema, nulls and JSON distinctness.
+  CSV exports quote carriage returns as well as line feeds.
+
 - Line and area sparkline colors now follow a continuous vertical y-value
   gradient instead of solid outgoing intervals. Alpha stops, clamped endpoints,
   sharp threshold bands and gaps are preserved; observation colors apply to

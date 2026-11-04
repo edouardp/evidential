@@ -15,6 +15,7 @@ from ._aliases import alias, format_code
 from ._column_options import _normalize_column_options
 from ._domain import domain_spec
 from ._sparkline import normalize_sparkline_colors, normalize_sparkline_options
+from ._spec import copy_spec
 from ._text_style import TextStyle
 from .configuration import Relative, SparklineType, TooltipOptions, validate_options
 
@@ -87,14 +88,14 @@ class Column(TextStyle, Mapping[str, Any]):
 
     def __init__(self, name: str, spec: Mapping[str, Any] | None = None) -> None:
         self._name = name
-        self._spec = dict(spec or {})
+        self._spec = copy_spec(dict(spec or {}))
 
     # --------------------------------------------------------- mapping ---
     def __getitem__(self, key: str) -> Any:
         """Return the value of ``key``; ``"name"`` is the column's name."""
         if key == "name":
             return self._name
-        return self._spec[key]
+        return copy_spec(self._spec[key])
 
     def __iter__(self):
         """Iterate the keys (``"name"`` first, then the configured options)."""

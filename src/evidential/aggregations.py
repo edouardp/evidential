@@ -16,6 +16,7 @@ Pass specs to :func:`grouped_table`/:func:`pivot_table` via ``aggregations``::
 
 from __future__ import annotations
 
+import math
 import statistics
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from typing import Any
@@ -38,6 +39,35 @@ __all__ = [
 #: A callable takes ``(values, weights)`` (weights may be ``None``) and returns
 #: the aggregate. ``weights`` is only supplied for weighted_mean.
 Aggregation = Callable[[Sequence[Any], Sequence[float] | None], Any]
+
+
+def _summary_key(value: Any) -> Any:
+    """JSON value identity: booleans differ from numbers; object order does not matter."""
+    if isinstance(value, bool):
+        return ("boolean", value)
+    if isinstance(value, (int, float)):
+        return ("number", value)
+    if isinstance(value, Mapping):
+        return ("object", tuple(sorted((str(key), _summary_key(item)) for key, item in value.items())))
+    if isinstance(value, (list, tuple)):
+        return ("array", tuple(_summary_key(item) for item in value))
+    return (type(value).__name__, value)
+
+
+def summary_values(operation: str, values: Sequence[Any]) -> Any:
+    """Portable display aggregation; frontend/aggregates.js shares its fixture contract."""
+    observed = [value for value in values if value is not None]
+    if operation == "count":
+        return len(observed)
+    if operation in ("count_distinct", "countdistinct", "distinct_count"):
+        return len({_summary_key(value) for value in observed})
+    if not observed:
+        return None
+    if operation in ("min", "max") and all(isinstance(value, str) for value in observed):
+        return min(observed) if operation == "min" else max(observed)
+    if any(not isinstance(value, (int, float)) or not math.isfinite(value) for value in observed):
+        raise TypeError(f"summary {operation} requires numeric values (min/max also accept strings and ISO dates)")
+    return resolve_aggregation(operation)(observed, None)
 
 
 def sum_values(values: Sequence[Any], weights: Sequence[float] | None = None) -> Any:

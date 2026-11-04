@@ -1,25 +1,11 @@
 // Display projection over detail records. Annotation entries are never data rows.
 import { formatValue } from "./format.js";
-import { numeric } from "./mark-data.js";
+import { aggregateValues } from "./aggregates.js";
 
 export function summaryValue(spec, members) {
   if (!spec.operation) return spec.value;
-  const op = spec.operation;
   const values = spec.source == null ? members : members.map(row => row[spec.source]).filter(value => value != null);
-  const numbers = values.map(numeric).filter(value => value != null);
-  let value = null;
-  if (op === "count") value = values.length;
-  else if (["count_distinct", "countdistinct", "distinct_count"].includes(op)) value = new Set(values.map(value => JSON.stringify(value))).size;
-  else if (numbers.length) {
-    if (op === "sum") value = numbers.reduce((sum, item) => sum + item, 0);
-    else if (op === "min") value = numbers.reduce((low, item) => Math.min(low, item), Infinity);
-    else if (op === "max") value = numbers.reduce((high, item) => Math.max(high, item), -Infinity);
-    else if (op === "median") {
-      const sorted = [...numbers].sort((a, b) => a - b);
-      const mid = Math.floor(sorted.length / 2);
-      value = sorted.length % 2 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
-    } else value = numbers.reduce((sum, item) => sum + item, 0) / numbers.length;
-  }
+  const value = aggregateValues(spec.operation, values);
   if (value != null && (spec.prefix || spec.suffix)) {
     return `${spec.prefix || ""}${formatValue(value, spec.format || "num", {type: "number", fallback: String(value)})}${spec.suffix || ""}`;
   }

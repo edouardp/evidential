@@ -23,6 +23,18 @@ if (!dom.window.HTMLDialogElement.prototype.showModal) {
 
 const { EvidentialTableRenderer, render, fontSizeValue } = await import("./src/table.js");
 
+test("navigation rejects executable data URLs for cells, rows and information links", () => {
+  for (const url of ["javascript:window.bad=1", "JaVa\tScRiPt:window.bad=1", "data:text/html,<script>bad()</script>"]) {
+    const renderer = new EvidentialTableRenderer(makeModel([{name: "Safe text", url}],
+      [{name: "name", link: "url"}], {link: "url", title: "Example", info: "Details", info_link: url}, el), el);
+    assert.equal(el.querySelector("tbody a"), null);
+    assert.equal(el.querySelector(".et-row-link"), null);
+    assert.equal(el.querySelector(".et-info-link"), null);
+    assert.match(el.querySelector("tbody").textContent, /Safe text/);
+    renderer.destroy();
+  }
+});
+
 test("legends render without a table title, follow visibility and update with column metadata", () => {
   const column = {name: "a", title: "Response", legend: true, legend_options: {column_names: true}, encodings: [
     {kind: "stacked_bar", source: "a", color: "navy"},

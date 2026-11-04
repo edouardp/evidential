@@ -16,7 +16,7 @@ from dataclasses import dataclass, replace
 from typing import Any
 
 from ._aliases import format_code
-from .aggregations import BUILTIN_AGGREGATIONS, resolve_aggregation
+from .aggregations import BUILTIN_AGGREGATIONS, summary_values
 from .data import jsonify, normalize_data
 
 __all__ = ["Aggregate", "Rows", "RowView", "aggregate", "count", "group_by", "of"]
@@ -319,14 +319,7 @@ def _compile_annotation(
             value = (
                 len(members)
                 if source is None and expression.operation == "count"
-                else (
-                    0
-                    if not observed
-                    and expression.operation in ("count", "count_distinct", "countdistinct", "distinct_count")
-                    else resolve_aggregation(expression.operation)(observed, None)
-                    if observed
-                    else None
-                )
+                else summary_values(expression.operation, observed)
             )
             cells[name] = {
                 "value": jsonify(value),

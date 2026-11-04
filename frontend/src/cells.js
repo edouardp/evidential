@@ -5,6 +5,7 @@ import { withDecimals, indentForCell, sectionPadding } from "./rows.js";
 import { calculateColorStyles, contrastTextColor, resolveColor, setCellBackground } from "./color.js";
 import { renderBar, renderDelta, renderMarks, renderSparkline, renderSymbols } from "./visualizations.js";
 import { inspectCell } from "./tooltips.js";
+import { navigationUrl } from "./urls.js";
 
 /** Return the first matching substitution text, or null. */
 export function matchSubstitution(col, row, value, options) {
@@ -267,7 +268,7 @@ export function renderCell({row, col, index, ctx, rowIndex, options: opts, toggl
     if (col.negative_color) content.style.color = resolveColor(col.negative_color);
   }
 
-  const link = col.link ? row[col.link] : null;
+  const link = col.link ? navigationUrl(row[col.link]) : null;
   if (link && row.render_type !== "row_total") {
     td.append(h("a", {
       class: "et-cell-link", href: String(link),

@@ -10,6 +10,7 @@ from __future__ import annotations
 from collections.abc import Mapping, Sequence
 from typing import Any
 
+from ._sql import quote_identifier as _quote
 from .data import make_column
 from .grouped import _parse_measure
 from .marks import rebind_measure
@@ -29,10 +30,6 @@ _COMPARE_TO_PERIOD = {
     "week over week": "week",
 }
 _PERIODS = {"year", "quarter", "month", "week", "day"}
-
-
-def _quote(identifier: str) -> str:
-    return '"' + identifier.replace('"', '""') + '"'
 
 
 def comparison_table(
@@ -66,6 +63,8 @@ def comparison_table(
         raise ValueError("comparison_table requires at least one measure")
 
     dims = list(dimensions)
+    sql_dims = [_quote(name) for name in dims]
+    sql_date = _quote(date_column)
     parsed = [_parse_measure(measure) for measure in measures]
     measure_exprs = ", ".join(f"{expression} AS {_quote(alias)}" for alias, expression in parsed)
 
@@ -92,21 +91,21 @@ def comparison_table(
             {sql}
         ),
         __bounds AS (
-            SELECT date_trunc('{period}', max({date_column})) AS anchor FROM __base
+            SELECT date_trunc('{period}', max({sql_date})) AS anchor FROM __base
         ),
         __current AS (
-            SELECT {", ".join(dims)}, {measure_exprs}
+            SELECT {", ".join(sql_dims)}, {measure_exprs}
             FROM __base, __bounds
-            WHERE {date_column} >= anchor - INTERVAL '{current_offset} {period}'
-              AND {date_column} < anchor + INTERVAL '1 {period}'
-            GROUP BY {", ".join(dims)}
+            WHERE {sql_date} >= anchor - INTERVAL '{current_offset} {period}'
+              AND {sql_date} < anchor + INTERVAL '1 {period}'
+            GROUP BY {", ".join(sql_dims)}
         ),
         __prior AS (
-            SELECT {", ".join(dims)}, {measure_exprs}
+            SELECT {", ".join(sql_dims)}, {measure_exprs}
             FROM __base, __bounds
-            WHERE {date_column} >= anchor - INTERVAL '{prior_offset} {period}'
-              AND {date_column} < anchor - INTERVAL '{current_offset} {period}'
-            GROUP BY {", ".join(dims)}
+            WHERE {sql_date} >= anchor - INTERVAL '{prior_offset} {period}'
+              AND {sql_date} < anchor - INTERVAL '{current_offset} {period}'
+            GROUP BY {", ".join(sql_dims)}
         )
         SELECT {", ".join(select_parts)}
         FROM __current AS c

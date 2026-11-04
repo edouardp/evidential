@@ -12,6 +12,7 @@ import datetime as dt
 from collections.abc import Mapping, Sequence
 from typing import Any
 
+from ._sql import quote_identifier as _quote
 from .aggregations import apply_aggregations
 from .data import jsonify, make_column
 from .grouped import _parse_measure, decorate_grouped_rows
@@ -31,10 +32,6 @@ def _sql_literal(value: Any) -> str:
     if isinstance(value, (dt.datetime, dt.date)):
         return f"TIMESTAMP '{value.isoformat()}'"
     return "'" + str(value).replace("'", "''") + "'"
-
-
-def _quote(identifier: str) -> str:
-    return '"' + identifier.replace('"', '""') + '"'
 
 
 def _label(combo: Sequence[Any]) -> str:
@@ -77,25 +74,29 @@ def pivot_table(
 
     dims = list(dimensions)
     pivot_cols = list(pivots)
+    sql_dims = [_quote(name) for name in dims]
+    sql_pivots = [_quote(name) for name in pivot_cols]
     parsed_measures = [_parse_measure(measure) for measure in measures]
 
     # Distinct pivot combinations become the pivoted columns.
     combo_query = (
         "WITH __base AS ( " + sql + " ) "
-        "SELECT DISTINCT " + ", ".join(pivot_cols) + " FROM __base "
-        "ORDER BY " + ", ".join(pivot_cols)
+        "SELECT DISTINCT " + ", ".join(sql_pivots) + " FROM __base "
+        "ORDER BY " + ", ".join(sql_pivots)
     )
     combo_rows = connection.sql(combo_query).to_arrow_table().to_pylist()
     combos = [tuple(row.get(col) for col in pivot_cols) for row in combo_rows]
 
-    select_parts: list[str] = list(dims)
+    select_parts: list[str] = list(sql_dims)
     flags = [f"__g{index}" for index in range(len(dims))]
     select_parts.extend(flags)
 
     inner_measures = [f"{expression} AS {_quote(alias)}" for alias, expression in parsed_measures]
     weights = dict(weight_columns or {})
     inner_weights = {alias: f"__w_{index}" for index, (alias, _) in enumerate(parsed_measures) if alias in weights}
-    inner_measures.extend(f"sum({weights[alias]}) AS {_quote(hidden)}" for alias, hidden in inner_weights.items())
+    inner_measures.extend(
+        f"sum({_quote(weights[alias])}) AS {_quote(hidden)}" for alias, hidden in inner_weights.items()
+    )
 
     used_names = {name.casefold() for name in dims}
 
@@ -128,7 +129,7 @@ def pivot_table(
     for alias, _ in parsed_measures:
         for combo in combos:
             condition = "__pivot_total = 0 AND " + " AND ".join(
-                f"{column} IS NOT DISTINCT FROM {_sql_literal(value)}"
+                f"{_quote(column)} IS NOT DISTINCT FROM {_sql_literal(value)}"
                 for column, value in zip(pivot_cols, combo, strict=True)
             )
             label = _label(combo)
@@ -145,16 +146,16 @@ def pivot_table(
     if total:
         levels.append(0)
     for size in levels:
-        sets.append("(" + ", ".join([*dims[:size], *pivot_cols]) + ")")
+        sets.append("(" + ", ".join([*sql_dims[:size], *sql_pivots]) + ")")
         if show_total_column:
-            sets.append("(" + ", ".join(dims[:size]) + ")")
+            sets.append("(" + ", ".join(sql_dims[:size]) + ")")
 
-    group_cols = ", ".join([*dims, *pivot_cols])
+    group_cols = ", ".join([*sql_dims, *sql_pivots])
     query = f"""
         WITH __inner AS (
             SELECT {group_cols}, {", ".join(inner_measures)},
-                   {", ".join(f"grouping({dim}) AS {flag}" for dim, flag in zip(dims, flags, strict=True))},
-                   grouping({pivot_cols[0]}) AS __pivot_total
+                   {", ".join(f"grouping({dim}) AS {flag}" for dim, flag in zip(sql_dims, flags, strict=True))},
+                   grouping({sql_pivots[0]}) AS __pivot_total
             FROM (
                 {sql}
             ) AS __base
@@ -162,7 +163,7 @@ def pivot_table(
         )
         SELECT {", ".join(select_parts)}
         FROM __inner
-        GROUP BY {", ".join([*dims, *flags])}
+        GROUP BY {", ".join([*sql_dims, *flags])}
     """
     rows = [jsonify(row) for row in connection.sql(query).to_arrow_table().to_pylist()]
     ordered = decorate_grouped_rows(

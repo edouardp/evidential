@@ -17,6 +17,8 @@ import { HoldController, bindRowSelection } from "./interactions.js";
 import { LoadingController } from "./loading.js";
 import { TableViewport } from "./viewport.js";
 import { ExpandedPages } from "./expanded-pages.js";
+import { navigationUrl } from "./urls.js";
+import { serializeCsv } from "./csv.js";
 import { h, inlineMarkdown, withFigure, formatRowRanges, alignStyle, isStub } from "./dom.js";
 import { hiddenColumns, visibleRows, searchRows, sortRows, paginateRows,
   computeRowspans, shaded, sectionContinuation } from "./rows.js";
@@ -450,8 +452,9 @@ export class EvidentialTableRenderer {
       t.append(inlineMarkdown(title));
       if (info) {
         const infoSpan = h("span", { class: "et-info", title: info }, "ⓘ");
-        if (info_link) {
-          const a = h("a", { href: info_link, target: "_blank", rel: "noopener", class: "et-info-link" }, "ⓘ");
+        const infoUrl = navigationUrl(info_link);
+        if (infoUrl) {
+          const a = h("a", { href: infoUrl, target: "_blank", rel: "noopener noreferrer", class: "et-info-link" }, "ⓘ");
           a.title = info;
           if (info_link_title) a.append(document.createTextNode(` ${info_link_title}`));
           text.append(t, " ", a);
@@ -697,7 +700,7 @@ export class EvidentialTableRenderer {
     const isTotal = renderType === "row_total";
     const isSubtotal = renderType === "row_subtotal";
     const isCollapsed = isSubtotal && row.__group_key && this._isCollapsed(row.__group_key);
-    const hasLink = opts.link && row[opts.link];
+    const hasLink = opts.link && navigationUrl(row[opts.link]);
     const rowColorValue = opts.row_conditional_colors ? row[opts.row_conditional_colors] : null;
     const rowColorStyles =
       typeof rowColorValue === "string" ? colorStylesFromHex(rowColorValue) : null;
@@ -713,7 +716,7 @@ export class EvidentialTableRenderer {
         (renderType === "cell_data" || row.__combined) && shaded(ctx.shadingCounter.value++, opts) ? "et-row-shaded" : "",
       ].filter(Boolean).join(" "),
     });
-    if (hasLink) tr.addEventListener("click", () => { window.location.href = String(row[opts.link]); });
+    if (hasLink) tr.addEventListener("click", () => { window.location.href = hasLink; });
 
     bindRowSelection(tr, row, ctx.selected, opts, this.model, (key) =>
       [...this.scroller.querySelectorAll("tr.et-row-selectable")]
@@ -895,16 +898,7 @@ export class EvidentialTableRenderer {
       ? projectLegacy(layout, this.rows, sorted, key => this._isCollapsed(key)).filter(row => !row.render_type || row.render_type === "cell_data")
       : layout?.version ? projectLayout(layout, this.rows, sorted, "all", 0).rows
         : visibleRows(sorted, key => this._isCollapsed(key));
-    const escape = (v) => {
-      if (v === null || v === undefined) return "";
-      const s = typeof v === "object" ? JSON.stringify(v) : String(v);
-      return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
-    };
-    const lines = [columns.map((c) => escape(c.title || formatTitle(c.name))).join(",")];
-    for (const row of rows) {
-      lines.push(columns.map((c) => escape(row[c.name])).join(","));
-    }
-    const blob = new Blob([lines.join("\n")], { type: "text/csv;charset=utf-8;" });
+    const blob = new Blob([serializeCsv(columns, rows)], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;

@@ -1069,6 +1069,10 @@ column can show a literal such as `"27 products"` in a heading without applying
 its detail mark bindings. See the row-layout API above and
 [`45_display_row_layout.py`](../../notebooks/45_display_row_layout.py).
 
+Cell, row and information links accept HTTP/HTTPS, relative links, anchors,
+`mailto:` and `tel:` targets. Executable or unsupported URL protocols render
+without an active link.
+
 `col.html(...)` and `.html()` explicitly opt into **trusted, unsanitized HTML**.
 Only use them with content you control or have sanitized upstream. Ordinary text
 columns escape source strings and never interpret them as HTML.

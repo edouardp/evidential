@@ -12,6 +12,7 @@ import re
 from collections.abc import Mapping, Sequence
 from typing import Any
 
+from ._sql import quote_identifier
 from .aggregations import apply_aggregations
 from .data import jsonify
 from .table import EvidentialTable
@@ -153,34 +154,35 @@ def grouped_table(
         raise ValueError("grouped_table requires at least one measure")
 
     dims = list(dimensions)
+    sql_dims = [quote_identifier(dim) for dim in dims]
     parsed_measures = [_parse_measure(measure) for measure in measures]
 
-    grouping_cols = ", ".join(f"grouping({dim}) AS __g{index}" for index, dim in enumerate(dims))
+    grouping_cols = ", ".join(f"grouping({dim}) AS __g{index}" for index, dim in enumerate(sql_dims))
     measure_columns: list[str] = []
     for alias, expression in parsed_measures:
         total_expression = (total_measures or {}).get(alias)
         if total_expression:
             # Use a different aggregation for the grand total row.
             measure_columns.append(
-                f"CASE WHEN grouping({dims[0]}) = 1 THEN ({total_expression}) ELSE ({expression}) END AS {alias}"
+                f"CASE WHEN grouping({sql_dims[0]}) = 1 THEN ({total_expression}) ELSE ({expression}) END AS {quote_identifier(alias)}"
             )
         else:
-            measure_columns.append(f"{expression} AS {alias}")
+            measure_columns.append(f"{expression} AS {quote_identifier(alias)}")
 
     # Weighted aggregations need each measure's weights summed per detail group.
     weight_aliases: dict[str, str] = {}
     for alias, weight_column in (weight_columns or {}).items():
         hidden = f"__w_{alias}"
-        measure_columns.append(f"sum({weight_column}) AS {hidden}")
+        measure_columns.append(f"sum({quote_identifier(weight_column)}) AS {quote_identifier(hidden)}")
         weight_aliases[alias] = hidden
 
     measure_cols = ", ".join(measure_columns)
 
     sets: list[str] = []
     if subtotals:
-        sets.extend("(" + ", ".join(dims[:size]) + ")" for size in range(len(dims), 0, -1))
+        sets.extend("(" + ", ".join(sql_dims[:size]) + ")" for size in range(len(dims), 0, -1))
     else:
-        sets.append("(" + ", ".join(dims) + ")")
+        sets.append("(" + ", ".join(sql_dims) + ")")
     if total:
         sets.append("()")
 
@@ -188,7 +190,7 @@ def grouped_table(
         WITH __base AS (
             {sql}
         )
-        SELECT {", ".join(dims)}, {measure_cols}, {grouping_cols}
+        SELECT {", ".join(sql_dims)}, {measure_cols}, {grouping_cols}
         FROM __base
         GROUP BY GROUPING SETS ({", ".join(sets)})
     """

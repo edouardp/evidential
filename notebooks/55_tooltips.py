@@ -55,6 +55,8 @@ def precision_doc(mo):
     Hover **1.3T**, the rounded percentage, or the currency. The tooltip shows
     `1,253,224,564,123.12`, `12.3456%`, and `$1,253,224,564.12`, respectively.
     Tiny scientific values also expand without disappearing into a rounded zero.
+    The **Amount ⓘ** header uses the same tooltip: hover anywhere in that header
+    or focus it with Tab. Its two-line description explains the figure.
     """)
     return
 
@@ -74,7 +76,9 @@ def full_values(EvidentialTable, col, mo, tooltip_frame):
             ],
             columns=[
                 col.text("measure"),
-                col.number("amount", format="compact"),
+                col.number("amount", format="compact").info(
+                    "Total amount before refunds.\nReported in whole currency units."
+                ),
                 col.percent("share", decimals=0),
                 col.currency("revenue", format="usd0"),
                 col.number("tiny", format="sci"),

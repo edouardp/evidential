@@ -955,6 +955,10 @@ columns=[
   `.tooltip(delay=0)` overrides the graphics delay. Defaults are 0s for graphics
   and 0.8s for text. Keyboard and touch inspection bypass hover delays. See the offline
   [`55_tooltips.py`](../../notebooks/55_tooltips.py) gallery.
+  Column `.info(...)` descriptions use this same tooltip on whole-header hover,
+  keyboard focus and touch. They honor `text_delay`, support newlines and remain
+  available when sorting is disabled; data-cell tooltip overrides do not replace
+  the header description.
 - **Boxplot** — `boxplot(minimum, q1, median, q3, maximum, outliers=, whisker=`
   `"extrema"|"iqr")`. The renderer never computes statistics; the five numbers
   arrive from SQL or Python.

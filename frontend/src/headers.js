@@ -130,7 +130,7 @@ function headerTitle(title) {
   return label;
 }
 
-export function renderHeader({columns, rowNumbers, options: opts, sort, onSort}) {
+export function renderHeader({columns, rowNumbers, options: opts, sort, onSort, onInfo}) {
   const thead = h("thead");
   const {depth, levels, leaves} = headerLayout(columns);
   if (depth > 0) {
@@ -185,8 +185,6 @@ export function renderHeader({columns, rowNumbers, options: opts, sort, onSort})
       "data-column-start": leaf.start + (rowNumbers ? 1 : 0),
       style: withFigure(leaf.label ? {textAlign: "center"} : alignStyle(col), col, opts),
       "aria-sort": sorted ? (dir === "asc" ? "ascending" : "descending") : "none",
-      // The description tooltip belongs to the whole header cell.
-      title: infoText,
     });
     if (typeof rotation === "number") {
       th.style.setProperty("--et-th-angle", `${rotation}deg`);
@@ -215,6 +213,7 @@ export function renderHeader({columns, rowNumbers, options: opts, sort, onSort})
       });
       th.dataset.column = col.name;
     }
+    if (infoText) onInfo?.(th, col);
     row.append(th);
   }
   thead.append(row);

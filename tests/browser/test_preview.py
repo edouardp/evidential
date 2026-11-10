@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import pytest
 from paint_helpers import assert_colors, painted_colors
+from playwright.sync_api import expect
 
 pytestmark = pytest.mark.browser
 
@@ -201,11 +202,24 @@ def test_column_info_tooltip_is_on_the_header_cell(page, live_server):
     headers = page.locator("#features th.et-th:has(.et-th-info)")
     assert headers.count() == 1
     header = headers.first
-    # The native tooltip is on the whole cell, so it no longer lives on the icon.
-    assert header.get_attribute("title") == "The city name"
+    assert header.get_attribute("title") is None
     icon = header.locator(".et-th-info")
     assert icon.get_attribute("title") is None
     assert icon.evaluate("el => getComputedStyle(el).cursor") == "help"
+    icon.hover()
+    tip = page.locator("#features .et-tooltip")
+    expect(tip).to_be_visible()
+    expect(tip).to_have_text("The city name")
+    assert header.get_attribute("aria-describedby") == tip.get_attribute("id")
+    header.press("Escape")
+    expect(tip).to_be_hidden()
+    # Hovering the label also shows the same single widget tooltip.
+    header.locator(".et-th-title").hover()
+    expect(tip).to_be_visible()
+    header.press("Escape")
+    header.evaluate("el => el.blur()")
+    header.focus()
+    expect(tip).to_be_visible()
 
 
 def test_delta_indicator_follows_the_value(page, live_server):

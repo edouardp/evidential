@@ -24,6 +24,22 @@ export function inspectable(node, data, {priority = 1, navigate = true} = {}) {
 
 export function inspectionData(node) { return targets.get(node)?.data; }
 
+/** Header descriptions share the widget tooltip and its text delay settings. */
+export function inspectHeader(header, col, options) {
+  inspectable(header, {value: String(col.info)}, {priority: 0, navigate: false});
+  header.dataset.etTooltipCell = "";
+  header.tabIndex = 0;
+  cellOptions.set(header, inspectionOptions(col, options));
+}
+
+function inspectionOptions(col, options, graphic = false) {
+  const spec = {...options.tooltips, ...col.tooltip_options};
+  return {
+    delay: (graphic ? spec.delay ?? 0 : spec.text_delay ?? 0.8) * 1000,
+    maxEntries: spec.max_entries ?? DEFAULT_MAX_ENTRIES,
+  };
+}
+
 /** Apply column overrides once, including nulls and every child mark. */
 export function inspectCell(cell, col, row, options, formatCode) {
   targets.delete(cell);
@@ -51,12 +67,8 @@ export function inspectCell(cell, col, row, options, formatCode) {
   };
   targets.set(cell, {data, priority: 0, navigate: false});
   cell.dataset.etTooltipCell = "";
-  const tooltipOptions = {...options.tooltips, ...col.tooltip_options};
   const graphic = Boolean(cell.querySelector(".et-marks, .et-sparkline, .et-bar-cell, .et-symbols, .et-delta"));
-  cellOptions.set(cell, {
-    delay: (graphic ? tooltipOptions.delay ?? 0 : tooltipOptions.text_delay ?? 0.8) * 1000,
-    maxEntries: tooltipOptions.max_entries ?? DEFAULT_MAX_ENTRIES,
-  });
+  cellOptions.set(cell, inspectionOptions(col, options, graphic));
   const summary = marks.length ? marks.map(node => tooltipText(targets.get(node).data)).join("\n") : tooltipText(data);
   cell.setAttribute("aria-label", summary);
   if (marks.length || override != null) cell.tabIndex = 0;

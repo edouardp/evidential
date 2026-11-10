@@ -1,5 +1,5 @@
 ---
-status: accepted
+status: superseded by ADR-094
 date: 2026-10-13
 deciders: edouard
 ---
@@ -30,6 +30,10 @@ header cell is a more natural hover target.
 3. A CSS-only `::after` tooltip.
 
 ## Decision Outcome
+
+Superseded by [ADR-094](094-shared-header-info-tooltips.md): descriptions now
+use the shared widget tooltip introduced for data and graphics in ADR-085,
+while retaining the whole header cell as their hover target.
 
 Chosen option: "Native `title` on the `<th>`". `_renderHeader` sets `title` on
 the whole header cell when the column has `info`; the **ⓘ** stays as a marker

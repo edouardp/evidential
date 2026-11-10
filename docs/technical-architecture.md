@@ -579,9 +579,11 @@ alpha-3 country code).
   re-run (ADR-032). The clicked row is marked `.et-row-selected`; clicking it
   again clears the selection.
 - **Column descriptions** (`info`, or the `comment`/`description` aliases) render
-  as a **ⓘ** in the header, and set the native `title` on the whole `<th>` cell so
-  hovering anywhere in the header shows the description. The **ⓘ** keeps
-  `aria-label` (for assistive technology) and `cursor: help`.
+  as a **ⓘ** in the header. The whole `<th>` registers with the same tooltip
+  controller as data cells, using the table/column text delay. Hover, focus and
+  touch show safe multiline descriptions; headers are focusable even without
+  sorting. The **ⓘ** keeps `aria-label` and `cursor: help`, with no competing
+  native title. See [ADR-094](adr/094-shared-header-info-tooltips.md).
 
 ### 6.6 Fullscreen
 

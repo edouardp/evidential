@@ -83,6 +83,12 @@ is cancelled on leaving, dismissal, rerender or destruction. Once open,
 inspection follows marks in the same cell immediately. Keyboard and touch
 inspection bypass hover delays.
 
+Column descriptions now use the same controller and text-delay settings,
+including whole-header hover and focus when sorting is disabled. See
+[ADR-094](094-shared-header-info-tooltips.md), which supersedes the native-header
+decision in ADR-029. Header descriptions remain independent of data-cell
+`.tooltip(False)` and literal/bound overrides.
+
 Graphic cells receive one keyboard focus stop. Left/Right cycles through
 marks, Home/End selects the first/last, and Escape dismisses inspection.
 Touch inspection leaves row selection and other click handling intact.

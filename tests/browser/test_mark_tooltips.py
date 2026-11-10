@@ -60,6 +60,35 @@ def test_full_values_overlap_enlarged_hit_area_and_keyboard(page, live_server, d
     assert dot.get_attribute("title") is None
 
 
+def test_header_info_in_fullscreen_uses_shared_multiline_tooltip_without_sorting(page, live_server):
+    description = "<b>Total amount</b>\nBefore refunds"
+    table = EvidentialTable(
+        [{"amount": 1234}],
+        columns=[col.number("amount").info(description)],
+        sortable=False,
+        tooltips={"text_delay": 0},
+    )
+    mount(page, live_server, [("Header inspection", table, [])])
+    page.get_by_role("button", name="Expand table").click()
+    dialog = page.locator("dialog[open]")
+    header = dialog.locator("th:has(.et-th-info)")
+    assert header.get_attribute("tabindex") == "0"
+    header.locator(".et-th-info").hover()
+    tip = dialog.locator(".et-tooltip")
+    expect(tip).to_be_visible()
+    expect(tip).to_have_text(description)
+    assert tip.locator("b").count() == 0
+    assert tip.evaluate("el => el.matches(':popover-open')")
+    assert header.get_attribute("title") is None
+    header.focus()
+    capture(page, "header-info-tooltip.png")
+    header.press("Escape")
+    expect(tip).to_be_hidden()
+    expect(dialog).to_be_visible()
+    header.press("Escape")
+    expect(page.locator("dialog[open]")).to_have_count(0)
+
+
 def test_stacks_hidden_labels_and_both_neutral_halves(page, live_server, demos):
     mount(page, live_server, [("Stack", demos["stack_table"], []), ("Neutral", demos["neutral_table"], [])])
     root = page.locator("#case-0")

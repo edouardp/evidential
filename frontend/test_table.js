@@ -1107,17 +1107,52 @@ test("rows are only selectable when `select` is set", () => {
   renderer.destroy();
 });
 
-test("column info shows a native tooltip on the whole header cell", () => {
+test("column info uses the shared tooltip on header hover and focus without changing sorting", () => {
   const columns = [{ name: "city", type: "string", info: "A helpful hint" }];
-  const renderer = new EvidentialTableRenderer(makeModel([{ city: "NYC" }], columns, {}, el), el);
+  const renderer = new EvidentialTableRenderer(makeModel([{ city: "NYC" }], columns, {tooltips: {text_delay: 0}}, el), el);
   const th = el.querySelector("th.et-th");
   const icon = th.querySelector(".et-th-info");
   assert.ok(icon);
   assert.equal(icon.getAttribute("aria-label"), "A helpful hint");
-  // The native tooltip lives on the cell, so hovering anywhere in it works.
-  assert.equal(th.getAttribute("title"), "A helpful hint");
+  assert.equal(th.getAttribute("title"), null);
   assert.equal(icon.getAttribute("title"), null);
+  const tip = el.querySelector(".et-tooltip");
+  icon.dispatchEvent(new dom.window.MouseEvent("pointermove", {bubbles: true, clientX: 10, clientY: 10}));
+  assert.equal(tip.hidden, false);
+  assert.equal(tip.textContent, "A helpful hint");
+  assert.equal(th.getAttribute("aria-describedby"), tip.id);
+  th.dispatchEvent(new dom.window.KeyboardEvent("keydown", {key: "Escape", bubbles: true}));
+  assert.equal(tip.hidden, true);
+  th.focus();
+  assert.equal(tip.hidden, false);
+  th.dispatchEvent(new dom.window.KeyboardEvent("keydown", {key: "Enter", bubbles: true}));
+  assert.deepEqual(renderer._state.sort, {column: "city", direction: "desc"});
+  assert.equal(el.querySelectorAll(".et-tooltip").length, 1);
   renderer.destroy();
+});
+
+test("header info honors text delay overrides, multiline safety and nonsortable focus", t => {
+  t.mock.timers.enable({apis: ["setTimeout"]});
+  const info = "<b>Gross revenue</b>\nBefore refunds";
+  const columns = [{name: "city", info, tooltip: false, tooltip_options: {text_delay: 0.2}}];
+  const renderer = new EvidentialTableRenderer(makeModel([{city: "NYC"}], columns,
+    {sortable: false, tooltips: {text_delay: 1.5}}, el), el);
+  const th = el.querySelector("th");
+  const tip = el.querySelector(".et-tooltip");
+  th.dispatchEvent(new dom.window.MouseEvent("pointermove", {bubbles: true}));
+  t.mock.timers.tick(199);
+  assert.equal(tip.hidden, true);
+  t.mock.timers.tick(1);
+  assert.equal(tip.hidden, false);
+  assert.equal(tip.textContent, info);
+  assert.equal(tip.querySelector("b"), null);
+  th.dispatchEvent(new dom.window.KeyboardEvent("keydown", {key: "Escape", bubbles: true}));
+  assert.equal(th.tabIndex, 0);
+  th.focus();
+  assert.equal(tip.hidden, false);
+  assert.equal(th.getAttribute("title"), null);
+  renderer.destroy();
+  assert.equal(el.querySelector(".et-tooltip"), null);
 });
 
 test("page_size 'all' shows every row without pagination", () => {

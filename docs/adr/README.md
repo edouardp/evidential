@@ -47,7 +47,7 @@ dated, immutable record of the decisions behind them.
 | [026](026-delta-indicator-and-neutral-band.md) | Delta Indicator After the Value, Dash for Neutral | Accepted |
 | [027](027-sort-by-another-column.md) | Sort a Column by Another Column's Values | Accepted |
 | [028](028-dotted-column-name-groups.md) | Column Groups from Dotted Column Names | Accepted |
-| [029](029-native-header-tooltip.md) | Native Header Tooltip on the Whole Cell | Accepted |
+| [029](029-native-header-tooltip.md) | Native Header Tooltip on the Whole Cell | Superseded by ADR-094 |
 | [030](030-chip-visualisation.md) | Chip Visualisation | Accepted |
 | [031](031-column-highlights.md) | Column and Column-Group Highlights | Accepted |
 | [032](032-row-selection.md) | Row Selection Drives the Notebook | Accepted |
@@ -112,6 +112,7 @@ dated, immutable record of the decisions behind them.
 | [091](091-runtime-boundary-contracts.md) | Explicit Runtime Boundary Contracts | Accepted |
 | [092](092-frontend-quality-and-browser-measurement.md) | Frontend Quality Gates and Browser Measurements | Accepted |
 | [093](093-resumable-release-finalization.md) | Resumable Release Finalization | Accepted |
+| [094](094-shared-header-info-tooltips.md) | Shared Header Info Tooltips | Accepted |
 
 ## Creating New ADRs
 

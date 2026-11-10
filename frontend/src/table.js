@@ -22,7 +22,7 @@ import { serializeCsv } from "./csv.js";
 import { h, inlineMarkdown, formatRowRanges, isStub } from "./dom.js";
 import { hiddenColumns, visibleRows, searchRows, sortRows, paginateRows,
  } from "./rows.js";
-import { TooltipController } from "./tooltips.js";
+import { TooltipController, inspectHeader } from "./tooltips.js";
 import { combinePoints } from "./point-clusters.js";
 import { formatTitle } from "./format.js";
 
@@ -474,6 +474,7 @@ export class EvidentialTableRenderer {
 
   _renderHeader(columns, ctx) {
     return renderHeader({columns, rowNumbers: ctx.rowNumbers, options: this.options,
+      onInfo: (header, col) => inspectHeader(header, col, this.options),
       sort: this._state.sort, onSort: (name) => {
         this._sortColumn(name);
         const replacement = [...this.scroller.querySelectorAll("thead [data-column]")]

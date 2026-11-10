@@ -10,7 +10,8 @@ project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 - Column-header info descriptions use the same tooltip as table cells and graphics,
   with whole-header hover, keyboard/touch inspection, multiline text and configurable
-  text delay. Description headers remain focusable when sorting is disabled.
+  text delay. Description headers remain focusable when sorting is disabled;
+  the info icon inherits the header cursor instead of showing a question mark.
 
 ## 0.2.3 (2026-11-05)
 

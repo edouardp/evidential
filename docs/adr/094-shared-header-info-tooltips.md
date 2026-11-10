@@ -35,8 +35,9 @@ and avoids a circular dependency between headers and inspection.
 Headers with info are focusable even when sorting is disabled. Their descriptions
 use plain text with newlines, the normal table/column `text_delay`, and immediate
 keyboard/touch inspection. The info glyph retains its accessible description and
-help cursor. Managed header titles are removed so there is no competing native
-tooltip. Enter/Space sorting remains unchanged. No public API is added.
+inherits the surrounding header cursor. Managed header titles are removed so
+there is no competing native tooltip. Enter/Space sorting remains unchanged.
+No public API is added.
 
 ### Consequences
 

@@ -205,7 +205,7 @@ def test_column_info_tooltip_is_on_the_header_cell(page, live_server):
     assert header.get_attribute("title") is None
     icon = header.locator(".et-th-info")
     assert icon.get_attribute("title") is None
-    assert icon.evaluate("el => getComputedStyle(el).cursor") == "help"
+    assert icon.evaluate("el => getComputedStyle(el).cursor") == header.evaluate("el => getComputedStyle(el).cursor")
     icon.hover()
     tip = page.locator("#features .et-tooltip")
     expect(tip).to_be_visible()

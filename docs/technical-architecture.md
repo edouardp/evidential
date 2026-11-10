@@ -582,8 +582,8 @@ alpha-3 country code).
   as a **ⓘ** in the header. The whole `<th>` registers with the same tooltip
   controller as data cells, using the table/column text delay. Hover, focus and
   touch show safe multiline descriptions; headers are focusable even without
-  sorting. The **ⓘ** keeps `aria-label` and `cursor: help`, with no competing
-  native title. See [ADR-094](adr/094-shared-header-info-tooltips.md).
+  sorting. The **ⓘ** keeps `aria-label` and inherits the header cursor, with no
+  competing native title. See [ADR-094](adr/094-shared-header-info-tooltips.md).
 
 ### 6.6 Fullscreen
 

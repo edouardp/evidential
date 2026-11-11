@@ -6,6 +6,13 @@ project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## Unreleased
 
+### Changed
+
+- `make run-marimo` uses this machine's Tailscale DNS name when connected.
+  Missing, disconnected or unresponsive Tailscale omits `--host`, leaving
+  marimo's default in place. Explicit `HOST=...` overrides detection;
+  `HOST=` forces the marimo default.
+
 ### Fixed
 
 - Column-header info descriptions use the same tooltip as table cells and graphics,

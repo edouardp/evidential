@@ -57,12 +57,12 @@ def test_invalid_json_is_silent_fallback(monkeypatch):
 def test_run_marimo_passes_only_the_selected_host(tmp_path, cli, source, override):
     bin_dir = tmp_path / "bin"
     bin_dir.mkdir()
-    (bin_dir / "python3").symlink_to(sys.executable)
     (bin_dir / "date").symlink_to(shutil.which("date"))
     scripts = tmp_path / "scripts"
     scripts.mkdir()
     shutil.copy2(ROOT / "scripts/marimo_host.py", scripts)
     marker = tmp_path / "queried"
+    helper_marker = tmp_path / "uv-host-lookup"
     if cli != "missing":
         executable = bin_dir / "tailscale"
         executable.write_text(
@@ -73,7 +73,13 @@ def test_run_marimo_passes_only_the_selected_host(tmp_path, cli, source, overrid
         )
         executable.chmod(0o755)
     uv = bin_dir / "uv"
-    uv.write_text(f"#!{sys.executable}\nimport json,sys\nprint(json.dumps(sys.argv[1:]))\n")
+    uv.write_text(
+        f"#!{sys.executable}\nimport json,os,sys\nfrom pathlib import Path\n"
+        'if sys.argv[1:3] == ["run", "python"]:\n'
+        f"    Path({str(helper_marker)!r}).touch()\n"
+        "    os.execv(sys.executable, [sys.executable, *sys.argv[3:]])\n"
+        "print(json.dumps(sys.argv[1:]))\n"
+    )
     uv.chmod(0o755)
     status = ACTIVE if cli == "active" else {"BackendState": "Stopped"}
     environment = {
@@ -111,4 +117,5 @@ def test_run_marimo_passes_only_the_selected_host(tmp_path, cli, source, overrid
         "notebooks",
     ]
     assert not result.stderr
+    assert helper_marker.exists() is (override is None)
     assert marker.exists() is (cli != "missing" and override is None)

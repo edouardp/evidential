@@ -77,7 +77,7 @@ frontend-check: ## Verify committed renderer assets match a fresh build
 
 .PHONY: run-marimo
 run-marimo: ## Open notebooks using active Tailscale DNS or marimo defaults (override HOST=...)
-	@marimo_host="$(if $(filter file,$(origin HOST)),$(shell python3 scripts/marimo_host.py),$(HOST))"; \
+	@marimo_host="$(if $(filter file,$(origin HOST)),$(shell uv run python scripts/marimo_host.py),$(HOST))"; \
 	set --; \
 	if [ -n "$$marimo_host" ]; then set -- --host "$$marimo_host"; fi; \
 	uv run marimo edit --watch --no-sandbox "$$@" notebooks

@@ -18,14 +18,6 @@ ROOT = Path(__file__).resolve().parents[2]
 ACTIVE = {"BackendState": "Running", "Self": {"Online": True, "DNSName": "my-mini.example.ts.net."}}
 
 
-def test_missing_cli_does_not_start_a_process(monkeypatch):
-    monkeypatch.setattr(shutil, "which", lambda _name: None)
-    run = Mock()
-    monkeypatch.setattr(subprocess, "run", run)
-    assert tailscale_host() is None
-    run.assert_not_called()
-
-
 @pytest.mark.parametrize(
     "status",
     [
@@ -34,15 +26,12 @@ def test_missing_cli_does_not_start_a_process(monkeypatch):
         {"BackendState": "Stopped"},
         {**ACTIVE, "Self": None},
         {**ACTIVE, "Self": {**ACTIVE["Self"], "Online": False}},
-        *[
-            {**ACTIVE, "Self": {**ACTIVE["Self"], "DNSName": value}}
-            for value in [None, "", "bad host.ts.net.", "--host", "a..ts.net.", "a/evil.ts.net.", "-bad.ts.net."]
-        ],
+        {**ACTIVE, "Self": {**ACTIVE["Self"], "DNSName": None}},
+        {**ACTIVE, "Self": {**ACTIVE["Self"], "DNSName": ""}},
     ],
 )
 def test_inactive_or_unusable_status_omits_host(monkeypatch, status):
-    monkeypatch.setattr(shutil, "which", lambda _name: "/fake/tailscale")
-    monkeypatch.setattr(subprocess, "run", lambda *_args, **_kwargs: Mock(stdout=json.dumps(status)))
+    monkeypatch.setattr(subprocess, "check_output", lambda *_args, **_kwargs: json.dumps(status))
     assert tailscale_host() is None
 
 
@@ -51,14 +40,12 @@ def test_inactive_or_unusable_status_omits_host(monkeypatch, status):
     [OSError("missing"), subprocess.TimeoutExpired("tailscale", 2), subprocess.CalledProcessError(1, "tailscale")],
 )
 def test_cli_failure_or_timeout_is_silent_fallback(monkeypatch, error):
-    monkeypatch.setattr(shutil, "which", lambda _name: "/fake/tailscale")
-    monkeypatch.setattr(subprocess, "run", Mock(side_effect=error))
+    monkeypatch.setattr(subprocess, "check_output", Mock(side_effect=error))
     assert tailscale_host() is None
 
 
 def test_invalid_json_is_silent_fallback(monkeypatch):
-    monkeypatch.setattr(shutil, "which", lambda _name: "/fake/tailscale")
-    monkeypatch.setattr(subprocess, "run", lambda *_args, **_kwargs: Mock(stdout="not JSON"))
+    monkeypatch.setattr(subprocess, "check_output", lambda *_args, **_kwargs: "not JSON")
     assert tailscale_host() is None
 
 

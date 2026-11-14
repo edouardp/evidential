@@ -46,18 +46,37 @@ Extras are `evidential[duckdb]`, `evidential[marimo]` and `evidential[studio]`
 
 ## Agent skill
 
-The bundled [Evidential skill](skills/evidential/SKILL.md) helps coding agents
-build tables and marimo explorers using the public API. It includes focused
-references and runnable report/explorer templates, with no local dataset
-requirements. Install it from a checkout using the skills CLI:
+The Python package includes a [development skill](src/evidential/skills/developing-with-evidential/SKILL.md)
+with focused references and runnable report/explorer templates. Its instructions
+match the installed library release. Locate it in the project's environment:
 
 ```bash
-npx skills add . --skill evidential
+uv run python -m evidential.skills path
 ```
 
-For a published revision on GitHub, the same skill can be installed with
-`npx skills add edouardp/evidential --skill evidential`. The skill checks the
-installed library's capabilities because this checkout can be ahead of PyPI.
+Or from Python:
+
+```python
+from evidential import skills
+
+skill_directory = skills.path()  # pathlib.Path containing SKILL.md and resources
+```
+
+Read `SKILL.md` in that directory, then its references as needed. The command
+prints the path without changing agent configuration. No repository clone or
+local datasets are required to use the bundled templates.
+
+Install the lightweight [discovery skill](skills/evidential/SKILL.md) into your
+agent using the skills CLI:
+
+```bash
+npx skills add edouardp/evidential --skill evidential
+```
+
+From a checkout, use `npx skills add . --skill evidential`. This entry point
+finds the development skill in the project's Python environment, so upgrading
+Evidential also updates its instructions. Older releases without bundled skills
+use matching release documentation; the discovery skill does not upgrade them.
 
 ## 1. Your first table
 

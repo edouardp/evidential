@@ -97,7 +97,7 @@ markers = [
 
 [tool.coverage.run]
 source = ["evidential"]
-omit = ["*/static/*"]
+omit = ["*/static/*", "*/skills/developing-with-evidential/assets/*"]
 
 [tool.coverage.report]
 show_missing = true
@@ -107,4 +107,4 @@ exclude_lines = ["pragma: no cover", "if TYPE_CHECKING:"]
 search-path = ["src"]
 # Type-check the shipped package (tests and notebooks are exercised at runtime).
 project-includes = ["src/evidential/**/*.py"]
-project-excludes = ["**/__pycache__", ".venv", "**/static/**"]
+project-excludes = ["**/__pycache__", ".venv", "**/static/**", "**/skills/developing-with-evidential/assets/**"]

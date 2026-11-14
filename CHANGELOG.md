@@ -8,6 +8,11 @@ project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- Bundle the development skill, references and report/explorer templates with
+  the Python package. `evidential.skills.path()` and
+  `python -m evidential.skills path` locate the version-matched instructions.
+  The repository's installable skill now discovers the project's bundled copy.
+
 - Rounded range ends with `cap="round"` and numeric gradients with
   `.gradient(scale=, stops=, min=, max=, midpoint=)`. Colors follow a shared
   x-value scale, preserve transparency and clamp at their bounds; clipped

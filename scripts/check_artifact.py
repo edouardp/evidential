@@ -3,7 +3,8 @@
 Run by ``make check-artifact`` after ``make build``. The checks assert that the
 shipped wheel/sdist contain every runtime module plus the committed renderer
 assets, and that no development files (tests, notebooks, the JS sources) leak
-into a release.
+into a release. Notebook templates under the bundled skill are intentional
+package data; the repository notebook collection remains excluded.
 """
 
 from __future__ import annotations
@@ -17,6 +18,18 @@ ROOT = Path(__file__).resolve().parents[1]
 DIST = ROOT / "dist"
 
 PACKAGE = "evidential"
+SKILL_ROOT = f"{PACKAGE}/skills/developing-with-evidential"
+SKILL_FILES = (
+    "SKILL.md",
+    "LICENSE.txt",
+    "agents/openai.yaml",
+    "references/tables.md",
+    "references/graphics.md",
+    "references/marimo.md",
+    "references/dimensions.md",
+    "assets/report.py",
+    "assets/explorer.py",
+)
 REQUIRED = (
     f"{PACKAGE}/__init__.py",
     f"{PACKAGE}/_compat.py",
@@ -41,6 +54,9 @@ REQUIRED = (
     f"{PACKAGE}/static/table.css",
     f"{PACKAGE}/static/dimension-grid.js",
     f"{PACKAGE}/static/dimension-grid.css",
+    f"{PACKAGE}/skills/__init__.py",
+    f"{PACKAGE}/skills/__main__.py",
+    *(f"{SKILL_ROOT}/{name}" for name in SKILL_FILES),
 )
 FORBIDDEN = ("tests/", "notebooks/", "frontend/", "__pycache__", ".pyc", ".coverage")
 MIN_RENDERER_BYTES = 10_000

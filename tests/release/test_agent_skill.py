@@ -10,15 +10,15 @@ from urllib.parse import urlparse
 import pytest
 import yaml
 
-from evidential import EvidentialTable
+from evidential import EvidentialTable, skills
 
 ROOT = Path(__file__).resolve().parents[2]
-SKILL = ROOT / "skills/evidential"
+SKILL = skills.path()
 
 
 @pytest.fixture
 def installed_skill(tmp_path):
-    destination = tmp_path / "installed" / "evidential"
+    destination = tmp_path / "installed" / SKILL.name
     shutil.copytree(SKILL, destination, ignore=shutil.ignore_patterns("__pycache__"))
     return destination
 
@@ -40,7 +40,7 @@ def test_portable_skill_metadata_and_local_resources(installed_skill):
             assert resource.is_relative_to(installed_skill), f"{document.name}: resource escapes the skill: {target}"
             assert resource.is_file(), f"{document.name}: missing bundled resource: {target}"
     interface = yaml.safe_load((installed_skill / "agents/openai.yaml").read_text())
-    assert "$evidential" in interface["interface"]["default_prompt"]
+    assert f"${installed_skill.name}" in interface["interface"]["default_prompt"]
 
 
 @pytest.mark.parametrize("relative", ["SKILL.md", "references/tables.md", "references/graphics.md"])
@@ -116,8 +116,8 @@ def test_explorer_template_updates_in_place_and_binds_selection(installed_skill)
 def test_markdown_gates_include_the_distributable_skill():
     config = yaml.safe_load((ROOT / ".pre-commit-config.yaml").read_text())
     hook = next(hook for repo in config["repos"] for hook in repo["hooks"] if hook["id"] == "rumdl")
-    assert hook["entry"].endswith(" docs notebooks skills")
+    assert hook["entry"].endswith(" docs notebooks skills src/evidential/skills")
     for path in (ROOT / "scripts/lint.sh", ROOT / "Makefile"):
         commands = [line.strip() for line in path.read_text().splitlines() if "uvx rumdl " in line]
         assert commands
-        assert all(command.endswith(" docs notebooks skills") for command in commands)
+        assert all(command.endswith(" docs notebooks skills src/evidential/skills") for command in commands)

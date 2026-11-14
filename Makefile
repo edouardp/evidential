@@ -159,7 +159,7 @@ typecheck: ## Type-check the package with pyrefly
 
 .PHONY: markdown-lint
 markdown-lint: ## Lint documentation markdown with rumdl
-	uvx rumdl check README.md CHANGELOG.md docs notebooks skills
+	uvx rumdl check README.md CHANGELOG.md docs notebooks skills src/evidential/skills
 
 # ============================================================================
 # Testing

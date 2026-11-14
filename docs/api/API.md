@@ -34,6 +34,7 @@ captured with Playwright by
 - [Visualisations](#visualisations)
 - [Formatting](#formatting)
 - [Dimension slicers](#dimension-slicers)
+- [Bundled agent skill](#bundled-agent-skill)
 - [Reference](#reference)
 
 ## Quick start
@@ -1288,6 +1289,32 @@ Only aggregate category data travels to the browser; virtualization bounds
 rendered rows. Source normalization and aggregation remain in memory: for
 large sources, preaggregate additive metrics at the needed dimension grain
 in SQL before passing them to the grid. Do not sum precomputed means.
+
+## Bundled agent skill
+
+`evidential.skills.path()` returns a `pathlib.Path` to the development skill
+shipped with the installed package. The directory contains `SKILL.md`, focused
+`references/`, executable marimo templates in `assets/`, and skill metadata.
+It works with normal wheel installs and editable source checkouts.
+
+```python
+from evidential import skills
+
+skill_directory = skills.path()
+instructions = (skill_directory / "SKILL.md").read_text()
+```
+
+The equivalent command prints the absolute directory path and a newline:
+
+```bash
+uv run python -m evidential.skills path
+```
+
+Run it in the user's project environment so the instructions match its pinned
+library version. It does not copy files or modify agent configuration.
+The repository's `skills/evidential` discovery skill routes agents to this
+bundled copy. Older versions without the module require their matching release
+documentation; discovering a skill does not authorize upgrading a project.
 
 ## Reference
 

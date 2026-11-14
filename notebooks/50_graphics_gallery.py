@@ -570,9 +570,9 @@ def graphic_sparklines_doc(mo):
     #### Sparklines
 
     Show a series as a line, area, bars, points or increase/steady/decrease marks.
-    Use `.color(scale="viridis", min=0, max=12)` to color observations by their
-    y value with the same gradient API as cell backgrounds. Bars and dots use
-    their own value; lines and areas use a continuous vertical gradient.
+    Use `.gradient(scale="viridis", min=0, max=12)` to color observations by their
+    y value with the same gradient API as cell backgrounds. Dots sample their
+    value; bars, lines and areas use a continuous vertical gradient.
     For a solid outline and a baseline fade, use `fill_opacity=(0, 0.6)`.
     """)
     return
@@ -603,13 +603,13 @@ def graphic_sparklines(EvidentialTable, col, frame):
         columns=[
             col.text("series"),
             col.sparkline("line", type="line", width=110, height=30)
-                .color(scale="viridis", min=0, max=12),
+                .gradient(scale="viridis", min=0, max=12),
             col.sparkline("area", type="area", color="#00a878", fill_opacity=(0, 0.6),
                           fit_to_data=True, width=110, height=30),
             col.sparkline("bar", type="bar", width=110, height=30)
-                .color(scale="viridis", min=0, max=12),
+                .gradient(scale="viridis", min=0, max=12),
             col.sparkline("points", type="points", width=110, height=30, markers=True)
-                .color(scale="viridis", min=0, max=12),
+                .gradient(scale="viridis", min=0, max=12),
             col.sparkline("change", type="change", width=110, height=30),
         ],
         settings=frame("Sparkline types", 900),
@@ -626,7 +626,7 @@ def graphic_sparkline_areas_doc(mo):
     60% opacity at the edge, keeping a solid outline. A fixed value such as
     `fill_opacity=0.5` sets one opacity throughout the fill.
 
-    Use `.color(stops=...)` for a vertical color gradient with alpha: the middle
+    Use `.gradient(stops=...)` for a vertical color gradient with alpha: the middle
     column fades from transparent at zero to green at 40, then turns red above
     40. Closely spaced stops at 40 and 40.001 make that transition sharp. Only
     the part of each peak above the threshold is red.
@@ -661,7 +661,7 @@ def graphic_sparkline_areas(EvidentialTable, col, frame):
             col.sparkline("readings", title="Baseline fade", type="area", color="#00a878",
                           fill_opacity=(0, 0.6), width=180, height=26),
             col.sparkline("readings", title="Green to 40, then red", type="area", width=180, height=26)
-                .color(stops=[
+                .gradient(stops=[
                     {"value": 0, "color": "#20af4b00"},
                     {"value": 40, "color": "#20af4b"},
                     {"value": 40.001, "color": "#ed1c24"},
@@ -669,7 +669,7 @@ def graphic_sparkline_areas(EvidentialTable, col, frame):
                 ]),
             col.sparkline("anomalies", title="Color clamped at ±1", type="area", reference=0,
                           y_fmt="num1", width=180, height=26)
-                .color(scale=["#e66b13", "#ffffff00", "#39799b"], min=-1, max=1, midpoint=0),
+                .gradient(scale=["#e66b13", "#ffffff00", "#39799b"], min=-1, max=1, midpoint=0),
         ],
         settings=frame("Area sparkline colors", 900),
     )
@@ -910,6 +910,48 @@ def graphic_marker_shapes(EvidentialTable, col, frame):
                .legend(column_names=False),
         ],
         settings=frame("Distinguish observations by shape", 680),
+    )
+    return
+
+
+@app.cell(hide_code=True)
+def graphic_numeric_gradients_doc(mo):
+    mo.md(r"""
+    #### Shared numeric gradients
+
+    Bars and ranges paint along the numeric axis; points sample their value.
+    The same `.gradient(...)` options work for cell backgrounds and sparklines.
+    Add `.scale(gradient=True)` for a thin colour key outside the rows, aligned
+    with the ticks. Colours clamp beyond their bounds; alpha stops let stripes
+    show through. [Notebook 63](notebooks/63_visual_gradients.py) also compares
+    box plots, density bands, reversed scales and logarithmic coordinates.
+    """)
+    return
+
+
+@app.cell
+def graphic_numeric_gradients(EvidentialTable, col, frame, label):
+    gradient_values = [
+        {"case": "Declining", "change": -8, "low": -10, "high": -3},
+        {"case": "Near zero", "change": -1, "low": -4, "high": 3},
+        {"case": "Growing", "change": 6, "low": 2, "high": 9},
+        {"case": "Above colour bounds", "change": 12, "low": 8, "high": 14},
+    ]
+    EvidentialTable(
+        gradient_values,
+        columns=[
+            col.text("case"),
+            col.bar("change", center=True, label=label.auto_position("outside end"))
+               .gradient(scale=["#b91c1c", "#e5e7eb", "#1d4ed8"], min=-10, max=10, midpoint=0)
+               .scale(domain=(-15, 15), gradient=True, axis_position="bottom"),
+            col.point("change", shape="star", size=11, outline="#334155")
+               .gradient(scale=["#b91c1c", "#e5e7eb", "#1d4ed8"], min=-10, max=10, midpoint=0)
+               .title("Point").scale(domain=(-15, 15), gradient=True, axis_position="bottom"),
+            col.range("low", "high", cap="round", size=7)
+               .gradient(scale=["#b91c1c", "#e5e7eb", "#1d4ed8"], min=-10, max=10, midpoint=0)
+               .title("Range").scale(domain=(-15, 15), gradient=True, axis_position="bottom"),
+        ],
+        settings=frame("One gradient across numeric marks", 800),
     )
     return
 

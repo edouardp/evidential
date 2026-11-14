@@ -396,7 +396,7 @@ class EncodingSpec(MarkerOptions, total=False):
     side: Literal["left", "right"] | None
     #: ``range``: end treatment, or ``"arrow"`` when an endpoint is off-scale.
     cap: Literal["none", "line", "dot", "arrow", "round"] | None
-    #: ``range``: numeric x-value gradient, independent of interval endpoints.
+    #: Numeric x-value gradient, independent of each mark's visible bounds.
     gradient: ColorOptions | None
     #: ``range``: a centered chevron from the first endpoint to the second.
     direction_marker: bool | None
@@ -448,6 +448,8 @@ class ScaleSpec(TypedDict, total=False):
     #: Draw a tick axis for the column (above or below the cells).
     axis: bool | None
     axis_position: Literal["top", "bottom"] | None
+    #: Show the last numeric mark gradient as a thin strip along the axis.
+    gradient: bool | None
     #: Draw faint vertical lines through the cells at the ticks.
     gridlines: bool | None
     #: Stack normalisation: raw additive values, or each row's share of its total.

@@ -530,6 +530,7 @@ tbody tr:first-child .et-bar-center .et-bar-axis { top: var(--et-bar-pad, 0); }
 tbody tr:last-child .et-bar-center .et-bar-axis { bottom: var(--et-bar-pad, 0); }
 .et-bar-center .et-bar-axis {
   position: absolute;
+  z-index: 1;
   top: 0;
   bottom: 0;
   left: 50%;
@@ -772,6 +773,11 @@ tbody tr:last-child .et-bar-center .et-bar-axis { bottom: var(--et-bar-pad, 0); 
   pointer-events: none;
 }
 .et-cell-guide-track { position: relative; height: 100%; }
+/* The origin must survive opaque bar fills. Keep ordinary guides behind the
+   marks, with points and value labels still above the origin. */
+.et-cell-guides-foreground { z-index: 1; }
+.et-mark-centerline { z-index: 1; }
+.et-marks-centered :is(.et-mark-point, .et-point-composite, .et-mark-label) { z-index: 2; }
 .et-cell-guides .et-mark-gridline,
 .et-cell-guides .et-mark-reference { top: 0; bottom: 0; }
 .et-root .et-axis-row > .et-td { padding-top: 0; padding-bottom: 0; border: 0; }
@@ -788,7 +794,7 @@ tbody tr:last-child .et-bar-center .et-bar-axis { bottom: var(--et-bar-pad, 0); 
 }
 .et-axis-tick {
   position: absolute;
-  transform: translateX(-50%);
+  width: 0;
   font-size: 0.85em;
   line-height: 1;
   color: #000;
@@ -798,7 +804,7 @@ tbody tr:last-child .et-bar-center .et-bar-axis { bottom: var(--et-bar-pad, 0); 
 .et-axis-tick::after {
   content: "";
   position: absolute;
-  left: 50%;
+  left: 0;
   top: 100%;
   height: 0.25rem;
   border-left: 1px solid #000;
@@ -1269,3 +1275,11 @@ tbody tr:last-child .et-bar-center .et-bar-axis { bottom: var(--et-bar-pad, 0); 
 /* Font-independent geometric markers shared by points, legends and ratings. */
 .et-marker-svg { display: block; width: 100%; height: 100%; overflow: visible; }
 .et-shaped-marker { background: transparent; }
+
+/* A gradient key shares the axis coordinates and stays outside the detail rows. */
+.et-axis-gradient { position: absolute; left: 0; right: 0; height: 3px; bottom: 0; }
+.et-axis-row-bottom .et-axis-gradient { top: 0; bottom: auto; }
+
+.et-axis-label { display: block; width: max-content; transform: translateX(-50%); }
+.et-axis-label-start { transform: none; }
+.et-axis-label-end { transform: translateX(-100%); }

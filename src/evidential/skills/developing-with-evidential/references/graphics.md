@@ -157,12 +157,12 @@ Notebook 48 prints the values beside two-/three-/four-sector examples.
   For absolute observations such as `[5, 4, 8]`, set `delta=True` to compare
   adjacent values. The first comparison stays blank; missing values break
   adjacency. `steady=(low, high)` is inclusive and defaults to `(0, 0)`.
-- All sparkline styles accept `.color(scale="viridis", min=..., max=...)`,
-  `.color(scale=[...], midpoint=0)`, or explicit `.color(stops=[...])` using y.
+- All sparkline styles accept `.gradient(scale="viridis", min=..., max=...)`,
+  `.gradient(scale=[...], midpoint=0)`, or explicit `.gradient(stops=[...])` using y.
   This colors the graphic, not the cell background. Inferred bounds pool
   matching details before pagination. Color bounds alone do not change geometry.
   A shared `.domain(...)` can also share the palette.
-- Lines/areas use a vertical gradient in data-y space, including between
+- Bars/lines/areas use a vertical gradient in data-y space, including between
   observations. Explicit alpha stops allow transparent baselines; closely spaced
   stops create sharp threshold bands. Colors beyond fixed endpoints clamp
   without clipping the data. Missing observations leave gaps.
@@ -176,7 +176,7 @@ Notebook 48 prints the values beside two-/three-/four-sector examples.
 - Change gradients keep the whole steady interval at the palette midpoint,
   even on asymmetric domains. Fixed bounds must contain it. Explicit stops
   instead define a direct y lookup. Legacy `color_scale`/`color_domain` options
-  remain supported; use fluent `.color()` in new examples.
+  and fluent `.color()` remain supported; use `.gradient()` in new examples.
 - A signed area can use `reference=1, signed=True` to fill above/below a 100%
   baseline. Format fractions with `y_fmt="pct1"`. Share/fix domains explicitly
   when multiple rows need comparable vertical geometry.
@@ -191,19 +191,35 @@ columns fit content; chart tracks use remaining space and minimum widths.
 the rendered table at the target width rather than shortening source values
 or clipping meaningful labels to hide a layout problem.
 
-## Rounded gradient ranges
+## Numeric gradients and scale strips
 
 Use `col.range("low", "high", cap="round", size=8).gradient(scale="viridis",
 min=0, max=100).scale(domain=(0, 100))` for a pill-shaped interval colored by
-numeric x value. `.gradient(...)` refines the last range only; append points
-after it to retain independent point colors. Its `scale`, `stops`, `min`, `max`
+numeric x value. `.gradient(...)` refines the last numeric mark: bar, point,
+points, range, box plot or density band. Append points after it to retain
+independent point colors. Its `scale`, `stops`, `min`, `max`
 and `midpoint` arguments match `.color()`. Bounds default to the column's
 coordinate domain, rather than restarting at each interval. Explicit bounds
 keep colors stable across filtering. Value stops and alpha colors work;
 out-of-domain colors clamp. Clipped ends stay square. Do not combine a gradient
-with solid `color` or `color_negative` on the same range. Notebook 61 demonstrates
+with solid `color` or `color_negative` on the same mark. Notebook 61 demonstrates
 a city chooser using historical monthly temperature extremes; notebook 48 shows
 point overlays, transparent stops and reversed/clipped/missing intervals.
+
+Spans paint continuously along x; points and tooltip swatches sample their value.
+Density still controls band opacity. Gradient bars honor alpha directly; solid bars
+keep their existing opacity. Cell backgrounds and sparklines use the same
+`.gradient(...)` arguments, with `.color(...)` retained for compatibility.
+Categorical stacks/strips, chips, ratings and repeated symbols keep their existing APIs.
+
+Use `.scale(gradient=True, axis_position="bottom")` for a three-pixel color strip
+outside the rows, enabling the numeric axis automatically. It requires a mark
+gradient; do not combine it with `axis=False`. The strip follows the last gradient
+mark in a composite column, including fixed color bounds, log/reversed geometry
+and alpha. Solid overlays do not replace it. Numeric gradients use this strip
+rather than categorical `.legend()` keys. See notebook 63 for a comparison of
+all supported numeric visuals. Centered bar origins remain above opaque fills;
+points and labels remain above the origin.
 
 ## Marker shapes and repeated symbols
 

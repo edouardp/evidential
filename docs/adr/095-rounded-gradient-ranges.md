@@ -59,6 +59,8 @@ keeps its original values for inspection, including when clipped or reversed.
 
 ## More Information
 
+- [ADR-098](098-shared-numeric-gradients.md) proposes extending this lookup to
+  other numeric marks and adding axis color strips on the review branch.
 - [ADR-073](073-directional-ranges.md) covers negative colors and direction.
 - [ADR-090](090-sparkline-y-color-encodings.md) covers numeric sparkline colors.
 - Notebook 48 demonstrates rounded ranges and point overlays.

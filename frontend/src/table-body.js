@@ -1,5 +1,6 @@
 // Physical table DOM: headers, axes, placeholders and display/data rows.
 import {h, isStub, withFigure, alignStyle} from "./dom.js";
+import {gradientPaint} from "./mark-gradient.js";
 import {labelFootnotes} from "./footnotes.js";
 import {renderColumnSizing} from "./column-sizing.js";
 import {decorateSubcolumn} from "./headers.js";
@@ -91,8 +92,14 @@ function renderAxisRow(columns, ctx, position, covered = new Set()) {
     }
     cell.classList.add("et-axis-cell");
     const { lo, hi } = marksDomain(col, ctx.ranges.get(col) || ctx.ranges.get(col.name));
-    const pos = scalePosition(lo, hi, scale.transform, (col.encodings || []).some(enc => enc.kind === "bar" && enc.direction === "left"));
+    const reverse = (col.encodings || []).some(enc => enc.kind === "bar" && enc.direction === "left");
+    const pos = scalePosition(lo, hi, scale.transform, reverse);
     const axis = h("div", { class: "et-axis" });
+    if (scale.gradient) {
+      const encoding = [...col.encodings].reverse().find(enc => enc.gradient);
+      if (encoding) axis.append(h("span", {class: "et-axis-gradient", "aria-hidden": "true",
+        style: gradientPaint(encoding, {col, lo, hi, pos, reverse}, 0, 100).style}));
+    }
     for (const {value: tick, major} of axisTicks(lo, hi, 4, scale.transform)) {
       const raw = pos(tick);
       if (raw == null) continue;
@@ -103,7 +110,8 @@ function renderAxisRow(columns, ctx, position, covered = new Set()) {
         fallback: String(tick),
       }) : "";
       axis.append(h("span", { class: `et-axis-tick${major ? "" : " et-axis-tick-minor"}`,
-        "aria-hidden": major ? null : "true", style: { left: `${pct}%` } }, formattedText(label)));
+        "aria-hidden": major ? null : "true", style: { left: `${pct}%` } }, major
+          ? h("span", {class: `et-axis-label${pct === 0 ? " et-axis-label-start" : pct === 100 ? " et-axis-label-end" : ""}`}, formattedText(label)) : null));
     }
     cell.append(axis);
   }

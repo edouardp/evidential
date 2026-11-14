@@ -656,11 +656,11 @@ columns=[
   each observation's **y value**, rather than shading the table cell:
 
   ```python
-  col.sparkline("history", type="bar").color(scale="viridis", min=0, max=100)
-  col.sparkline("history", type="area").color(
+  col.sparkline("history", type="bar").gradient(scale="viridis", min=0, max=100)
+  col.sparkline("history", type="area").gradient(
       scale=["#b2182b", "#b8bcc2", "#2166ac"], min=-10, max=10, midpoint=0,
   )
-  col.sparkline("history", type="points").color(stops=[
+  col.sparkline("history", type="points").gradient(stops=[
       {"value": -10, "color": "red"},
       {"value": 0, "color": "#ffffffcc"},
       {"value": 10, "color": "blue"},
@@ -674,7 +674,7 @@ columns=[
   and explicit stops reuse the scalar cell-color lookup. `.domain(...)` shares
   coordinates and optional palettes with other columns, including heatmaps.
 
-  Bars and dots use their own observation color. Lines and areas use a
+  Dots and change markers sample their observation's color. Bars, lines and areas use a
   **vertical gradient in data-y space**: the color at any height is the same
   across the chart, including between observations. A peak above a threshold
   can have a red tip while the area below the threshold stays green. Missing
@@ -706,7 +706,7 @@ columns=[
 
   Constant `color=` and gradient settings are mutually exclusive. Row-level `scale_column` and
   `conditional_colors` do not apply to sparkline arrays. Existing sparkline
-  `color_scale=`/`color_domain=` options remain supported; prefer `.color(...)`
+  `color_scale=`/`color_domain=` options and fluent `.color(...)` remain supported; prefer `.gradient(...)`
   for new examples and do not supply conflicting declarations.
 
   `type="change"` draws one equal rectangle per observation, with an ordinal
@@ -870,14 +870,22 @@ columns=[
   `fill=True` draws the interval as a translucent band instead of a line.
   `cap="round"` rounds the interval inside its true bounds; clipped edges remain
   square. Append `.gradient(scale="viridis", min=0, max=100)` to color the last
-  range by x value, or pass `stops=[{"value": 0, "color": "blue"}, ...]`.
+  numeric mark by x value, or pass `stops=[{"value": 0, "color": "blue"}, ...]`.
   The options `scale`, `stops`, `min`, `max`, `midpoint` match `.color()`.
   Bounds default to the column's shared coordinate domain, never each row's
-  endpoints. Colors clamp outside their specified domain and preserve alpha.
-  A gradient cannot share a range with solid `color` or `color_negative`
+  endpoints. Bars, ranges, box plots and density bands paint continuously along x;
+  points, median/cap/outlier marks and tooltip swatches sample their value.
+  Density continues to control opacity. Gradient bar fills honor the palette's alpha
+  directly; solid bars keep their existing opacity. Colors clamp outside their
+  specified domain and preserve alpha.
+  A gradient cannot share a mark with solid `color` or `color_negative`
   bindings; sibling marks keep independent colors. Log/reversed coordinates
   keep colors anchored to numeric values. Equal endpoints retain the existing one-pixel minimum mark.
-  Numeric gradients do not support categorical `.legend()` keys.
+  Numeric gradients use `.scale(gradient=True)` rather than categorical `.legend()` keys.
+  Cell backgrounds and all sparkline styles accept the same `.gradient(...)` arguments;
+  existing fluent `.color(...)` calls remain supported there. Categorical stacks,
+  strips, chips, ratings and repeated symbols retain their existing color APIs.
+  See [notebook 63](../../notebooks/63_visual_gradients.py) for the shared gradient examples.
   See the [monthly weather city chooser](../../notebooks/61_monthly_weather.py).
   For dumbbells, `color_negative="red"` colors a range when its second value
   is smaller than its first. `direction_marker=True` adds a centered chevron
@@ -1068,7 +1076,7 @@ columns=[
   `.min_width(pixels)` adds a minimum available width. Inside and stacked labels
   choose light/dark text for contrast; an explicit color overrides this choice.
 - **Scale** — `.scale(domain=(lo, hi), include_zero=, unit=, transform=`
-  `"linear"|"log", axis=, axis_position="top"|"bottom", gridlines=)` fixes the
+  `"linear"|"log", axis=, axis_position="top"|"bottom", gridlines=, gradient=)` fixes the
   shared quantitative axis; `.reference_line(value, label=, color=)` adds a rule
   and `.reference_band(low, high, label=, color=)` shades a zone (a target or
   equivalence range) through the cell height behind guides and marks. An explicit
@@ -1083,6 +1091,13 @@ columns=[
   unlabeled ticks at 2–9 within each decade. Their gaps shrink toward the next
   decade; major and minor tick marks are black. It is what a forest plot
   uses with `.reference_line(1)`.
+  `.scale(gradient=True)` adds a three-pixel color strip along the axis and enables
+  its ticks. It requires a mark gradient and rejects an explicit `axis=False`.
+  The strip follows numeric bounds, reversed/log coordinates and alpha stops.
+  With multiple gradient marks it uses the last configured gradient; solid overlays
+  do not replace it. Set `gradient=False` to remove the strip without changing ticks.
+  Centered bars paint their zero line above the fill, with points and labels above
+  the line. Reference bands and ordinary gridlines remain behind the marks.
   Repeated `.scale(...)` calls preserve earlier settings; `domain="auto"`
   explicitly clears fixed bounds. Missing data suppresses only its own mark.
   Automatic marks domains exclude synthetic rows and include all detail-row
@@ -1417,7 +1432,7 @@ other than `auto`, `merge`, `group` and `subcolumns` return a `Column`;
 | `.bar(source, …)` / `.point(source, …)` / `.range(low, high, …)` | append a mark |
 | `.legend(labels=True, *, outline=False, column_names=None)` | wrapping key; optional box and automatic/explicit column headings |
 | `.label(value=True \| "@field", *, source=, text=, position=, format=)` | annotate the last mark |
-| `.scale(domain=(lo, hi), include_zero=, unit=, transform="linear"\|"log", axis=, axis_position=, gridlines=)` / `.reference_line(value, label=, color=)` / `.reference_band(low, high, …)` | shared axis / rules |
+| `.scale(domain=(lo, hi), include_zero=, unit=, transform="linear"\|"log", axis=, axis_position=, gridlines=, gradient=)` / `.reference_line(value, label=, color=)` / `.reference_band(low, high, …)` | shared axis / rules |
 | `.relative(value=True)` / `.fmt_column(column)` | relative time / format source |
 | `.to_config()` | the plain dict |
 

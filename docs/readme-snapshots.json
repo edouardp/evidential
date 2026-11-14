@@ -3,7 +3,7 @@
   "inputs": {
     "notebooks/21_studio_dashboard.py": "8f4e85940544eac38b95c21f952659d3da97375dc584616347b24814281dc48b",
     "notebooks/49_api_screenshots.py": "219de292a242152427ca2e62163eb787c5c7355f974909eff90bd0c76ac5606b",
-    "notebooks/50_graphics_gallery.py": "214001ba117a0b9f4355e4dc78fafc0d71b0d570e53f9903dceeaa1c4b765abb",
+    "notebooks/50_graphics_gallery.py": "73b578a491eed0c1c705c69664c93891f82fe9bc950be01fbb1e32a91c50d148",
     "notebooks/51_table_layouts.py": "5f4d375309eef793c8c756761e67c9127db0ac554e2405234a85cd81ee1b9930",
     "notebooks/56_dimension_grid.py": "c31b38f124c0874e9c55d0d8a72eaa7e40c92dfe725df6308fffadbbfa2f7c52",
     "notebooks/data/46_football_england_2024.json": "aa8d550e7bb3e776dfd2dbfee5dd2cd57ab14a66c5c036dd393001055b55ff03",
@@ -12,13 +12,13 @@
     "notebooks/sample_data/needful_things/orders.parquet": "b373511b4f7a0547b704022b055655b6d3bafc2505a2a573292b206417fe3eb4",
     "notebooks/sql/50_europe_trade.sql": "c01857da122eb48c819aa14def0bcd4f6fb2e762ea987e55271c58f509746ea6",
     "pyproject.toml": "530abbddea8a6cd7174e91840422f608c88cdf975dfeb49bcbbbe257ee5d7624",
-    "scripts/api_screenshots.py": "113b903086abdb8bd8428e382af97a44e5d762c7646d4a5b9705ca963d59a515",
+    "scripts/api_screenshots.py": "fedfd2865cdb1328dbec7754cc951646d0e6958980a2aaa81d62b0645e579969",
     "scripts/generate_readme.py": "2942558e4363d66603f6aefb2bdd9cc3f1978543d810f787d0b6fc8dc60326c0",
     "src/evidential/__init__.py": "60a7457f583bcbde6ec9e6838f9153af3fac6636d29f45010e46b0c77dc7c350",
     "src/evidential/_aliases.py": "5e207c4a862754e1ca9f7ea309a0e489bf158a7e380876f8edcf20eeee1438f1",
-    "src/evidential/_color.py": "d734564c8bc15d73c9ffd9396cfe6aad1088b86e9d942e5d5e27c51b9491d890",
-    "src/evidential/_column.py": "d35f5ef2aef980719ebc6fa521b8717b726796217d806e5113109c1f1d7cdaae",
-    "src/evidential/_column_options.py": "033b04a3397d165e7ef22c3585fcdc3c0b193a22e1dc2786791df1861b969bea",
+    "src/evidential/_color.py": "dd53b93a8d2e3d10228b1554cc324e3b7e7a63eb7f1d0cd50376f2e97060a8b7",
+    "src/evidential/_column.py": "1a2bdbab25758a1ab5f4c3e8d2245ddabb8cb1cd424f9a880f9981b92b0c4e3f",
+    "src/evidential/_column_options.py": "815762b103364678d98bf4664092567466b1318a8582ca60aa2f1954b43609aa",
     "src/evidential/_compat.py": "f51d6c0013acf8eb4a16bbab18adafc24846825073beeb3df9dea3ca3c6cce7c",
     "src/evidential/_distribution.py": "16278a133e89b66addd282a3209ff3c34a1bb59baff0e3fb17f2ffaacb5f4992",
     "src/evidential/_domain.py": "80cdf20bfa1d24c991c11c33bb5e2fd8b89635402bd1dd901376159677b3a044",
@@ -34,7 +34,7 @@
     "src/evidential/client.py": "6ce1f9e0b9e5e99b1bcc94fd040a290792885b80de89260ad35c8aa72f8c5c3e",
     "src/evidential/col.py": "1d827527ab6319f5590f1dfef787eabe23a28ab8b2dd37ff4e5257fea16f456d",
     "src/evidential/comparison.py": "b2f182404d4f20df94af5e9cde61d2b3b8ea0d6d7bed690c26c19312f9a0d70f",
-    "src/evidential/configuration.py": "6bb6548db4aa2241a88ce2813fdab2238261f1d23a3a80a64e705e6abe9f6289",
+    "src/evidential/configuration.py": "5f06dfa977e7d3bb227094acfc1c631ed8a1b3664801f3ad45d685085ef63cec",
     "src/evidential/data.py": "b47ee55fbb1c45f45937c51214cdd920efd7f3a00c3ad166d261df334be8230f",
     "src/evidential/dimension.py": "17c5eec76b4434bebfcf34b52aef655bcb99e6253ed9a3a7d12384d4a22ad70b",
     "src/evidential/domain.py": "9e607e105122cffb1a6cc4de27adb15bdc3f73af1184b3506302cb908bf34ba9",
@@ -42,7 +42,7 @@
     "src/evidential/grouped.py": "65da5eba306f3280a3af99c3cb8398a46a8211b542d2fb1b6fb5f7734a1c65a2",
     "src/evidential/label.py": "7ca27ed5d2fbfa06b417b05825836f593194b3cc30042be956d5a1c9f61ecb10",
     "src/evidential/live.py": "614167a7c5d528468e136e22c82ba06182c2d338bbef586754f6fcaf1abd7533",
-    "src/evidential/marks.py": "eb1f91e880c6f463269b237e018ba91aad49db1cb1cee40ac6c908d0ec8373b5",
+    "src/evidential/marks.py": "2d3882c12817ae82b8897068f1ee25fca9d5371abd9a0028b89b2d8fa7e579e8",
     "src/evidential/pivot.py": "e5783d9d48311b930187b38393f7f396fa41d7867d6bbd8928016e91481df95e",
     "src/evidential/query.py": "1474b03ca11f438611b59a911221cf34625621b12af3c2871ed94710d5808049",
     "src/evidential/rows.py": "cf0822e55268fa6d9cf8aa5e6872ba75324f931e39e7e1d49a476bfb42d10b04",
@@ -53,8 +53,8 @@
     "src/evidential/skills/developing-with-evidential/assets/report.py": "55508d1a1ef33ce444fa7745ebace9660f37954ae73e3306a1a3b166e708f5ce",
     "src/evidential/static/dimension-grid.css": "54f56d45e03b8af5ba1aa8f7c1153b3bc3cfcc8b195dedf347afba0686460fdc",
     "src/evidential/static/dimension-grid.js": "01fd0183f1a76795b4f5dfa3f6b8deaab4b1a294469e76ddfbb6d4640ef2475d",
-    "src/evidential/static/table.css": "d38a18d599d47f63de86530d78dfd889ebe895d746e2165f119ccbedb1866615",
-    "src/evidential/static/table.js": "7ef4a2d0265f80a80a51c2ae1586c364371c6e42cbd46ab7b86099323f2945d2",
+    "src/evidential/static/table.css": "d9e6b98738274f78d97a5ae2789651d79db101dc9ae427d6014f4ca5c3d62169",
+    "src/evidential/static/table.js": "04671053a058ec9261a70c792d77d73aae5036038bfcb72c1956af891e45f5b8",
     "src/evidential/table.py": "6af1f26253d72967bcf9298c14502af94431427eb97ddae43e3d5cb1d40ed017",
     "uv.lock": "08ebde87df2e59e3a83df5d50676751b8eb7b917b50d3aeb40e7cec06c6a1724"
   },
@@ -82,7 +82,7 @@
     "docs/api/images/visualizations.png": {
       "notebook": "notebooks/49_api_screenshots.py",
       "cell": "visualizations",
-      "sha256": "7b099713fead18c49cc66d76800c03c0b72920c941799255f20419be4224620d"
+      "sha256": "06e38effab6712159e7a406b4bc10abeb708edd7f3aab62ec89b9aae343e7729"
     },
     "docs/api/images/back-to-back.png": {
       "notebook": "notebooks/49_api_screenshots.py",
@@ -147,7 +147,7 @@
     "docs/img/graphics/bar-centered.png": {
       "notebook": "notebooks/50_graphics_gallery.py",
       "cell": "graphic_bar_centered",
-      "sha256": "6ab1677b85a2e1c985f72f0df19371fdeeae2dbb5c70e26808bf4ec14dfc5404"
+      "sha256": "42de8ee4959a06d91aa82924cedc66613f2d643eed6c3aeaa6670e8a13898cbd"
     },
     "docs/img/graphics/bar-overlay.png": {
       "notebook": "notebooks/50_graphics_gallery.py",
@@ -162,27 +162,27 @@
     "docs/img/graphics/dumbbell.png": {
       "notebook": "notebooks/50_graphics_gallery.py",
       "cell": "graphic_dumbbell",
-      "sha256": "4c036777356c81888bc92fb021356c6c34dd08d8c8576660922f0cf99e61074e"
+      "sha256": "5e8c30ee8d7ec561c0d574ee877270e02af656689454045ea9dc2bb10153e9c9"
     },
     "docs/img/graphics/points.png": {
       "notebook": "notebooks/50_graphics_gallery.py",
       "cell": "graphic_points",
-      "sha256": "d8339ae959362027547c7bf2025881fae93e2a89fc9fe0934207f8b7d58ba53f"
+      "sha256": "d66b00b64fce1a819d5839fd2138a2cba32867457f75bcd81536f7838de7581e"
     },
     "docs/img/graphics/point-overlaps.png": {
       "notebook": "notebooks/50_graphics_gallery.py",
       "cell": "graphic_point_overlaps",
-      "sha256": "f7854d318e5968e62140e3dae8663a9ba4e513e0a8f3bbb14bda68ffc2c6982e"
+      "sha256": "488398e7ba84ea9ffed54e08532c60e6583e3c685e19d67d1f15101cd322f94f"
     },
     "docs/img/graphics/boxplot.png": {
       "notebook": "notebooks/50_graphics_gallery.py",
       "cell": "graphic_boxplot",
-      "sha256": "858eb8be9811551855ca44c2582010eceac5e5c276088c8dbaeb0bc05aa48e38"
+      "sha256": "c3007496a1cae270d44e642695303a4ac0ae6ef3000ccd6a6f1955566c64045a"
     },
     "docs/img/graphics/distribution.png": {
       "notebook": "notebooks/50_graphics_gallery.py",
       "cell": "graphic_distribution",
-      "sha256": "c1fc68fc46236aef27ca501363595fd17e1d2d70c46eb22297d5db59052fb912"
+      "sha256": "8ca6d8afa631bb8d975e975294a919400de8b46a683571619d7a39802da72ed2"
     },
     "docs/img/graphics/stacked-bar.png": {
       "notebook": "notebooks/50_graphics_gallery.py",
@@ -217,7 +217,7 @@
     "docs/img/graphics/sparklines.png": {
       "notebook": "notebooks/50_graphics_gallery.py",
       "cell": "graphic_sparklines",
-      "sha256": "7b8cb17075133b408619d475ff4faa2e3666bc4cfa49fe9badf39261ed655196"
+      "sha256": "a035b8b61867c1c14f26c8edf22aa0286c12048d1ab2899fee59487e65071161"
     },
     "docs/img/graphics/sparkline-areas.png": {
       "notebook": "notebooks/50_graphics_gallery.py",
@@ -242,7 +242,7 @@
     "docs/img/graphics/reference.png": {
       "notebook": "notebooks/50_graphics_gallery.py",
       "cell": "graphic_reference",
-      "sha256": "97f4049bfd76fda9249354ced4da958f52d513da77b0100d66d6562a8b8d1899"
+      "sha256": "6816188a27e8cde0f587d43e387bf968e7aa3e2dd1577c2d3f9c9f3b8e2770c7"
     },
     "docs/img/graphics/range-gradient.png": {
       "notebook": "notebooks/50_graphics_gallery.py",
@@ -253,6 +253,11 @@
       "notebook": "notebooks/50_graphics_gallery.py",
       "cell": "graphic_marker_shapes",
       "sha256": "65b76760a554e2385b86b494c062019f6016061521e557fdefd5dd8862dfc8d1"
+    },
+    "docs/img/graphics/numeric-gradients.png": {
+      "notebook": "notebooks/50_graphics_gallery.py",
+      "cell": "graphic_numeric_gradients",
+      "sha256": "e81dce7ec71d17a9717d37d95439f57d86f4492fea6edb0a344e0a99c0cee093"
     },
     "docs/img/studio-table.png": {
       "notebook": "notebooks/21_studio_dashboard.py",

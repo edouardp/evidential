@@ -257,9 +257,15 @@ export function renderCell({row, col, index, ctx, rowIndex, options: opts, toggl
     const guides = content.querySelectorAll(":scope > .et-mark-band, :scope > .et-mark-gridline, :scope > .et-mark-reference");
     if (guides.length) {
       td.classList.add("et-has-guides");
-      const guideTrack = h("div", {class: "et-cell-guide-track"});
-      for (const guide of guides) guideTrack.append(guide);
-      td.append(h("div", {class: "et-cell-guides", "aria-hidden": "true"}, guideTrack));
+      for (const foreground of [false, true]) {
+        const layer = [...guides].filter(guide => guide.classList.contains("et-mark-centerline") === foreground);
+        if (!layer.length) continue;
+        const guideTrack = h("div", {class: "et-cell-guide-track"}, layer);
+        td.append(h("div", {
+          class: `et-cell-guides${foreground ? " et-cell-guides-foreground" : ""}`,
+          "aria-hidden": "true",
+        }, guideTrack));
+      }
     }
   }
 

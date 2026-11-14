@@ -7,6 +7,7 @@ from difflib import get_close_matches
 from typing import Any
 
 from ._aliases import alias
+from ._color import normalize_scale_gradient
 from ._domain import domain_spec
 from ._marker import normalize_marker_options
 from ._sparkline import normalize_sparkline_colors, normalize_sparkline_options
@@ -201,6 +202,8 @@ def validate_canonical_column(data: dict[str, Any]) -> dict[str, Any]:
     """Validate the complete declaration after all configuration layers are merged."""
     if data.get("tooltip") == "@":
         raise ValueError("tooltip row binding needs a field name")
+    if isinstance(data.get("scale"), Mapping):
+        data["scale"] = normalize_scale_gradient(data["scale"])
     if data.get("symbol_options"):
         data["symbol_options"] = normalize_marker_options(data["symbol_options"])
     if data.get("sparkline_options"):

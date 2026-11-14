@@ -2517,6 +2517,21 @@ test("cell guides are clipped independently of marks, labels and interval arrows
   renderer.destroy();
 });
 
+test("centred bar origins have a separate foreground guide layer", () => {
+  const model = makeModel([{x: 8}], [{name: "x", encodings: [{kind: "bar", source: "x", center: true}],
+    scale: {domain: [-10, 10], gridlines: true}, references: [{value: 4}]}], {}, el);
+  const renderer = new EvidentialTableRenderer(model, el);
+  const foreground = el.querySelector(".et-cell-guides-foreground");
+  assert.ok(el.querySelector(".et-marks-centered"));
+  assert.equal(foreground.querySelectorAll(".et-mark-reference").length, 1);
+  assert.ok(foreground.querySelector(".et-mark-centerline"));
+  assert.equal(foreground.querySelector(".et-mark-centerline").style.left, "50%");
+  const background = el.querySelector(".et-cell-guides:not(.et-cell-guides-foreground)");
+  assert.ok(background.querySelector(".et-mark-gridline"));
+  assert.equal(background.querySelectorAll(".et-mark-reference").length, 1);
+  renderer.destroy();
+});
+
 test("axes live outside the data body and only top-axis labels gain header height", () => {
   const columns = [
     {name: "country"},

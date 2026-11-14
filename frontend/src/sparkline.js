@@ -89,7 +89,7 @@ export function renderSparkline(col, value, preparedColor, sharedRange) {
 
   const type = opts.type || "line";
   const gradientGeometry = {min, max, origin, top: pad, bottom: height - pad};
-  const stroke = lookup && (type === "line" || type === "area")
+  const stroke = lookup && (type === "line" || type === "area" || type === "bar")
     ? verticalGradient(svg, lookup, gradientGeometry) : color;
   const fillOpacity = opts.fill_opacity ?? (lookup ? 1 : 0.22);
   const areaPaint = fill => lookup && fillOpacity === 1 ? stroke
@@ -109,10 +109,10 @@ export function renderSparkline(col, value, preparedColor, sharedRange) {
       rect.setAttribute("width", String(barWidth));
       rect.setAttribute("height", String(Math.max(1, Math.abs(baseline - point.y))));
       rect.setAttribute("rx", "0.5");
-      const fill = pointColor(point);
+      const fill = observationColor(point.source) || (lookup ? stroke : pointColor(point));
       rect.setAttribute("fill", fill);
       rect.append(tooltip(point.raw));
-      inspectable(rect, observationTooltip(point.raw[0], point.raw[1], opts.y_fmt, point.source, fill,
+      inspectable(rect, observationTooltip(point.raw[0], point.raw[1], opts.y_fmt, point.source, pointColor(point),
         [opts.x, opts.y, "x", "y", "value"]), {priority: 2});
       svg.append(rect);
     });

@@ -43,7 +43,11 @@ function placeBarLabel(node, spec, geometry, position) {
     const atLeft = position === "inside_start" ? !geometry.negative : geometry.negative;
     const align = spec.align || (position === "center" ? "center" : atLeft ? "begin" : "end");
     node.classList.add(`et-mark-label-align-${align}`);
-    if (!spec.color && geometry.color) autoLabelColor(node, geometry.color);
+    if (!spec.color && geometry.color) {
+      const at = position === "center" ? geometry.leftPct + geometry.widthPct / 2
+        : atLeft ? geometry.leftPct : geometry.leftPct + geometry.widthPct;
+      autoLabelColor(node, geometry.colorAt ? geometry.colorAt(at) : geometry.color);
+    }
   } else {
     const atLeft = position === "outside_start" ? !geometry.negative : geometry.negative;
     node.style.left = `${atLeft ? geometry.leftPct : geometry.leftPct + geometry.widthPct}%`;

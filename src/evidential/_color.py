@@ -38,3 +38,17 @@ def normalize_value_colors(colors: Mapping[str, Any], subject: str) -> dict[str,
             raise ValueError(f"{subject} stops must have distinct values")
         spec["color_stops"] = stops
     return spec
+
+
+def normalize_scale_gradient(options: Mapping[str, Any]) -> dict[str, Any]:
+    """A requested color strip makes its containing numeric axis visible."""
+    spec = dict(options)
+    if spec.get("gradient") is not None and not isinstance(spec["gradient"], bool):
+        raise TypeError("scale gradient must be True or False")
+    if spec.get("gradient"):
+        if spec.get("axis") is not None and not isinstance(spec["axis"], bool):
+            raise TypeError("scale axis must be True or False")
+        if spec.get("axis") is False:
+            raise ValueError("scale gradient=True requires a visible axis")
+        spec["axis"] = True
+    return spec

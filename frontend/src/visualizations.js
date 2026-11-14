@@ -37,11 +37,12 @@ export function renderMarks(col, row, range, format, context = {}) {
     }
   }
 
-  // Column-wide reference rules paint behind the marks.
+  // Reference guides sit behind marks; a centred bar's origin stays visible above its fill.
   const barReferences = encodings.filter(enc => enc.kind === "bar" && enc.reference != null)
     .map(enc => ({value: enc.reference, color: enc.reference_color, label: enc.reference_label}));
   const hasCenter = encodings.some(enc => enc.center);
-  const references = [...(hasCenter ? [{value: 0}] : []), ...(col.references || []), ...barReferences];
+  if (hasCenter) track.classList.add("et-marks-centered");
+  const references = [...(hasCenter ? [{value: 0, center: true}] : []), ...(col.references || []), ...barReferences];
   const referenceBands = document.createDocumentFragment();
   for (const ref of references) {
     if (ref.value == null || !isFinite(Number(ref.value))) continue;
@@ -74,7 +75,7 @@ export function renderMarks(col, row, range, format, context = {}) {
     if (pct < 0 || pct > 100) continue;
     track.append(
       h("div", {
-        class: "et-mark-reference",
+        class: `et-mark-reference${ref.center ? " et-mark-centerline" : ""}`,
         style: {
           left: `${pct}%`,
           backgroundColor: resolveColor(ref.color) || "var(--et-reference, #0f766e)",

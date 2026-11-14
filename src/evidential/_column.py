@@ -12,6 +12,7 @@ from collections.abc import Iterable, Mapping, Sequence
 from typing import Any, Literal, Self
 
 from ._aliases import alias, format_code
+from ._color import normalize_value_colors
 from ._column_options import _normalize_column_options
 from ._domain import domain_spec
 from ._marker import normalize_marker_options
@@ -599,6 +600,37 @@ class Column(TextStyle, Mapping[str, Any]):
                 {**dict(self._spec.get("color_options") or {}), **(colors.get("color_options") or {})},
             )
         return self._with(viz="sparkline" if self._spec.get("viz") == "sparkline" else "color", **colors)
+
+    def gradient(
+        self,
+        *,
+        scale: Any = None,
+        stops: Any = None,
+        min: float | None = None,
+        max: float | None = None,
+        midpoint: float | None = None,
+    ) -> Self:
+        """Use the common numeric gradient API for cells and sparkline y values.
+
+        Existing .color() declarations remain supported. Geometric mark columns
+        refine their last mark instead, through MarkColumn.gradient().
+        """
+        if self._spec.get("viz") not in (None, "color", "sparkline"):
+            raise ValueError("gradient() supports numeric cell backgrounds and sparklines on scalar columns")
+        colors = normalize_value_colors(
+            {
+                **dict(self._spec.get("color_options") or {}),
+                **_clean(color_scale=scale, color_stops=stops, min=min, max=max, midpoint=midpoint),
+            },
+            "gradient",
+        )
+        return self.color(
+            scale=colors.get("color_scale"),
+            stops=colors.get("color_stops"),
+            min=colors.get("min"),
+            max=colors.get("max"),
+            midpoint=colors.get("midpoint"),
+        )
 
     def delta(
         self,

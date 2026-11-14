@@ -29,7 +29,7 @@ from collections.abc import Callable, Mapping, Sequence
 from typing import Any, Literal
 
 from ._aliases import alias, format_code
-from ._color import normalize_value_colors
+from ._color import normalize_scale_gradient, normalize_value_colors
 from ._column import Column, _clean, _field
 from ._distribution import band_spec, validate_curve
 from ._label import LABEL_POSITIONS, _label_spec
@@ -117,9 +117,9 @@ _ANONYMOUS = itertools.count()
 
 
 _ALLOWED_ENCODINGS = {
-    "bar": {*_BAR_STYLE_KEYS, "color_negative_column", "side", "size", "valign"},
-    "point": {"outline", "shape", "angle", "size", "valign"},
-    "points": {"outline", "shape", "angle", "size", "valign", "sources", "names", "palette", "connect"},
+    "bar": {"gradient", *_BAR_STYLE_KEYS, "color_negative_column", "side", "size", "valign"},
+    "point": {"gradient", "outline", "shape", "angle", "size", "valign"},
+    "points": {"gradient", "outline", "shape", "angle", "size", "valign", "sources", "names", "palette", "connect"},
     "range": {
         "high",
         "cap",
@@ -134,8 +134,8 @@ _ALLOWED_ENCODINGS = {
     },
     "strip": {"colors", "strip_labels", "segmented"},
     "stacked_bar": {"size", "diverge_at", "neutral"},
-    "boxplot": {"parts", "outliers", "whisker"},
-    "distribution": {"distribution"},
+    "boxplot": {"gradient", "parts", "outliers", "whisker"},
+    "distribution": {"gradient", "distribution"},
 }
 
 
@@ -184,11 +184,11 @@ def _validate_mark_style(kind: str, encoding: Mapping[str, Any]) -> None:
         raise ValueError("range overflow is 'clip' or 'arrow'")
 
 
-def _normalize_range_gradient(encoding: dict[str, Any]) -> None:
+def _normalize_mark_gradient(encoding: dict[str, Any]) -> None:
     if "gradient" in encoding:
-        encoding["gradient"] = normalize_value_colors(encoding["gradient"], "range gradient")
+        encoding["gradient"] = normalize_value_colors(encoding["gradient"], f"{encoding['kind']} gradient")
         if any(key in encoding for key in ("color", "color_column", "color_negative", "color_negative_column")):
-            raise ValueError("range gradient and solid color bindings are mutually exclusive")
+            raise ValueError("gradient and solid color bindings are mutually exclusive")
 
 
 def _canonical_encoding(
@@ -239,7 +239,7 @@ def _canonical_encoding(
     if kind == "points":
         _validate_point_sources(encoding)
     encoding = normalize_marker_options(encoding)
-    _normalize_range_gradient(encoding)
+    _normalize_mark_gradient(encoding)
     _validate_mark_style(kind, encoding)
     label_spec = _label_spec(label, position=label_position, **(label_options or {}))
     if label_spec:
@@ -519,15 +519,15 @@ class MarkColumn(Column):
         max: float | None = None,
         midpoint: float | None = None,
     ) -> MarkColumn:
-        """Color the last range by x value, using the shared numeric color API.
+        """Color the last mark by its numeric value, using a shared gradient.
 
         Bounds default to the column's coordinate domain, not each interval.
         Explicit stops clamp outside their endpoints. Solid colors cannot be
-        combined with a gradient on the same range; sibling marks keep theirs.
+        combined with a gradient on the same mark; sibling marks keep theirs.
         """
         encodings = self._encodings()
-        if not encodings or encodings[-1]["kind"] != "range":
-            raise ValueError("gradient() refines the last range; add a range first")
+        if not encodings or encodings[-1]["kind"] not in ("bar", "point", "points", "range", "boxplot", "distribution"):
+            raise ValueError("gradient() needs a numeric mark: bar, point, points, range, boxplot or distribution")
         encoding = dict(encodings[-1])
         encoding["gradient"] = {
             **(encoding.get("gradient") or {}),
@@ -629,6 +629,7 @@ class MarkColumn(Column):
         axis: bool | None = None,
         axis_position: str | None = None,
         gridlines: bool | None = None,
+        gradient: bool | None = None,
     ) -> MarkColumn:
         """The quantitative axis shared by the column's encodings."""
         spec: dict[str, Any] = dict(self._spec.get("scale") or {})
@@ -666,7 +667,9 @@ class MarkColumn(Column):
             spec["axis_position"] = axis_position
         if gridlines is not None:
             spec["gridlines"] = gridlines
-        return self._with(scale=spec or None)
+        if gradient is not None:
+            spec["gradient"] = gradient
+        return self._with(scale=normalize_scale_gradient(spec) or None)
 
     def reference_line(self, value: float, *, label: str | None = None, color: str | None = None) -> MarkColumn:
         """Draw a column-wide reference rule at ``value`` (on the shared scale)."""
@@ -862,6 +865,8 @@ def _validate_encoding_data(
     """Validate coordinate compatibility and magnitude constraints before JSON."""
     encodings = column.get("encodings") or []
     if not encodings:
+        if (column.get("scale") or {}).get("gradient"):
+            raise ValueError("scale gradient=True needs a numeric mark gradient")
         return
     kinds = {encoding["kind"] for encoding in encodings}
     if column.get("viz") == "sparkline":
@@ -872,6 +877,8 @@ def _validate_encoding_data(
     if len(directions) > 1:
         raise ValueError("bars sharing a scale must have the same direction")
     scale = column.get("scale") or {}
+    if scale.get("gradient") and not any(encoding.get("gradient") is not None for encoding in encodings):
+        raise ValueError("scale gradient=True needs a numeric mark gradient")
     for encoding in encodings:
         if encoding["kind"] == "distribution":
             config = encoding.get("distribution")

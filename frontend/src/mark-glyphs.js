@@ -2,6 +2,7 @@
 import {h} from "./dom.js";
 import {decorateMarker} from "./marker-shapes.js";
 import {rangePaint} from "./range-paint.js";
+import {gradientColor, gradientPaint} from "./mark-gradient.js";
 import {formatValue} from "./format.js";
 import {formattedText} from "./formatted-text.js";
 import {resolveColor} from "./color.js";
@@ -197,7 +198,7 @@ function renderStack(col, encodings, row, lo, hi, format, context) {
 }
 
 /** A precomputed five-number summary with optional outliers. */
-function renderBox(col, enc, row, pos, context) {
+function renderBox(col, enc, row, pos, context, view) {
   const parts = enc.parts || {};
   const value = (name) => numeric(row[parts[name]]);
   const [minimum, q1, median, q3, maximum] = ["minimum", "q1", "median", "q3", "maximum"].map(value);
@@ -205,19 +206,30 @@ function renderBox(col, enc, row, pos, context) {
     return h("span", { class: "et-null" }, "–");
   }
   const color = markColor(enc, row, "var(--et-accent, #2563eb)");
+  const colorAt = value => gradientColor(enc, view, value, color);
+  const spanStyle = (a, b) => {
+    const left = Math.min(pos(a), pos(b)), right = Math.max(pos(a), pos(b));
+    return {left: `${left}%`, width: `${right-left}%`, backgroundColor: color,
+      ...gradientPaint(enc, view, left, right, color).style};
+  };
   const box = h("div", { class: "et-mark et-mark-box" });
-  inspectable(box, markTooltip(col, enc, row, {context}));
-  box.append(h("div", { class: "et-box-whisker", style: { left: `${pos(minimum)}%`, width: `${Math.max(0, pos(maximum) - pos(minimum))}%`, backgroundColor: color } }));
-  box.append(h("div", { class: "et-box-cap", style: { left: `${pos(minimum)}%`, backgroundColor: color } }));
-  box.append(h("div", { class: "et-box-cap", style: { left: `${pos(maximum)}%`, backgroundColor: color } }));
-  box.append(h("div", { class: "et-box-iqr", style: { left: `${pos(q1)}%`, width: `${Math.max(0, pos(q3) - pos(q1))}%`, borderColor: color, backgroundColor: color } }));
-  box.append(h("div", { class: "et-box-median", style: { left: `${pos(median)}%`, backgroundColor: color } }));
+  const tip = markTooltip(col, enc, row, {context});
+  if (enc.gradient) tip.color = colorAt(median);
+  inspectable(box, tip);
+  box.append(h("div", {class: "et-box-whisker", style: spanStyle(minimum, maximum)}));
+  for (const endpoint of [minimum, maximum]) box.append(h("div", {class: "et-box-cap",
+    style: {left: `${pos(endpoint)}%`, backgroundColor: colorAt(endpoint)}}));
+  const iqrStyle = spanStyle(q1, q3);
+  box.append(h("div", {class: "et-box-iqr", style: {...iqrStyle, borderColor: colorAt(median),
+    ...(enc.gradient ? {borderImageSource: iqrStyle.backgroundImage, borderImageSlice: "1"} : {})}}));
+  box.append(h("div", {class: "et-box-median", style: {left: `${pos(median)}%`, backgroundColor: colorAt(median)}}));
+
   const outliers = enc.outliers && Array.isArray(row[enc.outliers]) ? row[enc.outliers] : [];
   for (const outlier of outliers) {
     const number = numeric(outlier);
     if (number == null) continue;
-    box.append(inspectable(h("div", { class: "et-box-outlier", style: { left: `${pos(number)}%`, backgroundColor: color } }),
-      {name: "Outlier", value: tooltipValue(number, context.formatCode ?? col.fmt, col), color}, {priority: 3}));
+    box.append(inspectable(h("div", { class: "et-box-outlier", style: { left: `${pos(number)}%`, backgroundColor: colorAt(number) } }),
+      {name: "Outlier", value: tooltipValue(number, context.formatCode ?? col.fmt, col), color: colorAt(number)}, {priority: 3}));
   }
   return box;
 }
@@ -246,6 +258,11 @@ function drawBar(enc, view) {
       widthPct = -widthPct;
     }
   }
+  const paint = gradientPaint(enc, view, leftPct, leftPct + widthPct, color);
+  const endPct = enc.side === "left" ? leftPct : enc.side === "right" ? leftPct + widthPct : view.clampPos(value);
+  const sampled = paint.at(endPct ?? leftPct);
+  const tip = markTooltip(col, enc, row, {context});
+  if (enc.gradient) tip.color = sampled;
   if (enc.background) track.prepend(h("div", {class: "et-mark et-mark-background",
     style: {inset: "0", backgroundColor: resolveColor(enc.background) || enc.background}}));
   const pad = enc.pad == null ? null : typeof enc.pad === "number" ? `${enc.pad}px` : String(enc.pad);
@@ -259,12 +276,14 @@ function drawBar(enc, view) {
         width: `${Math.max(0, widthPct)}%`,
         height,
         backgroundColor: color,
+        ...paint.style,
+        ...(enc.gradient ? {opacity: "1"} : {}),
       },
-    }), markTooltip(col, enc, row, {context}), {priority: 2}),
+    }), tip, {priority: 2}),
   );
   if (!enc.hide_labels && enc.label) {
     const labelled = enc.center && !enc.label.position ? {...enc, label: {...enc.label, position: "outside_start"}} : enc;
-    track.append(labelFor(col, labelled, row, { leftPct, widthPct, color, negative: reverse ? value >= 0 : value < 0 || enc.side === "left" }, format));
+    track.append(labelFor(col, labelled, row, { leftPct, widthPct, color: sampled, colorAt: paint.at, negative: reverse ? value >= 0 : value < 0 || enc.side === "left" }, format));
   }
 }
 
@@ -283,15 +302,17 @@ function drawPoints(enc, view) {
         height: "1px", backgroundColor: "var(--et-muted, #94a3b8)"}}));
   }
   for (const {point, raw, pct, observation} of projected) {
+    const color = gradientColor(enc, view, Number(raw), markColor(point, row));
     const data = enc.sources ? markTooltip(col, point, row, {value: raw, context})
       : observationTooltip(seriesName(col, enc, enc.source, context), raw, context.formatCode ?? col.fmt, observation,
-        markColor(point, row), ["value", "y"]);
+        color, ["value", "y"]);
     data.xValue = Number(raw);
+    if (enc.gradient) data.color = color;
     track.append(
       inspectable(decorateMarker(h("div", {
         class: "et-mark et-mark-point",
-        style: { ...verticalStyle(enc.valign, true), left: `${pct}%`, width: `${size}px`, height: `${size}px`, backgroundColor: markColor(point, row) },
-      }), {...point, color: markColor(point, row)}), data, {priority: 3}),
+        style: { ...verticalStyle(enc.valign, true), left: `${pct}%`, width: `${size}px`, height: `${size}px`, backgroundColor: color },
+      }), {...point, color}), data, {priority: 3}),
     );
     if (enc.label) track.append(labelFor(col, point, {...row, [point.source]: raw}, {pointPct: pct}, format));
   }
@@ -304,11 +325,14 @@ function drawPoint(enc, view) {
   const pct = clampPos(value);
   if (pct == null) return;
   const size = enc.size != null ? Number(enc.size) : 7;
+  const color = gradientColor(enc, view, value, markColor(enc, row));
+  const tip = markTooltip(col, enc, row, {context});
+  if (enc.gradient) tip.color = color;
   track.append(
     inspectable(decorateMarker(h("div", {
       class: "et-mark et-mark-point",
-      style: { ...verticalStyle(enc.valign, true), left: `${pct}%`, width: `${size}px`, height: `${size}px`, backgroundColor: markColor(enc, row, "var(--et-accent, #2563eb)") },
-    }), {...enc, color: markColor(enc, row)}), markTooltip(col, enc, row, {context}), {priority: 3}),
+      style: { ...verticalStyle(enc.valign, true), left: `${pct}%`, width: `${size}px`, height: `${size}px`, backgroundColor: color },
+    }), {...enc, color}), tip, {priority: 3}),
   );
   if (enc.label) track.append(labelFor(col, enc, row, { pointPct: pct }, format));
 }
@@ -390,21 +414,22 @@ function drawRange(enc, view) {
 
 function drawBoxplot(enc, view) {
   const {col, row, track, clampPos, format, labelFor, context} = view;
-  track.append(renderBox(col, enc, row, clampPos, context));
+  track.append(renderBox(col, enc, row, clampPos, context, view));
   const median = clampPos(row[enc.source]);
   if (enc.label && median != null) track.append(labelFor(col, enc, row, {pointPct: median}, format));
 }
 
 function drawDistribution(enc, view) {
   const {col, row, track, pos, format, labelFor, context} = view;
-  const node = renderDensityBand(enc, row, pos, markColor(enc, row, "var(--et-accent, #2563eb)"));
+  const node = renderDensityBand(enc, row, pos, markColor(enc, row, "var(--et-accent, #2563eb)"),
+    run => gradientPaint(enc, view, run.left, run.left + run.width).style);
   if (node) {
     const runs = readDensity(row[enc.source], enc.distribution);
     let count = 0, peak = 0;
     for (const run of runs) for (const sample of run) { count++; peak = Math.max(peak, sample.density); }
     const inspect = value => tooltipValue(value, context.formatCode ?? col.fmt, col);
     inspectable(node, {name: seriesName(col, enc, enc.source, context), value: "Density band",
-      color: markColor(enc, row), details: [
+      color: gradientColor(enc, view, (runs[0][0].x + runs.at(-1).at(-1).x) / 2, markColor(enc, row)), details: [
         {name: "Support start", value: inspect(runs[0][0].x)},
         {name: "Support end", value: inspect(runs.at(-1).at(-1).x)},
         {name: "Peak density", value: tooltipValue(peak)},

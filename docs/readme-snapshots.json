@@ -3,7 +3,7 @@
   "inputs": {
     "notebooks/21_studio_dashboard.py": "8f4e85940544eac38b95c21f952659d3da97375dc584616347b24814281dc48b",
     "notebooks/49_api_screenshots.py": "219de292a242152427ca2e62163eb787c5c7355f974909eff90bd0c76ac5606b",
-    "notebooks/50_graphics_gallery.py": "bef7411c42fcbc6acb898b559cac392f21842b66ad2c78311d70cae4d8bb9088",
+    "notebooks/50_graphics_gallery.py": "214001ba117a0b9f4355e4dc78fafc0d71b0d570e53f9903dceeaa1c4b765abb",
     "notebooks/51_table_layouts.py": "5f4d375309eef793c8c756761e67c9127db0ac554e2405234a85cd81ee1b9930",
     "notebooks/56_dimension_grid.py": "c31b38f124c0874e9c55d0d8a72eaa7e40c92dfe725df6308fffadbbfa2f7c52",
     "notebooks/data/46_football_england_2024.json": "aa8d550e7bb3e776dfd2dbfee5dd2cd57ab14a66c5c036dd393001055b55ff03",
@@ -12,20 +12,21 @@
     "notebooks/sample_data/needful_things/orders.parquet": "b373511b4f7a0547b704022b055655b6d3bafc2505a2a573292b206417fe3eb4",
     "notebooks/sql/50_europe_trade.sql": "c01857da122eb48c819aa14def0bcd4f6fb2e762ea987e55271c58f509746ea6",
     "pyproject.toml": "530abbddea8a6cd7174e91840422f608c88cdf975dfeb49bcbbbe257ee5d7624",
-    "scripts/api_screenshots.py": "3e0351b19a2ee0c4fe6d279dc47a8abd2e77a1d5528cc9b6e824d9b2e409a13f",
+    "scripts/api_screenshots.py": "113b903086abdb8bd8428e382af97a44e5d762c7646d4a5b9705ca963d59a515",
     "scripts/generate_readme.py": "2942558e4363d66603f6aefb2bdd9cc3f1978543d810f787d0b6fc8dc60326c0",
-    "src/evidential/__init__.py": "201e74c56c5efe824d175452bd373d001f09eb6e59021e0b3459b0af0ae6d1d6",
+    "src/evidential/__init__.py": "60a7457f583bcbde6ec9e6838f9153af3fac6636d29f45010e46b0c77dc7c350",
     "src/evidential/_aliases.py": "5e207c4a862754e1ca9f7ea309a0e489bf158a7e380876f8edcf20eeee1438f1",
     "src/evidential/_color.py": "d734564c8bc15d73c9ffd9396cfe6aad1088b86e9d942e5d5e27c51b9491d890",
-    "src/evidential/_column.py": "2ea1a10cf929850f9a16769fdfcdb2e9046ddc7469f8af34c4277efeb2c5b373",
-    "src/evidential/_column_options.py": "4fef981c5a6e11ca8050f10a53c2573bc3ca8a0ae6638608b8e2c438ff13cbca",
+    "src/evidential/_column.py": "d35f5ef2aef980719ebc6fa521b8717b726796217d806e5113109c1f1d7cdaae",
+    "src/evidential/_column_options.py": "033b04a3397d165e7ef22c3585fcdc3c0b193a22e1dc2786791df1861b969bea",
     "src/evidential/_compat.py": "f51d6c0013acf8eb4a16bbab18adafc24846825073beeb3df9dea3ca3c6cce7c",
     "src/evidential/_distribution.py": "16278a133e89b66addd282a3209ff3c34a1bb59baff0e3fb17f2ffaacb5f4992",
     "src/evidential/_domain.py": "80cdf20bfa1d24c991c11c33bb5e2fd8b89635402bd1dd901376159677b3a044",
     "src/evidential/_label.py": "d396116dc5a76f9b3d3e40d9b1e7414879665f6c926992266116f18f9668d706",
+    "src/evidential/_marker.py": "6ca0a6455cb34eff75b3f0171a3cc630a534ac94a3df00dd3e6f33e44cf49bd6",
     "src/evidential/_netscape.py": "4f02d582fa4f80567ea60b3c569a9734246a0de6fd923a5f8a1a10a02e1e7152",
     "src/evidential/_row_layout.py": "da35fc68f39c8d6223a6d027cbe41d957fdd0452cd8b3be288799e903a55ee21",
-    "src/evidential/_sparkline.py": "6ec45f5a7ee8334bc2505f5cda711f235b1828eba34ce376898bbef0a9ad6eaa",
+    "src/evidential/_sparkline.py": "c23ac7ff097217de6b530c69175ec72b864d770f54e19a695df8305ab9ce126c",
     "src/evidential/_spec.py": "ff926b1e2f2b2f6e07bae47cccf389978136086cc00b44f79fa1dd143734b675",
     "src/evidential/_sql.py": "9a44100de9b1317a30b3ae89636110dee7a13aa3e99ecefb137667696939693c",
     "src/evidential/_text_style.py": "99f38816be21786b8d72e4f19ed1a2a63ee5e4db15f536774ed29f9f9482d005",
@@ -33,7 +34,7 @@
     "src/evidential/client.py": "6ce1f9e0b9e5e99b1bcc94fd040a290792885b80de89260ad35c8aa72f8c5c3e",
     "src/evidential/col.py": "1d827527ab6319f5590f1dfef787eabe23a28ab8b2dd37ff4e5257fea16f456d",
     "src/evidential/comparison.py": "b2f182404d4f20df94af5e9cde61d2b3b8ea0d6d7bed690c26c19312f9a0d70f",
-    "src/evidential/configuration.py": "457843cd547f2d4c3be983ece5990b1902b07ba470c9c5c6ce81f8b09e27e5d0",
+    "src/evidential/configuration.py": "6bb6548db4aa2241a88ce2813fdab2238261f1d23a3a80a64e705e6abe9f6289",
     "src/evidential/data.py": "b47ee55fbb1c45f45937c51214cdd920efd7f3a00c3ad166d261df334be8230f",
     "src/evidential/dimension.py": "17c5eec76b4434bebfcf34b52aef655bcb99e6253ed9a3a7d12384d4a22ad70b",
     "src/evidential/domain.py": "9e607e105122cffb1a6cc4de27adb15bdc3f73af1184b3506302cb908bf34ba9",
@@ -41,7 +42,7 @@
     "src/evidential/grouped.py": "65da5eba306f3280a3af99c3cb8398a46a8211b542d2fb1b6fb5f7734a1c65a2",
     "src/evidential/label.py": "7ca27ed5d2fbfa06b417b05825836f593194b3cc30042be956d5a1c9f61ecb10",
     "src/evidential/live.py": "614167a7c5d528468e136e22c82ba06182c2d338bbef586754f6fcaf1abd7533",
-    "src/evidential/marks.py": "b1621aa4fa02f472a4dc4ed40a0fb00048e2a5beba9ef169f194a50abafe43a4",
+    "src/evidential/marks.py": "eb1f91e880c6f463269b237e018ba91aad49db1cb1cee40ac6c908d0ec8373b5",
     "src/evidential/pivot.py": "e5783d9d48311b930187b38393f7f396fa41d7867d6bbd8928016e91481df95e",
     "src/evidential/query.py": "1474b03ca11f438611b59a911221cf34625621b12af3c2871ed94710d5808049",
     "src/evidential/rows.py": "cf0822e55268fa6d9cf8aa5e6872ba75324f931e39e7e1d49a476bfb42d10b04",
@@ -52,8 +53,8 @@
     "src/evidential/skills/developing-with-evidential/assets/report.py": "55508d1a1ef33ce444fa7745ebace9660f37954ae73e3306a1a3b166e708f5ce",
     "src/evidential/static/dimension-grid.css": "54f56d45e03b8af5ba1aa8f7c1153b3bc3cfcc8b195dedf347afba0686460fdc",
     "src/evidential/static/dimension-grid.js": "01fd0183f1a76795b4f5dfa3f6b8deaab4b1a294469e76ddfbb6d4640ef2475d",
-    "src/evidential/static/table.css": "f961e61c8d3ab217a85c5c5054255ac9257127501cef08c6c115e3e0c2057660",
-    "src/evidential/static/table.js": "c3b6acdadb8f71575bce51d2ff7a4a675d0783fd27e7515ab3e0cfde4664cc01",
+    "src/evidential/static/table.css": "d38a18d599d47f63de86530d78dfd889ebe895d746e2165f119ccbedb1866615",
+    "src/evidential/static/table.js": "7ef4a2d0265f80a80a51c2ae1586c364371c6e42cbd46ab7b86099323f2945d2",
     "src/evidential/table.py": "6af1f26253d72967bcf9298c14502af94431427eb97ddae43e3d5cb1d40ed017",
     "uv.lock": "08ebde87df2e59e3a83df5d50676751b8eb7b917b50d3aeb40e7cec06c6a1724"
   },
@@ -76,7 +77,7 @@
     "docs/api/images/symbols.png": {
       "notebook": "notebooks/49_api_screenshots.py",
       "cell": "symbols",
-      "sha256": "b25197ab900f0722186c6a830a0baccd105fd4446d215a19e643883d9eca5091"
+      "sha256": "0b790e2530a407042e9e99eed209dac51e258b160e72cbf2544b7e42c38ce970"
     },
     "docs/api/images/visualizations.png": {
       "notebook": "notebooks/49_api_screenshots.py",
@@ -231,22 +232,27 @@
     "docs/img/graphics/symbols.png": {
       "notebook": "notebooks/50_graphics_gallery.py",
       "cell": "graphic_symbols",
-      "sha256": "57a5f1001f491a0e7f67abfbbf1f426a1ef662abe627c3e00ef269f90303744e"
+      "sha256": "a5c85de35267c3b0631208f4d3885aac0c9eee773729675c6736ffcde56fb6c4"
     },
     "docs/img/graphics/boolean-icons.png": {
       "notebook": "notebooks/50_graphics_gallery.py",
       "cell": "graphic_boolean_icons",
-      "sha256": "ddb1b387739a2ff11910ff05f35539431673e83f21af58212543076bcc9eb195"
+      "sha256": "5a0b0651ab8dd86c9863af5d50e25982e5e2774b5e2533b5645775a614b03ff1"
     },
     "docs/img/graphics/reference.png": {
       "notebook": "notebooks/50_graphics_gallery.py",
       "cell": "graphic_reference",
-      "sha256": "e4b2eb09d9a3ea1502cc9f38f3b984ff457310e17c83bd4e21eae918135a8229"
+      "sha256": "97f4049bfd76fda9249354ced4da958f52d513da77b0100d66d6562a8b8d1899"
     },
     "docs/img/graphics/range-gradient.png": {
       "notebook": "notebooks/50_graphics_gallery.py",
       "cell": "graphic_range_gradient",
-      "sha256": "3601c9d4cf94ca6a5e8ed2b946ffa3acf2c4778d53544b84ba21b597e6c55b2b"
+      "sha256": "28003aa8addc167fb566e86ed75c09175b627e469e56f295a1095ba710d6cae9"
+    },
+    "docs/img/graphics/marker-shapes.png": {
+      "notebook": "notebooks/50_graphics_gallery.py",
+      "cell": "graphic_marker_shapes",
+      "sha256": "65b76760a554e2385b86b494c062019f6016061521e557fdefd5dd8862dfc8d1"
     },
     "docs/img/studio-table.png": {
       "notebook": "notebooks/21_studio_dashboard.py",

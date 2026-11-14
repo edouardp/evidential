@@ -1,5 +1,6 @@
 // Per-kind glyphs share a coordinate/label context; no renderer state lives here.
 import {h} from "./dom.js";
+import {decorateMarker} from "./marker-shapes.js";
 import {rangePaint} from "./range-paint.js";
 import {formatValue} from "./format.js";
 import {formattedText} from "./formatted-text.js";
@@ -18,13 +19,6 @@ function verticalStyle(valign, point = false) {
   return point
     ? { top: "50%", transform: "translate(-50%, -50%)" }
     : { top: "50%", transform: "translateY(-50%)" };
-}
-
-/** Preserve the theme ring unless a point explicitly hides or recolors it. */
-function pointOutlineStyle(outline) {
-  if (outline === false) return { boxShadow: "none" };
-  if (typeof outline === "string") return { boxShadow: `0 0 0 1px ${resolveColor(outline) || outline}` };
-  return {};
 }
 
 /** Direction follows projected endpoints; equality and fully clipped spans omit it. */
@@ -294,10 +288,10 @@ function drawPoints(enc, view) {
         markColor(point, row), ["value", "y"]);
     data.xValue = Number(raw);
     track.append(
-      inspectable(h("div", {
+      inspectable(decorateMarker(h("div", {
         class: "et-mark et-mark-point",
-        style: { ...verticalStyle(enc.valign, true), ...pointOutlineStyle(enc.outline), left: `${pct}%`, width: `${size}px`, height: `${size}px`, backgroundColor: markColor(point, row) },
-      }), data, {priority: 3}),
+        style: { ...verticalStyle(enc.valign, true), left: `${pct}%`, width: `${size}px`, height: `${size}px`, backgroundColor: markColor(point, row) },
+      }), {...point, color: markColor(point, row)}), data, {priority: 3}),
     );
     if (enc.label) track.append(labelFor(col, point, {...row, [point.source]: raw}, {pointPct: pct}, format));
   }
@@ -311,10 +305,10 @@ function drawPoint(enc, view) {
   if (pct == null) return;
   const size = enc.size != null ? Number(enc.size) : 7;
   track.append(
-    inspectable(h("div", {
+    inspectable(decorateMarker(h("div", {
       class: "et-mark et-mark-point",
-      style: { ...verticalStyle(enc.valign, true), ...pointOutlineStyle(enc.outline), left: `${pct}%`, width: `${size}px`, height: `${size}px`, backgroundColor: markColor(enc, row, "var(--et-accent, #2563eb)") },
-    }), markTooltip(col, enc, row, {context}), {priority: 3}),
+      style: { ...verticalStyle(enc.valign, true), left: `${pct}%`, width: `${size}px`, height: `${size}px`, backgroundColor: markColor(enc, row, "var(--et-accent, #2563eb)") },
+    }), {...enc, color: markColor(enc, row)}), markTooltip(col, enc, row, {context}), {priority: 3}),
   );
   if (enc.label) track.append(labelFor(col, enc, row, { pointPct: pct }, format));
 }

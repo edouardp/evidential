@@ -35,6 +35,7 @@ REQUIRED = (
     f"{PACKAGE}/_compat.py",
     f"{PACKAGE}/_column.py",
     f"{PACKAGE}/_column_options.py",
+    f"{PACKAGE}/_marker.py",
     f"{PACKAGE}/aggregations.py",
     f"{PACKAGE}/client.py",
     f"{PACKAGE}/col.py",

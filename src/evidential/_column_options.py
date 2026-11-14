@@ -8,6 +8,7 @@ from typing import Any
 
 from ._aliases import alias
 from ._domain import domain_spec
+from ._marker import normalize_marker_options
 from ._sparkline import normalize_sparkline_colors, normalize_sparkline_options
 from .configuration import COLOR_SCALES, ColumnOptions, validate_options
 
@@ -200,6 +201,8 @@ def validate_canonical_column(data: dict[str, Any]) -> dict[str, Any]:
     """Validate the complete declaration after all configuration layers are merged."""
     if data.get("tooltip") == "@":
         raise ValueError("tooltip row binding needs a field name")
+    if data.get("symbol_options"):
+        data["symbol_options"] = normalize_marker_options(data["symbol_options"])
     if data.get("sparkline_options"):
         data["sparkline_options"] = normalize_sparkline_options(data["sparkline_options"])
     if data.get("viz") == "sparkline" and data.get("color_options"):

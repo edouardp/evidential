@@ -90,3 +90,8 @@ legends remain separate decisions.
 - [Colour-key request](https://github.com/edouardp/evidential/issues/1).
 - [Related tooltip request](https://github.com/edouardp/evidential/issues/2).
 - [ADR-058: Encoding-Based Columns](058-encoding-based-columns.md).
+
+### Extension: marker shapes
+
+[ADR-097](097-shared-marker-geometry.md) makes point swatches reproduce the
+mark's shape, rotation and outline through the shared marker renderer.

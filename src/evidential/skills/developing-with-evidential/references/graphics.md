@@ -204,3 +204,25 @@ out-of-domain colors clamp. Clipped ends stay square. Do not combine a gradient
 with solid `color` or `color_negative` on the same range. Notebook 61 demonstrates
 a city chooser using historical monthly temperature extremes; notebook 48 shows
 point overlays, transparent stops and reversed/clipped/missing intervals.
+
+## Marker shapes and repeated symbols
+
+`col.point` and `col.points` accept `shape=` and clockwise `angle=` degrees.
+Choose `circle` (default), `square`, `rounded`, `triangle`, `diamond`, `cross`,
+`star` or `bar`; these names form the public `MarkerShape` Literal.
+Use `shape="cross", angle=45` for an X, or `shape="triangle", angle=270` for a
+left-pointing equilateral triangle. All shapes accept `outline=True`, `False`, or
+a color. Named point series retain their existing outline-free default.
+Legends reproduce the shape/angle/outline. Overlaps combine only compatible
+shape, angle and size, within one pixel for the whole cluster; mixed shapes
+retain declaration order. Scalar/array points keep their original tooltip data.
+
+Repeated counts use `col.number("n").symbols(...)`, `col.symbols("n", ...)`, or
+`col.shapes("n", ...)`. `col.rating("n", shape="star", max=5)` shares the same
+geometry and supports angle/outline. Familiar geometric glyphs such as `■`,
+`★` and `☆` resolve to those paths too; empty `☆` slots are hollow. Other text
+and emoji stay text. Outline=False suppresses hollow strokes as well. Symbol
+size is applied once in em; point sizes are pixels and refer to unrotated boxes.
+Sparkline `type="points"` and optional line/area markers accept the same shape,
+angle and outline, with their existing outline-free default. Bar/change styles
+do not have marker shape options. Notebook 62 demonstrates the combinations.

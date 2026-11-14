@@ -1087,14 +1087,17 @@ columns=[
 
 #### Symbols and rating
 
-Repeat glyphs or shapes for counts, or show a five-point rating.
+Repeat geometric shapes for counts, or show a five-point rating. Circles,
+squares and stars use the same geometry as point marks. Familiar glyphs
+such as `■`, `★` and `☆` resolve to those shapes too; custom text and emoji
+remain supported.
 
 ```python
 columns=[
     col.text("country"),
-    col.symbols("gold", symbol="●", color="#d97706", title="Circles"),
+    col.symbols("gold", shape="circle", color="#d97706", title="Circles"),
     col.symbols("gold", shape="square", color="#d97706", title="Squares").align("center"),
-    col.rating("score", title="Rating"),
+    col.rating("score", shape="star", title="Rating"),
 ]
 ```
 
@@ -1172,6 +1175,38 @@ columns=[
 ![Rounded ranges with a shared gradient](docs/img/graphics/range-gradient.png)
 
 [Notebook source: `graphic_range_gradient`](notebooks/50_graphics_gallery.py)
+
+<!-- /notebook -->
+
+<!-- notebook: notebooks/50_graphics_gallery.py#graphic_marker_shapes -->
+
+#### Point shapes and rotation
+
+Use shape as well as colour to distinguish observations. Circle is the
+default; square, triangle, diamond, cross, star, rounded square and vertical bar
+share the same outline options. Set rotation separately:
+`shape="cross", angle=45` makes an X. Legend keys match the marks.
+[Notebook 62](notebooks/62_marker_shapes.py) also demonstrates array points,
+ratings, sparkline markers and segmented overlapping shapes.
+
+```python
+columns=[
+    col.text("period"),
+    col.point("circle", size=10, color="#2563eb", outline="#172554")
+       .point("square", shape="square", size=10, color="#2563eb", outline="#172554")
+       .point("triangle", shape="triangle", size=10, color="#2563eb", outline="#172554")
+       .point("diamond", shape="diamond", size=10, color="#2563eb", outline="#172554")
+       .point("cross", shape="cross", size=10, color="#2563eb", outline="#172554")
+       .point("star", shape="star", size=10, color="#2563eb", outline="#172554")
+       .point("x", shape="cross", angle=45, size=10, color="#2563eb", outline="#172554")
+       .title("Observations").scale(domain=(0, 100))
+       .legend(column_names=False),
+]
+```
+
+![Point shapes and rotation](docs/img/graphics/marker-shapes.png)
+
+[Notebook source: `graphic_marker_shapes`](notebooks/50_graphics_gallery.py)
 
 <!-- /notebook -->
 

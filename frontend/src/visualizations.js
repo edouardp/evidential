@@ -1,4 +1,5 @@
 import {renderGlyph} from "./mark-glyphs.js";
+import {markerGraphic, symbolGeometry} from "./marker-shapes.js";
 import {marksDomain, niceTicks, scalePosition} from "./mark-scales.js";
 import { h } from "./dom.js";
 import { formatValue } from "./format.js";
@@ -193,7 +194,8 @@ export function renderSymbols(col, value, formatted) {
   }
   const filled = Math.max(0, Math.round(num));
   const total = opts.max != null ? Math.max(filled, Math.round(Number(opts.max))) : filled;
-  const wrap = h("span", { class: "et-symbols" });
+  const wrap = h("span", { class: "et-symbols", role: "img",
+    "aria-label": opts.max != null ? `${filled} of ${total} symbols` : `${filled} symbols` });
   if (opts.size != null) wrap.style.fontSize = `${opts.size}em`;
   if (opts.gap != null) wrap.style.gap = `${opts.gap}em`;
   for (let i = 0; i < total; i++) {
@@ -209,15 +211,14 @@ export function renderSymbols(col, value, formatted) {
       );
       continue;
     }
-    if (opts.shape) {
-      // A CSS-drawn box: pixel-exact and font-independent (unlike a glyph).
+    const geometry = symbolGeometry(opts, on);
+    if (geometry) {
       const box = h("span", {
-        class: `et-symbol-box et-symbol-box-${opts.shape}${on ? "" : " et-symbol-empty"}`,
-      });
-      const side = opts.size != null ? `${opts.size}em` : null;
-      if (side) box.style.width = box.style.height = side;
-      const fill = on ? opts.color : opts.empty_color;
-      if (fill) box.style.backgroundColor = resolveColor(fill);
+        class: `et-symbol-box et-symbol-box-${geometry.shape}${on ? "" : " et-symbol-empty"}`,
+        "data-shape": geometry.shape, "data-angle": geometry.angle, "data-hollow": String(geometry.hollow),
+        style: {width: opts.size != null ? "1em" : "0.85em", height: opts.size != null ? "1em" : "0.85em",
+          color: resolveColor(on ? opts.color : opts.empty_color) || resolveColor(opts.color) || "currentColor"},
+      }, markerGraphic({...geometry, outline: opts.outline}));
       wrap.append(box);
       continue;
     }

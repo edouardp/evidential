@@ -14,10 +14,11 @@ from typing import Any, Literal, Self
 from ._aliases import alias, format_code
 from ._column_options import _normalize_column_options
 from ._domain import domain_spec
+from ._marker import normalize_marker_options
 from ._sparkline import normalize_sparkline_colors, normalize_sparkline_options
 from ._spec import copy_spec
 from ._text_style import TextStyle
-from .configuration import Relative, SparklineType, TooltipOptions, validate_options
+from .configuration import MarkerShape, Relative, SparklineType, TooltipOptions, validate_options
 
 Align = Literal["left", "right", "center"]
 Rotation = Literal["vertical"] | float
@@ -651,6 +652,9 @@ class Column(TextStyle, Mapping[str, Any]):
         height: float | None = None,
         markers: bool | str | None = None,
         marker_color: str | None = None,
+        shape: MarkerShape | None = None,
+        angle: float | None = None,
+        outline: bool | str | None = None,
         signed: bool | None = None,
         fill_opacity: float | tuple[float, float] | None = None,
         delta: bool | None = None,
@@ -672,6 +676,9 @@ class Column(TextStyle, Mapping[str, Any]):
         :param height: chart height (the viewBox, in pixels).
         :param markers: draw a marker at every point, or ``"ends"`` for the endpoints.
         :param marker_color: marker colour; a per-point ``color`` key wins.
+        :param shape: MarkerShape for visible point/line/area markers (default circle).
+        :param angle: clockwise marker rotation in degrees.
+        :param outline: marker outline; omitted markers retain their outline-free default.
         :param signed: split an area fill at the zero baseline into up/down colours.
         :param fill_opacity: area-only opacity, or ``(baseline, edge)`` opacity ramp.
             Values are between 0 and 1. Defaults to 0.22 for a solid fill, 1 for
@@ -704,6 +711,9 @@ class Column(TextStyle, Mapping[str, Any]):
                 height=height,
                 markers=markers,
                 marker_color=marker_color,
+                shape=shape,
+                angle=angle,
+                outline=outline,
                 signed=signed,
                 fill_opacity=fill_opacity,
                 delta=delta,
@@ -771,7 +781,9 @@ class Column(TextStyle, Mapping[str, Any]):
         self,
         *,
         symbol: str | None = None,
-        shape: Literal["square", "rounded", "circle"] | None = None,
+        shape: MarkerShape | None = None,
+        angle: float | None = None,
+        outline: bool | str | None = None,
         empty: str | None = None,
         max: int | None = None,
         image: str | None = None,
@@ -783,8 +795,9 @@ class Column(TextStyle, Mapping[str, Any]):
         """Render the value as that many repeated symbols — glyphs, emoji or images.
 
         :param symbol: the filled glyph (default ``"●"``).
-        :param shape: draw a CSS box instead of a glyph — ``"square"``,
-            ``"rounded"`` or ``"circle"`` — for a pixel-exact, font-independent mark.
+        :param shape: a font-independent MarkerShape, shared with point marks.
+        :param angle: clockwise rotation in degrees; zero points triangles/stars up.
+        :param outline: True for the theme outline, False to hide it, or a color.
         :param empty: the glyph for the unfilled slots (used with ``max``).
         :param max: draw this many slots — ``value`` filled, the rest ``empty``;
             omit to draw exactly ``value`` repeats.
@@ -800,12 +813,12 @@ class Column(TextStyle, Mapping[str, Any]):
             col.number("medals").symbols(shape="square", color="#f0a500", size=0.8)
             col.number("rating").symbols(symbol="★", empty="☆", max=5, color="#f59e0b")
         """
+        options = normalize_marker_options(_clean(symbol=symbol, shape=shape, angle=angle, outline=outline))
         return self._with(
             viz="symbols",
             **_merge_options(
                 "symbol_options",
-                symbol=symbol,
-                shape=shape,
+                **options,
                 empty=empty,
                 max=max,
                 image=image,
@@ -1405,6 +1418,9 @@ def sparkline(
     height: float | None = None,
     markers: bool | str | None = None,
     marker_color: str | None = None,
+    shape: MarkerShape | None = None,
+    angle: float | None = None,
+    outline: bool | str | None = None,
     signed: bool | None = None,
     fill_opacity: float | tuple[float, float] | None = None,
     delta: bool | None = None,
@@ -1428,6 +1444,9 @@ def sparkline(
     :param width: chart width (the viewBox, in pixels).
     :param height: chart height (the viewBox, in pixels).
     :param markers: draw a marker at every point (line/area too).
+    :param shape: MarkerShape for visible markers (default circle).
+    :param angle: clockwise marker rotation in degrees.
+    :param outline: True, False, or an outline color; default False for sparkline markers.
     :param signed: split an area fill at the zero baseline into up/down colours.
     :param fill_opacity: area opacity or ``(baseline, edge)`` opacity ramp; see the chain method.
     :param delta: change-only adjacent differences; defaults to precomputed changes.
@@ -1455,6 +1474,9 @@ def sparkline(
         height=height,
         markers=markers,
         marker_color=marker_color,
+        shape=shape,
+        angle=angle,
+        outline=outline,
         signed=signed,
         fill_opacity=fill_opacity,
         delta=delta,
@@ -1523,7 +1545,9 @@ def symbols(
     name: str,
     *,
     symbol: str | None = None,
-    shape: Literal["square", "rounded", "circle"] | None = None,
+    shape: MarkerShape | None = None,
+    angle: float | None = None,
+    outline: bool | str | None = None,
     empty: str | None = None,
     max: int | None = None,
     image: str | None = None,
@@ -1540,8 +1564,9 @@ def symbols(
     :param name: the numeric column holding the count.
     :param symbol: the filled glyph (default ``"●"``). ``"■"`` for squares, ``"★"``
         for stars, or any emoji.
-    :param shape: draw a CSS box instead of a glyph — ``"square"``, ``"rounded"`` or
-        ``"circle"`` — for a pixel-exact mark that does not depend on the font.
+    :param shape: a font-independent MarkerShape, shared with point marks.
+    :param angle: clockwise rotation in degrees; zero points triangles/stars up.
+    :param outline: True for the theme outline, False to hide it, or a color.
     :param empty: the glyph for the unfilled slots, used with ``max`` (e.g. ``"☆"``).
     :param max: draw this many slots — ``value`` filled, the rest ``empty``; omit to
         draw exactly ``value`` repeats.
@@ -1561,6 +1586,8 @@ def symbols(
     return number(name, align=align, title=title, **extra).symbols(
         symbol=symbol,
         shape=shape,
+        angle=angle,
+        outline=outline,
         empty=empty,
         max=max,
         image=image,
@@ -1585,6 +1612,9 @@ def rating(
     name: str,
     *,
     max: int = 5,
+    shape: MarkerShape | None = None,
+    angle: float | None = None,
+    outline: bool | str | None = None,
     symbol: str = "★",
     empty: str = "☆",
     color: str = "#f59e0b",
@@ -1597,7 +1627,9 @@ def rating(
         col.rating("stars", max=5)
         col.rating("score", max=10, color="#eab308")
     """
-    return symbols(name, symbol=symbol, empty=empty, max=max, color=color, **options)
+    return symbols(
+        name, symbol=symbol, empty=empty, max=max, color=color, shape=shape, angle=angle, outline=outline, **options
+    )
 
 
 # ------------------------------------------------------------------- groups ---

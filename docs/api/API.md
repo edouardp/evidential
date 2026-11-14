@@ -629,7 +629,7 @@ columns=[
   show_symbol=, symbol_position=)`. Green for up, red for down, a grey dash
   inside `neutral_range`.
 - **Sparkline** — `.sparkline(type="line"|"area"|"bar"|"points"|"change", x=, y=,
-  color=, fit_to_data=, y_fmt=, width=, height=, markers=, marker_color=, signed=, fill_opacity=,
+  color=, fit_to_data=, y_fmt=, width=, height=, markers=, marker_color=, shape=, angle=, outline=, signed=, fill_opacity=,
   reference=, reference_color=, delta=, steady=, color_scale=, color_domain=)`
   over an array column. `type="points"` draws only markers; `markers=True` adds a
   dot at every point and `markers="ends"` only the endpoints; a per-point
@@ -756,9 +756,15 @@ columns=[
   football results dataset: search teams, select a year and competition, then
   click a team to update the second table with match details and labeled goal
   margin bars. A switch adds a goal-margin gradient to the top table's sparklines.
-- **Symbols** — `.symbols(symbol=, shape=, empty=, max=, image=, color=,
+- **Symbols** — `.symbols(symbol=, shape=, angle=, outline=, empty=, max=, image=, color=,
   empty_color=, size=, gap=)`: repeat the value as glyphs, emoji, images, or
-  font-independent CSS boxes. `max` is a *floor* (the row is filled to at least
+  font-independent geometric markers. Familiar glyphs (`■`, `□`, `●`, `○`,
+  `▲`, `△`, `▼`, `◆`, `◇`, `★`, `☆`, `+`, `✚`, `×`, `✕`) use the same geometry;
+  arbitrary text and emoji stay text. `col.rating(..., shape="star")` and the
+  default `★`/`☆` rating are equivalent; empty stars are hollow. An explicit
+  shape applies to all slots, including hollow slots. `outline=False` suppresses
+  all strokes, including hollow slots. Repeated-symbol sizes are em values
+  applied once; point-mark sizes are pixels. `max` is a *floor* (the row is filled to at least
   `max`, then the rest are empty). `col.rating` and `col.repeat` are shortcuts.
 
 ![Repeated symbols](images/symbols.png)
@@ -858,7 +864,7 @@ columns=[
 ```
 
 - **Marks** — `bar(source, color=, color_negative=, size=, side=, valign=, ...)`,
-  `point(source, size=, color=, outline=)`, `points(source, size=, color=, outline=)` (one marker per
+  `point(source, size=, color=, shape=, angle=, outline=)`, `points(source, size=, color=, shape=, angle=, outline=)` (one marker per
   array element), `range(low, high, cap="none"|"line"|"dot"|"arrow"|"round", fill=,
   color_negative=, direction_marker=)`.
   `fill=True` draws the interval as a translucent band instead of a line.
@@ -888,6 +894,25 @@ columns=[
   color string such as `outline="#334155"` to recolor it independently of
   `color` (the fill). Omission, `None`, or `True` keeps the default one-pixel
   theme ring, without changing the marker's size or position.
+- **Marker shapes** — `shape="circle"` (default), `"square"`, `"rounded"`,
+  `"triangle"`, `"diamond"`, `"cross"`, `"star"` or `"bar"`. These values are
+  typed as the exported `MarkerShape` Literal. Triangles are equilateral and point
+  up at zero degrees. Diamonds are horizontally compressed rotated squares.
+  Bars are vertical at zero degrees; `shape="bar", angle=90` is horizontal.
+  `angle=45` rotates clockwise: `shape="cross", angle=45` makes an X;
+  `shape="triangle", angle=270` points left. Angles must be finite; they are
+  normalized modulo 360. Circle rotation has no visible effect. Size measures
+  the nominal unrotated box, so rotated shapes may extend beyond it.
+  All shapes accept the same `outline=True|False|"color"` contract. Scalar and
+  array point defaults retain the theme outline; named series retain their
+  existing outline-free default. Legend keys reproduce shape, angle and outline.
+  Opaque overlapping points combine only when their shape, angle and size agree;
+  the whole cluster must fit within one screen pixel. Segments retain the marker
+  shape and individual outlines; circles remain circles, stars remain stars.
+  `col.shapes`, `.symbols`, `col.rating`, and sparkline point/line/area markers
+  use the same shape names, angles and outline options. Sparkline markers keep
+  their existing outline-free default. Bar/change sparklines have no marker shape.
+  See [notebook 62](../../notebooks/62_marker_shapes.py).
 - **Named point series** — `col.points(["actual", "target"], palette=,
   connect=True)` draws several scalar fields without repeated `.point(...)`
   calls. A field-to-name mapping, such as
@@ -1338,20 +1363,20 @@ other than `auto`, `merge`, `group` and `subcolumns` return a `Column`;
 | `col.flag(name, *, title=)` | alpha-3 country codes |
 | `col.icons(name, *, map={...}, title=)` | category → glyph / image |
 | `col.bar(source, *, title=, label=, size=, side=, color=, …)` | bar mark with an optional owned label |
-| `col.point(source, *, title=, size=, color=, label=)` | point marker |
-| `col.points(source, *, size=, color=, outline=, palette=, connect=False)` | array observations or named scalar point series |
+| `col.point(source, *, title=, size=, color=, shape=, angle=, outline=, label=)` | point marker |
+| `col.points(source, *, size=, color=, shape=, angle=, outline=, palette=, connect=False)` | array observations or named scalar point series |
 | `col.range(low, high, *, cap=, fill=, color=, color_negative=, direction_marker=, label=)` | interval / dumbbell |
 | `col.stacked_bar(*sources, *, colors=, labels=, normalize="percent", diverge_at=, neutral="split")` | cumulative stack |
 | `col.strip(source, *, colors=, labels=, segmented=)` | ordered categorical strip |
 | `col.boxplot(minimum, q1, median, q3, maximum, *, outliers=, whisker="extrema")` | box plot |
 | `col.distribution(source, *, x="position", y="density", style="band", height=0.5, density_max=None)` | constant-height uncertainty band; density controls opacity |
-| `col.shapes(name, *, shape=, color=, …)` | alias for `symbols` |
+| `col.shapes(name, *, shape=, angle=, outline=, color=, …)` | alias for `symbols` |
 | `col.color(name, *, title=, **options)` | colour scale |
 | `col.chip(name, *, min_width=, conditional_colors=, scale=, min=, max=, midpoint=, **extra)` | pill |
 | `col.delta(name, *, down_is_good=, neutral_range=, chip=)` | change indicator |
-| `col.sparkline(name, *, type="line"\|"area"\|"bar"\|"points"\|"change", x=, y=, color=, fit_to_data=, reference=, reference_color=, y_fmt=, width=, height=, markers=, marker_color=, signed=, fill_opacity=, delta=, steady=, color_scale=, color_domain=, title=)` | trend |
-| `col.symbols(name, *, symbol=, shape=, empty=, max=, image=, color=, empty_color=, size=, gap=, align=, title=)` | repeated symbols |
-| `col.rating(name, *, max=5, symbol="★", empty="☆", color="#f59e0b")` | star rating |
+| `col.sparkline(name, *, type="line"\|"area"\|"bar"\|"points"\|"change", x=, y=, color=, fit_to_data=, reference=, reference_color=, y_fmt=, width=, height=, markers=, marker_color=, shape=, angle=, outline=, signed=, fill_opacity=, delta=, steady=, color_scale=, color_domain=, title=)` | trend |
+| `col.symbols(name, *, symbol=, shape=, angle=, outline=, empty=, max=, image=, color=, empty_color=, size=, gap=, align=, title=)` | repeated symbols |
+| `col.rating(name, *, max=5, shape=, angle=, outline=, symbol="★", empty="☆", color="#f59e0b")` | star rating |
 | `col.repeat(name, **options)` | alias for `symbols` |
 | `col.link(name, *, label=, new_tab=, title=)` / `col.url` | hyperlink |
 | `col.image(name, *, height=, width=, alt=)` / `col.logo(name, *, height=)` | image |

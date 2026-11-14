@@ -115,6 +115,7 @@ dated, immutable record of the decisions behind them.
 | [094](094-shared-header-info-tooltips.md) | Shared Header Info Tooltips | Accepted |
 | [095](095-rounded-gradient-ranges.md) | Rounded Ranges with Numeric Gradients | Accepted |
 | [096](096-package-bundled-agent-skills.md) | Package-Bundled Agent Skills | Accepted |
+| [097](097-shared-marker-geometry.md) | Shared Marker Shapes and Rotation | Accepted |
 
 ## Creating New ADRs
 

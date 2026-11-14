@@ -744,7 +744,10 @@ def graphic_symbols_doc(mo):
     mo.md(r"""
     #### Symbols and rating
 
-    Repeat glyphs or shapes for counts, or show a five-point rating.
+    Repeat geometric shapes for counts, or show a five-point rating. Circles,
+    squares and stars use the same geometry as point marks. Familiar glyphs
+    such as `■`, `★` and `☆` resolve to those shapes too; custom text and emoji
+    remain supported.
     """)
     return
 
@@ -762,9 +765,9 @@ def graphic_symbols(EvidentialTable, col, frame):
         _rows,
         columns=[
             col.text("country"),
-            col.symbols("gold", symbol="●", color="#d97706", title="Circles"),
+            col.symbols("gold", shape="circle", color="#d97706", title="Circles"),
             col.symbols("gold", shape="square", color="#d97706", title="Squares").align("center"),
-            col.rating("score", title="Rating"),
+            col.rating("score", shape="star", title="Rating"),
         ],
         settings=frame("Symbols and rating", 600),
     )
@@ -864,6 +867,49 @@ def graphic_range_gradient(EvidentialTable, col, frame, json, mo):
         ],
         settings=frame("New York · monthly temperature extremes", 560,
             caption="July–December 2014 · Weather Underground / FiveThirtyEight · CC BY 4.0"),
+    )
+    return
+
+
+
+@app.cell(hide_code=True)
+def graphic_marker_shapes_doc(mo):
+    mo.md(r"""
+    #### Point shapes and rotation
+
+    Use shape as well as colour to distinguish observations. Circle is the
+    default; square, triangle, diamond, cross, star, rounded square and vertical bar
+    share the same outline options. Set rotation separately:
+    `shape="cross", angle=45` makes an X. Legend keys match the marks.
+    [Notebook 62](notebooks/62_marker_shapes.py) also demonstrates array points,
+    ratings, sparkline markers and segmented overlapping shapes.
+    """)
+    return
+
+
+@app.cell
+def graphic_marker_shapes(EvidentialTable, col, frame):
+    shape_values = [
+        {"period": "January", "circle": 10, "square": 25, "triangle": 40, "diamond": 55,
+         "cross": 70, "star": 85, "x": 95},
+        {"period": "February", "circle": 15, "square": 30, "triangle": 45, "diamond": 60,
+         "cross": 75, "star": 90, "x": 97},
+    ]
+    EvidentialTable(
+        shape_values,
+        columns=[
+            col.text("period"),
+            col.point("circle", size=10, color="#2563eb", outline="#172554")
+               .point("square", shape="square", size=10, color="#2563eb", outline="#172554")
+               .point("triangle", shape="triangle", size=10, color="#2563eb", outline="#172554")
+               .point("diamond", shape="diamond", size=10, color="#2563eb", outline="#172554")
+               .point("cross", shape="cross", size=10, color="#2563eb", outline="#172554")
+               .point("star", shape="star", size=10, color="#2563eb", outline="#172554")
+               .point("x", shape="cross", angle=45, size=10, color="#2563eb", outline="#172554")
+               .title("Observations").scale(domain=(0, 100))
+               .legend(column_names=False),
+        ],
+        settings=frame("Distinguish observations by shape", 680),
     )
     return
 

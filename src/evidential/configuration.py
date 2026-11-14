@@ -238,7 +238,18 @@ class DeltaOptions(TypedDict, total=False):
 SparklineType: TypeAlias = Literal["line", "area", "bar", "points", "change"]
 
 
-class SparklineOptions(TypedDict, total=False):
+MarkerShape: TypeAlias = Literal["circle", "square", "rounded", "triangle", "diamond", "cross", "star", "bar"]
+
+
+class MarkerOptions(TypedDict, total=False):
+    shape: MarkerShape | None
+    #: Clockwise degrees; zero points triangles/stars up and leaves crosses upright.
+    angle: float | None
+    #: True uses the theme outline, False suppresses it, or pass a color string.
+    outline: bool | str | None
+
+
+class SparklineOptions(MarkerOptions, total=False):
     type: SparklineType | None
     x: str | None
     y: str | None
@@ -293,9 +304,8 @@ class CellStyle(TypedDict, total=False):
     padding: str | None
 
 
-class SymbolOptions(TypedDict, total=False):
+class SymbolOptions(MarkerOptions, total=False):
     symbol: str | None
-    shape: Literal["square", "rounded", "circle"] | None
     empty: str | None
     max: int | None
     image: str | None
@@ -359,7 +369,7 @@ class DistributionSpec(TypedDict, total=False):
     density_max: float | None
 
 
-class EncodingSpec(TypedDict, total=False):
+class EncodingSpec(MarkerOptions, total=False):
     """One visual mark bound to a source, sharing its column's scale."""
 
     kind: Literal["bar", "point", "points", "range", "stacked_bar", "strip", "boxplot", "distribution"]
@@ -381,9 +391,6 @@ class EncodingSpec(TypedDict, total=False):
     color_column: str | None
     #: Bar height fraction (0, 1]; a point/range marker size in pixels.
     size: float | None
-    #: ``point``/``points``: False hides the ring; a color string recolors it.
-    #: True or omission keeps the default one-pixel theme outline.
-    outline: bool | str | None
     distribution: DistributionSpec | None
     #: A nonnegative magnitude extending left/right of the central origin.
     side: Literal["left", "right"] | None

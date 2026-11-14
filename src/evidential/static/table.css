@@ -175,6 +175,7 @@
 .et-legend-swatch-bar { opacity: 0.55; }
 .et-legend-swatch-point, .et-legend-swatch-points {
   border-radius: 50%;
+  box-shadow: 0 0 0 1px color-mix(in srgb, Canvas 60%, transparent);
 }
 .et-legend-swatch-range { height: 2px; opacity: 0.9; }
 .et-title {
@@ -876,13 +877,11 @@ tbody tr:last-child .et-bar-center .et-bar-axis { bottom: var(--et-bar-pad, 0); 
   display: inline-block;
   width: 0.85em;
   height: 0.85em;
-  background-color: currentColor;
+  background-color: transparent;
   /* A glyph carries its own side bearings, a box none — so a box needs extra
      space (on top of the flex gap) to keep the run from reading as one bar. */
   margin: 0 0.14em;
 }
-.et-symbol-box-rounded { border-radius: 0.2em; }
-.et-symbol-box-circle { border-radius: 50%; }
 
 /* Rotated headers (ALA): vertical 90° CCW, or oblique at a given angle. */
 .et-th-vertical {
@@ -1266,3 +1265,7 @@ tbody tr:last-child .et-bar-center .et-bar-axis { bottom: var(--et-bar-pad, 0); 
 .et-point-combined-member { visibility: hidden; }
 .et-point-composite { border-radius: 50%; }
 .et-point-composite > svg { display: block; width: 100%; height: 100%; overflow: visible; }
+
+/* Font-independent geometric markers shared by points, legends and ratings. */
+.et-marker-svg { display: block; width: 100%; height: 100%; overflow: visible; }
+.et-shaped-marker { background: transparent; }

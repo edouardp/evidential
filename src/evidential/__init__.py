@@ -36,7 +36,7 @@ from ._label import Label
 from .aggregations import BUILTIN_AGGREGATIONS, apply_aggregations, resolve_aggregation
 from .client import grouped_records
 from .comparison import comparison_table
-from .configuration import ColumnOptions, SparklineType, TableOptions, settings
+from .configuration import ColumnOptions, MarkerShape, SparklineType, TableOptions, settings
 from .data import make_column
 from .dimension import DimensionGrid
 from .grouped import grouped_table, simple_table
@@ -66,6 +66,7 @@ __all__ = [
     "TableOptions",
     "ColumnOptions",
     "SparklineType",
+    "MarkerShape",
     "col",
     "label",
     "domain",

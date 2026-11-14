@@ -7,15 +7,22 @@ from collections.abc import Mapping
 from typing import Any
 
 from ._color import normalize_value_colors
+from ._marker import normalize_marker_options
 from .configuration import COLOR_SCALES, SparklineOptions, validate_options
+
+
+def _validate_marker_kind(spec: Mapping[str, Any]) -> None:
+    if spec.get("type") in ("bar", "change") and {"shape", "angle", "outline"}.intersection(spec):
+        raise ValueError("sparkline shape, angle and outline apply to points or line/area markers")
 
 
 def normalize_sparkline_options(options: Mapping[str, Any]) -> dict[str, Any]:
     """Validate change thresholds and palettes without changing caller-owned data."""
-    spec = {key: value for key, value in options.items() if value is not None}
+    spec = normalize_marker_options({key: value for key, value in options.items() if value is not None})
     validate_options(spec, SparklineOptions, "column.sparkline_options")
     if "reference_color" in spec and "reference" not in spec:
         raise ValueError("sparkline reference_color requires reference")
+    _validate_marker_kind(spec)
     change = spec.get("type", "line") == "change"
     if "fill_opacity" in spec:
         if spec.get("type", "line") != "area":

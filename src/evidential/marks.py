@@ -33,7 +33,8 @@ from ._color import normalize_value_colors
 from ._column import Column, _clean, _field
 from ._distribution import band_spec, validate_curve
 from ._label import LABEL_POSITIONS, _label_spec
-from .configuration import COLOR_SCALES, EncodingSpec, LegendLabels, Palette, validate_options
+from ._marker import normalize_marker_options
+from .configuration import COLOR_SCALES, EncodingSpec, LegendLabels, MarkerShape, Palette, validate_options
 
 __all__ = [
     "MarkColumn",
@@ -90,6 +91,8 @@ _ENCODING_KEYS = (
     "distribution",
     "size",
     "outline",
+    "shape",
+    "angle",
     "side",
     "valign",
     "cap",
@@ -115,8 +118,8 @@ _ANONYMOUS = itertools.count()
 
 _ALLOWED_ENCODINGS = {
     "bar": {*_BAR_STYLE_KEYS, "color_negative_column", "side", "size", "valign"},
-    "point": {"outline", "size", "valign"},
-    "points": {"outline", "size", "valign", "sources", "names", "palette", "connect"},
+    "point": {"outline", "shape", "angle", "size", "valign"},
+    "points": {"outline", "shape", "angle", "size", "valign", "sources", "names", "palette", "connect"},
     "range": {
         "high",
         "cap",
@@ -175,12 +178,6 @@ def _validate_mark_style(kind: str, encoding: Mapping[str, Any]) -> None:
             raise ValueError(f"{kind} size must be finite and positive")
         if kind in ("bar", "stacked_bar") and size > 1:
             raise ValueError(f"{kind} height (size) is a fraction in (0, 1]")
-    outline = encoding.get("outline")
-    if outline is not None:
-        if kind not in ("point", "points"):
-            raise ValueError("outline is only supported for point and points marks")
-        if not isinstance(outline, bool) and not (isinstance(outline, str) and outline.strip()):
-            raise ValueError("point outline must be True, False, or a color string")
     if encoding.get("side") is not None and encoding["side"] not in ("left", "right"):
         raise ValueError(f"side must be 'left' or 'right', got {encoding['side']!r}")
     if encoding.get("overflow") not in (None, "clip", "arrow"):
@@ -241,6 +238,7 @@ def _canonical_encoding(
         raise TypeError("range expects two endpoints: col.range(low, high)")
     if kind == "points":
         _validate_point_sources(encoding)
+    encoding = normalize_marker_options(encoding)
     _normalize_range_gradient(encoding)
     _validate_mark_style(kind, encoding)
     label_spec = _label_spec(label, position=label_position, **(label_options or {}))
@@ -470,13 +468,29 @@ class MarkColumn(Column):
             return column._with(encodings=encodings)
         return column._add("bar", source, **options)
 
-    def point(self, source: Any, *, outline: bool | str | None = None, **options: Any) -> MarkColumn:
+    def point(
+        self,
+        source: Any,
+        *,
+        shape: MarkerShape | None = None,
+        angle: float | None = None,
+        outline: bool | str | None = None,
+        **options: Any,
+    ) -> MarkColumn:
         """Add a point; ``outline=False`` removes its ring, or use a color string."""
-        return self._add("point", source, outline=outline, **options)
+        return self._add("point", source, shape=shape, angle=angle, outline=outline, **options)
 
-    def points(self, source: Any, *, outline: bool | str | None = None, **options: Any) -> MarkColumn:
+    def points(
+        self,
+        source: Any,
+        *,
+        shape: MarkerShape | None = None,
+        angle: float | None = None,
+        outline: bool | str | None = None,
+        **options: Any,
+    ) -> MarkColumn:
         """Add array points or a named multi-field series; see :func:`points`."""
-        return self._append_column(points(source, outline=outline, **options))
+        return self._append_column(points(source, shape=shape, angle=angle, outline=outline, **options))
 
     def range(
         self,
@@ -914,14 +928,17 @@ def point(
     fmt: str | None = None,
     align: str | None = None,
     outline: bool | str | None = None,
+    shape: MarkerShape | None = None,
+    angle: float | None = None,
     **options: Any,
 ) -> MarkColumn:
     """A point marker; ``outline=False`` hides its ring, or use a color string.
 
     Omitted/``True`` retains the default outline, independently of the fill.
+    ``shape`` defaults to circle; ``angle`` rotates clockwise in degrees.
     """
     column = _factory_column(source, options, title=title, fmt=format_code(format, fmt), align=align)
-    return column._add("point", source, outline=outline, **options)
+    return column._add("point", source, outline=outline, shape=shape, angle=angle, **options)
 
 
 def points(
@@ -934,6 +951,8 @@ def points(
     size: float | None = None,
     color: str | None = None,
     outline: bool | str | None = None,
+    shape: MarkerShape | None = None,
+    angle: float | None = None,
     palette: Palette | None = None,
     connect: bool = False,
     **options: Any,
@@ -942,7 +961,8 @@ def points(
 
     ``source`` holds a list of numbers; each is placed on the column's shared
     scale, so the row's distribution is read directly against a bar or target.
-    ``outline=False`` removes rings; a color string sets their color.
+    ``shape`` and clockwise ``angle`` match scalar points.
+    ``outline=False`` removes outlines; a color string sets their color.
 
     A list of field names or field-to-display-name mapping creates a series,
     automatically colored from a categorical palette. ``palette="viridis"``
@@ -968,12 +988,16 @@ def points(
             size=9 if size is None else size,
             color=color,
             outline=False if outline is None else outline,
+            shape=shape,
+            angle=angle,
             **options,
         )
     if palette is not None or connect:
         raise ValueError("points palette and connect need a field list or mapping")
     column = _factory_column(source, options, title=title, fmt=format_code(format, fmt), align=align)
-    return column._add("points", source, size=size, color=color, outline=outline, **options)._with(type="array")
+    return column._add(
+        "points", source, size=size, color=color, outline=outline, shape=shape, angle=angle, **options
+    )._with(type="array")
 
 
 def range(  # noqa: A001 - the public constructor name

@@ -1,3 +1,4 @@
+import {markerGraphic} from "./marker-shapes.js";
 import { h } from "./dom.js";
 import { inspectable } from "./tooltips.js";
 import { observationTooltip, tooltipValue } from "./tooltip-data.js";
@@ -158,11 +159,27 @@ export function renderSparkline(col, value, preparedColor, sharedRange) {
     const visible = showMarkers && (!endsOnly || isEnd);
     const perPoint = observationColor(point.source);
     const markerColor = perPoint || resolveColor(opts.marker_color) || pointColor(point);
-    const dot = document.createElementNS(svgNS, "circle");
-    dot.setAttribute("cx", String(point.x));
-    dot.setAttribute("cy", String(point.y));
-    dot.setAttribute("r", visible ? "2.2" : "2.5");
-    dot.setAttribute("fill", visible ? markerColor : "transparent");
+    let dot;
+    if (visible && opts.shape && opts.shape !== "circle") {
+      dot = markerGraphic({shape: opts.shape, angle: opts.angle, color: markerColor,
+        outline: opts.outline ?? false});
+      dot.setAttribute("x", String(point.x - 2.2));
+      dot.setAttribute("y", String(point.y - 2.2));
+      dot.setAttribute("width", "4.4");
+      dot.setAttribute("height", "4.4");
+      dot.style.width = dot.style.height = "4.4px";
+    } else {
+      dot = document.createElementNS(svgNS, "circle");
+      dot.setAttribute("cx", String(point.x));
+      dot.setAttribute("cy", String(point.y));
+      dot.setAttribute("r", visible ? "2.2" : "2.5");
+      dot.setAttribute("fill", visible ? markerColor : "transparent");
+      if (visible && opts.outline) {
+        dot.setAttribute("stroke", opts.outline === true ? "var(--et-marker-outline, color-mix(in srgb, Canvas 60%, transparent))" : resolveColor(opts.outline));
+        dot.setAttribute("stroke-width", "1");
+      }
+    }
+    dot.dataset.sparklineObservation = "true";
     dot.append(tooltip(point.raw));
     const tooltipColor = type === "area" && opts.signed && !lookup && !visible
       ? point.raw[1] < (reference ?? 0) ? "var(--et-negative, #dc2626)" : color

@@ -72,3 +72,9 @@ outlines, inspection, resize separation and screenshot framing.
 - [README graphics source](../../notebooks/50_graphics_gallery.py).
 - [ADR-085: Data Tooltips](085-data-tooltips.md).
 - [ADR-084: Named Point Series](084-named-point-series.md).
+
+### Extension: shared marker geometry
+
+[ADR-097](097-shared-marker-geometry.md) extends the same bounded clustering
+rule to matching noncircle shapes. Different shapes or angles do not merge;
+compatible shapes retain their own geometry, outlines and screen-oriented sectors.

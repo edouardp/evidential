@@ -222,8 +222,93 @@ def overlapping_values(EvidentialTable, col, mo, settings):
 
 
 @app.cell
-def _():
+def forecast_description(mo):
+    mo.md("""
+    ## Rounded ranges with a shared gradient
+
+    `cap="round"` gives an interval pill-shaped ends. `.gradient(...)` uses the
+    same `scale`, `stops`, `min`, `max` and `midpoint` conventions as `.color()`.
+    Colours follow the **shared numeric scale**, rather than restarting at each
+    day's low temperature. Explicit bounds keep them stable when filtering.
+
+    A faint background range shows the full forecast span; the foreground range
+    shows each day's low and high. A white point marks the current temperature.
+    These temperatures are illustrative, inspired by a ten-day weather forecast.
+    """)
     return
+
+
+@app.cell
+def forecast_data():
+    forecast = [
+        {"day": "Today", "low": 13, "high": 18, "current": 14},
+        {"day": "Sun", "low": 10, "high": 16},
+        {"day": "Mon", "low": 9, "high": 16},
+        {"day": "Tue", "low": 8, "high": 18},
+        {"day": "Wed", "low": 11, "high": 20},
+        {"day": "Thu", "low": 11, "high": 23},
+        {"day": "Fri", "low": 16, "high": 26},
+        {"day": "Sat", "low": 17, "high": 25},
+        {"day": "Sun", "low": 15, "high": 23},
+        {"day": "Mon", "low": 11, "high": 17},
+    ]
+    return (forecast,)
+
+
+@app.cell
+def forecast_chart(EvidentialTable, col, forecast, mo, settings):
+    forecast_table = mo.ui.anywidget(
+        EvidentialTable(
+            forecast,
+            columns=[
+                col.text("day").bold(),
+                col.number("low", format='0"°"'),
+                col.range(lambda row: 8, lambda row: 26, color="#e2e8f0", size=7, cap="round")
+                .range("low", "high", size=7, cap="round")
+                .gradient(scale=["#67c9d4", "#add5ae", "#ffe04b", "#ffb52e"], min=8, max=26)
+                .point("current", size=7, color="white", outline="#64748b")
+                .title("Temperature").scale(domain=(8, 26)),
+                col.number("high", format='0"°"').bold(),
+            ],
+            title="Ten-day forecast",
+            subtitle="Rounded low–high intervals · colours share an 8–26°C domain",
+            settings=settings(border=False, row_lines=True, row_shading=False, search=False, page_size=0, width=480),
+        )
+    )
+    forecast_table
+    return (forecast_table,)
+
+
+@app.cell
+def gradient_variants(EvidentialTable, col, mo, settings):
+    gradient_cases = [
+        {"case": "Cold", "low": -8, "high": -2},
+        {"case": "Crosses zero", "low": -4, "high": 7},
+        {"case": "Warm", "low": 3, "high": 10},
+        {"case": "Reversed", "low": 8, "high": -5},
+        {"case": "Clipped", "low": -15, "high": 6},
+        {"case": "Missing", "low": None, "high": 6},
+    ]
+    gradient_table = mo.ui.anywidget(
+        EvidentialTable(
+            gradient_cases,
+            columns=[
+                col.text("case"),
+                col.range("low", "high", size=8, cap="round").gradient(scale="viridis", min=-10, max=10)
+                .title("Palette").scale(domain=(-10, 10)),
+                col.range("low", "high", size=8, cap="round").gradient(stops=[
+                    {"value": -10, "color": "#2563eb"},
+                    {"value": 0, "color": "#ffffff00"},
+                    {"value": 10, "color": "#dc2626"},
+                ]).title("Transparent midpoint").scale(domain=(-10, 10)),
+            ],
+            title="Palettes, value stops and edge cases",
+            caption="Clipped ends stay square; reversed endpoints retain their numeric colours; missing endpoints omit the range.",
+            settings=settings(border=False, row_lines=False, row_shading=True, search=False, page_size=0, width=680),
+        )
+    )
+    gradient_table
+    return (gradient_table,)
 
 
 if __name__ == "__main__":

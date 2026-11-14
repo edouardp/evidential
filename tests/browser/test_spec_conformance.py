@@ -1534,3 +1534,53 @@ def test_public_api_acceptance_marks(page, live_server):
     assert page.locator("#case-7 .et-box-outlier").count() == 1
     assert not errors
     capture(page, "evidential-acceptance.png")
+
+
+def test_rounded_gradients_paint_shared_numeric_colors_and_weather_notebooks(page, live_server):
+    root = Path(__file__).resolve().parents[2]
+    _, weather = runpy.run_path(str(root / "notebooks/61_monthly_weather.py"))["app"].run()
+    _, intervals = runpy.run_path(str(root / "notebooks/48_dumbbell_plots.py"))["app"].run()
+    data = [{"low": 0, "high": 80}, {"low": 20, "high": 100}, {"low": -10, "high": 60}]
+    column = (
+        col.range("low", "high", cap="round", size=12)
+        .gradient(scale=["#00ffff", "#ffff00"], min=0, max=100)
+        .scale(domain=(0, 100))
+    )
+    mount(
+        page,
+        live_server,
+        [
+            ("Shared gradient", data, [column]),
+            ("Monthly weather", weather["monthly_weather"].widget, []),
+            ("Forecast", intervals["forecast_table"].widget, []),
+            ("Edge cases", intervals["gradient_table"].widget, []),
+        ],
+    )
+    marks = page.locator("#case-0 .et-mark-range")
+    assert marks.first.evaluate("el => getComputedStyle(el).borderTopLeftRadius") == "999px"
+    assert marks.nth(2).evaluate("el => getComputedStyle(el).borderTopLeftRadius") == "0px"
+    assert marks.nth(2).evaluate("el => getComputedStyle(el).borderTopRightRadius") == "999px"
+    # Same numeric position in overlapping intervals must paint the same color.
+    positions = []
+    for mark in marks.all()[:2]:
+        bounds = mark.bounding_box()
+        track = mark.locator("..").bounding_box()
+        positions.append({"x": int(track["x"] + track["width"] / 2), "y": int(bounds["y"] + bounds["height"] / 2)})
+    png = b64encode(page.screenshot()).decode()
+    colors = page.evaluate(
+        """async ({png, positions}) => {
+        const image = new Image(); image.src = 'data:image/png;base64,' + png; await image.decode();
+        const canvas = document.createElement('canvas'); canvas.width = image.width; canvas.height = image.height;
+        const ctx = canvas.getContext('2d'); ctx.drawImage(image, 0, 0);
+        return positions.map(p => [...ctx.getImageData(p.x, p.y, 1, 1).data].slice(0, 3));
+    }""",
+        {"png": png, "positions": positions},
+    )
+    # Fractional interval origins and CSS rasterization can differ by two RGB levels.
+    assert colors[1] == pytest.approx(colors[0], abs=2)
+    assert colors[0] != [0, 255, 255] and colors[0] != [255, 255, 0]
+    assert page.locator("#case-1 tbody tr").count() == 12
+    assert page.locator("#case-1 .et-mark-point").count() == 24
+    assert page.locator("#case-2 .et-mark-point").count() == 1
+    assert page.locator("#case-3 tbody tr").last.locator(".et-mark-range").count() == 0
+    capture(page, "rounded-gradient-ranges.png")

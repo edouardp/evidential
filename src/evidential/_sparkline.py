@@ -6,7 +6,8 @@ import math
 from collections.abc import Mapping
 from typing import Any
 
-from .configuration import COLOR_SCALES, ColorOptions, SparklineOptions, validate_options
+from ._color import normalize_value_colors
+from .configuration import COLOR_SCALES, SparklineOptions, validate_options
 
 
 def normalize_sparkline_options(options: Mapping[str, Any]) -> dict[str, Any]:
@@ -65,30 +66,8 @@ def normalize_sparkline_options(options: Mapping[str, Any]) -> dict[str, Any]:
 
 def normalize_sparkline_colors(options: Mapping[str, Any], colors: Mapping[str, Any]) -> dict[str, Any]:
     """Reuse the cell gradient declaration for observation y values, without row bindings."""
-    spec = {key: value for key, value in colors.items() if value is not None}
-    validate_options(spec, ColorOptions, "column.color_options")
-    if any(spec.get(key) is not None for key in ("conditional_colors", "scale_column")):
-        raise ValueError("sparkline colors use observation y values; use an observation's color key for overrides")
-    for name in ("min", "max", "midpoint"):
-        if name in spec and not math.isfinite(spec[name]):
-            raise ValueError(f"sparkline color {name} must be finite")
-    if "min" in spec and "max" in spec and spec["min"] >= spec["max"]:
-        raise ValueError("sparkline color min must be less than max")
+    spec = normalize_value_colors(colors, "sparkline color")
     palette = spec.get("color_scale")
-    if isinstance(palette, str):
-        if palette.lower() not in COLOR_SCALES:
-            raise ValueError(f"Unknown colour scale {palette!r}")
-    elif palette is not None:
-        if len(palette) < 2 or any(not color.strip() for color in palette):
-            raise ValueError("sparkline color scale needs at least two nonempty colors")
-        spec["color_scale"] = list(palette)
-    if "color_stops" in spec:
-        stops = [dict(stop) for stop in spec["color_stops"]]
-        if len(stops) < 2 or any(not math.isfinite(stop["value"]) or not stop["color"].strip() for stop in stops):
-            raise ValueError("sparkline color stops need at least two finite values and nonempty colors")
-        if len({stop["value"] for stop in stops}) != len(stops):
-            raise ValueError("sparkline color stops must have distinct values")
-        spec["color_stops"] = stops
     legacy = options.get("color_scale")
     if legacy is not None and palette is not None:
         if (legacy.lower() if isinstance(legacy, str) else list(legacy)) != (

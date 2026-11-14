@@ -1132,6 +1132,32 @@ columns=[
 
 <!-- /notebook -->
 
+<!-- notebook: notebooks/50_graphics_gallery.py#graphic_range_gradient -->
+
+#### Rounded ranges with a shared gradient
+
+Pill-shaped intervals pick up the appropriate part of a common temperature
+gradient. Colours stay comparable across rows. Use named palettes or explicit
+value/color `stops`; colours clamp beyond the gradient's bounds.
+Try the [city chooser and monthly weather notebook](https://github.com/edouardp/evidential/blob/main/notebooks/61_monthly_weather.py).
+
+```python
+columns=[
+    col.text("period", title="Month"),
+    col.number("low", title="Lowest", format='0"°C"'),
+    col.range("low", "high", cap="round", size=8)
+       .gradient(scale=["#537bc4", "#67c9d4", "#add5ae", "#ffe04b", "#ef893c"], min=-30, max=50)
+       .title("Temperature").scale(domain=(-30, 50)),
+    col.number("high", title="Highest", format='0"°C"'),
+]
+```
+
+![Rounded ranges with a shared gradient](https://raw.githubusercontent.com/edouardp/evidential/main/docs/img/graphics/range-gradient.png)
+
+[Notebook source: `graphic_range_gradient`](https://github.com/edouardp/evidential/blob/main/notebooks/50_graphics_gallery.py)
+
+<!-- /notebook -->
+
 <!-- notebook: notebooks/50_graphics_gallery.py#graphic_points -->
 
 #### Points from an array

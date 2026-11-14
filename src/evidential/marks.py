@@ -29,6 +29,7 @@ from collections.abc import Callable, Mapping, Sequence
 from typing import Any, Literal
 
 from ._aliases import alias, format_code
+from ._color import normalize_value_colors
 from ._column import Column, _clean, _field
 from ._distribution import band_spec, validate_curve
 from ._label import LABEL_POSITIONS, _label_spec
@@ -92,6 +93,7 @@ _ENCODING_KEYS = (
     "side",
     "valign",
     "cap",
+    "gradient",
     "direction_marker",
     "overflow",
     "fill",
@@ -118,6 +120,7 @@ _ALLOWED_ENCODINGS = {
     "range": {
         "high",
         "cap",
+        "gradient",
         "direction_marker",
         "color_negative",
         "color_negative_column",
@@ -184,6 +187,13 @@ def _validate_mark_style(kind: str, encoding: Mapping[str, Any]) -> None:
         raise ValueError("range overflow is 'clip' or 'arrow'")
 
 
+def _normalize_range_gradient(encoding: dict[str, Any]) -> None:
+    if "gradient" in encoding:
+        encoding["gradient"] = normalize_value_colors(encoding["gradient"], "range gradient")
+        if any(key in encoding for key in ("color", "color_column", "color_negative", "color_negative_column")):
+            raise ValueError("range gradient and solid color bindings are mutually exclusive")
+
+
 def _canonical_encoding(
     kind: str,
     source: Any,
@@ -231,6 +241,7 @@ def _canonical_encoding(
         raise TypeError("range expects two endpoints: col.range(low, high)")
     if kind == "points":
         _validate_point_sources(encoding)
+    _normalize_range_gradient(encoding)
     _validate_mark_style(kind, encoding)
     label_spec = _label_spec(label, position=label_position, **(label_options or {}))
     if label_spec:
@@ -267,6 +278,8 @@ def normalize_legend(value: LegendLabels, encodings: Sequence[Mapping[str, Any]]
         raise ValueError("legend needs a mark column")
     keys = []
     for encoding in encodings:
+        if encoding.get("gradient") is not None:
+            raise ValueError("legend needs fixed mark colors; a numeric gradient has no categorical key")
         if encoding.get("color_column") or encoding.get("color_negative_column"):
             raise ValueError("legend needs fixed mark colors; per-row colors have no categorical key")
         if encoding["kind"] == "strip":
@@ -482,6 +495,32 @@ class MarkColumn(Column):
         return self._add(
             "range", low, high=high, color_negative=color_negative, direction_marker=direction_marker, **options
         )
+
+    def gradient(
+        self,
+        *,
+        scale: Palette | None = None,
+        stops: Any = None,
+        min: float | None = None,
+        max: float | None = None,
+        midpoint: float | None = None,
+    ) -> MarkColumn:
+        """Color the last range by x value, using the shared numeric color API.
+
+        Bounds default to the column's coordinate domain, not each interval.
+        Explicit stops clamp outside their endpoints. Solid colors cannot be
+        combined with a gradient on the same range; sibling marks keep theirs.
+        """
+        encodings = self._encodings()
+        if not encodings or encodings[-1]["kind"] != "range":
+            raise ValueError("gradient() refines the last range; add a range first")
+        encoding = dict(encodings[-1])
+        encoding["gradient"] = {
+            **(encoding.get("gradient") or {}),
+            **_clean(color_scale=scale, color_stops=stops, min=min, max=max, midpoint=midpoint),
+        }
+        encodings[-1] = normalize_encoding(encoding)
+        return self._with(encodings=encodings)
 
     def _append_column(self, column: MarkColumn) -> MarkColumn:
         """Compose a factory's validated marks without replacing slot metadata."""

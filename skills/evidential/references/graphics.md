@@ -190,3 +190,17 @@ columns fit content; chart tracks use remaining space and minimum widths.
 `stretch=False` makes a compact table; `width=` limits its container. Inspect
 the rendered table at the target width rather than shortening source values
 or clipping meaningful labels to hide a layout problem.
+
+## Rounded gradient ranges
+
+Use `col.range("low", "high", cap="round", size=8).gradient(scale="viridis",
+min=0, max=100).scale(domain=(0, 100))` for a pill-shaped interval colored by
+numeric x value. `.gradient(...)` refines the last range only; append points
+after it to retain independent point colors. Its `scale`, `stops`, `min`, `max`
+and `midpoint` arguments match `.color()`. Bounds default to the column's
+coordinate domain, rather than restarting at each interval. Explicit bounds
+keep colors stable across filtering. Value stops and alpha colors work;
+out-of-domain colors clamp. Clipped ends stay square. Do not combine a gradient
+with solid `color` or `color_negative` on the same range. Notebook 61 demonstrates
+a city chooser using historical monthly temperature extremes; notebook 48 shows
+point overlays, transparent stops and reversed/clipped/missing intervals.

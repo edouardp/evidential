@@ -236,6 +236,16 @@ def test_invalid_regions_fail_explicitly(example, text):
         docs.generate(text, example)
 
 
+def test_weather_snapshot_is_part_of_screenshot_provenance(monkeypatch):
+    name = "notebooks/data/61_monthly_weather_2014_15.json"
+    before = docs.inputs()
+    digest = docs._digest
+    monkeypatch.setattr(docs, "_digest", lambda path: "changed" if path == docs.ROOT / name else digest(path))
+    after = docs.inputs()
+    assert before[name] != after[name]
+    assert {key for key in before if before[key] != after[key]} == {name}
+
+
 def test_check_catches_stale_text_input_and_image_independently(example, monkeypatch):
     generated = docs.generate(MARKER + "\n" + docs.END, example)
     (example / "README.md").write_text(generated)

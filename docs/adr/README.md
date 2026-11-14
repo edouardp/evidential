@@ -113,6 +113,7 @@ dated, immutable record of the decisions behind them.
 | [092](092-frontend-quality-and-browser-measurement.md) | Frontend Quality Gates and Browser Measurements | Accepted |
 | [093](093-resumable-release-finalization.md) | Resumable Release Finalization | Accepted |
 | [094](094-shared-header-info-tooltips.md) | Shared Header Info Tooltips | Accepted |
+| [095](095-rounded-gradient-ranges.md) | Rounded Ranges with Numeric Gradients | Accepted |
 
 ## Creating New ADRs
 

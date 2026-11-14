@@ -6,6 +6,14 @@ project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## Unreleased
 
+### Added
+
+- Rounded range ends with `cap="round"` and numeric gradients with
+  `.gradient(scale=, stops=, min=, max=, midpoint=)`. Colors follow a shared
+  x-value scale, preserve transparency and clamp at their bounds; clipped
+  ends remain square. Notebook 61 adds a ten-city historical monthly weather
+  explorer, with updated range demos and a generated README example.
+
 ### Changed
 
 - `make run-marimo` uses this machine's Tailscale DNS name when connected.

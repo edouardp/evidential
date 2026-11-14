@@ -221,6 +221,7 @@ def inputs(root: Path = ROOT) -> dict[str, str]:
         root / "notebooks/sample_data/needful_things/orders.parquet",
         root / "notebooks/data/50_europe_trade_2024.json",
         root / "notebooks/data/46_football_england_2024.json",
+        root / "notebooks/data/61_monthly_weather_2014_15.json",
         root / "notebooks/sql/50_europe_trade.sql",
         *(root / notebook.relative_to(ROOT) for notebook, _ in _notebook_targets()),
         *(root / "src/evidential").rglob("*.py"),

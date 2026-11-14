@@ -118,3 +118,24 @@ colors every tied extreme and collects ordered sparkline observations.
 Match points are `3 × wins + draws`, without administrative adjustments; rows
 are ordered by match points, goal difference, then team name. Source and license
 are the same football-data / worldclubratings.com attribution above.
+
+## Historical US weather
+
+`61_monthly_weather_2014_15.json` aggregates the ten station CSVs in the local
+`~/datasets/fivethirtyeight-data/us-weather-history/` copy. The source observations
+cover 1 July 2014 through 30 June 2015. Notebook 61 reads the committed 120
+city-month rows, making the city chooser work offline; notebook 50 uses six
+New York months for the README range example.
+
+For each station/calendar month, `low` is the minimum `actual_min_temp`, `high`
+is the maximum `actual_max_temp`, and `avg_low` / `avg_high` are the arithmetic
+means of those daily readings. Fahrenheit temperatures are converted with
+`(F - 32) * 5 / 9` and rounded to two decimals after aggregation. `rain_mm` sums
+`actual_precipitation` and multiplies inches by 25.4, rounding to one decimal.
+`days` records coverage; no dates or readings are imputed. Station IDs are
+retained, and chronological month/year labels distinguish the two source years.
+These are observed monthly extremes and averages, not climate normals.
+
+Source: [Weather Underground via FiveThirtyEight's US Weather History](https://github.com/fivethirtyeight/data/tree/master/us-weather-history),
+provided by FiveThirtyEight under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/).
+Changes: aggregation, unit conversion and rounding as described above.

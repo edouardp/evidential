@@ -1,5 +1,6 @@
 // Per-kind glyphs share a coordinate/label context; no renderer state lives here.
 import {h} from "./dom.js";
+import {rangePaint} from "./range-paint.js";
 import {formatValue} from "./format.js";
 import {formattedText} from "./formatted-text.js";
 import {resolveColor} from "./color.js";
@@ -345,6 +346,12 @@ function drawRange(enc, view) {
   const right = Math.max(start, end);
   const size = enc.size != null ? Number(enc.size) : 4;
   const color = markColor(enc, row, "var(--et-accent, #2563eb)", high < low);
+  const paint = rangePaint(enc, view, left, right, color);
+  const leftColor = paint.at(left);
+  const rightColor = paint.at(right);
+  const directionColor = paint.at((left + right) / 2);
+  const tooltip = markTooltip(col, enc, row, {context});
+  if (enc.gradient) tooltip.color = directionColor;
   if (enc.fill) {
     // A translucent band, e.g. a forecast or uncertainty range.
     const band = h("div", {
@@ -356,12 +363,13 @@ function drawRange(enc, view) {
           left: `${left}%`,
           width: `${Math.max(0, right - left)}%`,
           backgroundColor: color,
+          ...paint.style,
         },
       });
-    if (arrowStart) band.append(h("span", { class: "et-mark-cap et-mark-arrow et-mark-arrow-start", style: { borderRightColor: color } }));
-    if (arrowEnd) band.append(h("span", { class: "et-mark-cap et-mark-arrow et-mark-arrow-end", style: { borderLeftColor: color } }));
-    track.append(inspectable(band, markTooltip(col, enc, row, {context})));
-    const direction = rangeDirection(enc, start, end, color);
+    if (arrowStart) band.append(h("span", { class: "et-mark-cap et-mark-arrow et-mark-arrow-start", style: { borderRightColor: leftColor } }));
+    if (arrowEnd) band.append(h("span", { class: "et-mark-cap et-mark-arrow et-mark-arrow-end", style: { borderLeftColor: rightColor } }));
+    track.append(inspectable(band, tooltip));
+    const direction = rangeDirection(enc, start, end, directionColor);
     if (direction) {
       direction.style.left = `${(left + right) / 2}%`;
       track.append(direction);
@@ -371,18 +379,18 @@ function drawRange(enc, view) {
   }
   const line = h("div", {
     class: "et-mark et-mark-range",
-    style: { ...verticalStyle(enc.valign), left: `${left}%`, width: `${Math.max(0, right - left)}%`, height: `${size}px`, backgroundColor: color },
+    style: { ...verticalStyle(enc.valign), left: `${left}%`, width: `${Math.max(0, right - left)}%`, height: `${size}px`, backgroundColor: color, ...paint.style },
   });
   if (enc.cap === "line" || enc.cap === "dot") {
     const capClass = `et-mark-cap${enc.cap === "dot" ? " et-mark-cap-dot" : ""}`;
-    if (!arrowStart) line.append(h("span", { class: `${capClass} et-mark-cap-start`, style: { backgroundColor: color } }));
-    if (!arrowEnd) line.append(h("span", { class: `${capClass} et-mark-cap-end`, style: { backgroundColor: color } }));
+    if (!arrowStart) line.append(h("span", { class: `${capClass} et-mark-cap-start`, style: { backgroundColor: leftColor } }));
+    if (!arrowEnd) line.append(h("span", { class: `${capClass} et-mark-cap-end`, style: { backgroundColor: rightColor } }));
   }
-  if (arrowStart) line.append(h("span", { class: "et-mark-cap et-mark-arrow et-mark-arrow-start", style: { borderRightColor: color } }));
-  if (arrowEnd) line.append(h("span", { class: "et-mark-cap et-mark-arrow et-mark-arrow-end", style: { borderLeftColor: color } }));
-  const direction = rangeDirection(enc, start, end, color);
+  if (arrowStart) line.append(h("span", { class: "et-mark-cap et-mark-arrow et-mark-arrow-start", style: { borderRightColor: leftColor } }));
+  if (arrowEnd) line.append(h("span", { class: "et-mark-cap et-mark-arrow et-mark-arrow-end", style: { borderLeftColor: rightColor } }));
+  const direction = rangeDirection(enc, start, end, directionColor);
   if (direction) line.append(direction);
-  track.append(inspectable(line, markTooltip(col, enc, row, {context})));
+  track.append(inspectable(line, tooltip));
   if (enc.label) track.append(labelFor(col, enc, row, { pointPct: left }, format));
 }
 

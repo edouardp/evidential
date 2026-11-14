@@ -207,6 +207,7 @@ def graphic_dumbbell(EvidentialTable, col, frame):
     return
 
 
+
 @app.cell(hide_code=True)
 def graphic_points_doc(mo):
     mo.md(r"""
@@ -828,6 +829,41 @@ def graphic_reference(EvidentialTable, col, frame, label):
             .reference_line(70, color="#dc2626"),
         ],
         settings=frame("Axis, reference line and band", 560, subtitle="Red line = target 70; band = 60–80."),
+    )
+    return
+
+
+@app.cell(hide_code=True)
+def graphic_range_gradient_doc(mo):
+    mo.md(r"""
+    #### Rounded ranges with a shared gradient
+
+    Pill-shaped intervals pick up the appropriate part of a common temperature
+    gradient. Colours stay comparable across rows. Use named palettes or explicit
+    value/color `stops`; colours clamp beyond the gradient's bounds.
+    Try the [city chooser and monthly weather notebook](notebooks/61_monthly_weather.py).
+    """)
+    return
+
+
+@app.cell
+def graphic_range_gradient(EvidentialTable, col, frame, json, mo):
+    weather_snapshot = json.loads(
+        (mo.notebook_location() / "data" / "61_monthly_weather_2014_15.json").read_text()
+    )
+    new_york_weather = [row for row in weather_snapshot if row["city"] == "New York"][:6]
+    EvidentialTable(
+        new_york_weather,
+        columns=[
+            col.text("period", title="Month"),
+            col.number("low", title="Lowest", format='0"°C"'),
+            col.range("low", "high", cap="round", size=8)
+               .gradient(scale=["#537bc4", "#67c9d4", "#add5ae", "#ffe04b", "#ef893c"], min=-30, max=50)
+               .title("Temperature").scale(domain=(-30, 50)),
+            col.number("high", title="Highest", format='0"°C"'),
+        ],
+        settings=frame("New York · monthly temperature extremes", 560,
+            caption="July–December 2014 · Weather Underground / FiveThirtyEight · CC BY 4.0"),
     )
     return
 

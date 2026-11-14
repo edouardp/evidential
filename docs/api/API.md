@@ -858,9 +858,20 @@ columns=[
 
 - **Marks** — `bar(source, color=, color_negative=, size=, side=, valign=, ...)`,
   `point(source, size=, color=, outline=)`, `points(source, size=, color=, outline=)` (one marker per
-  array element), `range(low, high, cap="none"|"line"|"dot"|"arrow", fill=,
+  array element), `range(low, high, cap="none"|"line"|"dot"|"arrow"|"round", fill=,
   color_negative=, direction_marker=)`.
   `fill=True` draws the interval as a translucent band instead of a line.
+  `cap="round"` rounds the interval inside its true bounds; clipped edges remain
+  square. Append `.gradient(scale="viridis", min=0, max=100)` to color the last
+  range by x value, or pass `stops=[{"value": 0, "color": "blue"}, ...]`.
+  The options `scale`, `stops`, `min`, `max`, `midpoint` match `.color()`.
+  Bounds default to the column's shared coordinate domain, never each row's
+  endpoints. Colors clamp outside their specified domain and preserve alpha.
+  A gradient cannot share a range with solid `color` or `color_negative`
+  bindings; sibling marks keep independent colors. Log/reversed coordinates
+  keep colors anchored to numeric values. Equal endpoints retain the existing one-pixel minimum mark.
+  Numeric gradients do not support categorical `.legend()` keys.
+  See the [monthly weather city chooser](../../notebooks/61_monthly_weather.py).
   For dumbbells, `color_negative="red"` colors a range when its second value
   is smaller than its first. `direction_marker=True` adds a centered chevron
   pointing from the first endpoint to the second; equal endpoints omit it.

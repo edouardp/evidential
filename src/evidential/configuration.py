@@ -388,7 +388,9 @@ class EncodingSpec(TypedDict, total=False):
     #: A nonnegative magnitude extending left/right of the central origin.
     side: Literal["left", "right"] | None
     #: ``range``: end treatment, or ``"arrow"`` when an endpoint is off-scale.
-    cap: Literal["none", "line", "dot", "arrow"] | None
+    cap: Literal["none", "line", "dot", "arrow", "round"] | None
+    #: ``range``: numeric x-value gradient, independent of interval endpoints.
+    gradient: ColorOptions | None
     #: ``range``: a centered chevron from the first endpoint to the second.
     direction_marker: bool | None
     overflow: Literal["clip", "arrow"] | None

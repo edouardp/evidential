@@ -15,14 +15,18 @@ const column = (type, overrides = {}) => ({name: "series", viz: "sparkline", typ
   sparkline_options: {type, width: 100, height: 30}, color_options: colors, ...overrides});
 const values = [-4, 0, 8];
 
-test("bars and points look up their own y, including explicit observation color overrides and tooltip swatches", () => {
+test("bars paint in y space while points sample y; observation overrides and tooltip swatches remain exact", () => {
   for (const type of ["bar", "points", "change"]) {
     const col = column(type);
     const source = [{x: 200, y: -4}, {x: 400, y: 0, color: "tab:green"}, {x: 1000, y: 8}];
     const svg = renderSparkline(col, source);
     const selector = type === "points" ? "circle" : "rect";
     const marks = [...svg.querySelectorAll(selector)];
-    assert.deepEqual(marks.map(mark => mark.getAttribute("fill")), ["#ff0000", "#2ca02c", "#0000ff"]);
+    if (type === "bar") {
+      assert.match(marks[0].getAttribute("fill"), /^url\(#et-sparkline-gradient-/);
+      assert.equal(marks[0].getAttribute("fill"), marks[2].getAttribute("fill"));
+      assert.equal(marks[1].getAttribute("fill"), "#2ca02c");
+    } else assert.deepEqual(marks.map(mark => mark.getAttribute("fill")), ["#ff0000", "#2ca02c", "#0000ff"]);
     assert.deepEqual(marks.map(mark => inspectionData(mark).color), ["#ff0000", "#2ca02c", "#0000ff"]);
     assert.equal(source[1].color, "tab:green");
   }

@@ -34,6 +34,7 @@ captured with Playwright by
 - [Visualisations](#visualisations)
 - [Formatting](#formatting)
 - [Dimension slicers](#dimension-slicers)
+- [Bundled agent skill](#bundled-agent-skill)
 - [Reference](#reference)
 
 ## Quick start
@@ -628,7 +629,7 @@ columns=[
   show_symbol=, symbol_position=)`. Green for up, red for down, a grey dash
   inside `neutral_range`.
 - **Sparkline** — `.sparkline(type="line"|"area"|"bar"|"points"|"change", x=, y=,
-  color=, fit_to_data=, y_fmt=, width=, height=, markers=, marker_color=, signed=, fill_opacity=,
+  color=, fit_to_data=, y_fmt=, width=, height=, markers=, marker_color=, shape=, angle=, outline=, signed=, fill_opacity=,
   reference=, reference_color=, delta=, steady=, color_scale=, color_domain=)`
   over an array column. `type="points"` draws only markers; `markers=True` adds a
   dot at every point and `markers="ends"` only the endpoints; a per-point
@@ -655,11 +656,11 @@ columns=[
   each observation's **y value**, rather than shading the table cell:
 
   ```python
-  col.sparkline("history", type="bar").color(scale="viridis", min=0, max=100)
-  col.sparkline("history", type="area").color(
+  col.sparkline("history", type="bar").gradient(scale="viridis", min=0, max=100)
+  col.sparkline("history", type="area").gradient(
       scale=["#b2182b", "#b8bcc2", "#2166ac"], min=-10, max=10, midpoint=0,
   )
-  col.sparkline("history", type="points").color(stops=[
+  col.sparkline("history", type="points").gradient(stops=[
       {"value": -10, "color": "red"},
       {"value": 0, "color": "#ffffffcc"},
       {"value": 10, "color": "blue"},
@@ -673,7 +674,7 @@ columns=[
   and explicit stops reuse the scalar cell-color lookup. `.domain(...)` shares
   coordinates and optional palettes with other columns, including heatmaps.
 
-  Bars and dots use their own observation color. Lines and areas use a
+  Dots and change markers sample their observation's color. Bars, lines and areas use a
   **vertical gradient in data-y space**: the color at any height is the same
   across the chart, including between observations. A peak above a threshold
   can have a red tip while the area below the threshold stays green. Missing
@@ -705,7 +706,7 @@ columns=[
 
   Constant `color=` and gradient settings are mutually exclusive. Row-level `scale_column` and
   `conditional_colors` do not apply to sparkline arrays. Existing sparkline
-  `color_scale=`/`color_domain=` options remain supported; prefer `.color(...)`
+  `color_scale=`/`color_domain=` options and fluent `.color(...)` remain supported; prefer `.gradient(...)`
   for new examples and do not supply conflicting declarations.
 
   `type="change"` draws one equal rectangle per observation, with an ordinal
@@ -755,9 +756,15 @@ columns=[
   football results dataset: search teams, select a year and competition, then
   click a team to update the second table with match details and labeled goal
   margin bars. A switch adds a goal-margin gradient to the top table's sparklines.
-- **Symbols** — `.symbols(symbol=, shape=, empty=, max=, image=, color=,
+- **Symbols** — `.symbols(symbol=, shape=, angle=, outline=, empty=, max=, image=, color=,
   empty_color=, size=, gap=)`: repeat the value as glyphs, emoji, images, or
-  font-independent CSS boxes. `max` is a *floor* (the row is filled to at least
+  font-independent geometric markers. Familiar glyphs (`■`, `□`, `●`, `○`,
+  `▲`, `△`, `▼`, `◆`, `◇`, `★`, `☆`, `+`, `✚`, `×`, `✕`) use the same geometry;
+  arbitrary text and emoji stay text. `col.rating(..., shape="star")` and the
+  default `★`/`☆` rating are equivalent; empty stars are hollow. An explicit
+  shape applies to all slots, including hollow slots. `outline=False` suppresses
+  all strokes, including hollow slots. Repeated-symbol sizes are em values
+  applied once; point-mark sizes are pixels. `max` is a *floor* (the row is filled to at least
   `max`, then the rest are empty). `col.rating` and `col.repeat` are shortcuts.
 
 ![Repeated symbols](images/symbols.png)
@@ -857,20 +864,28 @@ columns=[
 ```
 
 - **Marks** — `bar(source, color=, color_negative=, size=, side=, valign=, ...)`,
-  `point(source, size=, color=, outline=)`, `points(source, size=, color=, outline=)` (one marker per
+  `point(source, size=, color=, shape=, angle=, outline=)`, `points(source, size=, color=, shape=, angle=, outline=)` (one marker per
   array element), `range(low, high, cap="none"|"line"|"dot"|"arrow"|"round", fill=,
   color_negative=, direction_marker=)`.
   `fill=True` draws the interval as a translucent band instead of a line.
   `cap="round"` rounds the interval inside its true bounds; clipped edges remain
   square. Append `.gradient(scale="viridis", min=0, max=100)` to color the last
-  range by x value, or pass `stops=[{"value": 0, "color": "blue"}, ...]`.
+  numeric mark by x value, or pass `stops=[{"value": 0, "color": "blue"}, ...]`.
   The options `scale`, `stops`, `min`, `max`, `midpoint` match `.color()`.
   Bounds default to the column's shared coordinate domain, never each row's
-  endpoints. Colors clamp outside their specified domain and preserve alpha.
-  A gradient cannot share a range with solid `color` or `color_negative`
+  endpoints. Bars, ranges, box plots and density bands paint continuously along x;
+  points, median/cap/outlier marks and tooltip swatches sample their value.
+  Density continues to control opacity. Gradient bar fills honor the palette's alpha
+  directly; solid bars keep their existing opacity. Colors clamp outside their
+  specified domain and preserve alpha.
+  A gradient cannot share a mark with solid `color` or `color_negative`
   bindings; sibling marks keep independent colors. Log/reversed coordinates
   keep colors anchored to numeric values. Equal endpoints retain the existing one-pixel minimum mark.
-  Numeric gradients do not support categorical `.legend()` keys.
+  Numeric gradients use `.scale(gradient=True)` rather than categorical `.legend()` keys.
+  Cell backgrounds and all sparkline styles accept the same `.gradient(...)` arguments;
+  existing fluent `.color(...)` calls remain supported there. Categorical stacks,
+  strips, chips, ratings and repeated symbols retain their existing color APIs.
+  See [notebook 63](../../notebooks/63_visual_gradients.py) for the shared gradient examples.
   See the [monthly weather city chooser](../../notebooks/61_monthly_weather.py).
   For dumbbells, `color_negative="red"` colors a range when its second value
   is smaller than its first. `direction_marker=True` adds a centered chevron
@@ -887,6 +902,25 @@ columns=[
   color string such as `outline="#334155"` to recolor it independently of
   `color` (the fill). Omission, `None`, or `True` keeps the default one-pixel
   theme ring, without changing the marker's size or position.
+- **Marker shapes** — `shape="circle"` (default), `"square"`, `"rounded"`,
+  `"triangle"`, `"diamond"`, `"cross"`, `"star"` or `"bar"`. These values are
+  typed as the exported `MarkerShape` Literal. Triangles are equilateral and point
+  up at zero degrees. Diamonds are horizontally compressed rotated squares.
+  Bars are vertical at zero degrees; `shape="bar", angle=90` is horizontal.
+  `angle=45` rotates clockwise: `shape="cross", angle=45` makes an X;
+  `shape="triangle", angle=270` points left. Angles must be finite; they are
+  normalized modulo 360. Circle rotation has no visible effect. Size measures
+  the nominal unrotated box, so rotated shapes may extend beyond it.
+  All shapes accept the same `outline=True|False|"color"` contract. Scalar and
+  array point defaults retain the theme outline; named series retain their
+  existing outline-free default. Legend keys reproduce shape, angle and outline.
+  Opaque overlapping points combine only when their shape, angle and size agree;
+  the whole cluster must fit within one screen pixel. Segments retain the marker
+  shape and individual outlines; circles remain circles, stars remain stars.
+  `col.shapes`, `.symbols`, `col.rating`, and sparkline point/line/area markers
+  use the same shape names, angles and outline options. Sparkline markers keep
+  their existing outline-free default. Bar/change sparklines have no marker shape.
+  See [notebook 62](../../notebooks/62_marker_shapes.py).
 - **Named point series** — `col.points(["actual", "target"], palette=,
   connect=True)` draws several scalar fields without repeated `.point(...)`
   calls. A field-to-name mapping, such as
@@ -1042,7 +1076,7 @@ columns=[
   `.min_width(pixels)` adds a minimum available width. Inside and stacked labels
   choose light/dark text for contrast; an explicit color overrides this choice.
 - **Scale** — `.scale(domain=(lo, hi), include_zero=, unit=, transform=`
-  `"linear"|"log", axis=, axis_position="top"|"bottom", gridlines=)` fixes the
+  `"linear"|"log", axis=, axis_position="top"|"bottom", gridlines=, gradient=)` fixes the
   shared quantitative axis; `.reference_line(value, label=, color=)` adds a rule
   and `.reference_band(low, high, label=, color=)` shades a zone (a target or
   equivalence range) through the cell height behind guides and marks. An explicit
@@ -1057,6 +1091,13 @@ columns=[
   unlabeled ticks at 2–9 within each decade. Their gaps shrink toward the next
   decade; major and minor tick marks are black. It is what a forest plot
   uses with `.reference_line(1)`.
+  `.scale(gradient=True)` adds a three-pixel color strip along the axis and enables
+  its ticks. It requires a mark gradient and rejects an explicit `axis=False`.
+  The strip follows numeric bounds, reversed/log coordinates and alpha stops.
+  With multiple gradient marks it uses the last configured gradient; solid overlays
+  do not replace it. Set `gradient=False` to remove the strip without changing ticks.
+  Centered bars paint their zero line above the fill, with points and labels above
+  the line. Reference bands and ordinary gridlines remain behind the marks.
   Repeated `.scale(...)` calls preserve earlier settings; `domain="auto"`
   explicitly clears fixed bounds. Missing data suppresses only its own mark.
   Automatic marks domains exclude synthetic rows and include all detail-row
@@ -1289,6 +1330,32 @@ rendered rows. Source normalization and aggregation remain in memory: for
 large sources, preaggregate additive metrics at the needed dimension grain
 in SQL before passing them to the grid. Do not sum precomputed means.
 
+## Bundled agent skill
+
+`evidential.skills.path()` returns a `pathlib.Path` to the development skill
+shipped with the installed package. The directory contains `SKILL.md`, focused
+`references/`, executable marimo templates in `assets/`, and skill metadata.
+It works with normal wheel installs and editable source checkouts.
+
+```python
+from evidential import skills
+
+skill_directory = skills.path()
+instructions = (skill_directory / "SKILL.md").read_text()
+```
+
+The equivalent command prints the absolute directory path and a newline:
+
+```bash
+uv run python -m evidential.skills path
+```
+
+Run it in the user's project environment so the instructions match its pinned
+library version. It does not copy files or modify agent configuration.
+The repository's `skills/evidential` discovery skill routes agents to this
+bundled copy. Older versions without the module require their matching release
+documentation; discovering a skill does not authorize upgrading a project.
+
 ## Reference
 
 ### Column factories (`col.*`)
@@ -1311,20 +1378,20 @@ other than `auto`, `merge`, `group` and `subcolumns` return a `Column`;
 | `col.flag(name, *, title=)` | alpha-3 country codes |
 | `col.icons(name, *, map={...}, title=)` | category → glyph / image |
 | `col.bar(source, *, title=, label=, size=, side=, color=, …)` | bar mark with an optional owned label |
-| `col.point(source, *, title=, size=, color=, label=)` | point marker |
-| `col.points(source, *, size=, color=, outline=, palette=, connect=False)` | array observations or named scalar point series |
+| `col.point(source, *, title=, size=, color=, shape=, angle=, outline=, label=)` | point marker |
+| `col.points(source, *, size=, color=, shape=, angle=, outline=, palette=, connect=False)` | array observations or named scalar point series |
 | `col.range(low, high, *, cap=, fill=, color=, color_negative=, direction_marker=, label=)` | interval / dumbbell |
 | `col.stacked_bar(*sources, *, colors=, labels=, normalize="percent", diverge_at=, neutral="split")` | cumulative stack |
 | `col.strip(source, *, colors=, labels=, segmented=)` | ordered categorical strip |
 | `col.boxplot(minimum, q1, median, q3, maximum, *, outliers=, whisker="extrema")` | box plot |
 | `col.distribution(source, *, x="position", y="density", style="band", height=0.5, density_max=None)` | constant-height uncertainty band; density controls opacity |
-| `col.shapes(name, *, shape=, color=, …)` | alias for `symbols` |
+| `col.shapes(name, *, shape=, angle=, outline=, color=, …)` | alias for `symbols` |
 | `col.color(name, *, title=, **options)` | colour scale |
 | `col.chip(name, *, min_width=, conditional_colors=, scale=, min=, max=, midpoint=, **extra)` | pill |
 | `col.delta(name, *, down_is_good=, neutral_range=, chip=)` | change indicator |
-| `col.sparkline(name, *, type="line"\|"area"\|"bar"\|"points"\|"change", x=, y=, color=, fit_to_data=, reference=, reference_color=, y_fmt=, width=, height=, markers=, marker_color=, signed=, fill_opacity=, delta=, steady=, color_scale=, color_domain=, title=)` | trend |
-| `col.symbols(name, *, symbol=, shape=, empty=, max=, image=, color=, empty_color=, size=, gap=, align=, title=)` | repeated symbols |
-| `col.rating(name, *, max=5, symbol="★", empty="☆", color="#f59e0b")` | star rating |
+| `col.sparkline(name, *, type="line"\|"area"\|"bar"\|"points"\|"change", x=, y=, color=, fit_to_data=, reference=, reference_color=, y_fmt=, width=, height=, markers=, marker_color=, shape=, angle=, outline=, signed=, fill_opacity=, delta=, steady=, color_scale=, color_domain=, title=)` | trend |
+| `col.symbols(name, *, symbol=, shape=, angle=, outline=, empty=, max=, image=, color=, empty_color=, size=, gap=, align=, title=)` | repeated symbols |
+| `col.rating(name, *, max=5, shape=, angle=, outline=, symbol="★", empty="☆", color="#f59e0b")` | star rating |
 | `col.repeat(name, **options)` | alias for `symbols` |
 | `col.link(name, *, label=, new_tab=, title=)` / `col.url` | hyperlink |
 | `col.image(name, *, height=, width=, alt=)` / `col.logo(name, *, height=)` | image |
@@ -1365,7 +1432,7 @@ other than `auto`, `merge`, `group` and `subcolumns` return a `Column`;
 | `.bar(source, …)` / `.point(source, …)` / `.range(low, high, …)` | append a mark |
 | `.legend(labels=True, *, outline=False, column_names=None)` | wrapping key; optional box and automatic/explicit column headings |
 | `.label(value=True \| "@field", *, source=, text=, position=, format=)` | annotate the last mark |
-| `.scale(domain=(lo, hi), include_zero=, unit=, transform="linear"\|"log", axis=, axis_position=, gridlines=)` / `.reference_line(value, label=, color=)` / `.reference_band(low, high, …)` | shared axis / rules |
+| `.scale(domain=(lo, hi), include_zero=, unit=, transform="linear"\|"log", axis=, axis_position=, gridlines=, gradient=)` / `.reference_line(value, label=, color=)` / `.reference_band(low, high, …)` | shared axis / rules |
 | `.relative(value=True)` / `.fmt_column(column)` | relative time / format source |
 | `.to_config()` | the plain dict |
 

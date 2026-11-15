@@ -75,7 +75,7 @@ def test_symbol_gallery_distinguishes_circles_from_centered_squares():
         if isinstance(output, EvidentialTable) and output.options["title"] == "Symbols and rating"
     )
     circles, squares = table.columns[1:3]
-    assert circles["symbol_options"]["symbol"] == "●"
+    assert circles["symbol_options"]["shape"] == "circle"
     assert circles["title"] == "Circles"
     assert squares["symbol_options"]["shape"] == "square"
     assert squares["align"] == "center"

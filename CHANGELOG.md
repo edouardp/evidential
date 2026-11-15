@@ -8,6 +8,22 @@ project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- Shared `.gradient(scale=, stops=, min=, max=, midpoint=)` across numeric bars,
+  points, ranges, box plots, density bands, cell backgrounds and sparklines.
+  `.scale(gradient=True)` adds a thin color strip outside the row area, using
+  the same numeric lookup. Notebook 63 compares the visualizations and edge cases.
+
+- Shared marker shapes for scalar/array points, legends, repeated symbols,
+  ratings and sparkline markers: circle, square, rounded square, triangle,
+  diamond, cross, star and vertical bar. Set clockwise `angle=` separately, with the
+  same outline options throughout. Geometric glyphs share these paths and
+  compatible overlaps retain their shape. Notebook 62 and the README show them.
+
+- Bundle the development skill, references and report/explorer templates with
+  the Python package. `evidential.skills.path()` and
+  `python -m evidential.skills path` locate the version-matched instructions.
+  The repository's installable skill now discovers the project's bundled copy.
+
 - Rounded range ends with `cap="round"` and numeric gradients with
   `.gradient(scale=, stops=, min=, max=, midpoint=)`. Colors follow a shared
   x-value scale, preserve transparency and clamp at their bounds; clipped
@@ -22,6 +38,14 @@ project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   `HOST=` forces the marimo default.
 
 ### Fixed
+
+- Centered bars keep their zero line visible above opaque fills, without
+  obscuring point overlays or labels or intercepting hover. Axis endpoint labels
+  align inward to avoid collisions between neighboring columns. Reversed box
+  plots and density bands preserve their geometry and numeric color direction.
+
+- Repeated shape sizes are applied once in em, rather than squared by applying
+  the size to both the container and each symbol.
 
 - Column-header info descriptions use the same tooltip as table cells and graphics,
   with whole-header hover, keyboard/touch inspection, multiline text and configurable

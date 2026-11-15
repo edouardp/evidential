@@ -1570,7 +1570,7 @@ test("bar pad sets --et-bar-pad for the bar and the line ends", () => {
   renderer.destroy();
 });
 
-test("symbols with shape draw a CSS box, not a glyph", () => {
+test("symbols with shape draw shared geometry at the requested em size", () => {
   const columns = [
     {
       name: "n",
@@ -1584,13 +1584,15 @@ test("symbols with shape draw a CSS box, not a glyph", () => {
   const boxes = [...el.querySelectorAll("tbody .et-symbol-box")];
   assert.equal(boxes.length, 3);
   assert.ok(boxes[0].classList.contains("et-symbol-box-square"));
-  assert.equal(boxes[0].style.width, "0.8em");
-  assert.equal(boxes[0].style.backgroundColor, "rgb(240, 165, 0)");
+  assert.equal(boxes[0].style.width, "1em");
+  assert.equal(el.querySelector(".et-symbols").style.fontSize, "0.8em");
+  assert.equal(boxes[0].style.color, "rgb(240, 165, 0)");
+  assert.ok(boxes[0].querySelector("svg path"));
   assert.equal(el.querySelectorAll("tbody .et-symbol").length, 0);
   renderer.destroy();
 });
 
-test("symbols repeat a glyph with empty slots and the right alignment", () => {
+test("geometric rating glyphs use filled and hollow shared stars", () => {
   const columns = [
     {
       name: "n",
@@ -1603,12 +1605,13 @@ test("symbols repeat a glyph with empty slots and the right alignment", () => {
   const rows = [{ n: 3 }, { n: 0 }, { n: 7 }];
   const renderer = new EvidentialTableRenderer(makeModel(rows, columns, {}, el), el);
   const cells = [...el.querySelectorAll("tbody .et-symbols")];
-  assert.equal(cells[0].textContent, "★★★☆☆");
-  assert.equal(cells[0].querySelectorAll(".et-symbol").length, 5);
-  assert.equal(cells[1].textContent, "☆☆☆☆☆");
+  assert.equal(cells[0].getAttribute("aria-label"), "3 of 5 symbols");
+  assert.equal(cells[0].querySelectorAll("[data-hollow=true]").length, 2);
+  assert.equal(cells[0].querySelectorAll("[data-shape=star]").length, 5);
+  assert.equal(cells[1].querySelectorAll("[data-hollow=true]").length, 5);
   // `max` is a floor on the slot count: a larger value simply draws more.
-  assert.equal(cells[2].textContent, "★★★★★★★");
-  assert.equal(cells[0].querySelector(".et-symbol").style.color, "rgb(245, 158, 11)");
+  assert.equal(cells[2].querySelectorAll("[data-shape=star]").length, 7);
+  assert.equal(cells[0].querySelector(".et-symbol-box").style.color, "rgb(245, 158, 11)");
   renderer.destroy();
 });
 
@@ -1618,8 +1621,8 @@ test("symbols without max repeat the value exactly", () => {
   ];
   const renderer = new EvidentialTableRenderer(makeModel([{ n: 3 }], columns, {}, el), el);
   const cell = el.querySelector("tbody .et-symbols");
-  assert.equal(cell.querySelectorAll(".et-symbol").length, 3);
-  assert.equal(cell.textContent, "■■■");
+  assert.equal(cell.querySelectorAll("[data-shape=square]").length, 3);
+  assert.equal(cell.getAttribute("aria-label"), "3 symbols");
   renderer.destroy();
 });
 
@@ -2511,6 +2514,21 @@ test("cell guides are clipped independently of marks, labels and interval arrows
   assert.equal(cell.querySelectorAll(".et-marks .et-mark-gridline, .et-marks .et-mark-reference").length, 0);
   assert.equal(cell.querySelectorAll(".et-marks .et-mark-arrow").length, 2);
   assert.equal(cell.querySelector(".et-cell-guides").getAttribute("aria-hidden"), "true");
+  renderer.destroy();
+});
+
+test("centred bar origins have a separate foreground guide layer", () => {
+  const model = makeModel([{x: 8}], [{name: "x", encodings: [{kind: "bar", source: "x", center: true}],
+    scale: {domain: [-10, 10], gridlines: true}, references: [{value: 4}]}], {}, el);
+  const renderer = new EvidentialTableRenderer(model, el);
+  const foreground = el.querySelector(".et-cell-guides-foreground");
+  assert.ok(el.querySelector(".et-marks-centered"));
+  assert.equal(foreground.querySelectorAll(".et-mark-reference").length, 1);
+  assert.ok(foreground.querySelector(".et-mark-centerline"));
+  assert.equal(foreground.querySelector(".et-mark-centerline").style.left, "50%");
+  const background = el.querySelector(".et-cell-guides:not(.et-cell-guides-foreground)");
+  assert.ok(background.querySelector(".et-mark-gridline"));
+  assert.equal(background.querySelectorAll(".et-mark-reference").length, 1);
   renderer.destroy();
 });
 

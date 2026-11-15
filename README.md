@@ -46,18 +46,37 @@ Extras are `evidential[duckdb]`, `evidential[marimo]` and `evidential[studio]`
 
 ## Agent skill
 
-The bundled [Evidential skill](skills/evidential/SKILL.md) helps coding agents
-build tables and marimo explorers using the public API. It includes focused
-references and runnable report/explorer templates, with no local dataset
-requirements. Install it from a checkout using the skills CLI:
+The Python package includes a [development skill](src/evidential/skills/developing-with-evidential/SKILL.md)
+with focused references and runnable report/explorer templates. Its instructions
+match the installed library release. Locate it in the project's environment:
 
 ```bash
-npx skills add . --skill evidential
+uv run python -m evidential.skills path
 ```
 
-For a published revision on GitHub, the same skill can be installed with
-`npx skills add edouardp/evidential --skill evidential`. The skill checks the
-installed library's capabilities because this checkout can be ahead of PyPI.
+Or from Python:
+
+```python
+from evidential import skills
+
+skill_directory = skills.path()  # pathlib.Path containing SKILL.md and resources
+```
+
+Read `SKILL.md` in that directory, then its references as needed. The command
+prints the path without changing agent configuration. No repository clone or
+local datasets are required to use the bundled templates.
+
+Install the lightweight [discovery skill](skills/evidential/SKILL.md) into your
+agent using the skills CLI:
+
+```bash
+npx skills add edouardp/evidential --skill evidential
+```
+
+From a checkout, use `npx skills add . --skill evidential`. This entry point
+finds the development skill in the project's Python environment, so upgrading
+Evidential also updates its instructions. Older releases without bundled skills
+use matching release documentation; the discovery skill does not upgrade them.
 
 ## 1. Your first table
 
@@ -964,22 +983,22 @@ columns=[
 #### Sparklines
 
 Show a series as a line, area, bars, points or increase/steady/decrease marks.
-Use `.color(scale="viridis", min=0, max=12)` to color observations by their
-y value with the same gradient API as cell backgrounds. Bars and dots use
-their own value; lines and areas use a continuous vertical gradient.
+Use `.gradient(scale="viridis", min=0, max=12)` to color observations by their
+y value with the same gradient API as cell backgrounds. Dots sample their
+value; bars, lines and areas use a continuous vertical gradient.
 For a solid outline and a baseline fade, use `fill_opacity=(0, 0.6)`.
 
 ```python
 columns=[
     col.text("series"),
     col.sparkline("line", type="line", width=110, height=30)
-        .color(scale="viridis", min=0, max=12),
+        .gradient(scale="viridis", min=0, max=12),
     col.sparkline("area", type="area", color="#00a878", fill_opacity=(0, 0.6),
                   fit_to_data=True, width=110, height=30),
     col.sparkline("bar", type="bar", width=110, height=30)
-        .color(scale="viridis", min=0, max=12),
+        .gradient(scale="viridis", min=0, max=12),
     col.sparkline("points", type="points", width=110, height=30, markers=True)
-        .color(scale="viridis", min=0, max=12),
+        .gradient(scale="viridis", min=0, max=12),
     col.sparkline("change", type="change", width=110, height=30),
 ]
 ```
@@ -998,7 +1017,7 @@ columns=[
 60% opacity at the edge, keeping a solid outline. A fixed value such as
 `fill_opacity=0.5` sets one opacity throughout the fill.
 
-Use `.color(stops=...)` for a vertical color gradient with alpha: the middle
+Use `.gradient(stops=...)` for a vertical color gradient with alpha: the middle
 column fades from transparent at zero to green at 40, then turns red above
 40. Closely spaced stops at 40 and 40.001 make that transition sharp. Only
 the part of each peak above the threshold is red.
@@ -1015,7 +1034,7 @@ columns=[
     col.sparkline("readings", title="Baseline fade", type="area", color="#00a878",
                   fill_opacity=(0, 0.6), width=180, height=26),
     col.sparkline("readings", title="Green to 40, then red", type="area", width=180, height=26)
-        .color(stops=[
+        .gradient(stops=[
             {"value": 0, "color": "#20af4b00"},
             {"value": 40, "color": "#20af4b"},
             {"value": 40.001, "color": "#ed1c24"},
@@ -1023,7 +1042,7 @@ columns=[
         ]),
     col.sparkline("anomalies", title="Color clamped at ±1", type="area", reference=0,
                   y_fmt="num1", width=180, height=26)
-        .color(scale=["#e66b13", "#ffffff00", "#39799b"], min=-1, max=1, midpoint=0),
+        .gradient(scale=["#e66b13", "#ffffff00", "#39799b"], min=-1, max=1, midpoint=0),
 ]
 ```
 
@@ -1068,14 +1087,17 @@ columns=[
 
 #### Symbols and rating
 
-Repeat glyphs or shapes for counts, or show a five-point rating.
+Repeat geometric shapes for counts, or show a five-point rating. Circles,
+squares and stars use the same geometry as point marks. Familiar glyphs
+such as `■`, `★` and `☆` resolve to those shapes too; custom text and emoji
+remain supported.
 
 ```python
 columns=[
     col.text("country"),
-    col.symbols("gold", symbol="●", color="#d97706", title="Circles"),
+    col.symbols("gold", shape="circle", color="#d97706", title="Circles"),
     col.symbols("gold", shape="square", color="#d97706", title="Squares").align("center"),
-    col.rating("score", title="Rating"),
+    col.rating("score", shape="star", title="Rating"),
 ]
 ```
 
@@ -1153,6 +1175,70 @@ columns=[
 ![Rounded ranges with a shared gradient](docs/img/graphics/range-gradient.png)
 
 [Notebook source: `graphic_range_gradient`](notebooks/50_graphics_gallery.py)
+
+<!-- /notebook -->
+
+<!-- notebook: notebooks/50_graphics_gallery.py#graphic_marker_shapes -->
+
+#### Point shapes and rotation
+
+Use shape as well as colour to distinguish observations. Circle is the
+default; square, triangle, diamond, cross, star, rounded square and vertical bar
+share the same outline options. Set rotation separately:
+`shape="cross", angle=45` makes an X. Legend keys match the marks.
+[Notebook 62](notebooks/62_marker_shapes.py) also demonstrates array points,
+ratings, sparkline markers and segmented overlapping shapes.
+
+```python
+columns=[
+    col.text("period"),
+    col.point("circle", size=10, color="#2563eb", outline="#172554")
+       .point("square", shape="square", size=10, color="#2563eb", outline="#172554")
+       .point("triangle", shape="triangle", size=10, color="#2563eb", outline="#172554")
+       .point("diamond", shape="diamond", size=10, color="#2563eb", outline="#172554")
+       .point("cross", shape="cross", size=10, color="#2563eb", outline="#172554")
+       .point("star", shape="star", size=10, color="#2563eb", outline="#172554")
+       .point("x", shape="cross", angle=45, size=10, color="#2563eb", outline="#172554")
+       .title("Observations").scale(domain=(0, 100))
+       .legend(column_names=False),
+]
+```
+
+![Point shapes and rotation](docs/img/graphics/marker-shapes.png)
+
+[Notebook source: `graphic_marker_shapes`](notebooks/50_graphics_gallery.py)
+
+<!-- /notebook -->
+
+<!-- notebook: notebooks/50_graphics_gallery.py#graphic_numeric_gradients -->
+
+#### Shared numeric gradients
+
+Bars and ranges paint along the numeric axis; points sample their value.
+The same `.gradient(...)` options work for cell backgrounds and sparklines.
+Add `.scale(gradient=True)` for a thin colour key outside the rows, aligned
+with the ticks. Colours clamp beyond their bounds; alpha stops let stripes
+show through. [Notebook 63](notebooks/63_visual_gradients.py) also compares
+box plots, density bands, reversed scales and logarithmic coordinates.
+
+```python
+columns=[
+    col.text("case"),
+    col.bar("change", center=True, label=label.auto_position("outside end"))
+       .gradient(scale=["#b91c1c", "#e5e7eb", "#1d4ed8"], min=-10, max=10, midpoint=0)
+       .scale(domain=(-15, 15), gradient=True, axis_position="bottom"),
+    col.point("change", shape="star", size=11, outline="#334155")
+       .gradient(scale=["#b91c1c", "#e5e7eb", "#1d4ed8"], min=-10, max=10, midpoint=0)
+       .title("Point").scale(domain=(-15, 15), gradient=True, axis_position="bottom"),
+    col.range("low", "high", cap="round", size=7)
+       .gradient(scale=["#b91c1c", "#e5e7eb", "#1d4ed8"], min=-10, max=10, midpoint=0)
+       .title("Range").scale(domain=(-15, 15), gradient=True, axis_position="bottom"),
+]
+```
+
+![Shared numeric gradients](docs/img/graphics/numeric-gradients.png)
+
+[Notebook source: `graphic_numeric_gradients`](notebooks/50_graphics_gallery.py)
 
 <!-- /notebook -->
 

@@ -1,5 +1,6 @@
 """Y-value gradients render through the public fluent API and actual notebook demo."""
 
+import re
 import runpy
 from base64 import b64encode
 from pathlib import Path
@@ -24,7 +25,8 @@ def test_notebook_gradient_demo_renders_all_styles_and_matching_tooltip_colors(p
     points = cells.nth(2).locator("circle")
     expect(bars).to_have_count(7)
     expect(points).to_have_count(7)
-    for marks in (bars, points):
+    expect(bars.first).to_have_attribute("fill", re.compile(r"^url\(#et-sparkline-gradient-"))
+    for marks in (points,):
         expect(marks.first).to_have_attribute("fill", "#b2182b")
         expect(marks.nth(3)).to_have_attribute("fill", "#b8bcc2")
         expect(marks.last).to_have_attribute("fill", "#2166ac")
@@ -65,15 +67,22 @@ def test_auto_gradient_ranges_cover_all_pages_and_recompute_on_search(page, live
         ],
     )
     marks = page.locator("tbody rect")
-    expect(marks.first).to_have_attribute("fill", "#ff0000")
-    initial = marks.last.get_attribute("fill")
-    assert initial not in ("#ff0000", "#0000ff")
+    expect(marks.first).to_have_attribute("fill", re.compile(r"^url\(#"))
+    observations = page.locator("tbody [data-sparkline-observation]")
+
+    def inspect_last(value):
+        observations.last.hover(force=True)
+        expect(page.locator(".et-tooltip-content > .et-tooltip-value")).to_have_text(str(value))
+        return page.locator(".et-tooltip-swatch").evaluate("el => getComputedStyle(el).backgroundColor")
+
+    initial = inspect_last(5)
+    assert initial not in ("rgb(255, 0, 0)", "rgb(0, 0, 255)")
     page.get_by_role("button", name="Next page", exact=True).click()
-    expect(marks.last).to_have_attribute("fill", "#0000ff")
+    assert inspect_last(20) == "rgb(0, 0, 255)"
     page.get_by_role("button", name="Previous page", exact=True).click()
-    expect(marks.last).to_have_attribute("fill", initial)
+    assert inspect_last(5) == initial
     page.get_by_role("searchbox").fill("Keep")
-    expect(marks.last).to_have_attribute("fill", "#0000ff")
+    assert inspect_last(5) == "rgb(0, 0, 255)"
 
 
 def _sample_svg(page, svg, samples):

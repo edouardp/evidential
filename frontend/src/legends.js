@@ -1,16 +1,17 @@
 // Compact, wrapping color keys in the title area's free right-hand space.
 import { h } from "./dom.js";
+import {decorateMarker} from "./marker-shapes.js";
 import { columnHeading, headerLayout } from "./headers.js";
 import { markSeries, markColor } from "./mark-series.js";
 
 function legendItem(series, negative = false) {
   const name = negative ? `${series.label} (negative)` : series.label;
   const kind = series.enc.kind;
-  return h("li", {class: "et-legend-item"}, [
-    h("span", {class: `et-legend-swatch et-legend-swatch-${kind}`, "aria-hidden": "true",
-      style: {backgroundColor: negative ? markColor(series.enc, null, series.color, true) : series.color}}),
-    h("span", {class: "et-legend-label"}, name),
-  ]);
+  const color = negative ? markColor(series.enc, null, series.color, true) : series.color;
+  const swatch = h("span", {class: `et-legend-swatch et-legend-swatch-${kind}`, "aria-hidden": "true",
+    style: {backgroundColor: color}});
+  if (kind === "point" || kind === "points") decorateMarker(swatch, {...series.enc, color});
+  return h("li", {class: "et-legend-item"}, [swatch, h("span", {class: "et-legend-label"}, name)]);
 }
 
 export function renderLegends(columns, allColumns, options) {

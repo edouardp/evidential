@@ -100,7 +100,7 @@ dated, immutable record of the decisions behind them.
 | [079](079-notebook-generated-readme.md) | Notebook-Generated README Examples | Accepted |
 | [080](080-house-release-commands.md) | House Release Commands | Accepted |
 | [081](081-notebook-layout-excerpts.md) | Notebook Layout Excerpts | Accepted |
-| [082](082-portable-evidential-agent-skill.md) | Portable Evidential Agent Skill | Accepted |
+| [082](082-portable-evidential-agent-skill.md) | Portable Evidential Agent Skill | Superseded by ADR-096 |
 | [083](083-mark-legends.md) | Mark Legends | Accepted |
 | [084](084-named-point-series.md) | Named Point Series | Accepted |
 | [085](085-data-tooltips.md) | Data Tooltips | Accepted |
@@ -114,6 +114,9 @@ dated, immutable record of the decisions behind them.
 | [093](093-resumable-release-finalization.md) | Resumable Release Finalization | Accepted |
 | [094](094-shared-header-info-tooltips.md) | Shared Header Info Tooltips | Accepted |
 | [095](095-rounded-gradient-ranges.md) | Rounded Ranges with Numeric Gradients | Accepted |
+| [096](096-package-bundled-agent-skills.md) | Package-Bundled Agent Skills | Accepted |
+| [097](097-shared-marker-geometry.md) | Shared Marker Shapes and Rotation | Accepted |
+| [098](098-shared-numeric-gradients.md) | Shared Numeric Gradients and Scale Strips | Proposed |
 
 ## Creating New ADRs
 

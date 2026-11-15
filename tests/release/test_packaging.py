@@ -35,6 +35,7 @@ def test_build_backend_range_includes_the_running_uv_version() -> None:
 def test_inspect_flags_missing_runtime_files() -> None:
     problems = gate.inspect({})
     assert any("missing evidential/table.py" in problem for problem in problems)
+    assert "missing evidential/_marker.py" in problems
 
 
 def test_inspect_flags_development_files() -> None:

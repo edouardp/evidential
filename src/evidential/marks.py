@@ -29,11 +29,12 @@ from collections.abc import Callable, Mapping, Sequence
 from typing import Any, Literal
 
 from ._aliases import alias, format_code
-from ._color import normalize_value_colors
+from ._color import normalize_scale_gradient, normalize_value_colors
 from ._column import Column, _clean, _field
 from ._distribution import band_spec, validate_curve
 from ._label import LABEL_POSITIONS, _label_spec
-from .configuration import COLOR_SCALES, EncodingSpec, LegendLabels, Palette, validate_options
+from ._marker import normalize_marker_options
+from .configuration import COLOR_SCALES, EncodingSpec, LegendLabels, MarkerShape, Palette, validate_options
 
 __all__ = [
     "MarkColumn",
@@ -90,6 +91,8 @@ _ENCODING_KEYS = (
     "distribution",
     "size",
     "outline",
+    "shape",
+    "angle",
     "side",
     "valign",
     "cap",
@@ -114,9 +117,9 @@ _ANONYMOUS = itertools.count()
 
 
 _ALLOWED_ENCODINGS = {
-    "bar": {*_BAR_STYLE_KEYS, "color_negative_column", "side", "size", "valign"},
-    "point": {"outline", "size", "valign"},
-    "points": {"outline", "size", "valign", "sources", "names", "palette", "connect"},
+    "bar": {"gradient", *_BAR_STYLE_KEYS, "color_negative_column", "side", "size", "valign"},
+    "point": {"gradient", "outline", "shape", "angle", "size", "valign"},
+    "points": {"gradient", "outline", "shape", "angle", "size", "valign", "sources", "names", "palette", "connect"},
     "range": {
         "high",
         "cap",
@@ -131,8 +134,8 @@ _ALLOWED_ENCODINGS = {
     },
     "strip": {"colors", "strip_labels", "segmented"},
     "stacked_bar": {"size", "diverge_at", "neutral"},
-    "boxplot": {"parts", "outliers", "whisker"},
-    "distribution": {"distribution"},
+    "boxplot": {"gradient", "parts", "outliers", "whisker"},
+    "distribution": {"gradient", "distribution"},
 }
 
 
@@ -175,23 +178,17 @@ def _validate_mark_style(kind: str, encoding: Mapping[str, Any]) -> None:
             raise ValueError(f"{kind} size must be finite and positive")
         if kind in ("bar", "stacked_bar") and size > 1:
             raise ValueError(f"{kind} height (size) is a fraction in (0, 1]")
-    outline = encoding.get("outline")
-    if outline is not None:
-        if kind not in ("point", "points"):
-            raise ValueError("outline is only supported for point and points marks")
-        if not isinstance(outline, bool) and not (isinstance(outline, str) and outline.strip()):
-            raise ValueError("point outline must be True, False, or a color string")
     if encoding.get("side") is not None and encoding["side"] not in ("left", "right"):
         raise ValueError(f"side must be 'left' or 'right', got {encoding['side']!r}")
     if encoding.get("overflow") not in (None, "clip", "arrow"):
         raise ValueError("range overflow is 'clip' or 'arrow'")
 
 
-def _normalize_range_gradient(encoding: dict[str, Any]) -> None:
+def _normalize_mark_gradient(encoding: dict[str, Any]) -> None:
     if "gradient" in encoding:
-        encoding["gradient"] = normalize_value_colors(encoding["gradient"], "range gradient")
+        encoding["gradient"] = normalize_value_colors(encoding["gradient"], f"{encoding['kind']} gradient")
         if any(key in encoding for key in ("color", "color_column", "color_negative", "color_negative_column")):
-            raise ValueError("range gradient and solid color bindings are mutually exclusive")
+            raise ValueError("gradient and solid color bindings are mutually exclusive")
 
 
 def _canonical_encoding(
@@ -241,7 +238,8 @@ def _canonical_encoding(
         raise TypeError("range expects two endpoints: col.range(low, high)")
     if kind == "points":
         _validate_point_sources(encoding)
-    _normalize_range_gradient(encoding)
+    encoding = normalize_marker_options(encoding)
+    _normalize_mark_gradient(encoding)
     _validate_mark_style(kind, encoding)
     label_spec = _label_spec(label, position=label_position, **(label_options or {}))
     if label_spec:
@@ -470,13 +468,29 @@ class MarkColumn(Column):
             return column._with(encodings=encodings)
         return column._add("bar", source, **options)
 
-    def point(self, source: Any, *, outline: bool | str | None = None, **options: Any) -> MarkColumn:
+    def point(
+        self,
+        source: Any,
+        *,
+        shape: MarkerShape | None = None,
+        angle: float | None = None,
+        outline: bool | str | None = None,
+        **options: Any,
+    ) -> MarkColumn:
         """Add a point; ``outline=False`` removes its ring, or use a color string."""
-        return self._add("point", source, outline=outline, **options)
+        return self._add("point", source, shape=shape, angle=angle, outline=outline, **options)
 
-    def points(self, source: Any, *, outline: bool | str | None = None, **options: Any) -> MarkColumn:
+    def points(
+        self,
+        source: Any,
+        *,
+        shape: MarkerShape | None = None,
+        angle: float | None = None,
+        outline: bool | str | None = None,
+        **options: Any,
+    ) -> MarkColumn:
         """Add array points or a named multi-field series; see :func:`points`."""
-        return self._append_column(points(source, outline=outline, **options))
+        return self._append_column(points(source, shape=shape, angle=angle, outline=outline, **options))
 
     def range(
         self,
@@ -505,15 +519,15 @@ class MarkColumn(Column):
         max: float | None = None,
         midpoint: float | None = None,
     ) -> MarkColumn:
-        """Color the last range by x value, using the shared numeric color API.
+        """Color the last mark by its numeric value, using a shared gradient.
 
         Bounds default to the column's coordinate domain, not each interval.
         Explicit stops clamp outside their endpoints. Solid colors cannot be
-        combined with a gradient on the same range; sibling marks keep theirs.
+        combined with a gradient on the same mark; sibling marks keep theirs.
         """
         encodings = self._encodings()
-        if not encodings or encodings[-1]["kind"] != "range":
-            raise ValueError("gradient() refines the last range; add a range first")
+        if not encodings or encodings[-1]["kind"] not in ("bar", "point", "points", "range", "boxplot", "distribution"):
+            raise ValueError("gradient() needs a numeric mark: bar, point, points, range, boxplot or distribution")
         encoding = dict(encodings[-1])
         encoding["gradient"] = {
             **(encoding.get("gradient") or {}),
@@ -615,6 +629,7 @@ class MarkColumn(Column):
         axis: bool | None = None,
         axis_position: str | None = None,
         gridlines: bool | None = None,
+        gradient: bool | None = None,
     ) -> MarkColumn:
         """The quantitative axis shared by the column's encodings."""
         spec: dict[str, Any] = dict(self._spec.get("scale") or {})
@@ -652,7 +667,9 @@ class MarkColumn(Column):
             spec["axis_position"] = axis_position
         if gridlines is not None:
             spec["gridlines"] = gridlines
-        return self._with(scale=spec or None)
+        if gradient is not None:
+            spec["gradient"] = gradient
+        return self._with(scale=normalize_scale_gradient(spec) or None)
 
     def reference_line(self, value: float, *, label: str | None = None, color: str | None = None) -> MarkColumn:
         """Draw a column-wide reference rule at ``value`` (on the shared scale)."""
@@ -848,6 +865,8 @@ def _validate_encoding_data(
     """Validate coordinate compatibility and magnitude constraints before JSON."""
     encodings = column.get("encodings") or []
     if not encodings:
+        if (column.get("scale") or {}).get("gradient"):
+            raise ValueError("scale gradient=True needs a numeric mark gradient")
         return
     kinds = {encoding["kind"] for encoding in encodings}
     if column.get("viz") == "sparkline":
@@ -858,6 +877,8 @@ def _validate_encoding_data(
     if len(directions) > 1:
         raise ValueError("bars sharing a scale must have the same direction")
     scale = column.get("scale") or {}
+    if scale.get("gradient") and not any(encoding.get("gradient") is not None for encoding in encodings):
+        raise ValueError("scale gradient=True needs a numeric mark gradient")
     for encoding in encodings:
         if encoding["kind"] == "distribution":
             config = encoding.get("distribution")
@@ -914,14 +935,17 @@ def point(
     fmt: str | None = None,
     align: str | None = None,
     outline: bool | str | None = None,
+    shape: MarkerShape | None = None,
+    angle: float | None = None,
     **options: Any,
 ) -> MarkColumn:
     """A point marker; ``outline=False`` hides its ring, or use a color string.
 
     Omitted/``True`` retains the default outline, independently of the fill.
+    ``shape`` defaults to circle; ``angle`` rotates clockwise in degrees.
     """
     column = _factory_column(source, options, title=title, fmt=format_code(format, fmt), align=align)
-    return column._add("point", source, outline=outline, **options)
+    return column._add("point", source, outline=outline, shape=shape, angle=angle, **options)
 
 
 def points(
@@ -934,6 +958,8 @@ def points(
     size: float | None = None,
     color: str | None = None,
     outline: bool | str | None = None,
+    shape: MarkerShape | None = None,
+    angle: float | None = None,
     palette: Palette | None = None,
     connect: bool = False,
     **options: Any,
@@ -942,7 +968,8 @@ def points(
 
     ``source`` holds a list of numbers; each is placed on the column's shared
     scale, so the row's distribution is read directly against a bar or target.
-    ``outline=False`` removes rings; a color string sets their color.
+    ``shape`` and clockwise ``angle`` match scalar points.
+    ``outline=False`` removes outlines; a color string sets their color.
 
     A list of field names or field-to-display-name mapping creates a series,
     automatically colored from a categorical palette. ``palette="viridis"``
@@ -968,12 +995,16 @@ def points(
             size=9 if size is None else size,
             color=color,
             outline=False if outline is None else outline,
+            shape=shape,
+            angle=angle,
             **options,
         )
     if palette is not None or connect:
         raise ValueError("points palette and connect need a field list or mapping")
     column = _factory_column(source, options, title=title, fmt=format_code(format, fmt), align=align)
-    return column._add("points", source, size=size, color=color, outline=outline, **options)._with(type="array")
+    return column._add(
+        "points", source, size=size, color=color, outline=outline, shape=shape, angle=angle, **options
+    )._with(type="array")
 
 
 def range(  # noqa: A001 - the public constructor name

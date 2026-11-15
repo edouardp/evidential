@@ -94,6 +94,8 @@ GALLERY: list[tuple[Path, str]] = [
     (GALLERY_OUT / "boolean-icons.png", "graphic_boolean_icons"),
     (GALLERY_OUT / "reference.png", "graphic_reference"),
     (GALLERY_OUT / "range-gradient.png", "graphic_range_gradient"),
+    (GALLERY_OUT / "marker-shapes.png", "graphic_marker_shapes"),
+    (GALLERY_OUT / "numeric-gradients.png", "graphic_numeric_gradients"),
 ]
 
 #: Named layout examples, in README order. Prose/call excerpts live in notebook 51.

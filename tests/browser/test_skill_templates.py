@@ -1,18 +1,23 @@
 """The bundled skill templates render and interact through real marimo kernels."""
 
-from pathlib import Path
+import shutil
 
 import pytest
 from playwright.sync_api import expect
 
+from evidential import skills
 from scripts.api_screenshots import _server
 
 pytestmark = pytest.mark.browser
-ASSETS = Path(__file__).resolve().parents[2] / "skills/evidential/assets"
 
 
-def test_skill_report_template_renders_detail_annotations_and_footnotes(page):
-    with _server(ASSETS / "report.py") as url:
+@pytest.fixture
+def assets(tmp_path):
+    return shutil.copytree(skills.path() / "assets", tmp_path / "templates")
+
+
+def test_skill_report_template_renders_detail_annotations_and_footnotes(page, assets):
+    with _server(assets / "report.py") as url:
         page.goto(url, wait_until="networkidle")
         report = page.locator('[data-cell-name="report"] .et-root')
         expect(report.locator("tbody tr.et-row-section")).to_have_count(2, timeout=30000)
@@ -22,8 +27,8 @@ def test_skill_report_template_renders_detail_annotations_and_footnotes(page):
         expect(report.locator(".et-footnotes-list")).to_contain_text("Launch month.")
 
 
-def test_skill_explorer_template_keeps_widgets_and_clears_filtered_selection(page):
-    with _server(ASSETS / "explorer.py") as url:
+def test_skill_explorer_template_keeps_widgets_and_clears_filtered_selection(page, assets):
+    with _server(assets / "explorer.py") as url:
         page.goto(url, wait_until="networkidle")
         summary = page.locator('[data-cell-name="summary"] .et-root')
         detail = page.locator('[data-cell-name="detail"] .et-root')

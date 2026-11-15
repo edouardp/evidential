@@ -92,8 +92,8 @@ export function hitTargets(cell, x, y, direct) {
   if (sparkline) {
     const bounds = sparkline.getBoundingClientRect();
     if (x < bounds.left || x > bounds.right || y < bounds.top || y > bounds.bottom) return [];
-    const circles = nodes.filter(node => node.tagName.toLowerCase() === "circle");
-    const observations = circles.length ? circles : nodes;
+    const markers = nodes.filter(node => node.dataset.sparklineObservation || node.tagName.toLowerCase() === "circle");
+    const observations = markers.length ? markers : nodes;
     return observations.length ? [observations.reduce((nearest, node) => {
       const center = item => { const rect = item.getBoundingClientRect(); return rect.left + rect.width / 2; };
       return Math.abs(center(node) - x) < Math.abs(center(nearest) - x) ? node : nearest;

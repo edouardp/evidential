@@ -175,6 +175,7 @@
 .et-legend-swatch-bar { opacity: 0.55; }
 .et-legend-swatch-point, .et-legend-swatch-points {
   border-radius: 50%;
+  box-shadow: 0 0 0 1px color-mix(in srgb, Canvas 60%, transparent);
 }
 .et-legend-swatch-range { height: 2px; opacity: 0.9; }
 .et-title {
@@ -529,6 +530,7 @@ tbody tr:first-child .et-bar-center .et-bar-axis { top: var(--et-bar-pad, 0); }
 tbody tr:last-child .et-bar-center .et-bar-axis { bottom: var(--et-bar-pad, 0); }
 .et-bar-center .et-bar-axis {
   position: absolute;
+  z-index: 1;
   top: 0;
   bottom: 0;
   left: 50%;
@@ -771,6 +773,11 @@ tbody tr:last-child .et-bar-center .et-bar-axis { bottom: var(--et-bar-pad, 0); 
   pointer-events: none;
 }
 .et-cell-guide-track { position: relative; height: 100%; }
+/* The origin must survive opaque bar fills. Keep ordinary guides behind the
+   marks, with points and value labels still above the origin. */
+.et-cell-guides-foreground { z-index: 1; }
+.et-mark-centerline { z-index: 1; }
+.et-marks-centered :is(.et-mark-point, .et-point-composite, .et-mark-label) { z-index: 2; }
 .et-cell-guides .et-mark-gridline,
 .et-cell-guides .et-mark-reference { top: 0; bottom: 0; }
 .et-root .et-axis-row > .et-td { padding-top: 0; padding-bottom: 0; border: 0; }
@@ -787,7 +794,7 @@ tbody tr:last-child .et-bar-center .et-bar-axis { bottom: var(--et-bar-pad, 0); 
 }
 .et-axis-tick {
   position: absolute;
-  transform: translateX(-50%);
+  width: 0;
   font-size: 0.85em;
   line-height: 1;
   color: #000;
@@ -797,7 +804,7 @@ tbody tr:last-child .et-bar-center .et-bar-axis { bottom: var(--et-bar-pad, 0); 
 .et-axis-tick::after {
   content: "";
   position: absolute;
-  left: 50%;
+  left: 0;
   top: 100%;
   height: 0.25rem;
   border-left: 1px solid #000;
@@ -876,13 +883,11 @@ tbody tr:last-child .et-bar-center .et-bar-axis { bottom: var(--et-bar-pad, 0); 
   display: inline-block;
   width: 0.85em;
   height: 0.85em;
-  background-color: currentColor;
+  background-color: transparent;
   /* A glyph carries its own side bearings, a box none — so a box needs extra
      space (on top of the flex gap) to keep the run from reading as one bar. */
   margin: 0 0.14em;
 }
-.et-symbol-box-rounded { border-radius: 0.2em; }
-.et-symbol-box-circle { border-radius: 50%; }
 
 /* Rotated headers (ALA): vertical 90° CCW, or oblique at a given angle. */
 .et-th-vertical {
@@ -1266,3 +1271,15 @@ tbody tr:last-child .et-bar-center .et-bar-axis { bottom: var(--et-bar-pad, 0); 
 .et-point-combined-member { visibility: hidden; }
 .et-point-composite { border-radius: 50%; }
 .et-point-composite > svg { display: block; width: 100%; height: 100%; overflow: visible; }
+
+/* Font-independent geometric markers shared by points, legends and ratings. */
+.et-marker-svg { display: block; width: 100%; height: 100%; overflow: visible; }
+.et-shaped-marker { background: transparent; }
+
+/* A gradient key shares the axis coordinates and stays outside the detail rows. */
+.et-axis-gradient { position: absolute; left: 0; right: 0; height: 3px; bottom: 0; }
+.et-axis-row-bottom .et-axis-gradient { top: 0; bottom: auto; }
+
+.et-axis-label { display: block; width: max-content; transform: translateX(-50%); }
+.et-axis-label-start { transform: none; }
+.et-axis-label-end { transform: translateX(-100%); }

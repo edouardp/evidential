@@ -31,7 +31,8 @@ export function projectBand(runs, spec, position) {
   const ceiling = spec.density_max ?? peak;
   if (!(ceiling > 0) || !(peak > 0)) return [];
   const projected = [];
-  for (const run of runs) {
+  for (const source of runs) {
+    const run = position(source[0].x) > position(source.at(-1).x) ? [...source].reverse() : source;
     let stops = [];
     const flush = () => {
       if (stops.length > 1) {
@@ -67,7 +68,7 @@ export function projectBand(runs, spec, position) {
 }
 
 /** Paint constant-height rectangles; transparent tails reveal the cell below. */
-export function renderDensityBand(encoding, row, position, color) {
+export function renderDensityBand(encoding, row, position, color, paint = () => ({})) {
   const spec = encoding.distribution;
   const runs = projectBand(readDensity(row[encoding.source], spec), spec, position);
   if (!runs.length) return null;
@@ -76,7 +77,7 @@ export function renderDensityBand(encoding, row, position, color) {
   for (const run of runs) {
     const mask = run.stops.map(stop => `rgba(0, 0, 0, ${stop.alpha}) ${stop.offset}%`).join(", ");
     band.append(h("div", {class: "et-density-band-run", style: {
-      left: `${run.left}%`, width: `${run.width}%`, backgroundColor: color,
+      left: `${run.left}%`, width: `${run.width}%`, backgroundColor: color, ...paint(run),
       maskImage: `linear-gradient(to right, ${mask})`,
     }}));
   }

@@ -1,10 +1,13 @@
 ---
-status: accepted
+status: superseded by ADR-096
 date: 2026-10-26
 deciders: edouard
 ---
 
 # ADR-082: Portable Evidential Agent Skill
+
+Superseded by [ADR-096](096-package-bundled-agent-skills.md), which bundles the
+full development skill with the runtime and keeps a portable discovery entry.
 
 ## Context and Problem Statement
 

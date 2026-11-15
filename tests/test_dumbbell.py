@@ -102,9 +102,9 @@ def test_range_gradients_validate_mapping_and_update_atomically(options):
     assert table.columns == original
 
 
-def test_gradient_refines_only_ranges_and_rejects_conflicting_colors():
-    with pytest.raises(ValueError, match="last range"):
-        col.point("x").gradient(scale="viridis")
+def test_gradient_refines_numeric_marks_and_rejects_conflicting_colors():
+    with pytest.raises(ValueError, match="numeric mark"):
+        col.strip("x", colors={"a": "red"}).gradient(scale="viridis")
     for options in ({"color": "red"}, {"color": "@ink"}, {"color_negative": "red"}):
         with pytest.raises(ValueError, match="mutually exclusive"):
             col.range("low", "high", **options).gradient(scale="viridis")

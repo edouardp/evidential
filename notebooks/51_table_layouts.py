@@ -10,7 +10,10 @@ Run ``make readme`` to extract the named cells and capture their widget output.
 import marimo
 
 __generated_with = "0.25.1"
-app = marimo.App(width="full")
+app = marimo.App(
+    width="full",
+    layout_file="layouts/51_table_layouts.slides.json",
+)
 
 
 @app.cell
@@ -73,7 +76,7 @@ def layout_simple_doc(mo):
 
 
 @app.cell
-def layout_simple(EvidentialTable, con, layout_frame, layout_columns):
+def layout_simple(EvidentialTable, con, layout_columns, layout_frame):
     EvidentialTable(con.sql("SELECT product, units, sales FROM orders"), columns=layout_columns, settings=layout_frame)
     return
 
@@ -90,7 +93,7 @@ def layout_titles_doc(mo):
 
 
 @app.cell
-def layout_titles(EvidentialTable, con, layout_frame, layout_columns):
+def layout_titles(EvidentialTable, con, layout_columns, layout_frame):
     EvidentialTable(
         con.sql("SELECT product, units, sales FROM orders"),
         columns=layout_columns,
@@ -114,7 +117,7 @@ def layout_footnotes_doc(mo):
 
 
 @app.cell
-def layout_footnotes(EvidentialTable, con, layout_frame, col):
+def layout_footnotes(EvidentialTable, col, con, layout_frame):
     EvidentialTable(
         con.sql("SELECT product, units, sales, note FROM orders"),
         columns=[
@@ -139,7 +142,7 @@ def layout_lines_on_doc(mo):
 
 
 @app.cell
-def layout_lines_on(EvidentialTable, con, layout_frame, layout_columns):
+def layout_lines_on(EvidentialTable, con, layout_columns, layout_frame):
     EvidentialTable(
         con.sql("SELECT product, units, sales FROM orders"),
         columns=layout_columns,
@@ -161,7 +164,7 @@ def layout_lines_off_doc(mo):
 
 
 @app.cell
-def layout_lines_off(EvidentialTable, con, layout_frame, layout_columns):
+def layout_lines_off(EvidentialTable, con, layout_columns, layout_frame):
     EvidentialTable(
         con.sql("SELECT product, units, sales FROM orders"),
         columns=layout_columns,
@@ -183,7 +186,7 @@ def layout_frame_doc(mo):
 
 
 @app.cell
-def layout_frame(EvidentialTable, con, layout_frame, layout_columns):
+def layout_frame(EvidentialTable, con, layout_columns, layout_frame):
     EvidentialTable(
         con.sql("SELECT product, units, sales FROM orders"),
         columns=layout_columns,
@@ -205,7 +208,7 @@ def layout_shading_off_doc(mo):
 
 
 @app.cell
-def layout_shading_off(EvidentialTable, con, layout_frame, layout_columns):
+def layout_shading_off(EvidentialTable, con, layout_columns, layout_frame):
     EvidentialTable(
         con.sql("SELECT product, units, sales FROM orders"),
         columns=layout_columns,
@@ -228,7 +231,7 @@ def layout_shading_one_doc(mo):
 
 
 @app.cell
-def layout_shading_one(EvidentialTable, con, layout_frame, layout_columns):
+def layout_shading_one(EvidentialTable, con, layout_columns, layout_frame):
     EvidentialTable(
         con.sql("SELECT product, units, sales FROM orders"),
         columns=layout_columns,
@@ -251,7 +254,7 @@ def layout_shading_three_doc(mo):
 
 
 @app.cell
-def layout_shading_three(EvidentialTable, con, layout_frame, layout_columns):
+def layout_shading_three(EvidentialTable, con, layout_columns, layout_frame):
     EvidentialTable(
         con.sql("SELECT product, units, sales FROM orders"),
         columns=layout_columns,
@@ -276,7 +279,7 @@ def layout_headings_doc(mo):
 
 
 @app.cell
-def layout_headings(EvidentialTable, con, layout_frame, layout_columns, rows):
+def layout_headings(EvidentialTable, con, layout_columns, layout_frame, rows):
     EvidentialTable(
         con.sql("SELECT region, product, units, sales FROM orders"),
         columns=layout_columns,
@@ -301,7 +304,13 @@ def layout_headings_centered_doc(mo):
 
 
 @app.cell
-def layout_headings_centered(EvidentialTable, con, layout_frame, layout_columns, rows):
+def layout_headings_centered(
+    EvidentialTable,
+    con,
+    layout_columns,
+    layout_frame,
+    rows,
+):
     EvidentialTable(
         con.sql("SELECT region, product, units, sales FROM orders"),
         columns=layout_columns,
@@ -327,7 +336,7 @@ def layout_headings_column_doc(mo):
 
 
 @app.cell
-def layout_headings_column(EvidentialTable, con, layout_frame, col, rows):
+def layout_headings_column(EvidentialTable, col, con, layout_frame, rows):
     EvidentialTable(
         con.sql("SELECT region, product, units, sales FROM orders"),
         columns=[
@@ -357,7 +366,13 @@ def layout_heading_values_doc(mo):
 
 
 @app.cell
-def layout_heading_values(EvidentialTable, con, layout_frame, layout_columns, rows):
+def layout_heading_values(
+    EvidentialTable,
+    con,
+    layout_columns,
+    layout_frame,
+    rows,
+):
     EvidentialTable(
         con.sql("SELECT region, product, units, sales FROM orders"),
         columns=layout_columns,
@@ -388,7 +403,13 @@ def layout_summary_top_doc(mo):
 
 
 @app.cell
-def layout_summary_top(EvidentialTable, con, layout_frame, layout_columns, rows):
+def layout_summary_top(
+    EvidentialTable,
+    con,
+    layout_columns,
+    layout_frame,
+    rows,
+):
     EvidentialTable(
         con.sql("SELECT region, product, units, sales FROM orders"),
         columns=layout_columns,
@@ -421,7 +442,13 @@ def layout_summary_bottom_doc(mo):
 
 
 @app.cell
-def layout_summary_bottom(EvidentialTable, con, layout_frame, layout_columns, rows):
+def layout_summary_bottom(
+    EvidentialTable,
+    con,
+    layout_columns,
+    layout_frame,
+    rows,
+):
     EvidentialTable(
         con.sql("SELECT region, product, units, sales FROM orders"),
         columns=layout_columns,
@@ -448,7 +475,13 @@ def layout_grand_total_doc(mo):
 
 
 @app.cell
-def layout_grand_total(EvidentialTable, con, layout_frame, layout_columns, Rows):
+def layout_grand_total(
+    EvidentialTable,
+    Rows,
+    con,
+    layout_columns,
+    layout_frame,
+):
     EvidentialTable(
         con.sql("SELECT product, units, sales FROM orders"),
         columns=layout_columns,
@@ -473,7 +506,13 @@ def layout_combined_totals_doc(mo):
 
 
 @app.cell
-def layout_combined_totals(EvidentialTable, con, layout_frame, layout_columns, rows):
+def layout_combined_totals(
+    EvidentialTable,
+    con,
+    layout_columns,
+    layout_frame,
+    rows,
+):
     EvidentialTable(
         con.sql("SELECT region, product, units, sales FROM orders"),
         columns=layout_columns,
@@ -501,7 +540,7 @@ def layout_groups_one_doc(mo):
 
 
 @app.cell
-def layout_groups_one(EvidentialTable, con, layout_frame, col):
+def layout_groups_one(EvidentialTable, col, con, layout_frame):
     EvidentialTable(
         con.sql("SELECT product, units, target_units, sales, cost FROM orders"),
         settings=layout_frame,
@@ -534,7 +573,7 @@ def layout_groups_two_doc(mo):
 
 
 @app.cell
-def layout_groups_two(EvidentialTable, con, layout_frame, col):
+def layout_groups_two(EvidentialTable, col, con, layout_frame):
     EvidentialTable(
         con.sql("SELECT product, units, target_units, sales, cost FROM orders"),
         settings=layout_frame,

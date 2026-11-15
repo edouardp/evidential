@@ -80,14 +80,14 @@ def weather_table(EvidentialTable, col, mo, settings):
                 col.range(lambda row: -30, lambda row: 50, cap="round", size=8, color="#e2e8f0")
                    .range("low", "high", cap="round", size=8)
                    .gradient(scale=["#537bc4", "#67c9d4", "#add5ae", "#ffe04b", "#ef893c"], min=-30, max=50)
-                   .point("avg_low", color="#00000000", outline="#475569", size=8)
-                   .point("avg_high", color="#00000000", outline="#475569", size=8)
+                   .point("avg_low", color="#00000040", outline="#475569", size=8)
+                   .point("avg_high", color="#00000040", outline="#475569", size=8)
                    .title("Temperature").fmt('0.0"°C"')
                    .scale(domain=(-30, 50), axis=True, axis_position="bottom"),
                 col.number("high", title="Highest", format='0.0"°C"'),
                 col.number("rain_mm", title="Rain (mm)", format="num1"),
             ],
-            settings=settings(border=False, row_lines=False, row_shading=3, page_size=0, search=False, width=780),
+            settings=settings(border=False, row_lines=False, row_shading=None, page_size=0, search=False, width=780),
         )
     )
     monthly_weather

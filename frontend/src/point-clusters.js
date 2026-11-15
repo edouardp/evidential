@@ -56,7 +56,20 @@ function sectorCircle(group, size) {
   return svg;
 }
 
-/** Clip the same marker geometry into colored sectors; keep its own outline. */
+/** Bars split along their long axis; other shapes keep screen-oriented sectors. */
+function colorSegment(shape, angle, index, count) {
+  if (shape === "bar") {
+    // Extend the outer bands past the cap so their outline is not clipped off.
+    const start = index === 0 ? -150 : -50 + index * 100 / count;
+    const end = index === count - 1 ? 150 : -50 + (index + 1) * 100 / count;
+    return {d: `M-150,${start} H150 V${end} H-150 Z`, transform: `rotate(${angle})`};
+  }
+  const start = index / count * 2 * Math.PI, end = (index + 1) / count * 2 * Math.PI;
+  const at = angle => `${Math.sin(angle) * 150},${-Math.cos(angle) * 150}`;
+  return {d: `M0,0 L${at(start)} A150,150 0 ${end - start > Math.PI ? 1 : 0},1 ${at(end)} Z`};
+}
+
+/** Clip the same marker geometry into colored segments; keep its own outline. */
 function sectorShape(group, size) {
   if (!group[0].shape || group[0].shape === "circle") return sectorCircle(group, size);
   const svg = svgNode("svg", {viewBox: "-50 -50 100 100", "aria-hidden": "true"});
@@ -68,13 +81,11 @@ function sectorShape(group, size) {
   shapeClip.append(svgNode("path", {d: markerPath(shape), transform: `rotate(${group[0].angle || 0})`}));
   defs.append(shapeClip); svg.append(defs);
   group.forEach((point, index) => {
-    const start = index / group.length * 2 * Math.PI, end = (index + 1) / group.length * 2 * Math.PI;
-    const at = angle => `${Math.sin(angle) * 150},${-Math.cos(angle) * 150}`;
-    const sector = `M0,0 L${at(start)} A150,150 0 ${end - start > Math.PI ? 1 : 0},1 ${at(end)} Z`;
+    const segment = colorSegment(shape, group[0].angle || 0, index, group.length);
     const sectorClip = svgNode("clipPath", {id: `${id}-${index}`});
-    sectorClip.append(svgNode("path", {d: sector})); defs.append(sectorClip);
+    sectorClip.append(svgNode("path", segment)); defs.append(sectorClip);
     const fill = svgNode("g", {"clip-path": `url(#${id})`});
-    fill.append(svgNode("path", {d: sector, fill: point.color})); svg.append(fill);
+    fill.append(svgNode("path", {...segment, fill: point.color})); svg.append(fill);
     if (point.outline) {
       const edge = svgNode("g", {"clip-path": `url(#${id}-${index})`});
       edge.append(svgNode("path", {d: markerPath(shape), fill: "none", stroke: point.outline,

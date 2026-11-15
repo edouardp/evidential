@@ -917,6 +917,9 @@ columns=[
   Opaque overlapping points combine only when their shape, angle and size agree;
   the whole cluster must fit within one screen pixel. Segments retain the marker
   shape and individual outlines; circles remain circles, stars remain stars.
+  Bar-shaped points stack equal color bands along their long axis: top/bottom
+  halves for two, thirds for three, and so on. The first declared point starts
+  at the top; bands rotate with `angle`. Other shapes retain pie sectors.
   `col.shapes`, `.symbols`, `col.rating`, and sparkline point/line/area markers
   use the same shape names, angles and outline options. Sparkline markers keep
   their existing outline-free default. Bar/change sparklines have no marker shape.

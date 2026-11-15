@@ -115,6 +115,32 @@ test("bar markers are vertical by default and rotate to horizontal", () => {
   assert.equal(markerGraphic({shape: "bar", angle: 90}).firstChild.getAttribute("transform"), "rotate(90)");
 });
 
+test("overlapping bar colors form equal end-to-end bands that rotate with the marker", () => {
+  for (const count of [2, 3, 4]) for (const angle of [0, 45, 90, 180]) {
+    const colors = ["red", "green", "blue", "gold"].slice(0, count);
+    const node = renderMarks({encodings: colors.map((color, index) => ({kind: "point", source: `x${index}`,
+      shape: "bar", angle, size: 18, color, outline: "black"}))},
+    Object.fromEntries(colors.map((_, index) => [`x${index}`, 50])));
+    for (const mark of node.querySelectorAll(".et-mark-point")) mark.getBoundingClientRect = () => ({left: 10, top: 10, width: 18, height: 18});
+    const holder = document.createElement("div"); holder.append(node); document.body.append(holder);
+    combinePoints(holder);
+    const composite = node.querySelector(".et-point-composite");
+    const fills = [...composite.querySelectorAll('g > path[fill]:not([fill="none"])')];
+    assert.equal(fills.length, count);
+    for (const [index, fill] of fills.entries()) {
+      const start = index === 0 ? -150 : -50 + index * 100 / count;
+      const end = index === count - 1 ? 150 : -50 + (index + 1) * 100 / count;
+      assert.equal(fill.getAttribute("d"), `M-150,${start} H150 V${end} H-150 Z`);
+      assert.equal(fill.getAttribute("transform"), `rotate(${angle})`);
+      const clip = composite.querySelectorAll("clipPath")[index + 1].firstChild;
+      assert.equal(clip.getAttribute("d"), fill.getAttribute("d"));
+      assert.equal(clip.getAttribute("transform"), fill.getAttribute("transform"));
+    }
+    assert.equal(composite.querySelectorAll('path[stroke="black"]').length, count);
+    holder.remove();
+  }
+});
+
 
 test("a composite keeps the paint order of its last member before later mixed shapes", () => {
   const node = renderMarks({encodings: [

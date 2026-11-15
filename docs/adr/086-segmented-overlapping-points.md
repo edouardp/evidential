@@ -78,3 +78,5 @@ outlines, inspection, resize separation and screenshot framing.
 [ADR-097](097-shared-marker-geometry.md) extends the same bounded clustering
 rule to matching noncircle shapes. Different shapes or angles do not merge;
 compatible shapes retain their own geometry, outlines and screen-oriented sectors.
+Bars instead use equal end-to-end bands: top-to-bottom in declaration order,
+rotating with the marker. This keeps narrow bar colors distinguishable.

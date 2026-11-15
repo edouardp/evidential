@@ -1,6 +1,8 @@
 """Marker geometry, outlines, legends, overlap sectors and rating glyphs in real browsers."""
 
+import math
 import runpy
+from base64 import b64encode
 from pathlib import Path
 
 import pytest
@@ -24,9 +26,12 @@ def test_marker_notebook_shapes_legends_rotation_and_segmented_stars(page, live_
         "repeated_table",
         "overlap_table",
         "sparkline_table",
+        "bar_overlap_table",
     )
     mount(page, live_server, [(name, definitions[name].widget, []) for name in names])
     page.locator("section").evaluate_all("nodes => nodes.forEach(el => el.style.width='960px')")
+    page.locator("section").nth(5).evaluate("el => el.style.width='1100px'")
+    page.locator("section").nth(7).evaluate("el => el.style.width='1100px'")
     expect(page.locator("#case-0 .et-mark-point")).to_have_count(8)
     expect(page.locator("#case-1 .et-mark-point")).to_have_count(8)
     for shape in definitions["marker_shapes"]:
@@ -48,15 +53,19 @@ def test_marker_notebook_shapes_legends_rotation_and_segmented_stars(page, live_
     )
     expect(page.locator('#case-4 [data-hollow="true"] path[fill="none"]')).to_have_count(4)
     overlaps = page.locator("#case-5 tbody tr")
-    expect(overlaps.first.locator(".et-point-composite")).to_have_count(4)
-    expect(overlaps.nth(1).locator(".et-point-composite")).to_have_count(4)
+    expect(overlaps.first.locator(".et-point-composite")).to_have_count(5)
+    expect(overlaps.nth(1).locator(".et-point-composite")).to_have_count(5)
     expect(overlaps.last.locator(".et-point-composite")).to_have_count(0)
-    star = overlaps.first.locator("td").last.locator(".et-point-composite")
+    star = overlaps.first.locator("td").nth(4).locator(".et-point-composite")
     expect(star.locator("clipPath")).to_have_count(3)
     expect(star.locator("path[stroke]")).to_have_count(2)
     star.hover()
     expect(page.locator("#case-5 .et-tooltip-name")).to_have_text(["Star Before:", "Star After:"])
     assert page.locator("#case-6 .et-marker-svg").count() == 14
+    bars = page.locator("#case-7 tbody tr")
+    expect(bars.first.locator(".et-point-composite")).to_have_count(5)
+    expect(bars.nth(1).locator(".et-point-composite")).to_have_count(5)
+    expect(bars.last.locator(".et-point-composite")).to_have_count(0)
     capture(page, "marker-shapes.png")
 
 
@@ -107,3 +116,39 @@ def test_different_shapes_and_angles_do_not_merge_and_opaque_matching_shapes_do(
     )
     square = cells.nth(3).locator('.et-mark-point[data-shape="square"]')
     assert_colors(painted_colors(page, [square], center=True), [[0, 128, 0]])
+
+
+@pytest.mark.parametrize("count,angle", [(2, 0), (3, 0), (4, 0), (3, 90), (3, 45), (2, 180)])
+def test_bar_composites_paint_equal_bands_and_keep_all_tooltip_values(page, live_server, count, angle):
+    colors = ["#ff0000", "#008000", "#0000ff", "#ffd700"][:count]
+    column = col.point("a", shape="bar", angle=angle, size=30, color=colors[0], outline="black")
+    for index, color in enumerate(colors[1:], start=1):
+        column = column.point(chr(97 + index), shape="bar", angle=angle, size=30, color=color, outline="black")
+    mount(page, live_server, [("Bar bands", [dict.fromkeys("abcd", 50)], [column.scale(domain=(0, 100))])])
+    page.evaluate("() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)))")
+    composite = page.locator(".et-point-composite")
+    expect(composite).to_have_count(1)
+    expect(composite.locator('path[stroke="rgb(0, 0, 0)"]')).to_have_count(count)
+    bounds = composite.bounding_box()
+    points = []
+    for index in range(count):
+        distance = 30 * ((index + 0.5) / count - 0.5)
+        points.append(
+            {
+                "x": int(bounds["x"] + bounds["width"] / 2 - math.sin(math.radians(angle)) * distance),
+                "y": int(bounds["y"] + bounds["height"] / 2 + math.cos(math.radians(angle)) * distance),
+            }
+        )
+    png = b64encode(page.screenshot()).decode()
+    actual = page.evaluate(
+        """async ({png, points}) => {
+            const image = new Image(); image.src = 'data:image/png;base64,' + png; await image.decode();
+            const canvas = document.createElement('canvas'); canvas.width = image.width; canvas.height = image.height;
+            const ctx = canvas.getContext('2d'); ctx.drawImage(image, 0, 0);
+            return points.map(({x, y}) => [...ctx.getImageData(x, y, 1, 1).data].slice(0, 3));
+        }""",
+        {"png": png, "points": points},
+    )
+    assert_colors(actual, [[255, 0, 0], [0, 128, 0], [0, 0, 255], [255, 215, 0]][:count])
+    composite.hover()
+    expect(page.locator(".et-tooltip-name")).to_have_count(count)

@@ -39,6 +39,10 @@ project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+- Overlapping bar-shaped points stack equal color bands along the marker's
+  long axis, instead of using pie sectors. Bands rotate with the bar and keep
+  individual outlines and tooltip values. Notebook 62 demonstrates the cases.
+
 - Centered bars keep their zero line visible above opaque fills, without
   obscuring point overlays or labels or intercepting hover. Axis endpoint labels
   align inward to avoid collisions between neighboring columns. Reversed box

@@ -1188,6 +1188,8 @@ Use shape as well as colour to distinguish observations. Circle is the
 default; square, triangle, diamond, cross, star, rounded square and vertical bar
 share the same outline options. Set rotation separately:
 `shape="cross", angle=45` makes an X. Legend keys match the marks.
+Overlapping bars stack their colours in equal top-to-bottom bands; the bands
+rotate with the bar. Other shapes use pie sectors.
 [Notebook 62](https://github.com/edouardp/evidential/blob/main/notebooks/62_marker_shapes.py) also demonstrates array points,
 ratings, sparkline markers and segmented overlapping shapes.
 

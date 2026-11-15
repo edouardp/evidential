@@ -55,7 +55,11 @@ container-times-symbol scaling.
 Point clusters group only equal shape, effective angle and size, with the
 existing one-pixel bound over the whole cluster. Noncircle composites clip
 colored sectors to the same marker path and preserve outline segments. Sector
-boundaries stay in screen coordinates even for rotated shapes. Mixed geometries
+boundaries stay in screen coordinates even for rotated shapes, except bars:
+their colors occupy equal end-to-end bands along the long axis. At zero degrees
+the first declared point occupies the top band; subsequent colors follow below.
+The bands rotate with the bar, and each band retains its member's outer outline.
+Mixed geometries
 keep their original nodes and declaration order. Composites occupy the position
 of their last member, preserving paint order against later marks. The sort/sweep remains bounded
 by O(n log n), and resize recalculates the presentation without changing data.

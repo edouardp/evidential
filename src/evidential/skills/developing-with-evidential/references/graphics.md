@@ -152,6 +152,9 @@ adjacent points cannot chain into a wider cluster. Translucent and differently
 sized marks retain ordinary rendering. Every underlying value remains
 inspectable through keyboard navigation, with the same per-popup limit.
 Notebook 48 prints the values beside two-/three-/four-sector examples.
+Matching bar-shaped points use equal bands along their long axis instead:
+top-to-bottom in declaration order, rotating with `angle`. See notebook 62
+for two, three and four colors, horizontal bars and rotated bars.
 
 - `type="change"` interprets input as signed changes/outcomes by default.
   For absolute observations such as `[5, 4, 8]`, set `delta=True` to compare

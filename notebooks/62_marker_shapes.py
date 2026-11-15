@@ -149,7 +149,7 @@ def repeated_shapes(EvidentialTable, col, mo, settings):
 
 @app.cell
 def overlapping_shapes(EvidentialTable, col, mo, settings):
-    overlap_shapes = ["circle", "square", "triangle", "star"]
+    overlap_shapes = ["circle", "square", "triangle", "star", "bar"]
     overlap_table = mo.ui.anywidget(EvidentialTable(
         [{"case": name, **{f"{shape}_{endpoint}": value
            for shape in overlap_shapes for endpoint, value in (("before", a), ("after", b))}}
@@ -159,9 +159,9 @@ def overlapping_shapes(EvidentialTable, col, mo, settings):
             .point(f"{shape}_after", shape=shape, size=12, color="#dc2626", outline="black")
             .title(shape.title()).scale(domain=(0, 100)) for shape in overlap_shapes
         ]],
-        settings=settings(border=False, row_lines=False, search=False, page_size=0, width=960),
+        settings=settings(border=False, row_lines=False, search=False, page_size=0, width=1100),
         title="Overlapping colours retain their marker shape",
-        caption="Only matching shape, angle and size combine. The whole cluster must fit within one screen pixel.",
+        caption="Matching shapes, angles and sizes combine within one pixel. Bar colours stack top-to-bottom.",
     ))
     overlap_table
     return
@@ -181,6 +181,49 @@ def sparkline_markers(EvidentialTable, col, mo, settings):
         caption="Hover inspection also includes observations without a visible marker.",
     ))
     sparkline_table
+    return
+
+
+@app.cell(hide_code=True)
+def bar_overlap_description(mo):
+    mo.md("""
+    ## Overlapping bars stack their colours
+
+    Two colours occupy the top and bottom halves; three or more occupy equal
+    bands along the bar. The first declared point starts at the top. Rotating
+    the bar rotates those bands too. Outlines and all tooltip values survive.
+    Other shapes keep their pie sectors, and the whole cluster still has to fit
+    within one screen pixel.
+    """)
+    return
+
+
+@app.cell
+def overlapping_bars(EvidentialTable, col, mo, settings):
+    def bar_column(count, angle, title):
+        fields = ["a", "b", "c", "d"][:count]
+        colors = ["#2563eb", "#dc2626", "#16a34a", "#eab308"][:count]
+        column = col.point(fields[0], shape="bar", angle=angle, size=18, color=colors[0], outline="#172554")
+        for field, color in zip(fields[1:], colors[1:], strict=True):
+            column = column.point(field, shape="bar", angle=angle, size=18, color=color, outline="#172554")
+        return column.title(title).scale(domain=(0, 100))
+
+    bar_overlap_table = mo.ui.anywidget(EvidentialTable(
+        [{"case": "Exact overlap", "a": 50, "b": 50, "c": 50, "d": 50},
+         {"case": "Within a pixel", "a": 50, "b": 50.1, "c": 50.2, "d": 50.3},
+         {"case": "Separated", "a": 20, "b": 40, "c": 60, "d": 80}],
+        columns=[
+            col.text("case"),
+            bar_column(2, 0, "Two colours"),
+            bar_column(3, 0, "Three colours"),
+            bar_column(4, 0, "Four colours"),
+            bar_column(3, 90, "Horizontal"),
+            bar_column(3, 45, "Rotated 45°"),
+        ],
+        settings=settings(border=False, row_lines=False, search=False, page_size=0, width=1100),
+        title="Bar colours split along the marker",
+    ))
+    bar_overlap_table
     return
 
 

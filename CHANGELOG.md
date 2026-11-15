@@ -6,6 +6,8 @@ project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## Unreleased
 
+## 0.2.4 (2026-11-16)
+
 ### Added
 
 - Shared `.gradient(scale=, stops=, min=, max=, midpoint=)` across numeric bars,
@@ -31,6 +33,9 @@ project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   explorer, with updated range demos and a generated README example.
 
 ### Changed
+
+- Gradient bar sparklines now paint a continuous vertical y-value gradient,
+  matching lines and areas. Explicit per-observation colors still override it.
 
 - `make run-marimo` uses this machine's Tailscale DNS name when connected.
   Missing, disconnected or unresponsive Tailscale omits `--host`, leaving

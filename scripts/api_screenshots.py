@@ -32,6 +32,8 @@ from contextlib import contextmanager
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+import libcst as cst
+
 if TYPE_CHECKING:
     from collections.abc import Iterator
 
@@ -172,6 +174,44 @@ def _server(notebook: Path) -> Iterator[str]:
                 process.wait(timeout=5)
 
 
+class _CaptureLayout(cst.CSTTransformer):
+    """Use notebook flow for captures without changing cells or saved layouts."""
+
+    def leave_Call(self, original_node: cst.Call, updated_node: cst.Call) -> cst.Call:
+        if not (
+            isinstance(updated_node.func, cst.Attribute)
+            and isinstance(updated_node.func.value, cst.Name)
+            and updated_node.func.value.value == "marimo"
+            and updated_node.func.attr.value == "App"
+        ):
+            return updated_node
+        return updated_node.with_changes(
+            args=[
+                arg.with_changes(value=cst.Name("None"))
+                if arg.keyword is not None and arg.keyword.value == "layout_file"
+                else arg
+                for arg in updated_node.args
+            ]
+        )
+
+
+@contextmanager
+def _capture_source(notebook: Path) -> Iterator[Path]:
+    original = notebook.read_text()
+    source = cst.parse_module(original).visit(_CaptureLayout()).code
+    if source == original:
+        yield notebook
+        return
+    # Keep the directory so notebook-relative data paths still resolve. Only
+    # app layout metadata changes; snippets/provenance use the original file.
+    with tempfile.NamedTemporaryFile(
+        mode="w", prefix=".evidential-capture-", suffix=".py", dir=notebook.parent
+    ) as capture:
+        capture.write(source)
+        capture.flush()
+        yield Path(capture.name)
+
+
 def _launch(playwright):
     """Prefer an installed browser so no download is required locally."""
     for kwargs in ({"channel": "msedge"}, {"channel": "chrome"}, {}):
@@ -251,7 +291,7 @@ def render(*, output_root: Path = ROOT) -> Iterator[Path]:
         browser = _launch(playwright)
         try:
             for notebook, targets in _notebook_targets():
-                with _server(notebook) as url:
+                with _capture_source(notebook) as source, _server(source) as url:
                     context = browser.new_context(
                         viewport={"width": 1600, "height": 1000},
                         device_scale_factor=2,

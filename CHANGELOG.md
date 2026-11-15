@@ -39,6 +39,10 @@ project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+- README screenshots use normal notebook flow even when the source notebook
+  has a saved slide/grid layout, avoiding blank captures without changing the
+  saved notebook or layout.
+
 - Overlapping bar-shaped points stack equal color bands along the marker's
   long axis, instead of using pie sectors. Bands rotate with the bar and keep
   individual outlines and tooltip values. Notebook 62 demonstrates the cases.

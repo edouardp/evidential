@@ -1,5 +1,5 @@
 ---
-status: proposed
+status: accepted
 date: 2026-11-15
 deciders: edouard
 ---
@@ -11,7 +11,7 @@ deciders: edouard
 Ranges already support numeric gradients, and sparklines and cell backgrounds
 use the same palette vocabulary through `.color()`. Bars and points would benefit
 from that lookup too. Readers also need a compact key showing how colors map to
-values. The implementation is on a review branch pending visual feedback.
+values. The implementation was reviewed visually and merged into main.
 
 ## Decision Drivers
 
@@ -29,7 +29,7 @@ values. The implementation is on a review branch pending visual feedback.
 
 ## Decision Outcome
 
-Chosen option: **3**, proposed for review. `.gradient(scale=, stops=, min=, max=,
+Chosen option: **3**. `.gradient(scale=, stops=, min=, max=,
 midpoint=)` configures the last numeric mark: bar, point, points, range, box plot
 or density band. Scalar backgrounds and sparklines accept the same method;
 their existing `.color()` declarations remain supported. Gradient and solid color

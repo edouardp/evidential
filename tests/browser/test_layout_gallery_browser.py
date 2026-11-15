@@ -1,10 +1,57 @@
 """The documented layout calls render the intended tables in marimo."""
 
+import json
+from base64 import b64encode
+
 import pytest
 
-from scripts.api_screenshots import LAYOUT_NOTEBOOK, LAYOUTS, _server, _wait_for_tables
+from scripts.api_screenshots import LAYOUT_NOTEBOOK, LAYOUTS, _capture, _capture_source, _server, _wait_for_tables
 
 pytestmark = pytest.mark.browser
+
+
+def test_saved_slide_layout_cannot_produce_blank_documentation_images(page, tmp_path):
+    layout = tmp_path / "slides.json"
+    layout.write_text(json.dumps({"type": "slides", "data": {"cells": [{}, {}], "deck": {}}}))
+    notebook = tmp_path / "slides.py"
+    original = """import marimo
+app = marimo.App(layout_file="slides.json")
+
+@app.cell
+def imports():
+    from evidential import EvidentialTable, col
+    return EvidentialTable, col
+
+@app.cell
+def example(EvidentialTable, col):
+    EvidentialTable([{"product": "Lamp", "sales": 1200}],
+                    columns=[col.text("product"), col.number("sales")], title="Visible table")
+    return
+
+if __name__ == "__main__":
+    app.run()
+"""
+    notebook.write_text(original)
+    image = tmp_path / "example.png"
+    with _capture_source(notebook) as source, _server(source) as url:
+        page.goto(url, wait_until="networkidle")
+        _wait_for_tables(page, [(image, "example")])
+        _capture(page, "example", image)
+        dark_pixels = page.evaluate(
+            """async png => {
+                const image = new Image(); image.src = 'data:image/png;base64,' + png; await image.decode();
+                const canvas = document.createElement('canvas'); canvas.width = image.width; canvas.height = image.height;
+                const ctx = canvas.getContext('2d'); ctx.drawImage(image, 0, 0);
+                const data = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+                let count = 0;
+                for (let i = 0; i < data.length; i += 4) if (data[i] + data[i+1] + data[i+2] < 600) count++;
+                return count;
+            }""",
+            b64encode(image.read_bytes()).decode(),
+        )
+        assert dark_pixels > 100, "The captured image must contain painted table text, not just a white rectangle"
+    assert notebook.read_text() == original
+    assert json.loads(layout.read_text())["type"] == "slides"
 
 
 def test_layout_notebook_renders_notes_shading_summaries_and_nested_headers(page):

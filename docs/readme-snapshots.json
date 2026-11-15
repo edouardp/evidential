@@ -4,7 +4,7 @@
     "notebooks/21_studio_dashboard.py": "8f4e85940544eac38b95c21f952659d3da97375dc584616347b24814281dc48b",
     "notebooks/49_api_screenshots.py": "219de292a242152427ca2e62163eb787c5c7355f974909eff90bd0c76ac5606b",
     "notebooks/50_graphics_gallery.py": "219a209a141edb12cd4a8fb5b1ba476d9bba352668c3876e7bcc8d478c9ca738",
-    "notebooks/51_table_layouts.py": "5f4d375309eef793c8c756761e67c9127db0ac554e2405234a85cd81ee1b9930",
+    "notebooks/51_table_layouts.py": "7d523aa569e8fe02a1394d0e2e2c43412040ef005e2484a14cbabc6cb797ffb6",
     "notebooks/56_dimension_grid.py": "c31b38f124c0874e9c55d0d8a72eaa7e40c92dfe725df6308fffadbbfa2f7c52",
     "notebooks/data/46_football_england_2024.json": "aa8d550e7bb3e776dfd2dbfee5dd2cd57ab14a66c5c036dd393001055b55ff03",
     "notebooks/data/50_europe_trade_2024.json": "04a22223c3b1a958255b27b41ad83ff47ca528f3f985f7db579c2e75f05f525e",
@@ -12,7 +12,7 @@
     "notebooks/sample_data/needful_things/orders.parquet": "b373511b4f7a0547b704022b055655b6d3bafc2505a2a573292b206417fe3eb4",
     "notebooks/sql/50_europe_trade.sql": "c01857da122eb48c819aa14def0bcd4f6fb2e762ea987e55271c58f509746ea6",
     "pyproject.toml": "530abbddea8a6cd7174e91840422f608c88cdf975dfeb49bcbbbe257ee5d7624",
-    "scripts/api_screenshots.py": "fedfd2865cdb1328dbec7754cc951646d0e6958980a2aaa81d62b0645e579969",
+    "scripts/api_screenshots.py": "0149c3a52b2f69ad6cf33e788dcb3bbc04c661f6768cc2bbf39e27d80866a0ab",
     "scripts/generate_readme.py": "2942558e4363d66603f6aefb2bdd9cc3f1978543d810f787d0b6fc8dc60326c0",
     "src/evidential/__init__.py": "60a7457f583bcbde6ec9e6838f9153af3fac6636d29f45010e46b0c77dc7c350",
     "src/evidential/_aliases.py": "5e207c4a862754e1ca9f7ea309a0e489bf158a7e380876f8edcf20eeee1438f1",
@@ -172,7 +172,7 @@
     "docs/img/graphics/point-overlaps.png": {
       "notebook": "notebooks/50_graphics_gallery.py",
       "cell": "graphic_point_overlaps",
-      "sha256": "e0bddfe5b3e044414d98e4139e3428aeef44c6e0bc8453f8ed7ddf667f0ac822"
+      "sha256": "488398e7ba84ea9ffed54e08532c60e6583e3c685e19d67d1f15101cd322f94f"
     },
     "docs/img/graphics/boxplot.png": {
       "notebook": "notebooks/50_graphics_gallery.py",
@@ -217,7 +217,7 @@
     "docs/img/graphics/sparklines.png": {
       "notebook": "notebooks/50_graphics_gallery.py",
       "cell": "graphic_sparklines",
-      "sha256": "68c5abaf2fdff1de9d4636c4c2ab84575299510c1c982b71389b8d36d8a679c2"
+      "sha256": "a035b8b61867c1c14f26c8edf22aa0286c12048d1ab2899fee59487e65071161"
     },
     "docs/img/graphics/sparkline-areas.png": {
       "notebook": "notebooks/50_graphics_gallery.py",

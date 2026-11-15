@@ -71,6 +71,12 @@ actual table; full Studio view documentation remains in its separate guide.
 
 ## More Information
 
+Screenshot capture ignores saved slide/grid layouts by clearing only the
+`marimo.App(layout_file=...)` option in a temporary sibling copy. Notebook cells
+and relative paths are preserved; the original notebook, saved layout and
+provenance source remain unchanged. A browser regression checks painted pixels
+so a DOM-visible table in an inactive slide cannot silently produce a blank PNG.
+
 - [Authoring and generation workflow](../notebook-documentation.md).
 - `scripts/generate_readme.py`, `scripts/api_screenshots.py`.
 - `notebooks/49_api_screenshots.py`, `notebooks/50_graphics_gallery.py`.

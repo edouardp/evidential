@@ -15,6 +15,11 @@ It also generates `docs/PYPI_README.md`, the package metadata's README, from
 the repository README. Repository image paths stay relative; the PyPI copy
 resolves images to GitHub raw URLs and documentation links to GitHub pages.
 This copy is an output, never a separately maintained source.
+Saved slide/grid layouts do not affect captures. When a notebook sets
+`layout_file`, the generator runs a temporary copy in the same directory with
+that app option set to `None`. Cells and relative data paths stay intact, and
+the original notebook and its saved view are untouched. Snippets and provenance
+still come from the original source.
 `make api-screenshots` is an alias. Commit these outputs with the notebook edit.
 The browser requirement is the same as `make test-browser`: installed Chrome,
 Edge or Playwright Chromium (`uv run playwright install chromium`).

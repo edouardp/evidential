@@ -119,6 +119,7 @@ dated, immutable record of the decisions behind them.
 | [098](098-shared-numeric-gradients.md) | Shared Numeric Gradients and Scale Strips | Accepted |
 | [099](099-painted-background-contrast.md) | Contrast Against Painted Backgrounds | Accepted |
 | [100](100-light-dark-themes.md) | Shared Light and Dark Themes | Accepted |
+| [101](101-widget-css-isolation.md) | Widget CSS Isolation in Embedded Documents | Accepted |
 
 ## Creating New ADRs
 

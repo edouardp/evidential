@@ -14,6 +14,10 @@ project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+- Isolate widget CSS from host pages, including blog styles copied into marimo
+  island shadow roots. Automatically follow the page theme in islands, with
+  `theme_source` overrides; retain notebook theme defaults elsewhere.
+
 - Automatic text colours account for translucent fills over the actual table,
   host and row backgrounds. Chips, row colours and inside-bar labels include
   the same layers and bar opacity, while explicit text colours remain in control.

@@ -153,7 +153,7 @@ def test_wdi_ranking_does_not_scroll_for_omitted_outside_labels(page, live_serve
             page.set_viewport_size({"width": width + 80, "height": 900})
             page.locator("section").evaluate("(el, width) => el.style.width = width + 'px'", width)
             # Fixed outside labels on the maximum bar cannot fit at any width.
-            page.wait_for_function("getComputedStyle(document.querySelector('.et-mark-label')).visibility === 'hidden'")
+            expect(page.locator(".et-mark-label").first).to_have_css("visibility", "hidden")
             geometry = page.locator(".et-scroller").evaluate("""el => ({
                 available: el.clientWidth, scroll: el.scrollWidth,
                 table: el.querySelector('table').getBoundingClientRect().width,
@@ -206,7 +206,7 @@ def test_automatic_bar_label_preferences_signed_bars_and_resize(page, live_serve
     )
     mount(page, live_server, cases)
     page.locator("section").evaluate_all("nodes => nodes.forEach(el => el.style.width = '240px')")
-    page.wait_for_function("document.querySelector('#case-0 .et-mark-label').dataset.labelPosition === 'inside_end'")
+    expect(page.locator("#case-0 .et-mark-label").first).to_have_attribute("data-label-position", "inside_end")
     for index, preferred in enumerate(positions):
         labels = page.locator(f"#case-{index} .et-mark-label")
         assert labels.count() == 4
@@ -229,12 +229,12 @@ def test_automatic_bar_label_preferences_signed_bars_and_resize(page, live_serve
     page.locator("#case-0 .et-marks").evaluate_all("nodes => nodes.forEach(el => el.style.minWidth = '0')")
     page.locator("section").first.evaluate("el => el.style.width = '24px'")
     first = page.locator("#case-0 .et-mark-label").first
-    page.wait_for_function("document.querySelector('#case-0 .et-mark-label').hidden")
+    expect(page.locator("#case-0 .et-mark-label").first).to_be_hidden()
     assert "X: $95" in first.locator("xpath=ancestor::td").get_attribute("aria-label")
     assert first.evaluate("el => getComputedStyle(el).display") == "none"
     page.locator("#case-0 .et-marks").evaluate_all("nodes => nodes.forEach(el => el.style.minWidth = '')")
     page.locator("section").first.evaluate("el => el.style.width = '2000px'")
-    page.wait_for_function("document.querySelector('#case-0 .et-mark-label').dataset.labelPosition === 'outside_end'")
+    expect(page.locator("#case-0 .et-mark-label").first).to_have_attribute("data-label-position", "outside_end")
     assert first.get_attribute("hidden") is None
     assert first.evaluate("el => getComputedStyle(el).color") != "rgb(255, 255, 255)"
 
@@ -1092,7 +1092,7 @@ def test_labels_hide_completely_when_the_segment_is_tiny(page, live_server):
         ],
     )
     labels = page.locator(".et-mark-stack-label")
-    page.wait_for_function("getComputedStyle(document.querySelector('.et-mark-stack-label')).visibility === 'hidden'")
+    expect(page.locator(".et-mark-stack-label").first).to_have_css("visibility", "hidden")
     assert labels.nth(1).is_visible()
     assert "A: 1" in page.locator(".et-marks").get_attribute("aria-label")
     capture(page, "evidential-labels.png")
@@ -1116,9 +1116,7 @@ def test_label_contrast_follows_fill_and_preserves_explicit_colors(page, live_se
         ],
     )
     labels = page.locator("[data-mark-label]")
-    page.wait_for_function(
-        "getComputedStyle(document.querySelectorAll('[data-mark-label]')[3]).color === 'rgb(255, 255, 255)'"
-    )
+    expect(page.locator("[data-mark-label]").nth(3)).to_have_css("color", "rgb(255, 255, 255)")
     assert labels.nth(0).evaluate("el => getComputedStyle(el).color") == "rgb(255, 255, 255)"
     assert labels.nth(1).evaluate("el => getComputedStyle(el).color") == "rgb(0, 0, 0)"
     assert labels.nth(2).evaluate("el => getComputedStyle(el).color") == "rgb(255, 255, 0)"
@@ -1523,7 +1521,7 @@ def test_public_api_acceptance_marks(page, live_server):
         ),
     ]
     mount(page, live_server, cases)
-    page.wait_for_function("document.querySelectorAll('.et-table').length === 9")
+    expect(page.locator(".et-table")).to_have_count(9)
     assert page.locator("#case-0 .et-mark-label").inner_text() == "Alpha"
     assert page.locator("#case-1 .et-mark-arrow").count() == 2
     assert (

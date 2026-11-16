@@ -176,10 +176,10 @@ export class TooltipController {
     on(this.view, "resize", () => this.hide());
     on(this.view, "scroll", () => this.hide(), true);
     on(root.ownerDocument, "pointerdown", event => {
-      if (!root.contains(event.target)) { this.touchInspection = null; clearTimeout(this.touchTimer); this.hide(); }
+      if (!event.composedPath().includes(root)) { this.touchInspection = null; clearTimeout(this.touchTimer); this.hide(); }
     });
     on(root.ownerDocument, "keydown", event => {
-      if (event.key === "Escape" && (!this.popup.hidden || this.pending) && !root.contains(event.target)) {
+      if (event.key === "Escape" && (!this.popup.hidden || this.pending) && !event.composedPath().includes(root)) {
         event.preventDefault(); this.hide();
       }
     });

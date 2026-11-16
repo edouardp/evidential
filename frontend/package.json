@@ -5,7 +5,7 @@
   "scripts": {
     "build": "node build.js",
     "check-bundle": "node check_bundle.js",
-    "dev": "esbuild src/index.js --bundle --format=esm --sourcemap --outfile=../src/evidential/static/table.js --watch",
+    "dev": "node --watch-path=src build.js",
     "test": "node --test test_*.js",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",

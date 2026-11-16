@@ -72,7 +72,6 @@ layers, explicit overrides and theme changes without rerendering data.
 - [ADR-100](100-light-dark-themes.md) adds scheme-aware presentation compilation.
   Mode and semantic UI-token changes also refresh colour scales; the independent
   contrast pass still handles hover, selection and transparent-host backgrounds.
-
 - [Issue #8](https://github.com/edouardp/evidential/issues/8).
 - [ADR-098](098-shared-numeric-gradients.md) covers gradient label sampling.
 - [Notebook 12](../../notebooks/12_color_scales.py) compares light/dark surfaces.

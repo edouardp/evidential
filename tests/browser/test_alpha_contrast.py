@@ -152,14 +152,13 @@ def test_transparent_host_changes_refresh_contrast_and_media_changes_switch_sche
         ],
     )
     cell = page.locator("tbody td")
-    root = page.locator(".et-root")
-    count = root.locator("..").get_attribute("data-render-count")
+    count = page.locator("#case-0").get_attribute("data-render-count")
     expect(cell).to_have_css("color", BLACK)
     page.locator("#case-0").evaluate("el => el.style.backgroundColor = '#111827'")
     expect(cell).to_have_css("color", WHITE)
     page.locator("#case-0").evaluate("el => el.style.backgroundColor = ''")
     expect(cell).to_have_css("color", BLACK)
-    assert root.locator("..").get_attribute("data-render-count") == count
+    assert page.locator("#case-0").get_attribute("data-render-count") == count
     page.add_style_tag(
         content="@media (prefers-color-scheme: dark) { #case-0 {background:#111827; color-scheme:dark;} }"
     )
@@ -167,7 +166,7 @@ def test_transparent_host_changes_refresh_contrast_and_media_changes_switch_sche
     expect(cell).to_have_css("color", WHITE)
     page.emulate_media(color_scheme="light")
     expect(cell).to_have_css("color", BLACK)
-    assert int(root.locator("..").get_attribute("data-render-count")) > int(count)
+    assert int(page.locator("#case-0").get_attribute("data-render-count")) > int(count)
 
 
 def test_frozen_surface_can_differ_from_the_ordinary_host_background(page, live_server):

@@ -57,3 +57,21 @@ def test_semantic_alpha_is_validated(alpha):
 def test_semantic_role_is_validated():
     with pytest.raises(ValueError, match="Unknown theme colour"):
         color.theme("chartreuse")
+
+
+@pytest.mark.parametrize("source", ["auto", "nearest", "host"])
+def test_theme_source_round_trip(source):
+    table = EvidentialTable([{"name": "A"}], theme_source=source)
+    grid = DimensionGrid([{"name": "A"}], theme_source=source)
+    assert table.options["theme_source"] == grid.options["theme_source"] == source
+    with pytest.raises((TypeError, ValueError)):
+        settings(theme_source="page")
+
+
+def test_custom_css_is_widget_owned_and_updateable():
+    css = ".et-title {font-size:21px}"
+    table = EvidentialTable([{"name": "A"}], css=css)
+    assert table.options["css"] == css
+    table.update_options(css=None)
+    assert table.options["css"] is None
+    assert DimensionGrid([{"name": "A"}], css=css).options["css"] == css

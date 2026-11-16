@@ -46,9 +46,10 @@ export function fontSizeValue(value) {
 }
 
 export class EvidentialTableRenderer {
-  constructor(model, el) {
+  constructor(model, el, container = el) {
     this.model = model;
     this.el = el;
+    this.container = container;
     this.destroyed = false;
     this._state = {
       sort: null,
@@ -125,7 +126,7 @@ export class EvidentialTableRenderer {
     // after the fullscreen dialog closes. It must be attached to the DOM
     // before it can anchor anything.
     this.placeholder = document.createComment("evidence-table inline position");
-    this.el.append(this.placeholder, this.root, this.dialog);
+    this.container.append(this.placeholder, this.root, this.dialog);
 
     this._viewport = new TableViewport({
       root: this.root, dialog: this.dialog, button: this.expandBtn,
@@ -632,9 +633,9 @@ export class EvidentialTableRenderer {
   }
 }
 
-export function render({ model, el }) {
+export function render({ model, el, container = el }) {
   el.classList.add("evidential-widget");
-  const renderer = new EvidentialTableRenderer(model, el);
+  const renderer = new EvidentialTableRenderer(model, el, container);
   const rerender = () => renderer.render();
   let pendingDataRender = false;
   const dataChanged = () => {
@@ -651,7 +652,7 @@ export function render({ model, el }) {
   const optionsChanged = () => {
     const before = renderer._theme.cache?.options || {}, after = model.get("options") || {};
     if (before === after) { dataChanged(); return; }
-    const appearance = new Set(["color_scheme", "adapt_colors", "theme", "color_scale", "background_color",
+    const appearance = new Set(["color_scheme", "theme_source", "adapt_colors", "theme", "color_scale", "background_color",
       "header_color", "header_font_color", "total_row_color", "total_font_color"]);
     const changed = [...new Set([...Object.keys(before), ...Object.keys(after)])]
       .filter(key => before[key] !== after[key]);

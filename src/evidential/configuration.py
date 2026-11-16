@@ -82,7 +82,9 @@ class TooltipOptions(TypedDict, total=False):
 
 
 class TableOptions(TypedDict, total=False):
+    css: str | None
     color_scheme: ColorScheme
+    theme_source: Literal["auto", "nearest", "host"]
     adapt_colors: bool
     tooltips: TooltipOptions | None
     title: str | None
@@ -556,7 +558,9 @@ class ColumnOptions(TypedDict, total=False):
 
 
 TABLE_DEFAULTS: TableOptions = {
+    "css": None,
     "color_scheme": "auto",
+    "theme_source": "auto",
     "adapt_colors": False,
     "tooltips": None,
     "title": None,

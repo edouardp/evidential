@@ -242,7 +242,6 @@ class EvidentialTable(anywidget.AnyWidget):
     """
 
     _esm = _ASSET_DIR / "table.js"
-    _css = _ASSET_DIR / "table.css"
 
     rows = traitlets.List(trait=traitlets.Dict(), default_value=[]).tag(sync=True)
     columns = traitlets.List(trait=traitlets.Dict(), default_value=[]).tag(sync=True)

@@ -1461,7 +1461,7 @@ other than `auto`, `merge`, `group` and `subcolumns` return a `Column`;
 `row_numbers`, `column_stats`, `compact`, `empty_message`, `empty_rows`,
 `default_sort`, `row_conditional_colors`, `show_link_column`, `select`,
 `header_color`, `header_font_color`, `total_row_color`, `total_font_color`,
-`background_color`, `theme`, `color_scale`, `color_scheme`, `adapt_colors`.
+`background_color`, `theme`, `color_scale`, `color_scheme`, `theme_source`, `adapt_colors`, `css`.
 
 ### Light and dark modes
 
@@ -1470,7 +1470,24 @@ other than `auto`, `merge`, `group` and `subcolumns` return a `Column`;
 DimensionGrid accepts the same `color_scheme`, `adapt_colors` and `theme`
 arguments. Automatic mode uses the nearest host's `data-color-scheme`,
 `data-theme`, `.light`/`.dark` class or CSS `color-scheme`, then the OS preference.
-Explicit widget settings always win. Mode changes retain sorting, selection,
+Explicit widget settings always win.
+
+Packaged widgets isolate their CSS in a nested shadow root, including when
+marimo copies host styles into its own root. Host table/control/SVG selectors
+cannot change widget layout. Use `theme` and column options to customize it.
+`theme_source="auto"` (default) follows the surrounding page inside a marimo
+island and the nearest notebook/runtime theme otherwise. Override with
+`theme_source="nearest"` to follow the runtime wrappers, or `"host"` to follow
+the surrounding document even outside islands. `color_scheme="light"` or
+`"dark"` always wins. Both widgets support these preferences; no island-specific
+Python conditional is required.
+
+For advanced notebook-owned styling, `css=".et-title { font-size: 21px; }"`
+installs CSS inside that widget's boundary. Supply plain CSS without `<style>`
+tags or host-ancestor prefixes; update it with `table.update_options(css=...)`.
+Both widgets accept this option. Prefer `theme` and column options where they
+cover the intended change. These selectors refer to renderer internals and may
+need updating when the renderer changes. Mode changes retain sorting, selection,
 search, collapsed sections and page offsets. Print output temporarily uses light.
 
 UI colours and named palettes adapt automatically. Literal colours remain exact

@@ -98,7 +98,23 @@ export function themeColors(scheme, options = {}, native = value => value) {
 }
 
 function parent(node) { return node.parentElement || node.getRootNode()?.host || null; }
-function hostScheme(host, view) {
+function hostScheme(host, view, attributesFirst = false) {
+  if (attributesFirst) {
+    for (let node = host; node; node = parent(node)) {
+      for (const attr of ["data-color-scheme", "data-theme"]) {
+        const value = node.getAttribute(attr);
+        if (value === "light" || value === "dark") return value;
+      }
+    }
+    // Prefer explicit site signals over an island host's computed light
+    // scheme, which marimo may set as a runtime default.
+    for (let node = host; node; node = parent(node)) {
+      if (node.classList.contains("dark")) return "dark";
+      if (node.classList.contains("light")) return "light";
+      const scheme = node.style.colorScheme?.replace(/\bonly\b/g, "").trim();
+      if (scheme === "light" || scheme === "dark") return scheme;
+    }
+  }
   const computed = new Map();
   const cssScheme = node => {
     if (!node) return null;
@@ -148,8 +164,20 @@ export class ThemeController {
   scheme() {
     if (this.printing) return "light";
     const explicit = this.getOptions().color_scheme;
+    let host = this.host;
+    const source = this.getOptions().theme_source || "auto";
+    let island = false;
+    for (let node = host; node; node = parent(node)) {
+      if (node.tagName === "MARIMO-ISLAND") { island = true; break; }
+    }
+    const hostContext = source === "host" || (source === "auto" && island);
+    if (hostContext) {
+      // Start outside the notebook runtime's shadow wrappers, preserving the
+      // surrounding article/site context. Plain DOM embeds use their host.
+      while (host.getRootNode()?.host) host = host.getRootNode().host;
+    }
     return explicit && explicit !== "auto" ? explicit
-      : hostScheme(this.host, this.view) || (this.media?.matches ? "dark" : "light");
+      : hostScheme(host, this.view, hostContext) || (this.media?.matches ? "dark" : "light");
   }
   paintKey() {
     const style = this.view.getComputedStyle(this.roots[0]);

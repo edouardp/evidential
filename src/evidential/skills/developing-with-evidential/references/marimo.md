@@ -90,3 +90,17 @@ pagination and row selection. Capture the intended table element `.et-root`,
 wait for it to render and fonts to load, and inspect the image. A screenshot
 of generated HTML with no connected marimo kernel cannot prove reactive
 selection or control updates.
+
+## Embedding in a website
+
+Evidential isolates table and DimensionGrid CSS in its own shadow root. Host
+`table`, `th`, `td`, button and SVG rules cannot style widget internals. Use
+public theme/column options instead of external CSS targeting `.et-*` classes.
+Automatic theme selection detects marimo islands and follows their surrounding
+page. Normal notebooks follow the nearest notebook/runtime theme.
+`theme_source="nearest"` or `"host"` overrides this choice; `color_scheme` still
+forces light/dark when explicitly set. The same options work on DimensionGrid.
+There is no need for a Python island detection conditional. Advanced `css=`
+accepts notebook-owned plain CSS inside the widget's boundary (no `<style>` tags
+or external ancestor selectors). Prefer theme and column options where possible;
+implementation CSS class selectors may change with renderer versions.

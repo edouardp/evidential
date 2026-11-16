@@ -137,7 +137,9 @@ def test_vertical_fills_paint_thresholds_alpha_ramps_and_clamped_endpoints(page,
         ],
     )
     # Enlarge just this fixture to sample fills away from antialiased edges.
-    page.add_style_tag(content=".et-sparkline { width: 300px; height: 120px; }")
+    page.locator(".et-sparkline").evaluate_all(
+        "nodes => nodes.forEach(el => { el.style.width='300px'; el.style.height='120px'; })"
+    )
     page.locator("section").evaluate("node => node.style.width = '1100px'")
     rows = page.locator("tbody tr")
     first = rows.first.locator(".et-sparkline")
@@ -198,9 +200,11 @@ def test_combined_alpha_threshold_and_sloping_line_paint_by_height(page, live_se
             )
         ],
     )
-    page.add_style_tag(
-        content="section { width: 800px !important; } .et-sparkline { width: 300px; height: 120px; } .et-sparkline polyline { stroke-width: 3px; }"
+    page.locator("section").evaluate("el => el.style.width = '800px'")
+    page.locator(".et-sparkline").evaluate_all(
+        "nodes => nodes.forEach(el => {el.style.width='300px';el.style.height='120px';})"
     )
+    page.locator(".et-sparkline polyline").evaluate_all("nodes => nodes.forEach(el => el.style.strokeWidth = '3px')")
     svg = page.locator("tbody .et-sparkline")
     red, green, transparent = _sample_svg(page, svg.first, [(150, 20), (150, 50), (150, 115)])
     assert red == [255, 0, 0]

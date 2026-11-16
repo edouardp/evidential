@@ -6,7 +6,7 @@
     "notebooks/50_graphics_gallery.py": "92a650e6fe8c07edfc5e1fe01e9000cfc94c3720b1068815193504a3bb087727",
     "notebooks/51_table_layouts.py": "7d523aa569e8fe02a1394d0e2e2c43412040ef005e2484a14cbabc6cb797ffb6",
     "notebooks/56_dimension_grid.py": "c31b38f124c0874e9c55d0d8a72eaa7e40c92dfe725df6308fffadbbfa2f7c52",
-    "notebooks/64_light_dark.py": "c92146229a5ceb4511b4d0dffa7ec52e7d5603627e81a5eba63c90e223938edd",
+    "notebooks/64_light_dark.py": "1985d3c3ccaf8f9e7023a3118e7b461d7b06bd56790241e441d50558c13f636f",
     "notebooks/data/46_football_england_2024.json": "aa8d550e7bb3e776dfd2dbfee5dd2cd57ab14a66c5c036dd393001055b55ff03",
     "notebooks/data/50_europe_trade_2024.json": "04a22223c3b1a958255b27b41ad83ff47ca528f3f985f7db579c2e75f05f525e",
     "notebooks/data/61_monthly_weather_2014_15.json": "1afd601c0c0ce215f2f8a8c69246da38e5f3dc42c2145d3579e5d789c3a54488",
@@ -36,9 +36,9 @@
     "src/evidential/col.py": "1d827527ab6319f5590f1dfef787eabe23a28ab8b2dd37ff4e5257fea16f456d",
     "src/evidential/color.py": "51a964ab798520717c2e03f282b125460008acfc0ece66eab8edd94b0ddd1c0b",
     "src/evidential/comparison.py": "b2f182404d4f20df94af5e9cde61d2b3b8ea0d6d7bed690c26c19312f9a0d70f",
-    "src/evidential/configuration.py": "d5d7cbfe5d655a62e5417df009f98e722d500b15935eed956812b025ee29ae0b",
+    "src/evidential/configuration.py": "ab30e7371c1cbd2ff4558b6af89a47efe0b9ebf1b8b317950f2380dad1f30716",
     "src/evidential/data.py": "b47ee55fbb1c45f45937c51214cdd920efd7f3a00c3ad166d261df334be8230f",
-    "src/evidential/dimension.py": "82f870c3511712372e5970666e3d7fe9095b630a5cec3d5ca9f5989792b6f121",
+    "src/evidential/dimension.py": "d330d2597ddd086baa8778fc950f833cc2b8e5b42fc21c488844d85386de4d7c",
     "src/evidential/domain.py": "9e607e105122cffb1a6cc4de27adb15bdc3f73af1184b3506302cb908bf34ba9",
     "src/evidential/duck.py": "fed7bbdc25492a8457ca7b1ba4903dacacf9cb2643a789f2c66d018b8449c8b3",
     "src/evidential/grouped.py": "65da5eba306f3280a3af99c3cb8398a46a8211b542d2fb1b6fb5f7734a1c65a2",
@@ -54,327 +54,327 @@
     "src/evidential/skills/developing-with-evidential/assets/explorer.py": "5177731289fb97acc5d23eda44a299d18e6965bcc5234a2cd44843bc888dc95b",
     "src/evidential/skills/developing-with-evidential/assets/report.py": "55508d1a1ef33ce444fa7745ebace9660f37954ae73e3306a1a3b166e708f5ce",
     "src/evidential/static/dimension-grid.css": "36ed0a4fad3640f01aa46785392be8e6f2d00e75b8cdf935741456e73f44bdb8",
-    "src/evidential/static/dimension-grid.js": "561253dacba42b261b3bef3ae9afb86eb450098a19fceb57b635b1f0ab812b47",
+    "src/evidential/static/dimension-grid.js": "e8b4fe428363f19bdcdca025ed49a87cdb06f57dfa94ff60c86c3a029509f442",
     "src/evidential/static/table.css": "afaaad1bcfa92ffece101ffa6e94f0726c33281af5ca1d32e58c69555dcd0845",
-    "src/evidential/static/table.js": "c5211d85a0abafab1602b880efa7812185c53268d9f0d29f21a1986e689236cd",
-    "src/evidential/table.py": "6af1f26253d72967bcf9298c14502af94431427eb97ddae43e3d5cb1d40ed017",
+    "src/evidential/static/table.js": "a56d562fa61b97019403c0f630cbbc096347a076a8d6224f7abcd18550b76e24",
+    "src/evidential/table.py": "6f2f48820a119cab0c079c579f4b3cc98c63d5ac40b15fbd2a2a9b3dd78efd58",
     "uv.lock": "08ebde87df2e59e3a83df5d50676751b8eb7b917b50d3aeb40e7cec06c6a1724"
   },
   "images": {
     "docs/api/images/quickstart.png": {
       "notebook": "notebooks/49_api_screenshots.py",
       "cell": "quickstart",
-      "sha256": "2a9645d08f6be333a14f106d7eba4bec676697aeac378d8e6f29775739573ea5"
+      "sha256": "00222878144555ea32d0cbc51483484dd79ce734e8ab56af61a1909caed65e92"
     },
     "docs/api/images/kinds.png": {
       "notebook": "notebooks/49_api_screenshots.py",
       "cell": "kinds",
-      "sha256": "911671290b244f3e8d917e1eafae6a2ae90b9745d0432bfe35ef6c26cd3a510d"
+      "sha256": "2a88aef83ac75774d31a5b548395607f0441db81e0bd07d7aa39cd1caf6e3a85"
     },
     "docs/api/images/relative-time.png": {
       "notebook": "notebooks/49_api_screenshots.py",
       "cell": "relative_time",
-      "sha256": "1e884acc1fa89a5a9290c9d83ed3a1e980997a4a15f819015b9071a7cf1697b1"
+      "sha256": "e27b44bf23d4089f797c271100b093836c7eb138125bb5c43a8c4adce7fa9190"
     },
     "docs/api/images/symbols.png": {
       "notebook": "notebooks/49_api_screenshots.py",
       "cell": "symbols",
-      "sha256": "07972ac88e1657f1b03119c9b76203348c0d109a5c6e103876603de1e16d139b"
+      "sha256": "c33d81c332c115ead721a3a62c7dce7a2663630ad79edc205df152c2b4f0b6cc"
     },
     "docs/api/images/visualizations.png": {
       "notebook": "notebooks/49_api_screenshots.py",
       "cell": "visualizations",
-      "sha256": "6084ed6d10fecb79e82c21e2d5547e3ba770760346128b0d5cea028823922d9a"
+      "sha256": "d5e4b7564dfe244680a0c451a92d679ef2e11da18a213c3cc4107ea5bc8d2514"
     },
     "docs/api/images/back-to-back.png": {
       "notebook": "notebooks/49_api_screenshots.py",
       "cell": "back_to_back",
-      "sha256": "59a98248a467f403d88464c7d62d8c99e728f11244739891beb1822436a3c88e"
+      "sha256": "796b52421ca8ea56bcce3251904f10d28e4286706df09f5c181b1407bed5e532"
     },
     "docs/api/images/styling.png": {
       "notebook": "notebooks/49_api_screenshots.py",
       "cell": "styling",
-      "sha256": "2f043e751f57d2858ea0c51c0c4e3d6046da6ca3f1f5b69a99736d952c1db11e"
+      "sha256": "95b2d0eb40716ceeb55b7d05dd39dec0c3549eea6ed9d9d6aaf9eb85349e6394"
     },
     "docs/api/images/groups.png": {
       "notebook": "notebooks/49_api_screenshots.py",
       "cell": "groups",
-      "sha256": "69e7c936da2d04496eadf8b83cc8c3aa44cf869a9a3b8364f3845f8149f2ecc6"
+      "sha256": "b9ac4031794f0a9c3350c25c2d6468cbfa16fd0f47fb30d77b0a469774a6dfce"
     },
     "docs/api/images/subcolumns.png": {
       "notebook": "notebooks/49_api_screenshots.py",
       "cell": "subcolumns",
-      "sha256": "685f6cf487229995305ab9b42621a2aee4d7a2aac86785b043594728d5a390c8"
+      "sha256": "0edf0dec1d39a824ab9b21ff3bb7e402d076d5ab8bd70c1a22665db7bdd6369e"
     },
     "docs/api/images/merged.png": {
       "notebook": "notebooks/49_api_screenshots.py",
       "cell": "merged",
-      "sha256": "b194c0a7a8428c65a6ba3e6b5ea5f79b0345070e6e89f7eeb5bb512fb2c3ce8e"
+      "sha256": "98589735808ddf5985d73ae947c81d19293dd5ad29e140e662d42eb8a89433e3"
     },
     "docs/api/images/grouped-table.png": {
       "notebook": "notebooks/49_api_screenshots.py",
       "cell": "grouped_totals",
-      "sha256": "9dd4d21b23e02294945b9532310f06ac3485be35691b5ed710390e4dc6d58acc"
+      "sha256": "20ed58f276d39fae89585e538a2e78f74a8347533d4d2c5c1d0310b17cbbfdcd"
     },
     "docs/api/images/pivot-table.png": {
       "notebook": "notebooks/49_api_screenshots.py",
       "cell": "pivoted_columns",
-      "sha256": "097a4248be8ee420b51827bae6abec9646246ec6721ee73c24ab97220f31cb0f"
+      "sha256": "6add54e3a03832d017d5d38f64a96c185c33292972b9160e6981a1b4e6344ddf"
     },
     "docs/api/images/comparison-table.png": {
       "notebook": "notebooks/49_api_screenshots.py",
       "cell": "prior_comparison",
-      "sha256": "ef79c61a1e48725132497abc94c8341377ed35ea9c912dd942f8d1f9ce7239b6"
+      "sha256": "177f29a3836e6016fd03a892902b694866bffb1020f33ec19dd5e25a3ad1a58d"
     },
     "docs/api/images/rules.png": {
       "notebook": "notebooks/49_api_screenshots.py",
       "cell": "rules",
-      "sha256": "e4770ff358667df04d78b33f3754e84ad4104de5fa5b3f4f83dd443a55316e2d"
+      "sha256": "cd59254eb8af352420af687fbdb4a788039d7f8376259a3152f94b4efa2568ce"
     },
     "docs/api/images/query-table.png": {
       "notebook": "notebooks/49_api_screenshots.py",
       "cell": "ad_hoc_query",
-      "sha256": "1b396f1de011f0d762ddafc1e9f37d3aa9c553eeb8a1a89bc89c0516365e37dc"
+      "sha256": "253815347abd8c1e45aad51b01e1ef33b698527b2e1c0ab860e1171bfc99736a"
     },
     "docs/preview.png": {
       "notebook": "notebooks/49_api_screenshots.py",
       "cell": "preview",
-      "sha256": "aad39ebc1463d61fdd158960040ca2629f6e8f8fdc751fe57f777f08d1fd8584"
+      "sha256": "5bfc2361cfbbee2b4ef52f6ca75142341283d9ae3c312faa65bb8a758f8bbb11"
     },
     "docs/img/graphics/bar.png": {
       "notebook": "notebooks/50_graphics_gallery.py",
       "cell": "graphic_bar",
-      "sha256": "068c21aa3d6f02bc2bb6d9df4ac182df74ffaa5be7fcec6e9c1061f94bc2c5ca"
+      "sha256": "2eab03996f37b1244084c6c1cd0c5dda1b4ee5aff2fbae2439450726d2f7eb63"
     },
     "docs/img/graphics/bar-centered.png": {
       "notebook": "notebooks/50_graphics_gallery.py",
       "cell": "graphic_bar_centered",
-      "sha256": "4ed1476db028970760f9588b6824cd26c064cb6307b96a80b72da71b6a47851a"
+      "sha256": "c36d51e9d8e41b14be3b7cbf9075cbe17fa8cc39ae1974364c6399d598719e0e"
     },
     "docs/img/graphics/bar-overlay.png": {
       "notebook": "notebooks/50_graphics_gallery.py",
       "cell": "graphic_bar_overlay",
-      "sha256": "a1e1d3dd1cef19fd31339df2fe326172438875eecac8b384a3b1009aa017cb21"
+      "sha256": "7a314811c124b0924c74231aa3f7abb4512fb0935b34b972b8305ebafa7c0f89"
     },
     "docs/img/graphics/bar-back-to-back.png": {
       "notebook": "notebooks/50_graphics_gallery.py",
       "cell": "graphic_bar_back_to_back",
-      "sha256": "be118dbccc7edb396f676e5e4c06924ec88314373c89292ef469537d538d0ca7"
+      "sha256": "0abaa1b39e2b657bb363825a485157a8d02a996994f67fd5c4eab30af423b6e1"
     },
     "docs/img/graphics/dumbbell.png": {
       "notebook": "notebooks/50_graphics_gallery.py",
       "cell": "graphic_dumbbell",
-      "sha256": "60a27c1fc3be8ab320afb8e48ef0059ef979d8ed555a7b86c1ce2d94625342e6"
+      "sha256": "05a85a83d0880e55fdfdd7c488c167e8e9bcded9757b4ce690cebb33ed276f24"
     },
     "docs/img/graphics/points.png": {
       "notebook": "notebooks/50_graphics_gallery.py",
       "cell": "graphic_points",
-      "sha256": "3a04d38b2083bc55d0c3d60d2aceddd311a3366348e3d283f4172e0456b0b3cf"
+      "sha256": "08d925d26f145d31821721eb20c7a7c64958e0a590bf638a3c0934fb15b60182"
     },
     "docs/img/graphics/point-overlaps.png": {
       "notebook": "notebooks/50_graphics_gallery.py",
       "cell": "graphic_point_overlaps",
-      "sha256": "9deebdeb8213c84576b25e3e04e8d4e7a3b5b1bfb6dc8cf93c7a0236d3f1af19"
+      "sha256": "962f82d65142a12d275b475329d49bd825e872f5ea93a6c999dac11d3f3c03e0"
     },
     "docs/img/graphics/boxplot.png": {
       "notebook": "notebooks/50_graphics_gallery.py",
       "cell": "graphic_boxplot",
-      "sha256": "f85f940c15ed765a5756806ff594648b182e517a7de168ff321a520fa0bb2f9f"
+      "sha256": "6962b1f8ba8f8f5cd3783e786c364c36d8276472887ae155beca23c65889269f"
     },
     "docs/img/graphics/distribution.png": {
       "notebook": "notebooks/50_graphics_gallery.py",
       "cell": "graphic_distribution",
-      "sha256": "b69aa65ce627b9f405c01b1274ec8e3f9c3da25e2237c32c6272336cdbc966e3"
+      "sha256": "da9b5aa8e30b749d7648fad358fe249c76f5f7ab5034e7487eb48499bb95fbee"
     },
     "docs/img/graphics/stacked-bar.png": {
       "notebook": "notebooks/50_graphics_gallery.py",
       "cell": "graphic_stacked_bar",
-      "sha256": "1ce6183559daee178fca556d570a43aa79a46ad21499e08a51b5fb8f091b9e44"
+      "sha256": "29c5f7f2e12aa0a3f0458aa4891ee1a837e0de556f4485a07fa82bd358d532ef"
     },
     "docs/img/graphics/stack-likert.png": {
       "notebook": "notebooks/50_graphics_gallery.py",
       "cell": "graphic_stack_likert",
-      "sha256": "2b31abc83d6ed9594453b41765dcf6a5ef191503fe8bbc678dd87a951cb84928"
+      "sha256": "06161c4e63fc1aed35c63672b552d52f829482d10e030b135a6fd7fd34756805"
     },
     "docs/img/graphics/strip.png": {
       "notebook": "notebooks/50_graphics_gallery.py",
       "cell": "graphic_strip",
-      "sha256": "472ff5d028efe7dee43f527f706a681e1549f5155e1221761bde2851b664ff1c"
+      "sha256": "0de51cf7e82e9be370ee617ff7406446a2cd0fb653a81222b41d6c584feda7f1"
     },
     "docs/img/graphics/color.png": {
       "notebook": "notebooks/50_graphics_gallery.py",
       "cell": "graphic_color",
-      "sha256": "447eb20e23501725c271946ef1b423eea50603190aa9e1ddf44459e35e3a2e7c"
+      "sha256": "34ad16a77d131e7ed8eea9789d04608cbed7bc0f5f214c9408e2c7160144a334"
     },
     "docs/img/graphics/chip.png": {
       "notebook": "notebooks/50_graphics_gallery.py",
       "cell": "graphic_chip",
-      "sha256": "eed25f5154cff9b8fe8e467a7524c10476388e90db7353792346a37579bc5950"
+      "sha256": "df2600e5f8142059d061ae8c87e117563befb640d88bd06e095b56379de6d9ef"
     },
     "docs/img/graphics/delta.png": {
       "notebook": "notebooks/50_graphics_gallery.py",
       "cell": "graphic_delta",
-      "sha256": "be1d001282476b8a5ffaf7f16ac5ba3521cfe7f7b8277ad7b156ef79d37e9ae8"
+      "sha256": "9039360ffc7160a7ffdaae90b7dc187569e6467d39abc459f6c1c733452f0562"
     },
     "docs/img/graphics/sparklines.png": {
       "notebook": "notebooks/50_graphics_gallery.py",
       "cell": "graphic_sparklines",
-      "sha256": "d9c3299b880bac22ab1552cd4c72721e553c6a7570c4da2828e7b75e9a7e3556"
+      "sha256": "11ffb5c631b2115b0d48b0639e8002422c9acb0464b881359d3427cb41d5c706"
     },
     "docs/img/graphics/sparkline-areas.png": {
       "notebook": "notebooks/50_graphics_gallery.py",
       "cell": "graphic_sparkline_areas",
-      "sha256": "916fad0be7567e881c975166936c94b83576aec36d36214ffbe8a983ee877264"
+      "sha256": "da61acd6ffcd4fcb1d00798f14b4a399b4d3bc1d8f34ecd3ff7f5b9c003e683a"
     },
     "docs/img/graphics/football-form.png": {
       "notebook": "notebooks/50_graphics_gallery.py",
       "cell": "graphic_football_form",
-      "sha256": "2eb5b65e5ec6b00ad1b11df75234433bf2c0648eb8a9b10c4bdd1fac6cd4b0b5"
+      "sha256": "bd180bd3b93a889ba5b5a033967ac2d7bc6c93194e8764ed1814d50ec003a3c4"
     },
     "docs/img/graphics/symbols.png": {
       "notebook": "notebooks/50_graphics_gallery.py",
       "cell": "graphic_symbols",
-      "sha256": "4526186c05983a0a618f8ad355a2b2e2bd8a3f694f21fa72998b25a72c48a2fe"
+      "sha256": "052a792fc09c5739ae69619c0ad597989342c6e04eb28ac7593110f8c5a5a984"
     },
     "docs/img/graphics/boolean-icons.png": {
       "notebook": "notebooks/50_graphics_gallery.py",
       "cell": "graphic_boolean_icons",
-      "sha256": "e992ee24d0593be05ffd7c39ce713f7ab77dd663676af943904f0d08c8a2f2fe"
+      "sha256": "ec280a1b0365ed343d90af92655afcab37163534009995d358e7bcbde5e54345"
     },
     "docs/img/graphics/reference.png": {
       "notebook": "notebooks/50_graphics_gallery.py",
       "cell": "graphic_reference",
-      "sha256": "4efde9e9b154a619f54038c38d65f261c2ddc15f4a21404e4efd2abdd07d4be8"
+      "sha256": "eed710f0a8a3221e1bb647380148c0e25632e9aede114f62ddfab447ec5b1efe"
     },
     "docs/img/graphics/range-gradient.png": {
       "notebook": "notebooks/50_graphics_gallery.py",
       "cell": "graphic_range_gradient",
-      "sha256": "cd2cd3e4b278da344f8680908291836d2b14bb66740c8c24f38b2d9bdb395c4a"
+      "sha256": "5ede9ea38ecd00bdad94818fb73d235d6bbffc6a86b9708d5ed98e2b05b96a34"
     },
     "docs/img/graphics/marker-shapes.png": {
       "notebook": "notebooks/50_graphics_gallery.py",
       "cell": "graphic_marker_shapes",
-      "sha256": "6d8cdea3a64ad2c604dfb8aa7c933abaf505203641e3b25255025ca2ee5d11e0"
+      "sha256": "24085597f74c89d4fc4b5341b17f816537c928b07196ebfa59db38249135e676"
     },
     "docs/img/graphics/numeric-gradients.png": {
       "notebook": "notebooks/50_graphics_gallery.py",
       "cell": "graphic_numeric_gradients",
-      "sha256": "5480a4486cb996ad1af958ffea7ff6742bdc6b50a00cf06870af24b8bb0fa79e"
+      "sha256": "561aa32512230200ddbe12a21ed58d1bcd7d2acdb95332a27dcb6a2b1aa59fe6"
     },
     "docs/img/theme-light.png": {
       "notebook": "notebooks/64_light_dark.py",
       "cell": "theme_light",
-      "sha256": "9469f4e28b9be71f480cebcdb9e1f9003720c0860040cb5fe97761f12fdae8b9"
+      "sha256": "552bb0532c825b07199cb3c94e60d32f29950c9c60f513cee9dd054792e20bcc"
     },
     "docs/img/theme-dark.png": {
       "notebook": "notebooks/64_light_dark.py",
       "cell": "theme_dark",
-      "sha256": "91fae8f672a72d261982cc25e367366df78c47fff99b4de5dbca21c327588b1c"
+      "sha256": "f7ced233195c0b156e779d303e99119f7fdcfc4eda17e16d03c00c3e1c26e2c5"
     },
     "docs/img/studio-table.png": {
       "notebook": "notebooks/21_studio_dashboard.py",
       "cell": "revenue_table",
-      "sha256": "f516378bea223b26d211651e2ce5444190d5453828bef2337f1b9378403a69ba"
+      "sha256": "8789f4e008493122a61408446e60697d175ea37456028a642111c4e97b5fc8b8"
     },
     "docs/img/layouts/simple.png": {
       "notebook": "notebooks/51_table_layouts.py",
       "cell": "layout_simple",
-      "sha256": "7fbf625d45a003a62e51b3debc8a8e58ae19ad43c3ba2c5577bc0e1c59bf6a25"
+      "sha256": "f38f65df285f4da03ac79374bdd4f59295c857a313cbcca43541f6f082eb2749"
     },
     "docs/img/layouts/titles.png": {
       "notebook": "notebooks/51_table_layouts.py",
       "cell": "layout_titles",
-      "sha256": "30ca9d489964dc0a0c9571327d6adb35b60fd7332d624d28f783189be6ba6168"
+      "sha256": "e6bda1810437b9ecc469b14a88d9f7c2d70af880a51ebdd50ae3385d6babd248"
     },
     "docs/img/layouts/footnotes.png": {
       "notebook": "notebooks/51_table_layouts.py",
       "cell": "layout_footnotes",
-      "sha256": "86acb3a4f5fc6ce7e274cac7e7502390936e271c8cf0b0a6db0c3b69ee4ac479"
+      "sha256": "4d6f11a32d90363fff49d1c9c37760de47dbab7924153de61f82441c3f4ea64b"
     },
     "docs/img/layouts/lines-on.png": {
       "notebook": "notebooks/51_table_layouts.py",
       "cell": "layout_lines_on",
-      "sha256": "aafa6319622e77e71ee018addae36810eafde5b18330735c78fe410a4fd945f9"
+      "sha256": "08c43f9ff4a9bcf2a2e3e038e7a4054bee28be6bb480be2dcef29a1d17d6a937"
     },
     "docs/img/layouts/lines-off.png": {
       "notebook": "notebooks/51_table_layouts.py",
       "cell": "layout_lines_off",
-      "sha256": "29791aa18ff8d902caf84d9ffe4d1003b6d55965199e184ee9c78d7cfd71be45"
+      "sha256": "11d547f8486a455d7fafd2c04d25deb093071a6542fe336be365f0be434ee2f2"
     },
     "docs/img/layouts/frame.png": {
       "notebook": "notebooks/51_table_layouts.py",
       "cell": "layout_frame",
-      "sha256": "57e5ed8fe5cdcb65411d23a757b868911b317bdc0e870eb25a7c612f73f09bf3"
+      "sha256": "edfc6e8ce0e458279cc88ce62d3a5e222f7e29a0f3e20068d0c048bf6d4eb5b2"
     },
     "docs/img/layouts/shading-off.png": {
       "notebook": "notebooks/51_table_layouts.py",
       "cell": "layout_shading_off",
-      "sha256": "af0c1ca8cc39a781f435d497e9381398e62acf8c7dee39fca1d5f4b9f9b669b5"
+      "sha256": "b03abbf5f7ded17eb039e5576eaa94086ec0db1290ef62bdea359eb6d61b07b4"
     },
     "docs/img/layouts/shading-one.png": {
       "notebook": "notebooks/51_table_layouts.py",
       "cell": "layout_shading_one",
-      "sha256": "dc76c617c122112e026e48effbd2f71ee9c9dd9839c5c2dad5af2fd287333f7f"
+      "sha256": "17fc896d38b7448099562507389f0659aa5265308c1d439fa11165ec7f6ac597"
     },
     "docs/img/layouts/shading-three.png": {
       "notebook": "notebooks/51_table_layouts.py",
       "cell": "layout_shading_three",
-      "sha256": "fe2a95990825402c02ef6b238cdea8628d1607d4fe5cc22b43430380e1d18c26"
+      "sha256": "9cbcc0e9c61c7ec82e50b061c80a9269180cc6c559881e0e4abbec69385e9e9c"
     },
     "docs/img/layouts/headings.png": {
       "notebook": "notebooks/51_table_layouts.py",
       "cell": "layout_headings",
-      "sha256": "e82d5207619e029c9288dd9cfb03a6406d8631ee816f4d7e11d74cb3603966fc"
+      "sha256": "6d3907f3b760b8cd4c55c533fe52d89854c1549f3991dd23e77f16965aa648b5"
     },
     "docs/img/layouts/headings-centered.png": {
       "notebook": "notebooks/51_table_layouts.py",
       "cell": "layout_headings_centered",
-      "sha256": "baa48ca9de23c66f88e641acd2d61e51668d7974e3dac109bb771ade1d20ca4f"
+      "sha256": "ddfd426faa2860173b93602be325689400d2429151861946c386f8c0b7d91d36"
     },
     "docs/img/layouts/headings-column.png": {
       "notebook": "notebooks/51_table_layouts.py",
       "cell": "layout_headings_column",
-      "sha256": "075dc9509c264679b99e0aaa92d4e1e6b001743bf53d8189e2a7101d45ffa118"
+      "sha256": "7f15f56c5e2b2f111132c746953eff623c183cdd5283471743b07f7fd3dad783"
     },
     "docs/img/layouts/heading-values.png": {
       "notebook": "notebooks/51_table_layouts.py",
       "cell": "layout_heading_values",
-      "sha256": "f0a811ddf1abc21441976887f851d56b2322ab953fe54eaf2bc3d50e3dc8b9e5"
+      "sha256": "094a1612843f8fd2ed43ce5f83eea018f6c6ac44a3bea23da65d6f42d4b910fd"
     },
     "docs/img/layouts/summary-top.png": {
       "notebook": "notebooks/51_table_layouts.py",
       "cell": "layout_summary_top",
-      "sha256": "65d3fbd5263ed79754525416b545bbd73088c1ac9ae168df27eb065f96d3d673"
+      "sha256": "191f5f1da1cf9aa8eda1f790bcf712bfe0fa68be41db777ccd2d3e1ca7eef5e0"
     },
     "docs/img/layouts/summary-bottom.png": {
       "notebook": "notebooks/51_table_layouts.py",
       "cell": "layout_summary_bottom",
-      "sha256": "7b98a04429fb114bcd7e39390850a8c17d3bb4fd52388eb98790d57438e9c5be"
+      "sha256": "a6a45df3b783f0dbda79681357294f7d182ccef615432c515e47a6a7f5d41709"
     },
     "docs/img/layouts/grand-total.png": {
       "notebook": "notebooks/51_table_layouts.py",
       "cell": "layout_grand_total",
-      "sha256": "b708f34820c88770c1569c67b9ba0f90cf9840c58068fadb76a30df9a40f22ec"
+      "sha256": "50b20661ec1a699d926edf3eef12df125fdbabb30f00e8eb9375e5b5416ecd1d"
     },
     "docs/img/layouts/combined-totals.png": {
       "notebook": "notebooks/51_table_layouts.py",
       "cell": "layout_combined_totals",
-      "sha256": "de462299327588686af765a1b53da74853ba0adaff3b019e201af49f25d75a0f"
+      "sha256": "9dc6b59b82b6c35d4ca80766eb326b539b0cc61806f6be07d05a004dc94908e4"
     },
     "docs/img/layouts/groups-one.png": {
       "notebook": "notebooks/51_table_layouts.py",
       "cell": "layout_groups_one",
-      "sha256": "21eee3e6e039efe6b3ef249b0b22ee5d18291e441a321ae5fde87995926f8505"
+      "sha256": "3bd35bea64516d37e29a5b3984151c41b029ea7c133770275efaa937846c491f"
     },
     "docs/img/layouts/groups-two.png": {
       "notebook": "notebooks/51_table_layouts.py",
       "cell": "layout_groups_two",
-      "sha256": "f9bf72fbb3ed94d29dced54888a427f6e42d8503aeb0fa3ea685dcf1d15462f6"
+      "sha256": "e8edb11b32d48779687fd8e5c6dde3cd97263362da01b61d09cc780a0f778e40"
     },
     "docs/img/dimension-grid.png": {
       "notebook": "notebooks/56_dimension_grid.py",
       "cell": "orders_grid",
-      "sha256": "fee46c9b5cc5f1ba4d70ff551c9486d1f4e91edbe7b74092ada005f61b3001cb"
+      "sha256": "7a13b8122f7fe8ce1ee0dee1db83c35075b02ac2d0c04ff4d5959a6a710bda12"
     }
   }
 }

@@ -1,5 +1,5 @@
 import { build } from "esbuild";
-import { copyFile, mkdir } from "node:fs/promises";
+import { copyFile, mkdir, readFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -16,16 +16,18 @@ export async function buildAssets(outputDirectory = ASSET_DIR) {
     format: "esm",
     minify: true,
     legalComments: "linked",
+    define: {EVIDENTIAL_TABLE_CSS: JSON.stringify(await readFile(join(FRONTEND_DIR, "src/table.css"), "utf8"))},
     outfile: join(outputDirectory, "table.js"),
   });
   await copyFile(join(FRONTEND_DIR, "src/table.css"), join(outputDirectory, "table.css"));
   await build({
     absWorkingDir: FRONTEND_DIR,
-    entryPoints: ["src/dimension-grid.js"],
+    entryPoints: ["src/dimension-grid-entry.js"],
     bundle: true,
     format: "esm",
     minify: true,
     legalComments: "linked",
+    define: {EVIDENTIAL_GRID_CSS: JSON.stringify(await readFile(join(FRONTEND_DIR, "src/dimension-grid.css"), "utf8"))},
     outfile: join(outputDirectory, "dimension-grid.js"),
   });
   await copyFile(join(FRONTEND_DIR, "src/dimension-grid.css"), join(outputDirectory, "dimension-grid.css"));

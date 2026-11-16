@@ -144,3 +144,37 @@ test("native CSS scheme, shadow hosts, absent matchMedia and exact UI overrides"
   assert.equal(roots[0].style.getPropertyValue("--et-total-text"), "white");
   assert.equal(roots[0].style.getPropertyValue("--et-row-border"), "red");
 });
+
+test('automatic island themes follow the surrounding site; overrides also work outside islands', () => {
+  const f = fixture(); f.controller.destroy();
+  f.document.body.dataset.theme = 'dark';
+  const island = f.document.createElement('marimo-island');
+  f.host.before(island); island.append(f.host);
+  const shadow = f.host.attachShadow({mode:'open'});
+  const wrapper = f.document.createElement('div'); wrapper.className='light';
+  const mount = f.document.createElement('div'); wrapper.append(mount); shadow.append(wrapper);
+  let options = {};
+  const controller = new ThemeController(mount, [mount], () => options, () => {});
+  assert.equal(controller.scheme(), 'dark');
+  options = {theme_source:'nearest'};
+  assert.equal(controller.scheme(), 'light');
+  options = {theme_source:'host'};
+  assert.equal(controller.scheme(), 'dark');
+  delete f.document.body.dataset.theme;
+  f.document.body.className='dark';
+  const computed=f.view.getComputedStyle.bind(f.view);
+  f.view.getComputedStyle=node=>node===f.host ? {colorScheme:'light'} : computed(node);
+  assert.equal(controller.scheme(), 'dark');
+  f.document.body.className='';
+  f.document.body.style.colorScheme='dark';
+  assert.equal(controller.scheme(), 'dark');
+  f.view.getComputedStyle=computed;
+  options = {theme_source:'nearest', color_scheme:'dark'};
+  assert.equal(controller.scheme(), 'dark');
+  island.replaceWith(f.host);
+  options = {};
+  assert.equal(controller.scheme(), 'light');
+  options = {theme_source:'host'};
+  assert.equal(controller.scheme(), 'dark');
+  controller.destroy();
+});

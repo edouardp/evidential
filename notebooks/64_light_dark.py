@@ -29,6 +29,11 @@ def introduction(mo):
     also adapts literal data colours. It raises lightness while retaining hue,
     opacity and palette order. It never changes values or numeric domains.
 
+    Embedded marimo islands automatically follow the surrounding page theme;
+    ordinary notebooks follow the nearest runtime theme. Override with
+    `theme_source="host"` or `"nearest"` if needed. Explicit light/dark schemes
+    still win. Widget CSS is isolated from host table and control styles.
+
     Literal white stays white: use `color.theme("neutral", alpha=0.8)` when you
     mean a partially transparent neutral surface. `color.fixed("#dc2626")`
     preserves an exact brand or reference colour even with adaptation enabled.
@@ -90,7 +95,7 @@ def theme_light(EvidentialTable, mo, theme_columns, theme_data):
         )
     )
     light_table
-    return (light_table,)
+    return
 
 
 @app.cell(hide_code=True)
@@ -126,7 +131,7 @@ def theme_dark(EvidentialTable, mo, theme_columns, theme_data):
         )
     )
     dark_table
-    return (dark_table,)
+    return
 
 
 @app.cell

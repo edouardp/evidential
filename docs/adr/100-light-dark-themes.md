@@ -33,7 +33,8 @@ identities, gradient ordering and intentional white or brand colours.
 Chosen option: **3**. `color_scheme="auto"|"light"|"dark"` is shared by
 tables and DimensionGrid; `auto` is the default. Explicit widget settings win,
 then host theme attributes/classes or CSS `color-scheme`, then the OS preference.
-Host detection crosses shadow roots. Changes to host attributes and OS
+Host detection crosses shadow roots. ADR-101 extends automatic detection for
+embedded islands and adds `theme_source` overrides. Changes to host attributes and OS
 preferences update existing widgets; listeners are disposed with the widget.
 Printing temporarily uses the light scheme and restores the previous mode.
 

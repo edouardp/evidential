@@ -5,6 +5,8 @@ Run with ``make test-browser`` (or ``uv run pytest -m browser tests/browser``).
 
 from __future__ import annotations
 
+import re
+
 import pytest
 from paint_helpers import assert_colors, painted_colors
 from playwright.sync_api import expect
@@ -40,7 +42,7 @@ def test_keyboard_sort_and_group_toggle(page, live_server):
     header.focus()
     page.keyboard.press("Enter")
     assert "London" in cell_text(page, "#raw", 0, 1)
-    assert header.evaluate("el => el === document.activeElement")
+    assert header.evaluate("el => el === el.getRootNode().activeElement")
     page.keyboard.press("Space")
     assert "Chicago" in cell_text(page, "#raw", 0, 1)
     button = page.locator("#grouped button.et-chevron").first
@@ -49,7 +51,7 @@ def test_keyboard_sort_and_group_toggle(page, live_server):
     page.keyboard.press("Enter")
     assert page.locator("#grouped tbody tr").count() < initial
     assert button.get_attribute("aria-expanded") == "false"
-    assert button.evaluate("el => el === document.activeElement")
+    assert button.evaluate("el => el === el.getRootNode().activeElement")
     page.keyboard.press("Space")
     assert page.locator("#grouped tbody tr").count() == initial
 
@@ -74,7 +76,7 @@ def test_keyboard_selection_retains_focus_through_synced_updates(page, live_serv
     row = page.locator("#keyboard-table tbody tr")
     row.focus()
     page.keyboard.press("Enter")
-    page.wait_for_function("document.querySelector('#keyboard-table tbody tr') === document.activeElement")
+    expect(page.locator("#keyboard-table tbody tr").first).to_be_focused()
     assert row.get_attribute("aria-selected") == "true"
     page.keyboard.press("Space")
     assert row.get_attribute("aria-selected") == "false"
@@ -345,7 +347,7 @@ def render_subcolumns(page, live_server):
         widget.render({el, model: {get: key => data[key], on: () => {}, off: () => {}}});
         el.scrollIntoView();
     }""")
-    page.wait_for_function("document.querySelector('#subcolumns .et-th-subcolumns').classList.contains('et-frozen')")
+    expect(page.locator("#subcolumns .et-th-subcolumns")).to_have_class(re.compile("et-frozen"))
 
 
 def test_subcolumns_alignment_shared_header_and_keyboard_sort(page, live_server):
@@ -381,7 +383,7 @@ def test_subcolumns_alignment_shared_header_and_keyboard_sort(page, live_server)
     header.focus()
     page.keyboard.press("Enter")
     assert cell_text(page, "#subcolumns", 0, 0) == "B"
-    assert header.evaluate("el => el === document.activeElement")
+    assert header.evaluate("el => el === el.getRootNode().activeElement")
 
 
 def test_subcolumns_frozen_edges_and_sticky_header_levels(page, live_server):
@@ -503,7 +505,7 @@ def test_statistics_demo_cycles_small_centered_dots_without_moving_rows(page, li
     controls.nth(1).press("Enter")
     assert controls.nth(1).inner_text() == "○○●"
     assert "distinct: 2" in cells.nth(2).inner_text()
-    assert controls.nth(1).evaluate("el => el === document.activeElement")
+    assert controls.nth(1).evaluate("el => el === el.getRootNode().activeElement")
     controls.nth(1).press("Space")
     assert controls.nth(1).inner_text() == "●○○"
     assert cells.nth(2).get_attribute("data-stats-column") == "fare"

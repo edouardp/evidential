@@ -70,7 +70,6 @@ class DimensionGrid(anywidget.AnyWidget):
     """
 
     _esm = Path(__file__).parent / "static" / "dimension-grid.js"
-    _css = Path(__file__).parent / "static" / "dimension-grid.css"
 
     selected = traitlets.Dict(default_value={}).tag(sync=True)
     facets = traitlets.List(default_value=[]).tag(sync=True)
@@ -92,6 +91,8 @@ class DimensionGrid(anywidget.AnyWidget):
         subtitle: str | None = None,
         selected: Mapping[str, Sequence[Scalar]] | None = None,
         color_scheme: ColorScheme = "auto",
+        theme_source: Literal["auto", "nearest", "host"] = "auto",
+        css: str | None = None,
         adapt_colors: bool = False,
         theme: Theme | None = None,
     ) -> None:
@@ -125,7 +126,13 @@ class DimensionGrid(anywidget.AnyWidget):
         self._domains = self._get_domains(self._records)
         super().__init__(
             options={
-                **settings(color_scheme=color_scheme, adapt_colors=adapt_colors, theme=theme),
+                **settings(
+                    color_scheme=color_scheme,
+                    theme_source=theme_source,
+                    adapt_colors=adapt_colors,
+                    theme=theme,
+                    css=css,
+                ),
                 "format": format,
                 "multiple": multiple,
                 "height": height,

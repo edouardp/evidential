@@ -115,7 +115,7 @@ export default {
       });
       viewport.addEventListener("scroll", () => drawWindow(state));
       viewport.addEventListener("keydown", event => {
-        const index = Number(document.activeElement?.dataset.index ?? -1);
+        const index = Number(root.getRootNode().activeElement?.dataset.index ?? -1);
         let target;
         if (event.key === "ArrowDown") target = Math.min(state.items.length - 1, index + 1);
         if (event.key === "ArrowUp") target = Math.max(0, index - 1);
@@ -155,7 +155,8 @@ export default {
     function drawWindow(state) {
       const { viewport, content, items } = state;
       const [start, end] = windowRange(items.length, viewport.scrollTop, viewport.clientHeight || options.height);
-      const focusKey = content.contains(document.activeElement) ? document.activeElement.dataset.key : null;
+      const active = root.getRootNode().activeElement;
+      const focusKey = content.contains(active) ? active.dataset.key : null;
       content.style.paddingTop = `${start * ROW_HEIGHT}px`;
       content.style.paddingBottom = `${(items.length - end) * ROW_HEIGHT}px`;
       content.replaceChildren(...items.slice(start, end).map((item, offset) => rowButton(state, item, state.selected.has(key(item.value)), start + offset)));
@@ -179,7 +180,7 @@ export default {
     }
 
     function update() {
-      const focused = document.activeElement;
+      const focused = root.getRootNode().activeElement;
       const focusedColumn = [...columns.values()].find(state => state.column.contains(focused));
       const focusKey = focused?.dataset.key;
       for (const facet of model.get("facets") || []) {

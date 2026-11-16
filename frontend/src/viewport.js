@@ -15,7 +15,7 @@ export class TableViewport {
         !["ArrowLeft", "ArrowRight"].includes(event.key)) return;
       // Inputs and composite widgets own their arrows. Graphic inspection
       // handles its keys on the root first and stops them before this dialog.
-      if (event.target?.closest?.('input, textarea, select, [contenteditable]:not([contenteditable="false"]), ' +
+      if ((event.composedPath?.()[0] || event.target)?.closest?.('input, textarea, select, [contenteditable]:not([contenteditable="false"]), ' +
         '[role="textbox"], [role="searchbox"], [role="combobox"], [role="slider"], [role="spinbutton"], ' +
         '[role="listbox"], [role="menu"], [role="menubar"], [role="tablist"], [role="radiogroup"]')) return;
       event.preventDefault();
@@ -23,7 +23,7 @@ export class TableViewport {
       const moved = this.advancePage(event.key === "ArrowRight" ? "next" : "prev");
       // Paging can replace a focused row or page button. Keep subsequent
       // key presses in the modal instead of dropping focus onto the document.
-      if (moved && !this.dialog.contains(this.dialog.ownerDocument.activeElement)) {
+      if (moved && !this.dialog.contains(this.dialog.getRootNode().activeElement)) {
         this.dialog.focus({preventScroll: true});
       }
     };

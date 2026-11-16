@@ -13,7 +13,7 @@ export async function benchmarkTable(data, samples = 5) {
     const initial = performance.now() - start;
     const durations = [];
     for (let index = 0; index < samples; index++) {
-      const button = el.querySelector('button[aria-label="Next page"]');
+      const button = el.shadowRoot.querySelector('button[aria-label="Next page"]');
       if (!button || button.disabled) throw new Error("Benchmark needs enough records for every navigation sample");
       const before = performance.now();
       button.click();
@@ -25,9 +25,9 @@ export async function benchmarkTable(data, samples = 5) {
       rows: data.rows.length,
       initial_ms: initial,
       navigation_median_ms: durations[Math.floor(durations.length / 2)],
-      visible_rows: el.querySelectorAll("tbody tr").length,
-      fitted_labels: el.querySelectorAll("[data-label-position]").length,
-      point_clusters: el.querySelectorAll(".et-point-composite").length,
+      visible_rows: el.shadowRoot.querySelectorAll("tbody tr").length,
+      fitted_labels: el.shadowRoot.querySelectorAll("[data-label-position]").length,
+      point_clusters: el.shadowRoot.querySelectorAll(".et-point-composite").length,
     };
   } finally { cleanup(); }
 }

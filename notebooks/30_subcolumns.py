@@ -275,7 +275,7 @@ def economist_recreation(EvidentialTable, col, economist_records, mo):
                 "background": "#ffffff", "text": "#242424", "muted": "#808080",
                 "header_bg": "#ffffff", "header_text": "#242424",
                 "header_border": "#808080", "shading": "#d5e7ef",
-                "hover": "#d5e7ef", "font_size": "14px",
+                "hover": "#d5e7ef", "font_size": "14px", "font": "Arial Narrow, Arial, sans-serif",
             },
             caption=(
                 "Source: Haver Analytics. ∗% change on previous quarter, annual rate. "
@@ -286,37 +286,35 @@ def economist_recreation(EvidentialTable, col, economist_records, mo):
         )
     )
     economist_css = """
-    <style>
-    .economist-recreation { max-width: 835px; font-family: 'Arial Narrow', Arial, sans-serif; }
-    .economist-recreation .et-root { line-height: 1.25; }
-    .economist-recreation .et-title { font-size: 21px; font-weight: 700; }
-    .economist-recreation .et-subtitle { font-size: 17px; color: #242424; }
-    .economist-recreation .et-titlebar { margin-bottom: 4px; }
-    .economist-recreation .et-th { font-weight: 400; color: #808080; padding: 2px 5px; text-align: left; }
-    .economist-recreation .et-th-group { text-align: left; color: #242424; font-weight: 700; letter-spacing: 0; font-size: 17px; border-left: 1px solid #808080; }
-    .economist-recreation .et-th-group .et-th-title { white-space: nowrap; }
-    .economist-recreation .et-th-group .et-th-line:not(:first-child) { color: #808080; font-size: 14px; font-weight: 400; }
-    .economist-recreation .et-th-subcolumns .et-th-inner { display: flex; }
-    .economist-recreation .et-th-group:last-child .et-th-line { font-size: 17px; font-weight: 700; color: #242424; }
-    .economist-recreation .et-th-group::after { display: none; }
-    .economist-recreation .et-th-group-blank { border-left: none; }
-    .economist-recreation .et-th { cursor: default; }
-    .economist-recreation .et-th:hover { background: #ffffff; }
-    .economist-recreation .et-td { padding-top: 1px; padding-bottom: 1px; }
-    .economist-recreation .et-td:first-child { width: 29%; padding-left: 7px; }
-    .economist-recreation .et-row:not(.et-row-shaded) .et-td:not(.et-color-cell) { background: #d5e7ef; }
-    .economist-recreation .et-row-shaded .et-td:not(.et-color-cell) { background: #ffffff; }
-    .economist-recreation .et-td[data-column-index='2'],
-    .economist-recreation .et-td[data-column-index='6'],
-    .economist-recreation .et-td[data-column-index='9'] { font-size: 11px; }
-    .economist-recreation .et-row:nth-child(6) .et-td,
-    .economist-recreation .et-row:nth-child(15) .et-td,
-    .economist-recreation .et-row:nth-child(23) .et-td { border-top: 1px solid #808080; }
-    .economist-recreation .et-caption { color: #808080; font-size: 12px; margin-top: 3px; }
-    .economist-recreation .et-table-actions { display: none; }
-    </style>
+    .et-root { line-height: 1.25; }
+    .et-title { font-size: 21px; font-weight: 700; }
+    .et-subtitle { font-size: 17px; color: #242424; }
+    .et-titlebar { margin-bottom: 4px; }
+    .et-th { font-weight: 400; color: #808080; padding: 2px 5px; text-align: left; }
+    .et-th-group { text-align: left; color: #242424; font-weight: 700; letter-spacing: 0; font-size: 17px; border-left: 1px solid #808080; }
+    .et-th-group .et-th-title { white-space: nowrap; }
+    .et-th-group .et-th-line:not(:first-child) { color: #808080; font-size: 14px; font-weight: 400; }
+    .et-th-subcolumns .et-th-inner { display: flex; }
+    .et-th-group:last-child .et-th-line { font-size: 17px; font-weight: 700; color: #242424; }
+    .et-th-group::after { display: none; }
+    .et-th-group-blank { border-left: none; }
+    .et-th { cursor: default; }
+    .et-th:hover { background: #ffffff; }
+    .et-td { padding-top: 1px; padding-bottom: 1px; }
+    .et-td:first-child { width: 29%; padding-left: 7px; }
+    .et-row:not(.et-row-shaded) .et-td:not(.et-color-cell) { background: #d5e7ef; }
+    .et-row-shaded .et-td:not(.et-color-cell) { background: #ffffff; }
+    .et-td[data-column-index='2'],
+    .et-td[data-column-index='6'],
+    .et-td[data-column-index='9'] { font-size: 11px; }
+    .et-row:nth-child(6) .et-td,
+    .et-row:nth-child(15) .et-td,
+    .et-row:nth-child(23) .et-td { border-top: 1px solid #808080; }
+    .et-caption { color: #808080; font-size: 12px; margin-top: 3px; }
+    .et-table-actions { display: none; }
     """
-    mo.Html(f'{economist_css}<div class="economist-recreation">{economist.text}</div>')
+    economist.widget.update_options(css=economist_css)
+    mo.Html(f'<div class="economist-recreation">{economist.text}</div>')
     return
 
 

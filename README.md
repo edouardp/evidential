@@ -108,6 +108,71 @@ table = mo.ui.anywidget(EvidentialTable(tips, title="Tipping by city"))
 table
 ```
 
+<!-- notebook: notebooks/64_light_dark.py#theme_light call -->
+
+### Light and dark
+
+Tables and DimensionGrid support `color_scheme="auto"`, `"light"` and
+`"dark"`. Automatic mode follows the notebook or host theme first, then
+the operating system. It is the default.
+
+These examples share one set of illustrative regional sales and the same
+columns. Named palettes adapt automatically. Set `adapt_colors=True` to
+adapt custom data colours too; otherwise literal colours stay exact.
+
+```python
+EvidentialTable(
+    theme_data,
+    columns=...,
+    color_scheme="light",
+    adapt_colors=True,
+    title="Regional sales · light",
+    row_shading=True,
+    border=False,
+    page_size=0,
+    width=800,
+)
+```
+
+![Light and dark](docs/img/theme-light.png)
+
+[Notebook source: `theme_light`](notebooks/64_light_dark.py)
+
+<!-- /notebook -->
+
+<!-- notebook: notebooks/64_light_dark.py#theme_dark call -->
+
+The same colours in dark mode. Adaptation preserves hue, opacity, palette
+order and numeric domains. Marks, legends and tooltip swatches agree.
+
+Use `color.theme("neutral", alpha=0.8)` for a diverging palette's centre:
+it follows the surface and lets stripes show through. Use
+`color.fixed("#dc2626")` to preserve an exact colour, as the red segments do
+here. Both helpers come from `from evidential import color`.
+
+[Notebook 64](notebooks/64_light_dark.py) also demonstrates a live mode
+selector, points, chips, gradients and DimensionGrid.
+
+```python
+EvidentialTable(
+    theme_data,
+    columns=...,
+    color_scheme="dark",
+    adapt_colors=True,
+    title="Regional sales · dark",
+    row_shading=True,
+    border=False,
+    page_size=0,
+    width=800,
+)
+```
+
+![theme_dark](docs/img/theme-dark.png)
+
+[Notebook source: `theme_dark`](notebooks/64_light_dark.py)
+
+<!-- /notebook -->
+
 ## 2. Point it at your data
 
 `EvidentialTable` accepts a list of dicts, a pandas `DataFrame`, a PyArrow
@@ -923,7 +988,9 @@ Color stops can include alpha: `["red", "#ffffffcc", "blue"]` uses white at
 value. Text and marks keep their own opacity. Automatic text colours account
 for the fill's transparency and the surface beneath it, including row stripes
 and dark backgrounds. See the comparison in
-[notebook 12](notebooks/12_color_scales.py).
+[notebook 12](notebooks/12_color_scales.py). For palettes shared across light
+and dark modes, use `color.theme("neutral", alpha=0.8)` for the midpoint
+instead of literal white; see [notebook 64](notebooks/64_light_dark.py).
 
 ```python
 columns=[

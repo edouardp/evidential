@@ -250,3 +250,19 @@ size is applied once in em; point sizes are pixels and refer to unrotated boxes.
 Sparkline `type="points"` and optional line/area markers accept the same shape,
 angle and outline, with their existing outline-free default. Bar/change styles
 do not have marker shape options. Notebook 62 demonstrates the combinations.
+
+## Light and dark colours
+
+Use `settings(color_scheme="auto", adapt_colors=True)` to share a palette across
+notebook themes. `auto` follows the host before the OS; `light` and `dark` force
+a scheme. Named palettes adapt automatically; custom literals adapt only with
+`adapt_colors=True`. DimensionGrid accepts the same options and `theme`.
+
+From `evidential import color`, use `color.theme("neutral", alpha=0.8)` at the
+centre of a diverging palette. It follows the surface and preserves transparency.
+Other roles: surface, text, muted, accent, positive, negative.
+`color.fixed("#dc2626")` preserves an exact colour even when adaptation is on.
+White remains white; do not use it when you mean a theme-neutral midpoint.
+Use the same declarations for marks, gradients and data-supplied colour fields.
+Avoid duplicating palettes for each mode. Leave text colour automatic where
+possible; review arbitrary low-opacity marks in both schemes.

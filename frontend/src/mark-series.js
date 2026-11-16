@@ -1,5 +1,5 @@
 // Names and fills belong to the marks, independently of their drawn labels.
-import { resolveColor, seriesColors } from "./color.js";
+import { resolveColor, seriesColors, dataColor, bindColorResolver } from "./color.js";
 import { columnHeading } from "./headers.js";
 
 export const DEFAULT_MARK_COLOR = "var(--et-accent, #2563eb)";
@@ -8,17 +8,21 @@ export const DEFAULT_MARK_COLOR = "var(--et-accent, #2563eb)";
 export function pointSeries(enc) {
   const fields = enc.sources || [];
   const colors = seriesColors(fields.length, enc.palette);
-  return fields.map((source, index) => ({...enc, source, color: enc.color ?? colors[index]}));
+  return fields.map((source, index) => {
+    const point = {...enc, source, color: enc.color ?? colors[index]};
+    bindColorResolver(point, value => dataColor(value, enc));
+    return point;
+  });
 }
 
 /** Resolve the same fill for a mark and its legend swatch. */
 export function markColor(enc, row, fallback = DEFAULT_MARK_COLOR, isNegative = Number(row?.[enc.source]) < 0) {
   if (isNegative) {
-    const negative = resolveColor(enc.color_negative) || resolveColor(row?.[enc.color_negative_column]);
+    const negative = resolveColor(enc.color_negative) || dataColor(row?.[enc.color_negative_column], enc);
     if (negative) return negative;
   }
   if (enc.color_column && row) {
-    const resolved = resolveColor(row[enc.color_column]);
+    const resolved = dataColor(row[enc.color_column], enc);
     if (resolved) return resolved;
   }
   return resolveColor(enc.color) || fallback;

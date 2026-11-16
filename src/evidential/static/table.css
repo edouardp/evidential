@@ -797,7 +797,7 @@ tbody tr:last-child .et-bar-center .et-bar-axis { bottom: var(--et-bar-pad, 0); 
   width: 0;
   font-size: 0.85em;
   line-height: 1;
-  color: #000;
+  color: var(--et-axis-text, #000);
   bottom: 0.25rem;
   white-space: nowrap;
 }
@@ -807,7 +807,7 @@ tbody tr:last-child .et-bar-center .et-bar-axis { bottom: var(--et-bar-pad, 0); 
   left: 0;
   top: 100%;
   height: 0.25rem;
-  border-left: 1px solid #000;
+  border-left: 1px solid var(--et-axis-text, #000);
 }
 .et-axis-row-bottom .et-axis-tick { top: 0.25rem; bottom: auto; }
 .et-axis-row-bottom .et-axis-tick::after { top: -0.25rem; }
@@ -986,7 +986,7 @@ tbody tr:last-child .et-bar-center .et-bar-axis { bottom: var(--et-bar-pad, 0); 
    the numbers stay aligned down the column. */
 .et-delta-indicator { display: inline-block; width: 1em; text-align: center; }
 .et-delta-value { font-variant-numeric: lining-nums tabular-nums; }
-.et-delta-good { color: #16a34a; }
+.et-delta-good { color: var(--et-positive, #16a34a); }
 .et-delta-bad { color: var(--et-negative); }
 .et-delta-neutral { color: var(--et-muted); }
 .et-delta-chip {
@@ -995,7 +995,7 @@ tbody tr:last-child .et-bar-center .et-bar-axis { bottom: var(--et-bar-pad, 0); 
   border-radius: 999px;
   border: 1px solid currentColor;
 }
-.et-delta-chip.et-delta-good { background: color-mix(in srgb, #16a34a 15%, transparent); }
+.et-delta-chip.et-delta-good { background: color-mix(in srgb, var(--et-positive, #16a34a) 15%, transparent); }
 .et-delta-chip.et-delta-bad { background: color-mix(in srgb, var(--et-negative) 15%, transparent); }
 .et-delta-chip.et-delta-neutral { background: color-mix(in srgb, var(--et-muted) 15%, transparent); }
 

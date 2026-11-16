@@ -136,7 +136,7 @@ test("numeric color and chip scales use inferred ranges", () => {
   }
 });
 
-test("theme options update and removing overrides restores inherited tokens", () => {
+test("theme options update and removing overrides restores scheme tokens", () => {
   const model = makeModel([{ x: 1 }], [{ name: "x" }], { theme: { background: "red" } }, el);
   const renderer = new EvidentialTableRenderer(model, el);
   model.data.options = { theme: { background: "blue" } };
@@ -145,8 +145,8 @@ test("theme options update and removing overrides restores inherited tokens", ()
   assert.equal(renderer.dialog.style.getPropertyValue("--et-bg"), "blue");
   model.data.options = {};
   renderer.render();
-  assert.equal(renderer.root.style.getPropertyValue("--et-bg"), "");
-  assert.equal(renderer.dialog.style.getPropertyValue("--et-bg"), "");
+  assert.equal(renderer.root.style.getPropertyValue("--et-bg"), "#ffffff");
+  assert.equal(renderer.dialog.style.getPropertyValue("--et-bg"), "#ffffff");
   renderer.destroy();
 });
 
@@ -255,8 +255,33 @@ test("comm updates invalidate caches even when array identity is unchanged", asy
   events.get("change:rows")();
   await Promise.resolve();
   assert.match(el.querySelector(".et-stats").textContent, /99/);
+  model.data.columns[0].title = "Updated";
+  events.get("change:columns")();
+  await Promise.resolve();
+  assert.match(el.querySelector("thead").textContent, /Updated/);
+  model.data.options.color_scheme = "dark";
+  events.get("change:options")();
+  await Promise.resolve();
+  assert.equal(el.querySelector(".et-root").dataset.colorScheme, "dark");
   dispose();
   assert.equal(events.size, 0);
+});
+
+test("API appearance updates preserve the search input and current page", () => {
+  const model = makeModel([{x: 1}, {x: 2}, {x: 3}], [{name: "x"}], {page_size: 1, search: true}, el);
+  const events = new Map();
+  model.on = (event, callback) => events.set(event, callback);
+  model.off = event => events.delete(event);
+  const dispose = render({model, el});
+  el.querySelector('[aria-label="Next page"]').click();
+  const input = el.querySelector(".et-search"); input.focus();
+  model.data.options = {...model.data.options, color_scheme: "dark", adapt_colors: true};
+  events.get("change:options")();
+  assert.equal(el.querySelector(".et-search"), input);
+  assert.equal(document.activeElement, input);
+  assert.equal(Number(el.querySelector("tbody").textContent), 2);
+  assert.equal(el.querySelector(".et-root").dataset.colorScheme, "dark");
+  dispose();
 });
 
 test("batched comm changes render once and pending work stops on disposal", async () => {

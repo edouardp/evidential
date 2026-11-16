@@ -89,10 +89,17 @@ export function resolveColor(value) {
   return NAMED_COLORS[value.toLowerCase()] ?? value;
 }
 
+// Compiled presentation metadata owns a resolver; source data stays untouched.
+const colorResolvers = new WeakMap();
+export function bindColorResolver(spec, resolve) { colorResolvers.set(spec, resolve); }
+export function dataColor(value, spec) {
+  return colorResolvers.get(spec)?.(value) ?? resolveColor(value);
+}
+
 /** Structured observations may override a numeric color encoding. */
-export function observationColor(source) {
+export function observationColor(source, spec) {
   return source && typeof source === "object" && !Array.isArray(source) && typeof source.color === "string"
-    ? resolveColor(source.color) || null : null;
+    ? dataColor(source.color, spec) || null : null;
 }
 
 const cellColorParsers = new WeakMap();
@@ -423,7 +430,7 @@ export function calculateColorStyles(col, row, range, scale, surface) {
   const conditional = opts.conditional_colors;
   if (conditional && conditional in row) {
     const v = row[conditional];
-    if (v && typeof v === "string") return colorStylesFromHex(v, surface);
+    if (v && typeof v === "string") return colorStylesFromHex(dataColor(v, opts), surface);
     return null;
   }
   const scaleColumn = opts.scale_column || col.name;

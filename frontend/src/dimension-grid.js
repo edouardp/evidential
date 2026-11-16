@@ -1,3 +1,4 @@
+import {ThemeController} from "./theme.js";
 import { h } from "./dom.js";
 import { formatTitle, formatValue } from "./format.js";
 
@@ -17,7 +18,7 @@ export default {
     const options = model.get("options");
     const columns = new Map();
     const root = h("section", { class: "edg-root", "aria-label": options.title || "Dimension filters" });
-    root.style.setProperty("--edg-color", options.color);
+
     root.style.setProperty("--edg-height", `${options.height}px`);
     root.style.setProperty("--edg-width", `${options.dimension_width}px`);
     root.style.setProperty("--edg-row-height", `${ROW_HEIGHT}px`);
@@ -31,6 +32,13 @@ export default {
     const nav = h("div", { class: "edg-nav" }, [reset, previous, next]);
     root.append(h("div", { class: "edg-toolbar" }, [titles, nav]), track);
     el.append(root);
+    const theme = new ThemeController(el, [root], () => model.get("options") || {}, paintTheme);
+    function paintTheme() {
+      const resolved = theme.prepare([], model.get("options") || {});
+      root.style.setProperty("--edg-color", resolved.colors.resolve(options.color));
+    }
+    paintTheme();
+    model.on("change:options", paintTheme);
 
     function navigation() {
       const overflow = track.scrollWidth > track.clientWidth + 1;
@@ -197,6 +205,8 @@ export default {
       model.off("change:facets", update);
       model.off("change:selected", update);
       resize?.disconnect();
+      model.off("change:options", paintTheme);
+      theme.destroy();
       root.remove();
     };
   },

@@ -2,7 +2,7 @@
 import {h} from "./dom.js";
 import {shaded} from "./rows.js";
 import {navigationUrl} from "./urls.js";
-import {colorStylesFromHex, setCellBackground} from "./color.js";
+import {colorStylesFromHex, setCellBackground, dataColor} from "./color.js";
 import {bindRowSelection} from "./interactions.js";
 import {renderCell} from "./cells.js";
 import {decorateSubcolumn} from "./headers.js";
@@ -45,7 +45,7 @@ export function renderDataRow(row, columns, ctx, index, ports) {
   const hasLink = opts.link && navigationUrl(row[opts.link]);
   const rowColorValue = opts.row_conditional_colors ? row[opts.row_conditional_colors] : null;
   const rowColorStyles =
-    typeof rowColorValue === "string" ? colorStylesFromHex(rowColorValue) : null;
+    typeof rowColorValue === "string" ? colorStylesFromHex(dataColor(rowColorValue, opts)) : null;
 
   const tr = h("tr", {
     class: [

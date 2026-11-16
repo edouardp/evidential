@@ -24,6 +24,7 @@ from typing import (
 Length = str | float
 Palette = str | Sequence[str]
 Rotation = Literal["vertical"] | float
+ColorScheme = Literal["auto", "light", "dark"]
 FigureStyle = Literal[
     "oldstyle",
     "oldstyle-tabular",
@@ -66,6 +67,7 @@ class Theme(TypedDict, total=False):
     pivot_bg: str | None
     link: str | None
     negative: str | None
+    positive: str | None
     accent: str | None
     font: str | None
     font_size: str | None
@@ -80,6 +82,8 @@ class TooltipOptions(TypedDict, total=False):
 
 
 class TableOptions(TypedDict, total=False):
+    color_scheme: ColorScheme
+    adapt_colors: bool
     tooltips: TooltipOptions | None
     title: str | None
     subtitle: str | None
@@ -552,6 +556,8 @@ class ColumnOptions(TypedDict, total=False):
 
 
 TABLE_DEFAULTS: TableOptions = {
+    "color_scheme": "auto",
+    "adapt_colors": False,
     "tooltips": None,
     "title": None,
     "subtitle": None,

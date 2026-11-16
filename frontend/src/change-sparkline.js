@@ -63,7 +63,7 @@ export function renderChangeSparkline(points, opts, colorForValue) {
     rect.setAttribute("width", String(slot * 0.7));
     rect.setAttribute("height", String(rectHeight));
     rect.setAttribute("rx", String(Math.min(0.6, slot * 0.35)));
-    const color = observationColor(source) || colors(value);
+    const color = observationColor(source, opts) || colors(value);
     rect.setAttribute("fill", color);
     rect.setAttribute("data-state", state);
     const data = observationTooltip(x, value, opts.y_fmt, source, color, [opts.x, opts.y, "x", "y", "value"]);

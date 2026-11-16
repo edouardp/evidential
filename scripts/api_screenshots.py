@@ -42,6 +42,7 @@ NOTEBOOK = ROOT / "notebooks" / "49_api_screenshots.py"
 GALLERY_NOTEBOOK = ROOT / "notebooks" / "50_graphics_gallery.py"
 STUDIO_NOTEBOOK = ROOT / "notebooks" / "21_studio_dashboard.py"
 LAYOUT_NOTEBOOK = ROOT / "notebooks" / "51_table_layouts.py"
+THEME_NOTEBOOK = ROOT / "notebooks" / "64_light_dark.py"
 DIMENSION_NOTEBOOK = ROOT / "notebooks" / "56_dimension_grid.py"
 OUT = ROOT / "docs" / "api" / "images"
 PREVIEW = ROOT / "docs" / "preview.png"
@@ -238,11 +239,10 @@ def _capture(page, cell: str, path: Path) -> Path:
     root = page.locator(f'[data-cell-name="{cell}"] :is(.et-root, .edg-root)')
     root.scroll_into_view_if_needed()
     # Let the table keep its configured width while the screenshot gains the
-    # same 20px white border the documentation used to draw around each table.
+    # same 20px border, using the widget's actual light/dark surface.
     root.evaluate(
         """el => {
             el.style.padding = '20px';
-            el.style.background = '#fff';
             el.style.boxSizing = 'content-box';
         }"""
     )
@@ -278,6 +278,10 @@ def _notebook_targets() -> list[tuple[Path, list[tuple[Path, str]]]]:
     return [
         (NOTEBOOK, [*api_targets, *EXTRAS]),
         (GALLERY_NOTEBOOK, GALLERY),
+        (
+            THEME_NOTEBOOK,
+            [(ROOT / "docs" / "img" / f"theme-{mode}.png", f"theme_{mode}") for mode in ("light", "dark")],
+        ),
         (STUDIO_NOTEBOOK, [(ROOT / "docs" / "img" / "studio-table.png", "revenue_table")]),
         (LAYOUT_NOTEBOOK, LAYOUTS),
         (DIMENSION_NOTEBOOK, [(ROOT / "docs" / "img" / "dimension-grid.png", "orders_grid")]),

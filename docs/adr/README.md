@@ -118,6 +118,7 @@ dated, immutable record of the decisions behind them.
 | [097](097-shared-marker-geometry.md) | Shared Marker Shapes and Rotation | Accepted |
 | [098](098-shared-numeric-gradients.md) | Shared Numeric Gradients and Scale Strips | Accepted |
 | [099](099-painted-background-contrast.md) | Contrast Against Painted Backgrounds | Accepted |
+| [100](100-light-dark-themes.md) | Shared Light and Dark Themes | Accepted |
 
 ## Creating New ADRs
 

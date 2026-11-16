@@ -26,6 +26,7 @@ import { TooltipController, inspectHeader } from "./tooltips.js";
 import { combinePoints } from "./point-clusters.js";
 import { formatTitle } from "./format.js";
 import {ContrastController} from "./contrast.js";
+import {ThemeController} from "./theme.js";
 
 /** Map a `font_size` to a CSS value.
  *
@@ -43,7 +44,6 @@ export function fontSizeValue(value) {
   }
   return text;
 }
-import { resolveColor } from "./color.js";
 
 export class EvidentialTableRenderer {
   constructor(model, el) {
@@ -71,8 +71,8 @@ export class EvidentialTableRenderer {
   }
 
   get rows() { return this.model.get("rows") || []; }
-  get columns() { return this.model.get("columns") || []; }
-  get options() { return this.model.get("options") || {}; }
+  get columns() { return this._presentation?.columns || this.model.get("columns") || []; }
+  get options() { return this._presentation?.options || this.model.get("options") || {}; }
 
   _build() {
     this.root = h("div", { class: "et-root", dataset: { widget: "evidence-table" } });
@@ -146,43 +146,19 @@ export class EvidentialTableRenderer {
       advancePage: direction => this._advance(direction),
     });
 
+    this._theme = new ThemeController(this.el, [this.root, this.dialog], () => this.model.get("options") || {},
+      () => this.render(true));
     this._contrast = new ContrastController(this.root, callback => this._viewport.frame(callback));
     this.render();
     this.setLoading(this.model.get("loading"));
   }
 
   _applyTheme() {
-    const opts = this.options;
-    const theme = opts.theme || {};
-    const surface =
-      theme.surface || theme.dialog_background || theme.background || opts.background_color;
-    const vars = {
-      "--et-bg": theme.background || opts.background_color,
-      "--et-surface": surface,
-      "--et-text": theme.text,
-      "--et-muted": theme.muted,
-      "--et-border": theme.border,
-      "--et-row-border": theme.row_border || (typeof opts.row_lines === "string" ? opts.row_lines : null),
-      "--et-header-bg": theme.header_bg || opts.header_color || surface,
-      "--et-header-border": theme.header_border,
-      "--et-header-text": theme.header_text || opts.header_font_color,
-      "--et-hover": theme.hover,
-      "--et-shading": theme.shading,
-      "--et-total-bg": theme.total_bg || opts.total_row_color,
-      "--et-total-text": theme.total_text || opts.total_font_color,
-      "--et-subtotal-bg": theme.subtotal_bg,
-      "--et-pivot-bg": theme.pivot_bg,
-      "--et-link": theme.link,
-      "--et-negative": theme.negative,
-      "--et-accent": theme.accent,
-      "--et-font": theme.font,
-      "--et-font-size": fontSizeValue(opts.font_size) || theme.font_size,
-    };
-    for (const [k, v] of Object.entries(vars)) {
-      for (const element of [this.root, this.dialog]) {
-        if (v) element.style.setProperty(k, resolveColor(v));
-        else element.style.removeProperty(k);
-      }
+    this._presentation = this._theme.prepare(this.model.get("columns") || [], this.model.get("options") || {}, this.model.get("row_layout"));
+    const size = fontSizeValue(this.options.font_size) || this.options.theme?.font_size;
+    for (const element of [this.root, this.dialog]) {
+      if (size) element.style.setProperty("--et-font-size", size);
+      else element.style.removeProperty("--et-font-size");
     }
   }
 
@@ -192,6 +168,7 @@ export class EvidentialTableRenderer {
     this._loadingController.destroy();
     this._viewport.destroy();
     this._contrast.destroy();
+    this._theme.destroy();
     this._tooltips.destroy();
     this._pipeline.clear();
     this.dialog.remove();
@@ -256,10 +233,10 @@ export class EvidentialTableRenderer {
     return page;
   }
   // --------------------------------------------------------------- render ---
-  render() {
+  render(themeOnly = false) {
     this._tooltips.hide();
-    const opts = this.options;
     this._applyTheme();
+    const opts = this.options;
     this.root.style.maxWidth =
       this._viewport.expanded || opts.width == null
         ? ""
@@ -284,16 +261,17 @@ export class EvidentialTableRenderer {
     this.root.classList.toggle("et-compact", !!opts.compact);
     this.root.classList.toggle("et-stretch-off", opts.stretch === false);
     this.root.classList.toggle("et-group-gap", !!opts.group_gap);
-    this._renderToolbar();
+    if (!themeOnly) this._renderToolbar();
 
     const processed = this._pipeline.get({
       rows: this.rows, columns: this.columns, options: opts,
-      rowLayout: this.model.get("row_layout"),
+      rowLayout: this._presentation.rowLayout,
       search: this._state.search, hidden: hiddenColumns(this.columns, this._state.hidden), sort: this._state.sort,
     });
     const { columns } = processed;
     this._renderTitle(columns);
     const visibility = this._pipeline.visible(processed, this._groupVersion, (key) => this._isCollapsed(key));
+    if (themeOnly) this._expandedProjection = processed;
     if (this._viewport.expanded && (this._expandedProjection !== processed || this._expandedGroupVersion !== this._groupVersion)) {
       this._expandedPages.reset();
       this._state.page = 0;
@@ -661,6 +639,7 @@ export function render({ model, el }) {
   let pendingDataRender = false;
   const dataChanged = () => {
     renderer._pipeline.clear();
+    renderer._theme.cache = null;
     if (pendingDataRender) return;
     pendingDataRender = true;
     queueMicrotask(() => {
@@ -669,16 +648,26 @@ export function render({ model, el }) {
     });
   };
   const setLoading = () => renderer.setLoading(model.get("loading"));
+  const optionsChanged = () => {
+    const before = renderer._theme.cache?.options || {}, after = model.get("options") || {};
+    if (before === after) { dataChanged(); return; }
+    const appearance = new Set(["color_scheme", "adapt_colors", "theme", "color_scale", "background_color",
+      "header_color", "header_font_color", "total_row_color", "total_font_color"]);
+    const changed = [...new Set([...Object.keys(before), ...Object.keys(after)])]
+      .filter(key => before[key] !== after[key]);
+    if (changed.every(key => appearance.has(key))) renderer.render(true);
+    else dataChanged();
+  };
   model.on("change:rows", dataChanged);
   model.on("change:columns", dataChanged);
-  model.on("change:options", dataChanged);
+  model.on("change:options", optionsChanged);
   model.on("change:row_layout", dataChanged);
   model.on("change:loading", setLoading);
   model.on("change:selected", rerender);
   return () => {
     model.off("change:rows", dataChanged);
     model.off("change:columns", dataChanged);
-    model.off("change:options", dataChanged);
+    model.off("change:options", optionsChanged);
     model.off("change:row_layout", dataChanged);
     model.off("change:selected", rerender);
     model.off("change:loading", setLoading);

@@ -77,7 +77,7 @@ def test_wheel_horizontal_navigation_search_and_keyboard(page, live_server):
     page.keyboard.press("Enter")
     assert len(page.evaluate("window.model.get('selected').dimension_0")) == 2
     page.emulate_media(color_scheme="dark")
-    assert page.locator(".edg-root").evaluate("el => getComputedStyle(el).backgroundColor") == "rgb(255, 255, 255)"
+    expect(page.locator(".edg-root")).to_have_css("background-color", "rgb(23, 27, 36)")
     page.screenshot(path="/private/tmp/evidential-dimensions-white.png")
     page.set_viewport_size({"width": 420, "height": 700})
     page.locator("main").evaluate("el => el.style.width = '100%'")

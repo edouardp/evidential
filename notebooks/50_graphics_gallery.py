@@ -480,7 +480,9 @@ def graphic_color_doc(mo):
     value. Text and marks keep their own opacity. Automatic text colours account
     for the fill's transparency and the surface beneath it, including row stripes
     and dark backgrounds. See the comparison in
-    [notebook 12](notebooks/12_color_scales.py).
+    [notebook 12](notebooks/12_color_scales.py). For palettes shared across light
+    and dark modes, use `color.theme("neutral", alpha=0.8)` for the midpoint
+    instead of literal white; see [notebook 64](notebooks/64_light_dark.py).
     """)
     return
 

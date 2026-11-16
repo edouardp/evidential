@@ -29,7 +29,7 @@ Quick start::
     )
 """
 
-from . import col, domain, duck, label, rows, skills
+from . import col, color, domain, duck, label, rows, skills
 from ._column import CURRENCY_CODES, Column, ColumnGroup
 from ._domain import Domain
 from ._label import Label
@@ -68,6 +68,7 @@ __all__ = [
     "SparklineType",
     "MarkerShape",
     "col",
+    "color",
     "label",
     "domain",
     "Domain",

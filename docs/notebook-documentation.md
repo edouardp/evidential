@@ -36,6 +36,10 @@ new images for visual quality as well.
 A version-only release bump is excluded from the environment fingerprint;
 dependency and configuration changes still invalidate it.
 
+Notebook 64 provides the paired light/dark examples; their explicit schemes
+make captures independent of the browser or OS theme. Capture padding retains
+the widget's own surface rather than forcing a white background.
+
 ## Adding an example
 
 1. Add a named table cell to `notebooks/49_api_screenshots.py` (API examples),

@@ -2,7 +2,7 @@ import { alignStyle, h, optString, inlineMarkdown, withFigure, isStub } from "./
 import { formatValue } from "./format.js";
 import { formattedText } from "./formatted-text.js";
 import { withDecimals, indentForCell, sectionPadding } from "./rows.js";
-import { calculateColorStyles, contrastTextColor, resolveColor, setCellBackground } from "./color.js";
+import { calculateColorStyles, contrastTextColor, resolveColor, setCellBackground, dataColor } from "./color.js";
 import { renderBar, renderDelta, renderMarks, renderSparkline, renderSymbols } from "./visualizations.js";
 import { inspectCell } from "./tooltips.js";
 import { navigationUrl } from "./urls.js";
@@ -137,10 +137,11 @@ export function renderCell({row, col, index, ctx, rowIndex, options: opts, toggl
   // Cell chrome (`cell_style=`): independent of the marks that sit on it.
   const cellStyle = col.cell_style || {};
   if (cellStyle.background_column && row[cellStyle.background_column] != null) {
-    setCellBackground(td, String(row[cellStyle.background_column]));
+    setCellBackground(td, dataColor(String(row[cellStyle.background_column]), cellStyle));
   } else if (cellStyle.background) {
     setCellBackground(td, cellStyle.background);
   }
+  if (col.highlight || cellStyle.background || cellStyle.background_column) autoContrast(td, {policy: "cell"});
   if (cellStyle.color) td.style.color = resolveColor(cellStyle.color);
   if (cellStyle.border) td.style.border = cellStyle.border;
   if (cellStyle.padding) td.style.padding = cellStyle.padding;

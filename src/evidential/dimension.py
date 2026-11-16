@@ -12,6 +12,7 @@ from typing import Any, Literal, TypedDict
 import anywidget
 import traitlets
 
+from .configuration import ColorScheme, Theme, settings
 from .data import infer_columns, normalize_data
 
 Aggregate = Literal["sum", "count", "mean", "min", "max"]
@@ -90,6 +91,9 @@ class DimensionGrid(anywidget.AnyWidget):
         title: str | None = None,
         subtitle: str | None = None,
         selected: Mapping[str, Sequence[Scalar]] | None = None,
+        color_scheme: ColorScheme = "auto",
+        adapt_colors: bool = False,
+        theme: Theme | None = None,
     ) -> None:
         records, inferred = normalize_data(data)
         schema = inferred or infer_columns(data, records)
@@ -121,6 +125,7 @@ class DimensionGrid(anywidget.AnyWidget):
         self._domains = self._get_domains(self._records)
         super().__init__(
             options={
+                **settings(color_scheme=color_scheme, adapt_colors=adapt_colors, theme=theme),
                 "format": format,
                 "multiple": multiple,
                 "height": height,

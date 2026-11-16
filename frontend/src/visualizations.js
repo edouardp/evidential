@@ -4,7 +4,7 @@ import {marksDomain, niceTicks, scalePosition} from "./mark-scales.js";
 import { h } from "./dom.js";
 import { formatValue } from "./format.js";
 import { formattedText } from "./formatted-text.js";
-import { resolveColor } from "./color.js";
+import { resolveColor, dataColor } from "./color.js";
 import { inspectable, inspectionData } from "./tooltips.js";
 import { markTooltip, tooltipText } from "./tooltip-data.js";
 import { renderMarkLabel } from "./mark-labels.js";
@@ -115,9 +115,9 @@ export function renderBar(col, value, formatted, range, row) {
   const leftward = opts.direction === "left";
   // A per-row colour column (`bar(color="@column")`) wins over a fixed colour.
   const rowColor =
-    opts.bar_color_column && row ? resolveColor(row[opts.bar_color_column]) : null;
+    opts.bar_color_column && row ? dataColor(row[opts.bar_color_column], opts) : null;
   const color = negative
-    ? (resolveColor(row?.[opts.bar_color_negative_column]) || rowColor || resolveColor(opts.bar_color_negative) || resolveColor(opts.bar_color) || "var(--et-negative, #dc2626)")
+    ? (dataColor(row?.[opts.bar_color_negative_column], opts) || rowColor || resolveColor(opts.bar_color_negative) || resolveColor(opts.bar_color) || "var(--et-negative, #dc2626)")
     : (rowColor || resolveColor(opts.bar_color) || "var(--et-accent, #2563eb)");
   const label = h(
     "span",

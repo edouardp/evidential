@@ -1,3 +1,4 @@
+import {autoContrast} from "./contrast.js";
 // Column ordering and header layout, independent of row processing.
 import { h, withFigure, alignStyle, isStub } from "./dom.js";
 import { formatTitle } from "./format.js";
@@ -157,6 +158,7 @@ export function renderHeader({columns, rowNumbers, options: opts, sort, onSort, 
         const spanned = columns.slice(cell.start, cell.start + cell.span);
         if (spanned.length && spanned.every((c) => c.highlight && c.highlight === spanned[0].highlight)) {
           th.style.backgroundColor = resolveColor(spanned[0].highlight);
+          if (!opts.header_font_color && !opts.theme?.header_text) autoContrast(th, {policy: "cell"});
         }
         groupRow.append(th);
       }
@@ -190,7 +192,10 @@ export function renderHeader({columns, rowNumbers, options: opts, sort, onSort, 
       th.style.setProperty("--et-th-angle", `${rotation}deg`);
     }
     const spanned = columns.slice(leaf.start, leaf.start + leaf.span);
-    if (col.highlight && spanned.every((member) => member.highlight === col.highlight)) th.style.backgroundColor = resolveColor(col.highlight);
+    if (col.highlight && spanned.every((member) => member.highlight === col.highlight)) {
+      th.style.backgroundColor = resolveColor(col.highlight);
+      if (!opts.header_font_color && !opts.theme?.header_text) autoContrast(th, {policy: "cell"});
+    }
     const inner = h("span", { class: "et-th-inner" });
     const title = columnHeading(col, opts, leaf.label);
     // A `\n` in the title forces a line break; whether other lines wrap at

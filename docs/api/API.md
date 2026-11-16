@@ -1092,7 +1092,7 @@ columns=[
   Axes belong to the header/footer, never synthetic body rows. A log scale needs a
   positive domain and labels powers of ten plus domain endpoints, with shorter
   unlabeled ticks at 2–9 within each decade. Their gaps shrink toward the next
-  decade; major and minor tick marks are black. It is what a forest plot
+  decade; major and minor tick marks follow the theme (black in light mode). It is what a forest plot
   uses with `.reference_line(1)`.
   `.scale(gradient=True)` adds a three-pixel color strip along the axis and enables
   its ticks. It requires a mark gradient and rejects an explicit `axis=False`.
@@ -1118,10 +1118,11 @@ columns=[
   labels account for the painted alpha layers and the underlying surface,
   including frozen cells, row stripes and the host page background. Label
   contrast includes the bar's opacity and sampled gradient colour. Explicit
-  text/label colours take precedence. Theme, host-background and system
-  colour-scheme changes refresh contrast without preparing the data again.
+  text/label colours take precedence. Hover, selection and transparent-host
+  background changes refresh contrast without preparing the data again. Theme
+  changes also refresh presentation colours while preserving table state.
   [Notebook 12](../../notebooks/12_color_scales.py) compares light and dark
-  surfaces using the same translucent fills; this does not add a dark-mode option.
+  surfaces using the same translucent fills.
 - **Sources** — a field name, `"@field"`, or a `lambda row: ...`. A callable is
   evaluated Python-side into a hidden helper column, so the browser (and any
   static export) only ever sees field names.
@@ -1460,7 +1461,47 @@ other than `auto`, `merge`, `group` and `subcolumns` return a `Column`;
 `row_numbers`, `column_stats`, `compact`, `empty_message`, `empty_rows`,
 `default_sort`, `row_conditional_colors`, `show_link_column`, `select`,
 `header_color`, `header_font_color`, `total_row_color`, `total_font_color`,
-`background_color`, `theme`, `color_scale`.
+`background_color`, `theme`, `color_scale`, `color_scheme`, `adapt_colors`.
+
+### Light and dark modes
+
+`color_scheme="auto"` (the default), `"light"` or `"dark"` works in
+`settings(...)`, table constructors and `table.update_options(...)`.
+DimensionGrid accepts the same `color_scheme`, `adapt_colors` and `theme`
+arguments. Automatic mode uses the nearest host's `data-color-scheme`,
+`data-theme`, `.light`/`.dark` class or CSS `color-scheme`, then the OS preference.
+Explicit widget settings always win. Mode changes retain sorting, selection,
+search, collapsed sections and page offsets. Print output temporarily uses light.
+
+UI colours and named palettes adapt automatically. Literal colours remain exact
+unless `adapt_colors=True`. Adaptation raises lightness in dark mode while
+preserving hue, alpha and palette ordering, reducing chroma to stay in sRGB.
+It transforms gradient anchors together and never changes domains or values.
+Marks, legends, scale strips and tooltip swatches use the same resolved colours.
+
+```python
+from evidential import color, settings
+
+frame = settings(color_scheme="auto", adapt_colors=True)
+neutral = color.theme("neutral", alpha=0.8)
+brand_red = color.fixed("#dc2626")
+```
+
+Use `["red", neutral, "blue"]` for a diverging gradient whose centre follows
+the surface and lets row stripes show through. Semantic roles are `surface`,
+`neutral`, `text`, `muted`, `accent`, `positive` and `negative`.
+`color.fixed(...)` preserves a literal even when adaptation is enabled. These
+helpers work in ordinary colour arguments, gradient stops and data colour fields.
+Literal white remains white; it is never assumed to mean neutral.
+
+Existing `theme={...}` UI overrides remain exact CSS colours. Themes add
+`positive` alongside `negative`; surfaces are opaque by default, with
+`theme={"background": "transparent"}` available for deliberate host blending.
+Arbitrary CSS variables, custom HTML and composite CSS border strings are not
+recoloured. Adaptation cannot guarantee distinguishability of arbitrary palettes;
+review small or translucent marks and explicitly coloured text in both modes.
+See [notebook 64](../../notebooks/64_light_dark.py) for a live mode selector and
+the same palette in two schemes.
 
 In an expanded table, **Left/Right arrows** show the previous/next page and
 **Escape** closes the expanded view, restoring its inline page and Expand-button

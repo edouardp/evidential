@@ -54,7 +54,7 @@ export function renderSparkline(col, value, preparedColor, sharedRange) {
   }));
 
   const color = resolveColor(opts.color) || "var(--et-accent, #2563eb)";
-  const pointColor = point => observationColor(point.source) || lookup?.(point.raw[1]) || color;
+  const pointColor = point => observationColor(point.source, opts) || lookup?.(point.raw[1]) || color;
   const svgNS = "http://www.w3.org/2000/svg";
   const svg = document.createElementNS(svgNS, "svg");
   svg.setAttribute("class", "et-sparkline");
@@ -109,7 +109,7 @@ export function renderSparkline(col, value, preparedColor, sharedRange) {
       rect.setAttribute("width", String(barWidth));
       rect.setAttribute("height", String(Math.max(1, Math.abs(baseline - point.y))));
       rect.setAttribute("rx", "0.5");
-      const fill = observationColor(point.source) || (lookup ? stroke : pointColor(point));
+      const fill = observationColor(point.source, opts) || (lookup ? stroke : pointColor(point));
       rect.setAttribute("fill", fill);
       rect.append(tooltip(point.raw));
       inspectable(rect, observationTooltip(point.raw[0], point.raw[1], opts.y_fmt, point.source, pointColor(point),
@@ -157,7 +157,7 @@ export function renderSparkline(col, value, preparedColor, sharedRange) {
     if (point.y == null) return;
     const isEnd = index === 0 || index === scaled.length - 1;
     const visible = showMarkers && (!endsOnly || isEnd);
-    const perPoint = observationColor(point.source);
+    const perPoint = observationColor(point.source, opts);
     const markerColor = perPoint || resolveColor(opts.marker_color) || pointColor(point);
     let dot;
     if (visible && opts.shape && opts.shape !== "circle") {

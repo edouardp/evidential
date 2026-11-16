@@ -6,6 +6,8 @@ project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## Unreleased
 
+## 0.2.6 (2026-11-16)
+
 ### Changed
 
 - Refresh locked dependencies, including DuckDB 2.0. Parameterized live queries

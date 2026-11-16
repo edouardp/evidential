@@ -172,9 +172,10 @@ export class ThemeController {
     }
     const hostContext = source === "host" || (source === "auto" && island);
     if (hostContext) {
-      // Start outside the notebook runtime's shadow wrappers, preserving the
-      // surrounding article/site context. Plain DOM embeds use their host.
-      while (host.getRootNode()?.host) host = host.getRootNode().host;
+      // Page preference is independent of the embed card: sites can force a
+      // light color-scheme on that card for other marimo outputs. Starting at
+      // the page body also avoids inherited runtime defaults on shadow hosts.
+      host = host.ownerDocument.body || host.ownerDocument.documentElement;
     }
     return explicit && explicit !== "auto" ? explicit
       : hostScheme(host, this.view, hostContext) || (this.media?.matches ? "dark" : "light");

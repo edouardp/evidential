@@ -97,3 +97,56 @@ def test_host_and_copied_marimo_css_cannot_change_widget_presentation(page, live
     other = "dark" if scheme == "light" else "light"
     page.locator("html").evaluate("(el, scheme) => el.dataset.theme = scheme", other)
     expect(root).to_have_attribute("data-color-scheme", other)
+
+
+@pytest.mark.parametrize("kind", ["table", "grid"])
+def test_island_auto_uses_page_preference_outside_a_light_forced_embed_card(page, live_server, kind):
+    from evidential import DimensionGrid
+
+    widget = (
+        EvidentialTable([{"name": "A"}]) if kind == "table" else DimensionGrid([{"name": "A"}], dimensions=["name"])
+    )
+    payload = {"options": widget.options}
+    payload.update(
+        {"rows": widget.rows, "columns": widget.columns}
+        if kind == "table"
+        else {"facets": widget.facets, "selected": widget.selected}
+    )
+    page.emulate_media(color_scheme="dark")
+    page.goto(f"{live_server}/frontend/preview.html", wait_until="networkidle")
+    page.evaluate(
+        """async ({kind, payload}) => {
+        const {default: widget} = await import('/src/evidential/static/' +
+            (kind === 'table' ? 'table.js' : 'dimension-grid.js'));
+        document.body.replaceChildren();
+        for (const [name, overrides] of Object.entries({auto: {}, nearest: {theme_source:'nearest'},
+            host: {theme_source:'host'}, explicit: {color_scheme:'light'}})) {
+            const card = document.createElement('section'); card.id = name;
+            card.style.cssText='background:white;color-scheme:light;padding:12px';
+            const island = document.createElement('marimo-island');
+            const runtime = document.createElement('div');
+            const shadow = runtime.attachShadow({mode:'open'});
+            const wrapper = document.createElement('div'); wrapper.className='light';
+            const el = document.createElement('div'); wrapper.append(el); shadow.append(wrapper);
+            island.append(runtime); card.append(island); document.body.append(card);
+            const state = {...payload, options:{...payload.options,...overrides}};
+            widget.render({el, model:{get:key=>state[key],on(){},off(){}}});
+        }
+    }""",
+        {"kind": kind, "payload": payload},
+    )
+    selector = ".et-root" if kind == "table" else ".edg-root"
+    for name in ["auto", "host"]:
+        expect(page.locator(f"#{name} {selector}")).to_have_attribute("data-color-scheme", "dark")
+    for name in ["nearest", "explicit"]:
+        expect(page.locator(f"#{name} {selector}")).to_have_attribute("data-color-scheme", "light")
+    page.locator("html").evaluate("el => el.dataset.theme='light'")
+    expect(page.locator(f"#auto {selector}")).to_have_attribute("data-color-scheme", "light")
+    page.locator("html").evaluate("el => delete el.dataset.theme")
+    expect(page.locator(f"#auto {selector}")).to_have_attribute("data-color-scheme", "dark")
+    page.emulate_media(color_scheme="light")
+    expect(page.locator(f"#auto {selector}")).to_have_attribute("data-color-scheme", "light")
+    page.locator("body").evaluate("el => el.classList.add('dark')")
+    expect(page.locator(f"#auto {selector}")).to_have_attribute("data-color-scheme", "dark")
+    expect(page.locator(f"#nearest {selector}")).to_have_attribute("data-color-scheme", "light")
+    expect(page.locator(f"#explicit {selector}")).to_have_attribute("data-color-scheme", "light")

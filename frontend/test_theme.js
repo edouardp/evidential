@@ -178,3 +178,24 @@ test('automatic island themes follow the surrounding site; overrides also work o
   assert.equal(controller.scheme(), 'dark');
   controller.destroy();
 });
+
+test('page themes ignore a light-forced island card, while nearest and explicit modes retain control', () => {
+  const f=fixture(); f.controller.destroy();
+  const island=f.document.createElement('marimo-island');
+  const card=f.document.createElement('section'); card.style.colorScheme='light';
+  f.host.before(card); card.append(island); island.append(f.host);
+  const shadow=f.host.attachShadow({mode:'open'});
+  const wrapper=f.document.createElement('div'); wrapper.className='light';
+  const mount=f.document.createElement('div'); wrapper.append(mount); shadow.append(wrapper);
+  let options={};
+  const controller=new ThemeController(mount,[mount],()=>options,()=>{});
+  assert.equal(controller.scheme(),'dark');
+  options={theme_source:'nearest'}; assert.equal(controller.scheme(),'light');
+  options={theme_source:'host'}; assert.equal(controller.scheme(),'dark');
+  options={color_scheme:'light'}; assert.equal(controller.scheme(),'light');
+  options={}; f.media.matches=false; assert.equal(controller.scheme(),'light');
+  f.document.documentElement.dataset.theme='dark'; assert.equal(controller.scheme(),'dark');
+  delete f.document.documentElement.dataset.theme;
+  f.document.body.className='dark'; assert.equal(controller.scheme(),'dark');
+  controller.destroy();
+});

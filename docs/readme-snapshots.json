@@ -54,9 +54,9 @@
     "src/evidential/skills/developing-with-evidential/assets/explorer.py": "5177731289fb97acc5d23eda44a299d18e6965bcc5234a2cd44843bc888dc95b",
     "src/evidential/skills/developing-with-evidential/assets/report.py": "55508d1a1ef33ce444fa7745ebace9660f37954ae73e3306a1a3b166e708f5ce",
     "src/evidential/static/dimension-grid.css": "36ed0a4fad3640f01aa46785392be8e6f2d00e75b8cdf935741456e73f44bdb8",
-    "src/evidential/static/dimension-grid.js": "e8b4fe428363f19bdcdca025ed49a87cdb06f57dfa94ff60c86c3a029509f442",
+    "src/evidential/static/dimension-grid.js": "c4e55038184629a649fd6054da587580826d0d538332863a330e29eee4dec7ef",
     "src/evidential/static/table.css": "afaaad1bcfa92ffece101ffa6e94f0726c33281af5ca1d32e58c69555dcd0845",
-    "src/evidential/static/table.js": "a56d562fa61b97019403c0f630cbbc096347a076a8d6224f7abcd18550b76e24",
+    "src/evidential/static/table.js": "6931b7be620f2368d371d960376677f34792fb7bbf3489686d977ba6b932c75b",
     "src/evidential/table.py": "6f2f48820a119cab0c079c579f4b3cc98c63d5ac40b15fbd2a2a9b3dd78efd58",
     "uv.lock": "08ebde87df2e59e3a83df5d50676751b8eb7b917b50d3aeb40e7cec06c6a1724"
   },
@@ -84,7 +84,7 @@
     "docs/api/images/visualizations.png": {
       "notebook": "notebooks/49_api_screenshots.py",
       "cell": "visualizations",
-      "sha256": "d5e4b7564dfe244680a0c451a92d679ef2e11da18a213c3cc4107ea5bc8d2514"
+      "sha256": "5eed67dc4ea5d6d3416b97fe3459da13ad12c717986e43b93b141fc17024a793"
     },
     "docs/api/images/back-to-back.png": {
       "notebook": "notebooks/49_api_screenshots.py",
@@ -99,7 +99,7 @@
     "docs/api/images/groups.png": {
       "notebook": "notebooks/49_api_screenshots.py",
       "cell": "groups",
-      "sha256": "b9ac4031794f0a9c3350c25c2d6468cbfa16fd0f47fb30d77b0a469774a6dfce"
+      "sha256": "e35bbbc5094d73d55f463a4da7741a2206ad0d844b8db81d15dbb05a3084ac5d"
     },
     "docs/api/images/subcolumns.png": {
       "notebook": "notebooks/49_api_screenshots.py",
@@ -119,7 +119,7 @@
     "docs/api/images/pivot-table.png": {
       "notebook": "notebooks/49_api_screenshots.py",
       "cell": "pivoted_columns",
-      "sha256": "6add54e3a03832d017d5d38f64a96c185c33292972b9160e6981a1b4e6344ddf"
+      "sha256": "806b714f8c276fd7ddafc8921220243b4837a932a73b99ade6798bda8945c2f0"
     },
     "docs/api/images/comparison-table.png": {
       "notebook": "notebooks/49_api_screenshots.py",
@@ -134,7 +134,7 @@
     "docs/api/images/query-table.png": {
       "notebook": "notebooks/49_api_screenshots.py",
       "cell": "ad_hoc_query",
-      "sha256": "253815347abd8c1e45aad51b01e1ef33b698527b2e1c0ab860e1171bfc99736a"
+      "sha256": "5fdc2cd67e40cf746a05e3c474627782d6b0fd8e21aac7c7cd0d87187f0435f5"
     },
     "docs/preview.png": {
       "notebook": "notebooks/49_api_screenshots.py",
@@ -174,7 +174,7 @@
     "docs/img/graphics/point-overlaps.png": {
       "notebook": "notebooks/50_graphics_gallery.py",
       "cell": "graphic_point_overlaps",
-      "sha256": "962f82d65142a12d275b475329d49bd825e872f5ea93a6c999dac11d3f3c03e0"
+      "sha256": "c1aea6b144032a7b5050b06269643d4d4c5eb27aedad9342bbff7fea60b6d50c"
     },
     "docs/img/graphics/boxplot.png": {
       "notebook": "notebooks/50_graphics_gallery.py",
@@ -269,12 +269,12 @@
     "docs/img/theme-dark.png": {
       "notebook": "notebooks/64_light_dark.py",
       "cell": "theme_dark",
-      "sha256": "f7ced233195c0b156e779d303e99119f7fdcfc4eda17e16d03c00c3e1c26e2c5"
+      "sha256": "a5b2f0d3b7abda540040516d67f1c3d87ce8877b43ee9caec64114ff41e6d8f8"
     },
     "docs/img/studio-table.png": {
       "notebook": "notebooks/21_studio_dashboard.py",
       "cell": "revenue_table",
-      "sha256": "8789f4e008493122a61408446e60697d175ea37456028a642111c4e97b5fc8b8"
+      "sha256": "6d3bf6fbd79636d183127e22f45d4f2fd1212b48b22864c3fe96553f05052f91"
     },
     "docs/img/layouts/simple.png": {
       "notebook": "notebooks/51_table_layouts.py",

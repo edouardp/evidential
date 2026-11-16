@@ -2811,3 +2811,17 @@ test("tableau colour names resolve in cell chrome and highlights", () => {
   assert.equal(header.style.backgroundColor, "rgb(255, 127, 14)");
   renderer.destroy();
 });
+
+test('layout rerenders preserve the active search field and caret, while disabling search removes it', () => {
+  const model=makeModel([{x:1}], [{name:'x'}], {search:true}, el);
+  const renderer=new EvidentialTableRenderer(model,el);
+  const input=el.querySelector('.et-search'); input.focus();
+  input.value='Item 1'; input.setSelectionRange(3,3);
+  renderer.render();
+  assert.equal(el.querySelector('.et-search'),input);
+  assert.equal(document.activeElement,input);
+  assert.equal(input.selectionStart,3);
+  model.data.options={search:false}; renderer.render();
+  assert.equal(el.querySelector('.et-search'),null);
+  renderer.destroy();
+});

@@ -262,7 +262,11 @@ export class EvidentialTableRenderer {
     this.root.classList.toggle("et-compact", !!opts.compact);
     this.root.classList.toggle("et-stretch-off", opts.stretch === false);
     this.root.classList.toggle("et-group-gap", !!opts.group_gap);
-    if (!themeOnly) this._renderToolbar();
+    // Measured fullscreen fitting may rerender after the user has focused the
+    // search field. Keep that field (and its caret) while it still exists in
+    // the configured toolbar, rather than replacing the active input.
+    const editingSearch = opts.search && this.toolbar.contains(this.root.getRootNode().activeElement);
+    if (!themeOnly && !editingSearch) this._renderToolbar();
 
     const processed = this._pipeline.get({
       rows: this.rows, columns: this.columns, options: opts,

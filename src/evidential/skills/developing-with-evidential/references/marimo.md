@@ -97,7 +97,9 @@ Evidential isolates table and DimensionGrid CSS in its own shadow root. Host
 `table`, `th`, `td`, button and SVG rules cannot style widget internals. Use
 public theme/column options instead of external CSS targeting `.et-*` classes.
 Automatic theme selection detects marimo islands and follows their surrounding
-page. Normal notebooks follow the nearest notebook/runtime theme.
+page's body/root. A forced-light embedding card does not override the page/OS
+preference. External card backgrounds/borders belong to the host stylesheet;
+the widget does not repaint them. Normal notebooks follow the nearest notebook/runtime theme.
 `theme_source="nearest"` or `"host"` overrides this choice; `color_scheme` still
 forces light/dark when explicitly set. The same options work on DimensionGrid.
 There is no need for a Python island detection conditional. Advanced `css=`

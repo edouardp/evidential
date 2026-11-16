@@ -1478,7 +1478,10 @@ cannot change widget layout. Use `theme` and column options to customize it.
 `theme_source="auto"` (default) follows the surrounding page inside a marimo
 island and the nearest notebook/runtime theme otherwise. Override with
 `theme_source="nearest"` to follow the runtime wrappers, or `"host"` to follow
-the surrounding document even outside islands. `color_scheme="light"` or
+the document body's/root's theme even outside islands. Page mode ignores a
+forced-light embedding card; when the page has no explicit scheme it follows
+the OS preference. Evidential does not repaint external island cards or borders;
+those belong to the hosting stylesheet. `color_scheme="light"` or
 `"dark"` always wins. Both widgets support these preferences; no island-specific
 Python conditional is required.
 

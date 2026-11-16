@@ -6,6 +6,13 @@ project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## Unreleased
 
+### Fixed
+
+- Automatic island themes follow the page/OS preference even when the embedding
+  card forces a light colour scheme. The nearest-context override still follows
+  that local scheme; external card backgrounds remain owned by the host page.
+- Fullscreen layout refits retain the active search field and its caret.
+
 ## 0.2.5 (2026-11-16)
 
 ### Added

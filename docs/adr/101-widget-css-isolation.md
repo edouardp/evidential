@@ -54,15 +54,19 @@ The outer host retains loading and render diagnostics for integrations.
 `theme_source="auto"` follows the surrounding document inside a
 `<marimo-island>` and the nearest theme context elsewhere. Detection traverses
 shadow hosts. `theme_source="nearest"` explicitly follows notebook/runtime
-wrappers; `"host"` explicitly starts outside the surrounding shadow roots,
-including in non-island embeds. These options apply equally to DimensionGrid.
+wrappers; `"host"` explicitly follows page-level signals on the document body
+and root, including in non-island embeds. Page mode ignores an embedding card's
+forced light scheme: a site can keep other marimo output on a light card while
+Evidential follows the page/OS preference. Site theme attributes/classes and
+CSS colour-scheme on the body/root take precedence over OS preference. These options apply equally to DimensionGrid.
 An explicit `color_scheme="light"` or `"dark"` wins over theme-source selection.
 This extends ADR-100 without requiring two palettes or a Python island-context
 flag. The current marimo Python context API does not expose an island flag.
 
 Focus reads use the local root's active element. Document-level pointer/key
 handlers use composed event paths to distinguish widget interactions from
-outside interactions after browser event retargeting. Playwright locators
+outside interactions after browser event retargeting. Fullscreen layout refits retain an active
+search input and its caret rather than replacing the toolbar during sizing. Playwright locators
 traverse the boundary; browser scripts and benchmarks query the appropriate
 shadow root instead of assuming all tables live in the document.
 

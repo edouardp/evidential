@@ -1,5 +1,7 @@
 """Host prose styles, including CSS copied into marimo's outer shadow root."""
 
+import re
+
 import pytest
 from playwright.sync_api import expect
 from test_spec_conformance import mount
@@ -45,10 +47,19 @@ def test_host_and_copied_marimo_css_cannot_change_widget_presentation(page, live
     page.locator("html").evaluate("(el, scheme) => el.dataset.theme = scheme", scheme)
     expect(root).to_have_attribute("data-color-scheme", scheme)
     selectors = ["table", "thead", "th", "td", "tbody tr:nth-child(4)", "button", "input", "svg"]
-    snapshot = """el => {const s=getComputedStyle(el);return Object.fromEntries(
-        ['fontSize','fontFamily','padding','borderTop','borderBottom','boxShadow','backgroundColor',
-         'textAlign','display','color','margin','width','cursor'].map(k=>[k,s[k]]));}"""
-    before = [root.locator(selector).first.evaluate(snapshot) for selector in selectors]
+    snapshot = """async (root, selectors) => {
+        // Theme changes replace the table. Frozen offsets and label fitting run
+        // on the following frame, including a possible ResizeObserver pass.
+        await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+        return selectors.map(selector => {
+            const s=getComputedStyle(root.querySelector(selector));
+            return Object.fromEntries(
+                ['fontSize','fontFamily','padding','borderTop','borderBottom','boxShadow','backgroundColor',
+                 'textAlign','display','color','margin','width','cursor'].map(k=>[k,s[k]]));
+        });
+    }"""
+    expect(root.locator("th").first).to_have_class(re.compile("et-frozen"))
+    before = root.evaluate(snapshot, selectors)
     # Reproduce marimo's existing shadow root with host CSS copied into it.
     page.locator("#case-0").evaluate(
         """(host, css) => {
@@ -62,7 +73,7 @@ def test_host_and_copied_marimo_css_cannot_change_widget_presentation(page, live
     )
     page.add_style_tag(content=HOST_CSS)
     expect(root).to_have_attribute("data-color-scheme", scheme)
-    assert [root.locator(selector).first.evaluate(snapshot) for selector in selectors] == before
+    assert root.evaluate(snapshot, selectors) == before
     assert root.locator("table").evaluate("el => el.getRootNode() !== el.getRootNode().host.getRootNode()")
     root.locator('th[data-column="score"]').click()
     expect(root.locator("tbody tr").first).to_contain_text("Item 11")
@@ -72,9 +83,13 @@ def test_host_and_copied_marimo_css_cannot_change_widget_presentation(page, live
     root.get_by_role("button", name="Expand table", exact=True).click()
     expect(page.locator("dialog")).to_be_visible()
     root.get_by_role("searchbox").focus()
-    values = root.locator("tbody td:first-child").all_text_contents()
+    # Fullscreen fitting can still increase the visible capacity after focus.
+    # Arrow keys in the search field must preserve the page's record offset,
+    # independently of how many trailing rows fit after the next layout pass.
+    first_record = root.locator("tbody td:first-child").first.inner_text()
     page.keyboard.press("ArrowRight")
-    assert root.locator("tbody td:first-child").all_text_contents() == values
+    expect(root.get_by_role("searchbox")).to_be_focused()
+    expect(root.locator("tbody td:first-child").first).to_have_text(first_record)
     page.keyboard.press("Escape")
     expect(page.locator("dialog")).not_to_be_visible()
     root.screenshot(path=f"/tmp/evidential-host-css-{scheme}.png")

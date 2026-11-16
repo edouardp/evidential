@@ -207,8 +207,11 @@ def test_centered_sections_and_fullscreen_fit_when_folded(page, live_server):
     button.click()
     expect(button).to_have_attribute("aria-expanded", "false")
     heading = dialog.locator(".et-display-heading").first
-    assert heading.evaluate("el => getComputedStyle(el).textAlign") == "center"
-    assert heading.get_attribute("colspan") == "2"
+    # Fullscreen fitting can replace the heading while resizing its page.
+    # Web-first assertions retry against the current node rather than reading
+    # computed styles from an element detached between locator/evaluation.
+    expect(heading).to_have_css("text-align", "center")
+    expect(heading).to_have_attribute("colspan", "2")
     page.wait_for_timeout(200)
     assert dialog.locator(".et-scroller").evaluate("el => el.scrollHeight <= el.clientHeight")
     assert dialog.locator(".et-root").evaluate("el => el.scrollHeight <= el.clientHeight")

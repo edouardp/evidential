@@ -6,6 +6,7 @@ import {colorStylesFromHex, setCellBackground} from "./color.js";
 import {bindRowSelection} from "./interactions.js";
 import {renderCell} from "./cells.js";
 import {decorateSubcolumn} from "./headers.js";
+import {autoContrast} from "./contrast.js";
 
 export function renderDataRow(row, columns, ctx, index, ports) {
   const opts = ctx.options;
@@ -70,6 +71,7 @@ export function renderDataRow(row, columns, ctx, index, ports) {
     if (rowColorStyles) {
       setCellBackground(numberCell, rowColorStyles.backgroundColor);
       numberCell.style.color = rowColorStyles.color;
+      autoContrast(numberCell, {policy: "cell"});
     }
     tr.append(numberCell);
   }

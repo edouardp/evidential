@@ -6,6 +6,7 @@ import { calculateColorStyles, contrastTextColor, resolveColor, setCellBackgroun
 import { renderBar, renderDelta, renderMarks, renderSparkline, renderSymbols } from "./visualizations.js";
 import { inspectCell } from "./tooltips.js";
 import { navigationUrl } from "./urls.js";
+import {autoContrast, clearAutoContrast} from "./contrast.js";
 
 /** Return the first matching substitution text, or null. */
 export function matchSubstitution(col, row, value, options) {
@@ -95,7 +96,15 @@ export function renderCell({row, col, index, ctx, rowIndex, options: opts, toggl
   let tooltipFormat = col.fmt_column && row[col.fmt_column] != null ? String(row[col.fmt_column]) : col.fmt;
   const finish = (includeFootnote = true) => {
     inspectCell(td, col, row, opts, tooltipFormat);
+    if (col.cell_style?.color) td.style.color = resolveColor(col.cell_style.color);
     decorateCell(td, col, row, ctx, rowIndex, matched.style, includeFootnote, opts);
+    if (col.font_color || col.cell_style?.color || matched.style?.color) {
+      clearAutoContrast(td);
+      for (const chip of td.querySelectorAll(".et-chip")) {
+        clearAutoContrast(chip);
+        chip.style.color = "inherit";
+      }
+    }
     return td;
   };
   if (ctx.section && index < ctx.dimCount) {
@@ -121,6 +130,7 @@ export function renderCell({row, col, index, ctx, rowIndex, options: opts, toggl
   if (rowColorStyles) {
     setCellBackground(td, rowColorStyles.backgroundColor);
     td.style.color = rowColorStyles.color;
+    autoContrast(td, {policy: "cell"});
   }
   // A column highlight is a vertical band: it wins over row colours.
   if (col.highlight) setCellBackground(td, col.highlight);
@@ -289,6 +299,7 @@ export function renderCell({row, col, index, ctx, rowIndex, options: opts, toggl
     setCellBackground(td, vizStyles.backgroundColor);
     td.style.color = vizStyles.color;
     td.classList.add("et-color-cell");
+    autoContrast(td, {policy: "cell"});
   }
 
   return finish();
@@ -373,6 +384,7 @@ function renderContent(col, value, formatted, ctx, row, format, formatCode) {
     if (chipStyles) {
       chip.style.backgroundColor = chipStyles.backgroundColor;
       chip.style.color = contrastTextColor(chipStyles.backgroundColor);
+      autoContrast(chip);
     }
     content = chip;
   } else {

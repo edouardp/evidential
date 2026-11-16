@@ -6,6 +6,14 @@ project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## Unreleased
 
+### Fixed
+
+- Automatic text colours account for translucent fills over the actual table,
+  host and row backgrounds. Chips, row colours and inside-bar labels include
+  the same layers and bar opacity, while explicit text colours remain in control.
+  Contrast refreshes on host/theme, colour-scheme and hover/selection changes
+  without rerunning data preparation. Notebook 12 adds light/dark surface demos.
+
 ## 0.2.4 (2026-11-16)
 
 ### Added

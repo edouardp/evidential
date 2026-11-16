@@ -117,6 +117,7 @@ dated, immutable record of the decisions behind them.
 | [096](096-package-bundled-agent-skills.md) | Package-Bundled Agent Skills | Accepted |
 | [097](097-shared-marker-geometry.md) | Shared Marker Shapes and Rotation | Accepted |
 | [098](098-shared-numeric-gradients.md) | Shared Numeric Gradients and Scale Strips | Accepted |
+| [099](099-painted-background-contrast.md) | Contrast Against Painted Backgrounds | Accepted |
 
 ## Creating New ADRs
 

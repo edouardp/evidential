@@ -13,6 +13,8 @@ import {
   resolveColor,
   setCellBackground,
   chroma,
+  compositeOver,
+  contrastTextColor,
 } from "./src/color.js";
 
 test("named colour scales: presets, matplotlib colormaps and names", () => {
@@ -101,6 +103,29 @@ test("contrast-aware cell styles", () => {
   assert.equal(dark.color, "#ffffff");
   const light = colorStylesFromHex("#fef9c3");
   assert.equal(light.color, "#000000");
+});
+
+test("translucent contrast uses the painted surface while preserving fill alpha", () => {
+  const fill = "rgba(220, 38, 38, 0.22)";
+  assert.equal(colorStylesFromHex(fill).color, "#000000");
+  assert.equal(colorStylesFromHex(fill).backgroundColor, chroma(fill).hex());
+  assert.equal(colorStylesFromHex(fill, "#111827").color, "#ffffff");
+  assert.equal(contrastTextColor(fill), "#000000");
+  assert.equal(contrastTextColor(fill, "#111827"), "#ffffff");
+  assert.equal(colorStylesFromHex("#8b0000", "white").color, "#ffffff");
+  assert.equal(contrastTextColor("invalid", "white"), "inherit");
+  assert.equal(compositeOver("rgba(0,0,0,0.5)", "white").hex(), "#808080");
+  assert.equal(compositeOver("black", "white", 0.5).hex(), "#808080");
+  assert.equal(compositeOver(fill, "invalid").hex(), compositeOver(fill).hex());
+  assert.equal(compositeOver("red", "black").hex(), "#ff0000");
+  const col = {name: "rate", color_options: {color_stops: [
+    {value: 0, color: "#ffffff1a"}, {value: 0.04, color: fill}, {value: 0.5, color: "#8b0000"},
+  ]}};
+  const range = {min: 0, max: 1}, scale = buildColorVizScale(col, range);
+  assert.equal(calculateColorStyles(col, {rate: 0.04}, range, scale).color, "#000000");
+  assert.equal(calculateColorStyles(col, {rate: 0.04}, range, scale, "#111827").color, "#ffffff");
+  assert.equal(calculateColorStyles({name: "rate", color_options: {conditional_colors: "c"}},
+    {rate: 0.04, c: fill}, range, scale, "#111827").color, "#ffffff");
 });
 
 test("viz ranges skip totals", () => {

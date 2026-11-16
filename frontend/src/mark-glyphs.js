@@ -113,7 +113,7 @@ function stackSegment(enc, row, col, leftPct, widthPct, text = "", context = {})
       "data-overflow": spec.overflow || "hide", "data-min-width": spec.min_width || 0,
       style: labelTextStyle(spec),
     }, h("span", {class: "et-mark-label-text"}, formattedText(text)));
-    if (!spec.color) autoLabelColor(label, markColor(enc, row, "var(--et-accent, #2563eb)"));
+    if (!spec.color) autoLabelColor(label, markColor(enc, row, "var(--et-accent, #2563eb)"), segment);
     segment.append(label);
   }
   return segment;
@@ -267,8 +267,7 @@ function drawBar(enc, view) {
     style: {inset: "0", backgroundColor: resolveColor(enc.background) || enc.background}}));
   const pad = enc.pad == null ? null : typeof enc.pad === "number" ? `${enc.pad}px` : String(enc.pad);
   const height = pad ? (typeof enc.pad === "number" ? `calc(${size * 100}% - ${2 * enc.pad}px)` : `calc(${size * 100}% - ${pad} - ${pad})`) : `${size * 100}%`;
-  track.append(
-    inspectable(h("div", {
+  const mark = inspectable(h("div", {
       class: `et-mark et-mark-bar${enc.side ? ` et-mark-bar-${enc.side}` : ""}`,
       style: {
         ...verticalStyle(enc.valign),
@@ -279,11 +278,11 @@ function drawBar(enc, view) {
         ...paint.style,
         ...(enc.gradient ? {opacity: "1"} : {}),
       },
-    }), tip, {priority: 2}),
-  );
+    }), tip, {priority: 2});
+  track.append(mark);
   if (!enc.hide_labels && enc.label) {
     const labelled = enc.center && !enc.label.position ? {...enc, label: {...enc.label, position: "outside_start"}} : enc;
-    track.append(labelFor(col, labelled, row, { leftPct, widthPct, color: sampled, colorAt: paint.at, negative: reverse ? value >= 0 : value < 0 || enc.side === "left" }, format));
+    track.append(labelFor(col, labelled, row, { leftPct, widthPct, mark, color: sampled, colorAt: paint.at, negative: reverse ? value >= 0 : value < 0 || enc.side === "left" }, format));
   }
 }
 

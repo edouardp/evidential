@@ -19,9 +19,9 @@ def _():
     import marimo as mo
     import duckdb
 
-    from evidential import EvidentialTable, col
+    from evidential import EvidentialTable, col, label
 
-    return EvidentialTable, col, duckdb, mo
+    return EvidentialTable, col, duckdb, label, mo
 
 
 @app.cell
@@ -248,6 +248,53 @@ def transparent_colors(EvidentialTable, col, mo):
     )
     mo.ui.anywidget(transparency_table)
     return (transparency_table,)
+
+
+@app.cell(hide_code=True)
+def translucent_contrast_doc(mo):
+    mo.md("""
+    ## Transparent fills on light and dark surfaces
+
+    A faint red fill needs dark text over a light surface and light text over a
+    dark surface. The same rule applies to chips and inside-bar labels, including
+    the bar's opacity. Fill transparency still lets the row stripe show through.
+    Explicit `.font_color(...)` and label colours override automatic choices.
+
+    These are explicit theme previews; they do not enable a new dark-mode setting.
+    """)
+    return
+
+
+@app.cell
+def translucent_contrast(EvidentialTable, col, label, mo):
+    failure_stops = [
+        {"value": 0, "color": "rgba(255,255,255,0.1)"},
+        {"value": 0.04, "color": "rgba(220,38,38,0.22)"},
+        {"value": 0.5, "color": "#8b0000"},
+    ]
+    failure_rates = [{"case": name, "failed_share": rate, "chip": rate, "example": 8}
+                     for name, rate in [("No failures", 0), ("Faint red", 0.04), ("High failure rate", 0.5)]]
+    contrast_columns = [
+        col.text("case"),
+        col.percent("failed_share").gradient(stops=failure_stops),
+        col.percent("chip").chip(stops=failure_stops),
+        col.bar("example", color="rgba(220,38,38,0.22)", label=label.fmt("num0").position("inside end"))
+           .scale(domain=(0, 10)),
+    ]
+    contrast_light = mo.ui.anywidget(EvidentialTable(
+        failure_rates, columns=contrast_columns,
+        title="Light surface · translucent colour and labels",
+        theme={"background": "#ffffff", "text": "#111827", "shading": "#dbe2ea"},
+        border=False, row_lines=False, row_shading=True, search=False, page_size=0, width=900,
+    ))
+    contrast_dark = mo.ui.anywidget(EvidentialTable(
+        failure_rates, columns=contrast_columns,
+        title="Dark surface · the same translucent colours",
+        theme={"background": "#111827", "text": "#e5e7eb", "shading": "#243044"},
+        border=False, row_lines=False, row_shading=True, search=False, page_size=0, width=900,
+    ))
+    mo.vstack([contrast_light, contrast_dark])
+    return contrast_dark, contrast_light
 
 
 if __name__ == "__main__":

@@ -25,6 +25,7 @@ import { hiddenColumns, visibleRows, searchRows, sortRows, paginateRows,
 import { TooltipController, inspectHeader } from "./tooltips.js";
 import { combinePoints } from "./point-clusters.js";
 import { formatTitle } from "./format.js";
+import {ContrastController} from "./contrast.js";
 
 /** Map a `font_size` to a CSS value.
  *
@@ -145,6 +146,7 @@ export class EvidentialTableRenderer {
       advancePage: direction => this._advance(direction),
     });
 
+    this._contrast = new ContrastController(this.root, callback => this._viewport.frame(callback));
     this.render();
     this.setLoading(this.model.get("loading"));
   }
@@ -189,6 +191,7 @@ export class EvidentialTableRenderer {
     this._holdController.stop();
     this._loadingController.destroy();
     this._viewport.destroy();
+    this._contrast.destroy();
     this._tooltips.destroy();
     this._pipeline.clear();
     this.dialog.remove();
@@ -353,6 +356,7 @@ export class EvidentialTableRenderer {
     if (opts.caption) this.caption.append(inlineMarkdown(opts.caption));
     this._updateBaselineHeight();
     this._viewport.observeTable(this.scroller.querySelector("table"));
+    this._contrast.watch();
     this._tooltips.refresh();
     this._viewport.frame(() => {
       this._viewport.applyFrozenOffsets();

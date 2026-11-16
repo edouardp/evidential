@@ -209,6 +209,11 @@ with solid `color` or `color_negative` on the same mark. Notebook 61 demonstrate
 a city chooser using historical monthly temperature extremes; notebook 48 shows
 point overlays, transparent stops and reversed/clipped/missing intervals.
 
+Automatic text contrast composites alpha over the actual cell/row/host surface,
+including dark surfaces. Inside-bar labels also account for bar opacity.
+Explicit text/label colours override automatic contrast. Notebook 12 has
+light/dark surface comparisons; there is no new dark-mode API.
+
 Spans paint continuously along x; points and tooltip swatches sample their value.
 Density still controls band opacity. Gradient bars honor alpha directly; solid bars
 keep their existing opacity. Cell backgrounds and sparklines use the same

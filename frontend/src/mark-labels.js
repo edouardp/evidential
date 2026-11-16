@@ -2,6 +2,7 @@ import { h, withFigure } from "./dom.js";
 import { formatValue } from "./format.js";
 import { formattedText } from "./formatted-text.js";
 import { resolveColor, contrastTextColor } from "./color.js";
+import {autoContrast, clearAutoContrast, refreshContrast} from "./contrast.js";
 
 // Retain the requested placement separately from the position chosen by fitting.
 const automaticLabels = new WeakMap();
@@ -11,10 +12,11 @@ const placementClasses = ["inside_start", "inside_end", "outside_start", "outsid
     "et-mark-label-align-begin", "et-mark-label-align-center", "et-mark-label-align-end"]);
 
 /** Explicit label colours win; otherwise read text against the mark's fill. */
-export function autoLabelColor(label, fill) {
+export function autoLabelColor(label, fill, mark) {
   label.dataset.autoContrast = "true";
   label.style.setProperty("--et-label-fill", fill);
   label.style.color = contrastTextColor(fill);
+  if (mark) autoContrast(label, {mark});
 }
 
 /** Share font/figure formatting with cells; label-specific colour is optional. */
@@ -35,6 +37,7 @@ function placeBarLabel(node, spec, geometry, position) {
   node.style.color = spec.color ? resolveColor(spec.color) : "";
   node.style.removeProperty("--et-label-fill");
   delete node.dataset.autoContrast;
+  clearAutoContrast(node);
   const inside = ["inside_start", "inside_end", "center"].includes(position);
   if (inside) {
     node.style.left = `${geometry.leftPct}%`;
@@ -46,7 +49,7 @@ function placeBarLabel(node, spec, geometry, position) {
     if (!spec.color && geometry.color) {
       const at = position === "center" ? geometry.leftPct + geometry.widthPct / 2
         : atLeft ? geometry.leftPct : geometry.leftPct + geometry.widthPct;
-      autoLabelColor(node, geometry.colorAt ? geometry.colorAt(at) : geometry.color);
+      autoLabelColor(node, geometry.colorAt ? geometry.colorAt(at) : geometry.color, geometry.mark);
     }
   } else {
     const atLeft = position === "outside_start" ? !geometry.negative : geometry.negative;
@@ -148,4 +151,5 @@ export function fitMarkLabels(root) {
       label.style.color = contrastTextColor(style.getPropertyValue("--et-label-fill").trim());
     }
   }
+  refreshContrast(root);
 }

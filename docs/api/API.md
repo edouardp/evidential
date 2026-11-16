@@ -1114,6 +1114,14 @@ columns=[
   `background="rgba(255,255,255,0.8)"` reveals 20% of the row stripe.
   Matching `rules` still win for the same property. Selection tint paints over
   the resulting cell color.
+  Automatic text colours for colour cells, row colours, chips and inside-bar
+  labels account for the painted alpha layers and the underlying surface,
+  including frozen cells, row stripes and the host page background. Label
+  contrast includes the bar's opacity and sampled gradient colour. Explicit
+  text/label colours take precedence. Theme, host-background and system
+  colour-scheme changes refresh contrast without preparing the data again.
+  [Notebook 12](../../notebooks/12_color_scales.py) compares light and dark
+  surfaces using the same translucent fills; this does not add a dark-mode option.
 - **Sources** — a field name, `"@field"`, or a `lambda row: ...`. A callable is
   evaluated Python-side into a hidden helper column, so the browser (and any
   static export) only ever sees field names.

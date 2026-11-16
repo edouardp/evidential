@@ -277,12 +277,22 @@ export function getColorForValue(value, scaleResult) {
   return scaleResult.scale(scaleResult.project ? scaleResult.project(value) : value).hex();
 }
 
-export function colorStylesFromHex(colorValue) {
+/** Source-over composition for contrast decisions; never changes the painted fill. */
+export function compositeOver(fill, surface = "#ffffff", opacity = 1) {
+  const color = chroma(resolveColor(fill));
+  const alpha = color.alpha() * opacity;
+  if (alpha >= 1) return color.alpha(1);
+  const base = chroma.valid(resolveColor(surface)) ? chroma(resolveColor(surface)).alpha(1) : chroma("white");
+  return chroma.mix(base, color.alpha(1), Math.max(0, alpha), "rgb");
+}
+
+export function colorStylesFromHex(colorValue, surface) {
   try {
     const bg = chroma(resolveColor(colorValue));
-    const color = chroma.contrast(bg, "#000000") > chroma.contrast(bg, "#ffffff") ? "#000000" : "#ffffff";
-    const isCellDark = bg.luminance() < 0.5;
-    const borderBottomColor = (isCellDark ? bg.brighten(0.5) : bg.darken(0.5)).hex();
+    const seen = compositeOver(bg, surface);
+    const color = chroma.contrast(seen, "#000000") > chroma.contrast(seen, "#ffffff") ? "#000000" : "#ffffff";
+    const isCellDark = seen.luminance() < 0.5;
+    const borderBottomColor = (isCellDark ? seen.brighten(0.5) : seen.darken(0.5)).hex();
     return {
       backgroundColor: bg.hex(),
       color,
@@ -296,9 +306,9 @@ export function colorStylesFromHex(colorValue) {
 
 /** Black or white text for a chip, by background luminance: white on darker
  *  backgrounds, black on lighter ones. */
-export function contrastTextColor(colorValue) {
+export function contrastTextColor(colorValue, surface) {
   try {
-    return chroma(resolveColor(colorValue)).luminance() < 0.5 ? "#ffffff" : "#000000";
+    return compositeOver(colorValue, surface).luminance() < 0.5 ? "#ffffff" : "#000000";
   } catch {
     return "inherit";
   }
@@ -408,12 +418,12 @@ export function buildColorVizScale(col, range, defaultColorScale) {
 }
 
 /** Resolve the background+border+text styles for a color-viz cell. */
-export function calculateColorStyles(col, row, range, scale) {
+export function calculateColorStyles(col, row, range, scale, surface) {
   const opts = col.color_options || {};
   const conditional = opts.conditional_colors;
   if (conditional && conditional in row) {
     const v = row[conditional];
-    if (v && typeof v === "string") return colorStylesFromHex(v);
+    if (v && typeof v === "string") return colorStylesFromHex(v, surface);
     return null;
   }
   const scaleColumn = opts.scale_column || col.name;
@@ -429,7 +439,7 @@ export function calculateColorStyles(col, row, range, scale) {
       queryValue = (scale.minValue + scale.maxValue) / 2;
     }
   }
-  return colorStylesFromHex(getColorForValue(queryValue, scale));
+  return colorStylesFromHex(getColorForValue(queryValue, scale), surface);
 }
 
 export { chroma };

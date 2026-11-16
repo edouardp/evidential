@@ -211,7 +211,7 @@ def test_football_sql_filters_year_and_league_but_keeps_international_matches(tm
         connection.execute("COPY games TO ? (FORMAT PARQUET)", [str(source)])
         query = (Path(__file__).resolve().parents[1] / "notebooks/sql/46_football_outcomes.sql").read_text()
         rows = (
-            connection.execute(query, {"games": str(source), "year": 2024, "competition": "a"})
+            connection.sql(query, params={"games": str(source), "year": 2024, "competition": "a"})
             .to_arrow_table()
             .to_pylist()
         )

@@ -172,3 +172,18 @@ def test_parameter_placeholders_ignore_sql_literals_and_comments(con) -> None:
     sql = "SELECT '{literal}' AS a, $$ $quoted $$ AS b, {x} AS c -- {comment}\n/* $block */"
     live = LiveEvidentialTable(con, sql, params={"x": 2})
     assert live.rows == [{"a": "{literal}", "b": " $quoted ", "c": 2}]
+
+
+def test_parameterized_refreshes_use_relation_arrow_without_a_cursor_copy(con):
+    import warnings
+
+    with warnings.catch_warnings():
+        warnings.filterwarnings("error", message="Arrow output on a DB-API result.*")
+        table = LiveEvidentialTable(con, "SELECT a FROM t WHERE a >= $minimum ORDER BY a", params={"minimum": 2})
+        assert [row["a"] for row in table.rows] == [2, 3]
+        table.set_controls(minimum=3)
+        assert [row["a"] for row in table.rows] == [3]
+        table.set_controls(minimum=9)
+        assert table.rows == []
+        assert table.columns[0]["name"] == "a"
+    table.close()

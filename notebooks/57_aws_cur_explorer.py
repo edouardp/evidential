@@ -98,14 +98,14 @@ def queries(Path, duckdb):
             arguments = (
                 [*parameters, detail_limit] if name == "details" else list(parameters)
             )
-            result = con.execute(
-                cur_sql[name].replace("/* filters */", predicate), arguments
+            result = con.sql(
+                cur_sql[name].replace("/* filters */", predicate), params=arguments
             )
             if name == "summary":
                 results[name] = dict(
                     zip(
-                        [column[0] for column in result.description],
-                        result.fetchone(),
+                        result.columns,
+                        result.fetchall()[0],
                         strict=True,
                     )
                 )
@@ -141,7 +141,7 @@ def local_data(Path, load_cur, mo, os):
     )
     source_summary = cur_connection.sql(
         "SELECT count(*) AS line_items, min(usage_date), max(usage_date) FROM cur"
-    ).fetchone()
+    ).fetchall()[0]
     mo.md(
         f"**{source_summary[0]:,} source line items · {source_summary[1]} to {source_summary[2]} · USD**"
     )

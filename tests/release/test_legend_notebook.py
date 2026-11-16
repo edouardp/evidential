@@ -79,7 +79,7 @@ def test_population_query_weights_sex_specific_percentages_and_requires_every_ba
             )
         connection.executemany("INSERT INTO observations VALUES (?, ?, ?, ?)", rows)
         result = connection.sql(SQL.read_text())
-        record = dict(zip(result.columns, result.fetchone(), strict=True))
+        record = dict(zip(result.columns, result.fetchall()[0], strict=True))
         assert record["age_0_9"] == pytest.approx(0.36)  # Unweighted average would be 0.30.
         assert sum(record[field] for field in FIELDS) == pytest.approx(1)
         connection.execute("DELETE FROM observations WHERE indicator_code = 'SP.POP.80UP.FE.5Y'")

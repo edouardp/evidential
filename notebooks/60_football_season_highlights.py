@@ -63,8 +63,8 @@ def query_helpers():
 
     def season_rows(connection, sql, season_start=2024, competition="england", start_month=7):
         return (
-            connection.execute(
-                sql, {"season_start": season_start, "competition": competition, "start_month": start_month}
+            connection.sql(
+                sql, params={"season_start": season_start, "competition": competition, "start_month": start_month}
             )
             .to_arrow_table()
             .to_pylist()
@@ -89,7 +89,7 @@ def dataset(Path, duckdb, mo, os, register_games):
     source_label = "Local football-data Parquet" if use_parquet else "Committed 2024/25 match snapshot"
     with duckdb.connect() as metadata_connection:
         register_games(metadata_connection, games_path, use_parquet)
-        available_periods = metadata_connection.execute(periods_sql).to_arrow_table().to_pylist()
+        available_periods = metadata_connection.sql(periods_sql).to_arrow_table().to_pylist()
     if not available_periods:
         raise ValueError("The data source contains no played national-league matches")
     leagues = sorted({period["competition"] for period in available_periods})

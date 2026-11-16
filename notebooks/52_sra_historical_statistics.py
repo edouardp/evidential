@@ -51,8 +51,8 @@ def introduction(mo):
 
 @app.function
 def query_rows(connection, sql, parameters=None):
-    result = connection.execute(sql, parameters or {})
-    names = [field[0] for field in result.description]
+    result = connection.sql(sql, params=parameters or {})
+    names = result.columns
     return [dict(zip(names, row, strict=True)) for row in result.fetchall()]
 
 
@@ -77,7 +77,7 @@ def dataset(Path, duckdb, mo, os):
     for model in models:
         connection.read_parquet(str(processed / f"{model}.parquet")).create_view(model)
     mo.stop(
-        connection.sql("SELECT count(*) FROM sra_monthly").fetchone()[0] == 0,
+        connection.sql("SELECT count(*) FROM sra_monthly").fetchall()[0][0] == 0,
         mo.md("The dbt monthly product contains no observations."),
     )
     return connection, dataset_path

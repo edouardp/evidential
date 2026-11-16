@@ -26,7 +26,7 @@ def test_amortized_cost_uses_reserved_effective_cost_and_retains_fee_rows(loaded
     assert results["summary"]["amortized_cost"] == 46
     assert results["summary"]["unblended_cost"] == 34
     assert results["summary"]["line_items"] == 6
-    assert con.sql("SELECT cost FROM cur_facets WHERE charge_type = 'DiscountedUsage'").fetchone()[0] == 12
+    assert con.sql("SELECT cost FROM cur_facets WHERE charge_type = 'DiscountedUsage'").fetchall()[0][0] == 12
     assert sum(row["amortized_cost"] for row in results["drivers"].to_pylist()) == 46
     assert sum(row["cost"] for row in con.table("cur_facets").to_arrow_table().to_pylist()) == 46
 

@@ -39,14 +39,14 @@ def test_reconciles_order_line_market_product_customer_and_monthly_grains(loaded
     assert score["Est. gross contribution"]["current"] == 320
     assert score["Est. contribution margin"]["current"] == pytest.approx(320 / 600)
     assert report["quality"]["header_rounding_difference"] == 0
-    assert connection.sql("SELECT net_sales FROM aw_orders WHERE order_id=1").fetchone()[0] == 200
-    assert connection.sql("SELECT count(*) FROM aw_orders WHERE order_id=7").fetchone()[0] == 0
+    assert connection.sql("SELECT net_sales FROM aw_orders WHERE order_id=1").fetchall()[0][0] == 200
+    assert connection.sql("SELECT count(*) FROM aw_orders WHERE order_id=7").fetchall()[0][0] == 0
 
 
 def test_historical_cost_intervals_fallback_and_unknown_cost_are_explicit(loaded):
     connection, helpers = loaded
-    assert connection.sql("SELECT unit_cost FROM aw_lines WHERE order_id=1 AND product_id=1").fetchone()[0] == 20
-    assert connection.sql("SELECT unit_cost FROM aw_lines WHERE order_id=3").fetchone()[0] == 80
+    assert connection.sql("SELECT unit_cost FROM aw_lines WHERE order_id=1 AND product_id=1").fetchall()[0][0] == 20
+    assert connection.sql("SELECT unit_cost FROM aw_lines WHERE order_id=3").fetchall()[0][0] == 80
     report, _ = helpers["query_report"](connection, 2024, "All channels")
     assert report["quality"]["fallback_sales"] == 200
     assert report["quality"]["missing_cost_sales"] == 0

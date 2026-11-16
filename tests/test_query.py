@@ -73,9 +73,9 @@ def test_custom_ranges_reject_invalid_dates(spec) -> None:
 def test_to_date_includes_todays_timestamps(spec) -> None:
     with duckdb.connect() as connection:
         condition = date_range_sql(spec, "d")
-        assert connection.sql(
-            f"SELECT {condition} FROM (SELECT CURRENT_DATE + INTERVAL '12 hours' AS d)"
-        ).fetchone() == (True,)
+        assert connection.sql(f"SELECT {condition} FROM (SELECT CURRENT_DATE + INTERVAL '12 hours' AS d)").fetchall()[
+            0
+        ] == (True,)
 
 
 @pytest.mark.parametrize("spec", ["until 2024-01-01", "2023-12-01 to 2024-01-01"])

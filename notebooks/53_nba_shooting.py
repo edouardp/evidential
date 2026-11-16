@@ -176,8 +176,8 @@ def archive_loader(Path, duckdb, shutil, tarfile, tempfile):
         return connection
 
     def query_rows(connection, sql, parameters=None):
-        result = connection.execute(sql, parameters or {})
-        names = [column[0] for column in result.description]
+        result = connection.sql(sql, params=parameters or {})
+        names = result.columns
         return [dict(zip(names, row, strict=True)) for row in result.fetchall()]
 
     return load_shots, query_rows

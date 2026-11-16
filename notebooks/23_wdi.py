@@ -114,14 +114,14 @@ def _(connection, mo):
                count(DISTINCT indicator_code), min(year), max(year)
         FROM observations
         """
-    ).fetchone()
+    ).fetchall()[0]
     total, real, aggregates = connection.sql(
         """
         SELECT count(*), count(*) FILTER (WHERE Region IS NOT NULL),
                count(*) FILTER (WHERE Region IS NULL)
         FROM country
         """
-    ).fetchone()
+    ).fetchall()[0]
     mo.md(f"""
     | | |
     | --- | --- |

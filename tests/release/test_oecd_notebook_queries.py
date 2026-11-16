@@ -31,11 +31,11 @@ def states(con, code):
 
 def test_only_comparable_real_quarterly_gdp_is_used(loaded):
     con, _, _, _ = loaded
-    assert con.sql("SELECT count(*) FROM gdp_observed WHERE country_code='USA'").fetchone()[0] == 11
+    assert con.sql("SELECT count(*) FROM gdp_observed WHERE country_code='USA'").fetchall()[0][0] == 11
     assert (
         con.sql(
             "SELECT growth_percent FROM gdp_observed WHERE country_code='USA' AND time_period='1960-Q1'"
-        ).fetchone()[0]
+        ).fetchall()[0][0]
         == -1
     )
 

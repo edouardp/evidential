@@ -85,8 +85,8 @@ def queries(Path, dt, duckdb):
         return None
 
     def records(connection, statement, parameters=None):
-        cursor = connection.execute(statement, parameters or {})
-        fields = [column[0] for column in cursor.description]
+        cursor = connection.sql(statement, params=parameters or {})
+        fields = cursor.columns
         return [dict(zip(fields, row, strict=True)) for row in cursor.fetchall()]
 
     def load_adventureworks(root):
@@ -97,21 +97,21 @@ def queries(Path, dt, duckdb):
         for name in required:
             connection.read_parquet(str(directory / f"{name}.parquet")).create_view(name)
         connection.execute(report_sql["source"])
-        header_orders = connection.sql("SELECT count(*) FROM SalesOrderHeader WHERE Status=5").fetchone()[0]
-        order_count = connection.sql("SELECT count(*) FROM aw_orders").fetchone()[0]
+        header_orders = connection.sql("SELECT count(*) FROM SalesOrderHeader WHERE Status=5").fetchall()[0][0]
+        order_count = connection.sql("SELECT count(*) FROM aw_orders").fetchall()[0][0]
         if not order_count or header_orders != order_count:
             connection.close()
             raise ValueError("Every shipped order must have sales lines, and order/dimension keys must be unique.")
         return connection
 
     def period_window(connection, year):
-        first, last = connection.sql("SELECT min(order_date), max(order_date) FROM aw_orders").fetchone()
+        first, last = connection.sql("SELECT min(order_date), max(order_date) FROM aw_orders").fetchall()[0]
         if not first.year <= int(year) <= last.year:
             raise ValueError("Choose a year inside the source coverage")
         start, end = max(first, dt.date(int(year), 1, 1)), min(last, dt.date(int(year), 12, 31))
         prior_start, prior_end = connection.execute(
             "SELECT (?::DATE - INTERVAL '1 year')::DATE, (?::DATE - INTERVAL '1 year')::DATE", [start, end]
-        ).fetchone()
+        ).fetchall()[0]
         return {
             "start": start,
             "end": end,
@@ -160,7 +160,7 @@ def local_data(Path, dt, load_adventureworks, mo, os, parquet_directory):
         ),
     )
     con = load_adventureworks(dataset_path)
-    first_date, last_date = con.sql("SELECT min(order_date), max(order_date) FROM aw_orders").fetchone()
+    first_date, last_date = con.sql("SELECT min(order_date), max(order_date) FROM aw_orders").fetchall()[0]
     report_years = list(range(first_date.year, last_date.year + 1))
     complete_years = [
         year for year in report_years if first_date <= dt.date(year, 1, 1) and last_date >= dt.date(year, 12, 31)

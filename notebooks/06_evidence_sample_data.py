@@ -56,7 +56,7 @@ def _(Path, duckdb, mo):
     connection.execute(
         f"CREATE VIEW needful_things.orders AS SELECT * FROM read_parquet('{sample}')"
     )
-    n_orders = connection.execute("SELECT count(*) FROM needful_things.orders").fetchone()[0]
+    n_orders = connection.execute("SELECT count(*) FROM needful_things.orders").fetchall()[0][0]
     mo.md(f"Loaded **{n_orders:,}** orders from `sample_data/needful_things/{sample.name}`")
     return (connection,)
 

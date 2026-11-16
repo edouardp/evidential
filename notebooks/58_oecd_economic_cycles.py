@@ -107,7 +107,7 @@ def queries(Path, col, duckdb):
             )
             count, first, last = con.execute(
                 f"SELECT count(*), {period_sql} FROM {view}"
-            ).fetchone()
+            ).fetchall()[0]
             inventory.append(
                 {
                     "dataset": title,
@@ -120,12 +120,12 @@ def queries(Path, col, duckdb):
             if name in source_names:
                 available[name] = {"title": title, "fields": fields}
         con.execute("CREATE TEMP VIEW gdp_observed AS " + gdp_sql)
-        duplicate = con.sql(
+        duplicates = con.sql(
             "SELECT country_code, period_start FROM gdp_observed GROUP BY ALL HAVING count(*) > 1 LIMIT 1"
-        ).fetchone()
-        if duplicate:
+        ).fetchall()
+        if duplicates:
             raise ValueError(
-                f"Multiple GDP growth series for one country/quarter: {duplicate}"
+                f"Multiple GDP growth series for one country/quarter: {duplicates[0]}"
             )
         con.execute("CREATE TEMP TABLE gdp_quarters AS " + quarter_sql)
         con.execute("""
@@ -173,13 +173,13 @@ def queries(Path, col, duckdb):
         ]
 
     def query_timeline(con, start_year, end_year, aggregates=False):
-        return con.execute(
+        return con.sql(
             timeline_sql,
-            {"start_year": start_year, "end_year": end_year, "aggregates": aggregates},
+            params={"start_year": start_year, "end_year": end_year, "aggregates": aggregates},
         ).to_arrow_table()
 
     def query_quarters(con, country_code, start_year, end_year):
-        return con.execute(
+        return con.sql(
             """
             SELECT year || '-Q' || quarter AS period, growth_percent / 100.0 AS growth,
                    CASE category WHEN 'recession' THEN 'Technical recession'
@@ -188,7 +188,7 @@ def queries(Path, col, duckdb):
             FROM gdp_quarters WHERE country_code = ? AND year BETWEEN ? AND ?
             ORDER BY period_start DESC
         """,
-            [country_code, start_year, end_year],
+            params=[country_code, start_year, end_year],
         ).to_arrow_table()
 
     def browse_source(
@@ -199,13 +199,13 @@ def queries(Path, col, duckdb):
         fields = available[name]["fields"]
         # Names come from the fixed registry; all user-controlled filters are bound.
         observations = (
-            con.execute(
+            con.sql(
                 f"""
             SELECT *, count(*) OVER () AS matching_observations FROM oecd_{name}
             WHERE ref_area = ? AND year BETWEEN ? AND ?
             ORDER BY period_start DESC, time_period LIMIT ?
         """,
-                [country_code, start_year, end_year, limit],
+                params=[country_code, start_year, end_year, limit],
             )
             .to_arrow_table()
             .to_pylist()
@@ -279,7 +279,7 @@ def local_data(Path, load_oecd, mo, os):
     oecd_connection, oecd_sources, oecd_inventory = load_oecd(oecd_root)
     first_year, last_year = oecd_connection.sql(
         "SELECT min(year), max(year) FROM gdp_quarters"
-    ).fetchone()
+    ).fetchall()[0]
     mo.stop(
         first_year is None,
         mo.md(

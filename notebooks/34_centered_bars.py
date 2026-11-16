@@ -97,16 +97,16 @@ def _(base_year, duckdb, end_year, json, mo, wdi_path):
     wdi_sql = (mo.notebook_location() / "sql" / "34_wdi_league.sql").read_text()
     if (wdi_path / "wdi_observations").is_dir() and (wdi_path / "country.parquet").is_file():
         with duckdb.connect() as connection:
-            result = connection.execute(
+            result = connection.sql(
                 wdi_sql,
-                {
+                params={
                     "observations": str(wdi_path / "wdi_observations/**/*.parquet"),
                     "countries": str(wdi_path / "country.parquet"),
                     "base_year": base_year,
                     "end_year": end_year,
                 },
             )
-            fields = [column[0] for column in result.description]
+            fields = result.columns
             leagues = [dict(zip(fields, record, strict=True)) for record in result.fetchall()]
         wdi_source = f"Queried local WDI bundle: `{wdi_path}`"
     else:

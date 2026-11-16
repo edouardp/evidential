@@ -14,9 +14,9 @@ ROOT = Path(__file__).resolve().parents[2]
 def query_league(bundle, end_year=2021):
     with duckdb.connect() as connection:
         return (
-            connection.execute(
+            connection.sql(
                 (ROOT / "notebooks/sql/34_wdi_league.sql").read_text(),
-                {
+                params={
                     "observations": str(bundle / "wdi_observations/**/*.parquet"),
                     "countries": str(bundle / "country.parquet"),
                     "base_year": 2019,

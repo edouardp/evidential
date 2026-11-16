@@ -103,7 +103,7 @@ def _(connection, mo, source):
                    try_cast(regexp_extract(details_release_date, '(\d{4})', 1) AS INTEGER) AS year
             FROM media
         )
-    """).fetchone()
+    """).fetchall()[0]
     mo.md(f"""
     | | |
     | --- | --- |

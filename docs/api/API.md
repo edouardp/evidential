@@ -1550,3 +1550,17 @@ Data sources and constructors: `EvidentialTable`, `LiveEvidentialTable`,
   works.
 - [`notebooks/`](../../notebooks) — runnable examples of every feature.
 - [`docs/adr/`](../adr/README.md) — the decisions behind the API.
+
+### DuckDB query results
+
+The locked development environment uses DuckDB 2. Parameterized live queries
+use `con.sql(statement, params=values)` relations, keeping values bound rather
+than interpolated. Arrow output is read directly from those relations.
+These APIs also work with DuckDB 1.
+
+DuckDB 2 relations have no `.fetchone()` or `.fetchmany()` methods. Use
+`.fetchall()[0]` for a known single-row aggregate, or `.limit(1).fetchall()` for
+an optional first row and check the returned list before indexing. A DB-API
+connection still supports cursor reads, but its result must be exhausted before
+other work on that connection. Prefer `.sql(...).to_arrow_table()` over converting
+a DB-API result to Arrow. See [ADR-102](../adr/102-duckdb-two-relations.md).

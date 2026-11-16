@@ -106,3 +106,15 @@ There is no need for a Python island detection conditional. Advanced `css=`
 accepts notebook-owned plain CSS inside the widget's boundary (no `<style>` tags
 or external ancestor selectors). Prefer theme and column options where possible;
 implementation CSS class selectors may change with renderer versions.
+
+## DuckDB query results
+
+Use `con.sql(sql, params=values)` for parameterized table queries and
+`.to_arrow_table()` for Arrow output. Parameters are bound separately from SQL.
+A relation is a query, not a cursor: DuckDB 2 removed relation `.fetchone()` and
+`.fetchmany()`. For a known single-row aggregate use `.fetchall()[0]`; for an
+optional first row use `.limit(1).fetchall()` and check whether the list is empty.
+Fully consume a DB-API `execute()` result before reusing that connection.
+Prefer relations for Arrow output; converting a DB-API result copies its rows
+on DuckDB 2. Keep `execute()` for schema/mutation commands or deliberate DB-API
+work. These relation patterns also work with DuckDB 1.

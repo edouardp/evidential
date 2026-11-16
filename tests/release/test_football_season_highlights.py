@@ -48,7 +48,7 @@ def season():
 
 def query(connection, year=2024, league="england", start_month=7):
     return (
-        connection.execute(SQL, {"season_start": year, "competition": league, "start_month": start_month})
+        connection.sql(SQL, params={"season_start": year, "competition": league, "start_month": start_month})
         .to_arrow_table()
         .to_pylist()
     )
@@ -94,7 +94,7 @@ def test_draw_only_winless_and_unbeaten_teams_do_not_get_false_highlights(season
 
 
 def test_discovery_and_queries_respect_league_year_and_window_convention(season):
-    periods = season.execute(PERIODS_SQL).to_arrow_table().to_pylist()
+    periods = season.sql(PERIODS_SQL).to_arrow_table().to_pylist()
     england = [period for period in periods if period["competition"] == "england"]
     assert {(period["start_month"], period["season_start"]) for period in england} == {
         (7, 2023),
@@ -120,7 +120,7 @@ def test_discovery_and_queries_respect_league_year_and_window_convention(season)
 def test_real_snapshot_has_twenty_complete_teams_and_keeps_raw_fixtures():
     with duckdb.connect() as connection:
         connection.read_json(str(SNAPSHOT)).create_view("games")
-        assert connection.sql("SELECT count(*) FROM games").fetchone()[0] == 380
+        assert connection.sql("SELECT count(*) FROM games").fetchall()[0][0] == 380
         assert "color" not in connection.sql("SELECT * FROM games LIMIT 0").columns
         teams = query(connection)
     assert len(teams) == 20 and all(row["played"] == 38 and len(row["season"]) == 38 for row in teams)

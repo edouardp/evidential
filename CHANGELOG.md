@@ -6,6 +6,12 @@ project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## Unreleased
 
+### Changed
+
+- Refresh locked dependencies, including DuckDB 2.0. Parameterized live queries
+  and notebook Arrow queries use relations; single-row reads fully consume their
+  results. Empty duplicate checks remain valid. DuckDB 1 compatibility is retained.
+
 ### Fixed
 
 - Automatic island themes follow the page/OS preference even when the embedding

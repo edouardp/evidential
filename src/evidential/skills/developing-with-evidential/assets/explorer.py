@@ -125,9 +125,9 @@ def detail(EvidentialTable, col, label, mo):
 @app.cell
 def refresh_detail(connection, detail_table, selected_id):
     data = (
-        connection.execute(
+        connection.sql(
             "SELECT month, units, sales FROM sales WHERE product_id = ? ORDER BY month",
-            [selected_id],
+            params=[selected_id],
         )
         if selected_id is not None
         else []

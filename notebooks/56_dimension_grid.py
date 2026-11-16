@@ -122,11 +122,11 @@ def update_monthly(connection, monthly_sales, orders_slicer):
     # Read the wrapper's synced value in a reactive cell; do not recreate widgets.
     selection = orders_slicer.value["selected"]
     predicate, parameters = orders_slicer.widget.where()
-    result = connection.execute(
+    result = connection.sql(
         f"""SELECT date_trunc('month', order_datetime) AS month,
                    sum(sales) AS sales, count(*) AS orders
             FROM orders WHERE {predicate} GROUP BY ALL ORDER BY month""",
-        parameters,
+        params=parameters,
     ).to_arrow_table()
     monthly_sales.widget.set_data(result)
     return

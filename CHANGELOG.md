@@ -6,7 +6,16 @@ project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## Unreleased
 
+## 0.2.5 (2026-11-16)
+
 ### Added
+
+- `theme_source="auto"` follows the surrounding page in marimo islands and the
+  notebook theme elsewhere. Override with `"nearest"` or `"host"`; explicit
+  light/dark settings still win.
+
+- Notebook-owned `css=` for advanced styling inside the widget boundary. The
+  subcolumns recreation uses this option to retain its custom styling.
 
 - Shared light/dark/automatic modes for tables and DimensionGrid, with adaptive
   named palettes, optional custom colour adaptation, semantic neutral colours
@@ -17,7 +26,6 @@ project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Isolate widget CSS from host pages, including blog styles copied into marimo
   island shadow roots. Automatically follow the page theme in islands, with
   `theme_source` overrides; retain notebook theme defaults elsewhere.
-
 - Automatic text colours account for translucent fills over the actual table,
   host and row backgrounds. Chips, row colours and inside-bar labels include
   the same layers and bar opacity, while explicit text colours remain in control.

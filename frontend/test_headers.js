@@ -1,6 +1,6 @@
 import {test} from "node:test";
 import assert from "node:assert/strict";
-import {headerLayout, orderedColumns} from "./src/headers.js";
+import {buildHeaderLevels, headerLayout, orderedColumns} from "./src/headers.js";
 
 const columns = [
   {name: "country"},
@@ -11,6 +11,35 @@ const columns = [
   {name: "inflation", column_group: ["Economy", "Prices"], subcolumn_group: "Latest"},
   {name: "month", column_group: ["Economy", "Prices"], subcolumn_group: "Latest"},
 ];
+
+test("a run of ungrouped columns is split at the freeze boundary", () => {
+  const paths = [[], [], [], [], ["Spend"], ["Spend"], []];
+  assert.deepEqual(buildHeaderLevels(paths, 1, 1)[0], [
+    {label: "", span: 1, start: 0},
+    {label: "", span: 3, start: 1},
+    {label: "Spend", span: 2, start: 4},
+    {label: "", span: 1, start: 6},
+  ]);
+  // Named groups are never split; no boundary keeps today's layout.
+  assert.deepEqual(buildHeaderLevels([["A"], ["A"]], 1, 1)[0], [{label: "A", span: 2, start: 0}]);
+  assert.equal(buildHeaderLevels(paths, 1)[0].length, 3);
+});
+
+test("nested blank spanners split without splitting their named parent", () => {
+  const grouped = [
+    {name: "a", column_group: ["A"]},
+    {name: "b", column_group: ["A"]},
+    {name: "c", column_group: ["A", "B"]},
+  ];
+  const layout = headerLayout(grouped, {breakAt: 1});
+  assert.deepEqual(layout.levels, [
+    [{label: "A", span: 3, start: 0}],
+    [{label: "", span: 1, start: 0}, {label: "", span: 1, start: 1}, {label: "B", span: 1, start: 2}],
+  ]);
+  for (const breakAt of [0, 3, 4]) {
+    assert.deepEqual(headerLayout(grouped, {breakAt}), headerLayout(grouped));
+  }
+});
 
 test("sub-columns cluster stably within the full parent path without mutating input", () => {
   const input = Object.freeze(columns.map((column) => Object.freeze({...column})));

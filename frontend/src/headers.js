@@ -22,8 +22,8 @@ export function groupKey(group) {
   return Array.isArray(group) ? group.join("\u0000") : String(group);
 }
 
-/** Build one row of contiguous spanners per hierarchy level. */
-export function buildHeaderLevels(paths, depth) {
+/** Build contiguous spanners, splitting blank runs at the frozen boundary. */
+export function buildHeaderLevels(paths, depth, breakAt = null) {
   const levels = Array.from({ length: depth }, () => []);
   function recurse(start, end, level) {
     if (level >= depth) return;
@@ -31,7 +31,7 @@ export function buildHeaderLevels(paths, depth) {
     while (i < end) {
       const label = paths[i][level] ?? "";
       let j = i + 1;
-      while (j < end && (paths[j][level] ?? "") === label) j++;
+      while (j < end && (paths[j][level] ?? "") === label && !(label === "" && j === breakAt)) j++;
       levels[level].push({ label, span: j - i, start: i });
       recurse(i, j, level + 1);
       i = j;
@@ -89,7 +89,7 @@ function compositeKey(col) {
 }
 
 /** All spans refer to physical columns, after hiding and ordering. */
-export function headerLayout(columns) {
+export function headerLayout(columns, {breakAt = null} = {}) {
   const paths = columns.map((col) => groupPath(col.column_group));
   const depth = Math.max(0, ...paths.map((path) => path.length));
   const leaves = [];
@@ -109,7 +109,7 @@ export function headerLayout(columns) {
     }
     start = end;
   }
-  return {depth, levels: buildHeaderLevels(paths, depth), leaves, joins};
+  return {depth, levels: buildHeaderLevels(paths, depth, breakAt), leaves, joins};
 }
 
 export function decorateSubcolumn(cell, col, index, ctx) {
@@ -133,7 +133,10 @@ function headerTitle(title) {
 
 export function renderHeader({columns, rowNumbers, options: opts, sort, onSort, onInfo}) {
   const thead = h("thead");
-  const {depth, levels, leaves} = headerLayout(columns);
+  const freeze = opts.freeze_columns || 0;
+  const {depth, levels, leaves} = headerLayout(columns, {
+    breakAt: freeze > 0 ? freeze - (rowNumbers ? 1 : 0) : null,
+  });
   if (depth > 0) {
     levels.forEach((cells, level) => {
       const groupRow = h("tr", { class: "et-header-groups" });

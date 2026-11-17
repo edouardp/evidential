@@ -9,6 +9,92 @@ from evidential import col, rows
 pytestmark = pytest.mark.browser
 
 
+@pytest.mark.parametrize("row_numbers", [False, True])
+def test_blank_column_group_header_covers_frozen_columns_when_scrolled(page, live_server, row_numbers):
+    data = [
+        {
+            "query_start": "Latest query",
+            "latest_user_name": "alice",
+            "user_count": 2,
+            "statement_subtype": "SELECT",
+            "dollars": 12,
+            "dollars_per_query": 3,
+            "scanned_bytes": 1024,
+            "queries": 4,
+            "cached": 1,
+            "failed_share": 0,
+            "mean_s": 2,
+            "workgroups": "analytics",
+            "first_submitted_at": "2026-11-01",
+            "last_submitted_at": "2026-11-18",
+            "latest_query_execution_id": "query-123",
+        }
+    ]
+    mount(
+        page,
+        live_server,
+        [
+            (
+                "Frozen blank column group",
+                data,
+                [
+                    col.text("query_start", title="Query (latest run)"),
+                    col.text("latest_user_name", title="Latest user"),
+                    col.integer("user_count", title="Users"),
+                    col.text("statement_subtype", title="Statement"),
+                    col.group(
+                        "Spend", [col.bar("dollars"), col.number("dollars_per_query"), col.number("scanned_bytes")]
+                    ),
+                    col.group(
+                        "Runs",
+                        [
+                            col.number("queries"),
+                            col.number("cached"),
+                            col.percent("failed_share"),
+                            col.number("mean_s"),
+                        ],
+                    ),
+                    col.text("workgroups"),
+                    col.datetime("first_submitted_at"),
+                    col.datetime("last_submitted_at"),
+                    col.text("latest_query_execution_id"),
+                ],
+                {"freeze_columns": 2 if row_numbers else 1, "row_numbers": row_numbers, "width": 320},
+            )
+        ],
+    )
+    offset = 1 if row_numbers else 0
+    cell = page.locator(f'.et-header-groups .et-th-group-blank[data-column-start="{offset}"]')
+    leaf = page.locator(f'.et-header-leaves .et-frozen[data-column-start="{offset}"]')
+    expect(leaf).to_have_css("position", "sticky")
+    scroller = page.locator(".et-scroller")
+    assert scroller.evaluate("el => el.scrollWidth > el.clientWidth + 300")
+    scroller.evaluate("el => el.scrollLeft = 300")
+    expect(scroller).to_have_js_property("scrollLeft", 300)
+    hit = cell.evaluate(
+        """(cell, column) => {
+            const leaf = cell.closest('thead').querySelector(
+                `.et-header-leaves [data-column-start="${column}"]`).getBoundingClientRect();
+            const bounds = cell.getBoundingClientRect();
+            const x = leaf.x + leaf.width / 2, y = bounds.y + bounds.height / 2;
+            let hit = document.elementFromPoint(x, y);
+            // Follow the browser's hit through the widget's open shadow boundary.
+            while (hit?.shadowRoot) {
+                const inner = hit.shadowRoot.elementFromPoint(x, y);
+                if (!inner || inner === hit) break;
+                hit = inner;
+            }
+            return {covered: hit === cell || cell.contains(hit), group: hit?.closest('th')?.dataset.group};
+        }""",
+        offset,
+    )
+    assert hit["covered"], hit
+    assert hit["group"] != "Spend"
+    assert "et-frozen" in cell.get_attribute("class").split()
+    expect(cell).to_have_css("position", "sticky")
+    assert cell.get_attribute("colspan") == "1"
+
+
 def assert_heading_boundary(heading, frozen_cell):
     label = heading.locator(".et-frozen-heading-label")
     expect(label).to_have_count(1)

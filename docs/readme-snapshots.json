@@ -56,7 +56,7 @@
     "src/evidential/static/dimension-grid.css": "36ed0a4fad3640f01aa46785392be8e6f2d00e75b8cdf935741456e73f44bdb8",
     "src/evidential/static/dimension-grid.js": "c4e55038184629a649fd6054da587580826d0d538332863a330e29eee4dec7ef",
     "src/evidential/static/table.css": "afaaad1bcfa92ffece101ffa6e94f0726c33281af5ca1d32e58c69555dcd0845",
-    "src/evidential/static/table.js": "6931b7be620f2368d371d960376677f34792fb7bbf3489686d977ba6b932c75b",
+    "src/evidential/static/table.js": "bde616419e4fd615afe93e8c3ba8d575a8db4250193783fba5fade80f50e87de",
     "src/evidential/table.py": "6f2f48820a119cab0c079c579f4b3cc98c63d5ac40b15fbd2a2a9b3dd78efd58",
     "uv.lock": "3d21ebcfa8f54c7a33e3a4c554f47df1094c8892b512377e054a7c753dad8692"
   },
@@ -119,7 +119,7 @@
     "docs/api/images/pivot-table.png": {
       "notebook": "notebooks/49_api_screenshots.py",
       "cell": "pivoted_columns",
-      "sha256": "6add54e3a03832d017d5d38f64a96c185c33292972b9160e6981a1b4e6344ddf"
+      "sha256": "d965be7385c1d1ab6de1af241c3a729da87f04712f5fcdb657813f7f832418e3"
     },
     "docs/api/images/comparison-table.png": {
       "notebook": "notebooks/49_api_screenshots.py",
@@ -134,7 +134,7 @@
     "docs/api/images/query-table.png": {
       "notebook": "notebooks/49_api_screenshots.py",
       "cell": "ad_hoc_query",
-      "sha256": "5fdc2cd67e40cf746a05e3c474627782d6b0fd8e21aac7c7cd0d87187f0435f5"
+      "sha256": "f7dca1c10cb39b20a6e09d6cc77be9574ceec24bd8b24d0ff87bc5be41c6e751"
     },
     "docs/preview.png": {
       "notebook": "notebooks/49_api_screenshots.py",

@@ -1403,6 +1403,29 @@ test("nested column groups build multiple header rows", () => {
   renderer.destroy();
 });
 
+test("freeze option updates rebuild blank spanners with the row-number offset", async () => {
+  for (const rowNumbers of [false, true]) {
+    const offset = rowNumbers ? 1 : 0;
+    const columns = [{name: "a"}, {name: "b"}, {name: "c", column_group: "Spend"}];
+    const model = makeModel([{a: "A", b: "B", c: 1}], columns, {row_numbers: rowNumbers}, el);
+    const events = new Map();
+    model.on = (event, callback) => events.set(event, callback);
+    model.off = event => events.delete(event);
+    const dispose = render({model, el});
+    const spans = () => [...el.querySelectorAll(".et-header-groups .et-th-group-blank")]
+      .map(cell => [Number(cell.dataset.columnStart), cell.colSpan]);
+    assert.deepEqual(spans(), [[offset, 2]]);
+    for (const frozen of [offset + 1, offset + 2, offset, 0]) {
+      model.data.options = {...model.data.options, freeze_columns: frozen};
+      events.get("change:options")();
+      await Promise.resolve();
+      assert.deepEqual(spans(), frozen === offset + 1
+        ? [[offset, 1], [offset + 1, 1]] : [[offset, 2]]);
+    }
+    dispose();
+  }
+});
+
 test("array column groups cluster at their first occurrence", () => {
   const columns = [
     { name: "a", type: "number", column_group: ["G", "1"] },

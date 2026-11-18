@@ -138,6 +138,8 @@ def test_blank_column_group_header_covers_frozen_columns_when_scrolled(page, liv
     scroll_column_groups(scroller)
     assert_blank_spanners_cover_leaves(blank.all(), [leaf], span=1)
     assert_blank_header_paint(page, blank.all(), [leaf])
+    for cell in [*blank.all(), leaf]:
+        expect(cell).to_have_css("box-shadow", "none")
 
 
 def test_two_frozen_ungrouped_leaves_share_blank_spanners(page, live_server):
@@ -193,8 +195,9 @@ def test_frozen_named_group_keeps_its_heading_rules(page, live_server):
         assert_named_group_rule(group)
 
 
-def test_only_the_trailing_blank_blends_into_a_frozen_leaf(page, live_server):
-    scroller = mount_column_groups(page, live_server, [col.text("query").group("Fixed")])
+@pytest.mark.parametrize("group_path", ["Fixed", ["", "Fixed"]], ids=["trailing-blank", "leading-blank"])
+def test_mixed_depth_frozen_header_keeps_its_freeze_shadow(page, live_server, group_path):
+    scroller = mount_column_groups(page, live_server, [col.text("query").group(group_path)])
     group = scroller.locator('.et-header-groups [data-group="Fixed"]')
     leaf = scroller.locator('.et-header-leaves [data-column="query"]')
     blank = scroller.locator('.et-header-groups .et-th-group-blank[data-column-start="0"]')
@@ -202,8 +205,10 @@ def test_only_the_trailing_blank_blends_into_a_frozen_leaf(page, live_server):
     scroll_column_groups(scroller)
     expect(group).to_have_class(re.compile(r"\bet-frozen-last\b"))
     assert_named_group_rule(group)
+    assert group.evaluate("cell => getComputedStyle(cell).boxShadow") != "none"
     assert_blank_spanners_cover_leaves([blank], [leaf], span=1)
-    assert_blank_header_paint(page, [blank], [leaf])
+    for cell in [blank, leaf]:
+        expect(cell).not_to_have_css("box-shadow", "none")
 
 
 def test_named_groups_keep_their_full_span_across_the_freeze_boundary(page, live_server):

@@ -180,6 +180,7 @@ export function renderHeader({columns, rowNumbers, options: opts, sort, onSort, 
     const isStubColumn = isStub(opts, col);
     const rotation = col.rotate_title ?? (isStubColumn ? null : opts.rotate_titles);
     let thClass = `et-th${sorted ? " et-th-sorted" : ""}${isStubColumn ? " et-stub-head" : ""}`;
+    if (depth > 0 && !groupPath(col.column_group).some(Boolean)) thClass += " et-th-ungrouped";
     if (rotation === "vertical") thClass += " et-th-vertical";
     else if (typeof rotation === "number") thClass += " et-th-oblique";
     const infoText = col.info ? String(col.info) : null;

@@ -55,8 +55,8 @@
     "src/evidential/skills/developing-with-evidential/assets/report.py": "55508d1a1ef33ce444fa7745ebace9660f37954ae73e3306a1a3b166e708f5ce",
     "src/evidential/static/dimension-grid.css": "36ed0a4fad3640f01aa46785392be8e6f2d00e75b8cdf935741456e73f44bdb8",
     "src/evidential/static/dimension-grid.js": "c4e55038184629a649fd6054da587580826d0d538332863a330e29eee4dec7ef",
-    "src/evidential/static/table.css": "ae9ed2c195ab8020e306938cea4561a8890e2b6ff4775d2f0db4b90e30a28922",
-    "src/evidential/static/table.js": "f807c903da9aa70885c1c83f161b5094442100ec0e422d69ffc9cb1e21bcefdb",
+    "src/evidential/static/table.css": "94baca8023fd54a0237ea08b4d1f269c4c1fc149af22f7d078301b1636b33fdd",
+    "src/evidential/static/table.js": "2a1ca0f30a46af7daf6cb8aef349e8a7c074a77b6ac3276b8bf0bcf95b2b0a47",
     "src/evidential/table.py": "6f2f48820a119cab0c079c579f4b3cc98c63d5ac40b15fbd2a2a9b3dd78efd58",
     "uv.lock": "3d21ebcfa8f54c7a33e3a4c554f47df1094c8892b512377e054a7c753dad8692"
   },
@@ -84,7 +84,7 @@
     "docs/api/images/visualizations.png": {
       "notebook": "notebooks/49_api_screenshots.py",
       "cell": "visualizations",
-      "sha256": "d5e4b7564dfe244680a0c451a92d679ef2e11da18a213c3cc4107ea5bc8d2514"
+      "sha256": "536560f1621128b74d52c2177ff3c6770e2ffbf7f57a4b79b22f8c694d790126"
     },
     "docs/api/images/back-to-back.png": {
       "notebook": "notebooks/49_api_screenshots.py",
@@ -99,7 +99,7 @@
     "docs/api/images/groups.png": {
       "notebook": "notebooks/49_api_screenshots.py",
       "cell": "groups",
-      "sha256": "b9ac4031794f0a9c3350c25c2d6468cbfa16fd0f47fb30d77b0a469774a6dfce"
+      "sha256": "b40daa31726e507a18d9f1a383fd31bbe318548d337d7bbc6ce01b5f3a1f1300"
     },
     "docs/api/images/subcolumns.png": {
       "notebook": "notebooks/49_api_screenshots.py",
@@ -119,22 +119,22 @@
     "docs/api/images/pivot-table.png": {
       "notebook": "notebooks/49_api_screenshots.py",
       "cell": "pivoted_columns",
-      "sha256": "5e96b1f92ba4c23fe413d46661652d7586eaa08e4edbd56725bb058a836f5ab2"
+      "sha256": "d965be7385c1d1ab6de1af241c3a729da87f04712f5fcdb657813f7f832418e3"
     },
     "docs/api/images/comparison-table.png": {
       "notebook": "notebooks/49_api_screenshots.py",
       "cell": "prior_comparison",
-      "sha256": "177f29a3836e6016fd03a892902b694866bffb1020f33ec19dd5e25a3ad1a58d"
+      "sha256": "8dc50e37ca45a34596dd8f8adc37f348f6c0327a403a38570376d06965aafe7e"
     },
     "docs/api/images/rules.png": {
       "notebook": "notebooks/49_api_screenshots.py",
       "cell": "rules",
-      "sha256": "1eead0120c5f40e4877e35ca9473f51c49d117d5bf5ba8be9db0e801948740bc"
+      "sha256": "cd59254eb8af352420af687fbdb4a788039d7f8376259a3152f94b4efa2568ce"
     },
     "docs/api/images/query-table.png": {
       "notebook": "notebooks/49_api_screenshots.py",
       "cell": "ad_hoc_query",
-      "sha256": "5fdc2cd67e40cf746a05e3c474627782d6b0fd8e21aac7c7cd0d87187f0435f5"
+      "sha256": "760d38dbeb5c9ef68f68a21772e8eaf7fa3a0fd6cd272008a63b0291cc8fc7ad"
     },
     "docs/preview.png": {
       "notebook": "notebooks/49_api_screenshots.py",

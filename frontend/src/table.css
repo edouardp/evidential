@@ -1020,12 +1020,12 @@ tbody tr:last-child .et-bar-center .et-bar-axis { bottom: var(--et-bar-pad, 0); 
 .et-frozen-last,
 .et-frozen-heading-label::before { box-shadow: 2px 0 4px -2px rgba(0, 0, 0, 0.25); }
 
-/* Keep the freeze marker to the right of the header cells so it cannot
-   cast a horizontal shadow between a blank spanner and its leaf. */
-.et-table thead:has(.et-th-group-blank.et-frozen-last) .et-th.et-frozen-last {
+/* For an ungrouped leaf at the freeze boundary, keep the marker outside
+   the leaf and its blank spanners so their joins have no horizontal shadow. */
+.et-table thead:has(.et-th-ungrouped.et-frozen-last) :is(.et-th-group-blank, .et-th-ungrouped).et-frozen-last {
   box-shadow: none;
 }
-.et-table thead:has(.et-th-group-blank.et-frozen-last) .et-th.et-frozen-last::before {
+.et-table thead:has(.et-th-ungrouped.et-frozen-last) :is(.et-th-group-blank, .et-th-ungrouped).et-frozen-last::before {
   content: "";
   position: absolute;
   inset: 0 -4px 0 auto;

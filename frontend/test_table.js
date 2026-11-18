@@ -1403,6 +1403,22 @@ test("nested column groups build multiple header rows", () => {
   renderer.destroy();
 });
 
+test("only leaves without a named group at any depth are marked as ungrouped", () => {
+  const columns = [
+    {name: "ungrouped"},
+    {name: "blank", column_group: ["", ""]},
+    {name: "parent", column_group: ["Fixed", ""]},
+    {name: "child", column_group: ["", "Fixed"]},
+  ];
+  const rows = [{ungrouped: "A", blank: "B", parent: "C", child: "D"}];
+  const renderer = new EvidentialTableRenderer(makeModel(rows, columns, {}, el), el);
+  assert.deepEqual(
+    [...el.querySelectorAll(".et-th-ungrouped")].map(cell => cell.dataset.column),
+    ["ungrouped", "blank"],
+  );
+  renderer.destroy();
+});
+
 test("freeze option updates rebuild blank spanners with the row-number offset", async () => {
   for (const rowNumbers of [false, true]) {
     const offset = rowNumbers ? 1 : 0;

@@ -1,6 +1,10 @@
-"""Display-only group headings follow frozen columns during horizontal scrolling."""
+"""Column groups and display-only row headings stay aligned with frozen columns."""
+
+import re
+from base64 import b64encode
 
 import pytest
+from paint_helpers import assert_colors
 from playwright.sync_api import expect
 from test_spec_conformance import capture, mount
 
@@ -9,90 +13,250 @@ from evidential import col, rows
 pytestmark = pytest.mark.browser
 
 
-@pytest.mark.parametrize("row_numbers", [False, True])
-def test_blank_column_group_header_covers_frozen_columns_when_scrolled(page, live_server, row_numbers):
+def mount_column_groups(
+    page, live_server, leading_columns, *, frozen=1, row_numbers=False, top_axis=False, column_stats=False
+):
     data = [
         {
-            "query_start": "Latest query",
-            "latest_user_name": "alice",
-            "user_count": 2,
-            "statement_subtype": "SELECT",
-            "dollars": 12,
-            "dollars_per_query": 3,
-            "scanned_bytes": 1024,
-            "queries": 4,
-            "cached": 1,
-            "failed_share": 0,
-            "mean_s": 2,
-            "workgroups": "analytics",
-            "first_submitted_at": "2026-11-01",
-            "last_submitted_at": "2026-11-18",
-            "latest_query_execution_id": "query-123",
+            "query": f"Query {number:02}",
+            "query_number": number,
+            "owner": f"Owner {25 - number:02}",
+            "user": "Latest user",
+            "estimate": number * 1.5,
+            "actual": number * 2,
+            "budget": number * 3,
+            "comment": "A wide scrolling column that extends past the edge of the compact table viewport",
         }
+        for number in range(24, 0, -1)
     ]
+    estimate = col.bar("estimate").group(["Spend", "Daily"])
+    if top_axis:
+        estimate = estimate.scale(axis=True)
     mount(
         page,
         live_server,
         [
             (
-                "Frozen blank column group",
+                "Frozen column groups",
                 data,
                 [
-                    col.text("query_start", title="Query (latest run)"),
-                    col.text("latest_user_name", title="Latest user"),
-                    col.integer("user_count", title="Users"),
-                    col.text("statement_subtype", title="Statement"),
-                    col.group(
-                        "Spend", [col.bar("dollars"), col.number("dollars_per_query"), col.number("scanned_bytes")]
-                    ),
-                    col.group(
-                        "Runs",
-                        [
-                            col.number("queries"),
-                            col.number("cached"),
-                            col.percent("failed_share"),
-                            col.number("mean_s"),
-                        ],
-                    ),
-                    col.text("workgroups"),
-                    col.datetime("first_submitted_at"),
-                    col.datetime("last_submitted_at"),
-                    col.text("latest_query_execution_id"),
+                    *leading_columns,
+                    estimate,
+                    col.number("actual").group(["Spend", "Daily"]),
+                    col.number("budget").group(["Spend", "Budget"]),
+                    col.text("comment"),
                 ],
-                {"freeze_columns": 2 if row_numbers else 1, "row_numbers": row_numbers, "width": 320},
+                {
+                    "freeze_columns": frozen + int(row_numbers),
+                    "row_numbers": row_numbers,
+                    "column_stats": column_stats,
+                    "width": 340,
+                    "max_height": 280,
+                },
             )
         ],
     )
-    offset = 1 if row_numbers else 0
-    cell = page.locator(f'.et-header-groups .et-th-group-blank[data-column-start="{offset}"]')
-    leaf = page.locator(f'.et-header-leaves .et-frozen[data-column-start="{offset}"]')
-    expect(leaf).to_have_css("position", "sticky")
     scroller = page.locator(".et-scroller")
-    assert scroller.evaluate("el => el.scrollWidth > el.clientWidth + 300")
-    scroller.evaluate("el => el.scrollLeft = 300")
-    expect(scroller).to_have_js_property("scrollLeft", 300)
-    hit = cell.evaluate(
-        """(cell, column) => {
-            const leaf = cell.closest('thead').querySelector(
-                `.et-header-leaves [data-column-start="${column}"]`).getBoundingClientRect();
-            const bounds = cell.getBoundingClientRect();
-            const x = leaf.x + leaf.width / 2, y = bounds.y + bounds.height / 2;
-            let hit = document.elementFromPoint(x, y);
-            // Follow the browser's hit through the widget's open shadow boundary.
-            while (hit?.shadowRoot) {
-                const inner = hit.shadowRoot.elementFromPoint(x, y);
-                if (!inner || inner === hit) break;
-                hit = inner;
-            }
-            return {covered: hit === cell || cell.contains(hit), group: hit?.closest('th')?.dataset.group};
+    expect(scroller.locator(".et-header-leaves .et-frozen-last")).to_have_count(1)
+    return scroller
+
+
+def scroll_column_groups(scroller):
+    assert scroller.evaluate("el => el.scrollWidth > el.clientWidth + 300 && el.scrollHeight > el.clientHeight + 100")
+    scroller.evaluate("el => el.scrollTo(240, 100)")
+    expect(scroller).to_have_js_property("scrollLeft", 240)
+    expect(scroller).to_have_js_property("scrollTop", 100)
+
+
+def assert_blank_header_paint(page, blank_cells, leaves):
+    # Match paint near each join to the interior of the blank spanner, at
+    # the center of every leaf the spanner covers.
+    points = []
+    for blank in blank_cells:
+        bounds = blank.bounding_box()
+        bottom = round(bounds["y"] + bounds["height"])
+        for leaf in leaves:
+            leaf_bounds = leaf.bounding_box()
+            x = int(leaf_bounds["x"] + leaf_bounds["width"] / 2)
+            points.extend([[x, bottom + dy] for dy in (-6, -2, -1, 0, 1)])
+    samples = page.evaluate(
+        """async ({png, points}) => {
+            const image = new Image();
+            image.src = 'data:image/png;base64,' + png;
+            await image.decode();
+            const canvas = document.createElement('canvas');
+            canvas.width = image.width;
+            canvas.height = image.height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(image, 0, 0);
+            return points.map(([x, y]) => [...ctx.getImageData(x, y, 1, 1).data].slice(0, 3));
         }""",
-        offset,
+        {"png": b64encode(page.screenshot(scale="css")).decode(), "points": points},
     )
-    assert hit["covered"], hit
-    assert hit["group"] != "Spend"
-    assert "et-frozen" in cell.get_attribute("class").split()
-    expect(cell).to_have_css("position", "sticky")
-    assert cell.get_attribute("colspan") == "1"
+    for index in range(0, len(samples), 5):
+        reference, *boundary = samples[index : index + 5]
+        assert_colors(boundary, [reference] * len(boundary))
+
+
+def assert_blank_spanners_cover_leaves(blank_cells, leaves, *, span):
+    for blank in blank_cells:
+        expect(blank).to_have_attribute("colspan", str(span))
+        expect(blank).to_have_css("position", "sticky")
+        expect(blank).to_have_class(re.compile(r"\bet-frozen\b"))
+        for leaf in leaves:
+            x = leaf.evaluate("el => el.getBoundingClientRect().left + el.getBoundingClientRect().width / 2")
+            assert blank.evaluate(
+                """(cell, x) => {
+                    const bounds = cell.getBoundingClientRect();
+                    const y = bounds.y + bounds.height / 2;
+                    let hit = document.elementFromPoint(x, y);
+                    while (hit?.shadowRoot) {
+                        const inner = hit.shadowRoot.elementFromPoint(x, y);
+                        if (!inner || inner === hit) break;
+                        hit = inner;
+                    }
+                    return cell.contains(hit);
+                }""",
+                x,
+            )
+
+
+@pytest.mark.parametrize("row_numbers", [False, True])
+def test_blank_column_group_header_covers_frozen_columns_when_scrolled(page, live_server, row_numbers):
+    scroller = mount_column_groups(
+        page,
+        live_server,
+        [col.text("query", title="Query"), col.text("user")],
+        row_numbers=row_numbers,
+    )
+    offset = int(row_numbers)
+    blank = scroller.locator(f'.et-header-groups .et-th-group-blank[data-column-start="{offset}"]')
+    leaf = scroller.locator(f'.et-header-leaves .et-frozen[data-column-start="{offset}"]')
+    expect(blank).to_have_count(2)
+    expect(leaf).to_have_css("position", "sticky")
+    assert_blank_header_paint(page, blank.all(), [leaf])
+    scroll_column_groups(scroller)
+    assert_blank_spanners_cover_leaves(blank.all(), [leaf], span=1)
+    assert_blank_header_paint(page, blank.all(), [leaf])
+
+
+def test_two_frozen_ungrouped_leaves_share_blank_spanners(page, live_server):
+    scroller = mount_column_groups(
+        page, live_server, [col.text("query"), col.text("owner"), col.text("user")], frozen=2
+    )
+    blank = scroller.locator('.et-header-groups .et-th-group-blank[data-column-start="0"]')
+    query = scroller.locator('.et-header-leaves [data-column="query"]')
+    owner = scroller.locator('.et-header-leaves [data-column="owner"]')
+    leaves = [query, owner]
+    expect(blank).to_have_count(2)
+    scroll_column_groups(scroller)
+    assert_blank_spanners_cover_leaves(blank.all(), leaves, span=2)
+    assert_blank_header_paint(page, blank.all(), leaves)
+
+    blank.last.click()
+    for leaf in leaves:
+        expect(leaf).to_have_attribute("aria-sort", "none")
+    edge = owner.evaluate("""cell => {
+        const strip = getComputedStyle(cell, '::before');
+        return { width: strip.width, right: strip.right, events: strip.pointerEvents };
+    }""")
+    assert edge == {"width": "4px", "right": "-4px", "events": "none"}
+    owner.hover()
+    assert owner.evaluate("cell => cell.matches(':hover')")
+    owner.click()
+    expect(owner).to_have_attribute("aria-sort", "descending")
+    owner.press("Enter")
+    expect(owner).to_have_attribute("aria-sort", "ascending")
+    expect(owner).to_be_focused()
+    query.click()
+    expect(query).to_have_attribute("aria-sort", "descending")
+    expect(owner).to_have_attribute("aria-sort", "none")
+
+
+def assert_named_group_rule(group):
+    assert group.evaluate("""cell => {
+        const rule = getComputedStyle(cell, '::after');
+        return rule.display !== 'none' && rule.height === '2px';
+    }""")
+
+
+def test_frozen_named_group_keeps_its_heading_rules(page, live_server):
+    scroller = mount_column_groups(page, live_server, [col.text("query").group(["Fixed", "Queries"])])
+    groups = scroller.locator('.et-header-groups .et-frozen[data-column-start="0"]')
+    expect(groups).to_have_count(2)
+    scroll_column_groups(scroller)
+    expect(groups).to_have_text(["Fixed", "Queries"])
+    for group in groups.all():
+        expect(group).to_have_attribute("colspan", "1")
+        expect(group).to_have_css("position", "sticky")
+        assert group.evaluate("cell => getComputedStyle(cell).boxShadow") != "none"
+        assert_named_group_rule(group)
+
+
+def test_only_the_trailing_blank_blends_into_a_frozen_leaf(page, live_server):
+    scroller = mount_column_groups(page, live_server, [col.text("query").group("Fixed")])
+    group = scroller.locator('.et-header-groups [data-group="Fixed"]')
+    leaf = scroller.locator('.et-header-leaves [data-column="query"]')
+    blank = scroller.locator('.et-header-groups .et-th-group-blank[data-column-start="0"]')
+    expect(blank).to_have_count(1)
+    scroll_column_groups(scroller)
+    expect(group).to_have_class(re.compile(r"\bet-frozen-last\b"))
+    assert_named_group_rule(group)
+    assert_blank_spanners_cover_leaves([blank], [leaf], span=1)
+    assert_blank_header_paint(page, [blank], [leaf])
+
+
+def test_named_groups_keep_their_full_span_across_the_freeze_boundary(page, live_server):
+    scroller = mount_column_groups(page, live_server, [col.text("query").group(["Spend", "Daily"])])
+    spend = scroller.locator('.et-header-groups [data-group="Spend"]')
+    daily = scroller.locator('.et-header-groups [data-group="Daily"]')
+    leaf = scroller.locator('.et-header-leaves [data-column="query"]')
+    groups = [spend, daily]
+    initial = [cell.bounding_box()["x"] for cell in [*groups, leaf]]
+    scroll_column_groups(scroller)
+    for group, span, x in zip(groups, [4, 3], initial[:2], strict=True):
+        expect(group).to_have_attribute("colspan", str(span))
+        expect(group).not_to_have_class(re.compile(r"\bet-frozen\b"))
+        assert group.bounding_box()["x"] == pytest.approx(x - 240, abs=1)
+        assert_named_group_rule(group)
+    assert leaf.bounding_box()["x"] == pytest.approx(initial[-1], abs=1)
+
+
+@pytest.mark.parametrize("column_stats", [False, True])
+@pytest.mark.parametrize("frozen_axis", [False, True])
+def test_frozen_blank_groups_keep_top_axis_and_stats_slots(page, live_server, column_stats, frozen_axis):
+    query = col.bar("query_number", title="Query").scale(axis=True) if frozen_axis else col.text("query")
+    scroller = mount_column_groups(
+        page, live_server, [query, col.text("user")], top_axis=True, column_stats=column_stats
+    )
+    blank = scroller.locator('.et-header-groups .et-th-group-blank[data-column-start="0"]')
+    leaf = scroller.locator('.et-header-leaves [data-column-start="0"]')
+    axis = scroller.locator(".et-axis-row-top")
+    axis_slot = axis.locator('[data-column-index="0"]')
+    estimate_axis = axis.locator('[data-column-index="2"]')
+    stats = scroller.locator('.et-stats-row [data-column-start="0"]')
+    scroll_column_groups(scroller)
+    assert_blank_header_paint(page, blank.all(), [leaf])
+    axis_covered = not column_stats and not frozen_axis
+    expect(leaf).to_have_js_property("rowSpan", 2 if axis_covered else 1)
+    expect(axis_slot).to_have_count(0 if axis_covered else 1)
+    expect(stats).to_have_count(int(column_stats))
+    expect(estimate_axis.locator(".et-axis-label").first).to_be_visible()
+
+    bounds = leaf.bounding_box()
+    for slot in [*stats.all(), *axis_slot.all()]:
+        assert slot.bounding_box()["x"] == pytest.approx(bounds["x"], abs=1)
+        assert slot.evaluate("cell => getComputedStyle(cell).boxShadow") != "none"
+    if column_stats:
+        stats_bounds = stats.bounding_box()
+        assert stats_bounds["y"] == pytest.approx(bounds["y"] + bounds["height"], abs=1)
+        bounds = stats_bounds
+    if frozen_axis:
+        expect(axis_slot.locator(".et-axis-label").first).to_be_visible()
+    axis_bounds = estimate_axis.bounding_box()
+    assert axis_bounds["y"] + (axis_bounds["height"] if axis_covered else 0) == pytest.approx(
+        bounds["y"] + bounds["height"], abs=1
+    )
 
 
 def assert_heading_boundary(heading, frozen_cell):

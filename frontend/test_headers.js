@@ -41,6 +41,15 @@ test("nested blank spanners split without splitting their named parent", () => {
   }
 });
 
+test("two frozen ungrouped columns share a blank spanner at each depth", () => {
+  const paths = [[], [], [], ["Spend", "Daily"], ["Spend", "Daily"], ["Spend", "Budget"]];
+  const blanks = [{label: "", span: 2, start: 0}, {label: "", span: 1, start: 2}];
+  assert.deepEqual(buildHeaderLevels(paths, 2, 2), [
+    [...blanks, {label: "Spend", span: 3, start: 3}],
+    [...blanks, {label: "Daily", span: 2, start: 3}, {label: "Budget", span: 1, start: 5}],
+  ]);
+});
+
 test("sub-columns cluster stably within the full parent path without mutating input", () => {
   const input = Object.freeze(columns.map((column) => Object.freeze({...column})));
   const ordered = orderedColumns(input, {});

@@ -502,20 +502,24 @@ See [ADR-037](adr/037-renderer-module-boundaries.md) and
 
   where `[m, M]` is the column range when `fit_to_data` is set, otherwise
   `[min(0, min), max(0, max)]` so bars start at a meaningful zero.
+
 - **Colour** (`calculateColorStyles` + `color.js`). Supports named presets,
   explicit palettes, explicit colour stops, min/max/ midpoint, a separate
   `scale_column`, and `conditional_colors` (a hidden hex column). Text colour is
   chosen by contrast against the background.
+
 - **Chip** (`viz="chip"`). The value in a rounded rectangle, filled by the same
   `calculateColorStyles` (a colour scale or `conditional_colors`), with a
   black/white text colour from the fill's luminance. Chips are centred by
   default: `_center_chips` sets the align unless the column asked otherwise.
+
 - **Sparkline** (`renderSparkline`). Builds an inline SVG from an array in a
   cell: `[y, …]`, `[[x, y], …]`, or `ARRAY_AGG({'date': …, 'value': …})`
   objects. Line/area/bar, optional zero baseline, tooltips via `<title>`. The
   SVG scales to the text size (`height: 1.25em`, width from the viewBox), so a
   sparkline never grows the row; `sparkline_options.width`/`height` set the
   viewBox (i.e. the aspect ratio).
+
 - **Delta** (`renderDelta`). The value first with the ▲/▼ indicator after it
   (or `symbol_position="left"`), a good/bad class — green for an increase, red
   for a decrease, flipped by `down_is_good` — and a grey dash for a value inside
@@ -559,6 +563,7 @@ alpha-3 country code).
 
 - **Sorting** is 3-state (desc → asc → none) per column, using a typed
   comparator that handles numbers, dates and locale strings.
+
 - **Press-and-hold pagination.** After a 700ms delay the page advances every
   700ms, easing linearly to 100ms by 3s:
 
@@ -567,17 +572,21 @@ alpha-3 country code).
 
   with $D=700$ms, $I_{\text{start}}=700$ms, $I_{\text{end}}=100$ms,
   $R=2300$ms. A `pointerup`/`pointercancel`/`blur` listener on `window` stops it.
+
 - **CSV download** serialises the current (searched, sorted, visible) rows, not
   just the page.
+
 - **Empty state.** An empty table with columns still renders its header and
   `empty_rows` (default: the effective page size) blank rows; the message is a
   `tbody::after` overlay (30% surface) that covers the body but not the header
   (ADR-033). A table with no columns falls back to a flat `.et-empty` block.
+
 - **Row selection** (`select="key_column"`). A row click sets the widget's synced
   `selected` trait and calls `model.save_changes()`; Marimo maps the comm update
   to a UI-element value change, so the cells that read `table.widget.selected`
   re-run (ADR-032). The clicked row is marked `.et-row-selected`; clicking it
   again clears the selection.
+
 - **Column descriptions** (`info`, or the `comment`/`description` aliases) render
   as a **ⓘ** in the header. The whole `<th>` registers with the same tooltip
   controller as data cells, using the table/column text delay. Hover, focus and

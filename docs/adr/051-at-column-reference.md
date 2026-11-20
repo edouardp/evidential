@@ -33,6 +33,7 @@ A string `"@name"` denotes the column `name`:
 - **Wherever an option names a column** — `sort_by`, `fmt_column`,
   `scale_column`, `conditional_colors`, `footnote`, `link`, `image`, `logo` —
   `"@name"` is accepted and the `@` is stripped.
+
 - **`scale="@name"`** on `.color()` / `.chip()` is shorthand for
   `conditional_colors="name"` — colour each cell from that column's values:
 

@@ -613,6 +613,7 @@ columns=[
   `direction="left"` it fills from the right edge instead, and `reference=N`
   draws a vertical benchmark rule at a value. `color="@column"` colours each bar
   from a column (`@` marks the column reference).
+
 - **Colour** — `.color(scale=, stops=, conditional_colors=, scale_column=, min=,
   max=, midpoint=)`. `scale` takes a preset (`"blues"`, `"viridis"`), any of the
   matplotlib colour maps (`"RdBu"`, `"plasma"`, …), a list of stops, or
@@ -623,11 +624,14 @@ columns=[
   Translucent fills reveal the row stripe/hover tint underneath without fading
   text or marks, including in frozen columns. See the comparison in
   [`12_color_scales.py`](../../notebooks/12_color_scales.py).
+
 - **Chip** — `.chip(min_width=, conditional_colors=, scale=, …)`, on either a
   text or a numeric column.
+
 - **Delta** — `.delta(down_is_good=, neutral_range=, chip=, show_value=,
   show_symbol=, symbol_position=)`. Green for up, red for down, a grey dash
   inside `neutral_range`.
+
 - **Sparkline** — `.sparkline(type="line"|"area"|"bar"|"points"|"change", x=, y=,
   color=, fit_to_data=, y_fmt=, width=, height=, markers=, marker_color=, shape=, angle=, outline=, signed=, fill_opacity=,
   reference=, reference_color=, delta=, steady=, color_scale=, color_domain=)`
@@ -756,6 +760,7 @@ columns=[
   football results dataset: search teams, select a year and competition, then
   click a team to update the second table with match details and labeled goal
   margin bars. A switch adds a goal-margin gradient to the top table's sparklines.
+
 - **Symbols** — `.symbols(symbol=, shape=, angle=, outline=, empty=, max=, image=, color=,
   empty_color=, size=, gap=)`: repeat the value as glyphs, emoji, images, or
   font-independent geometric markers. Familiar glyphs (`■`, `□`, `●`, `○`,
@@ -902,6 +907,7 @@ columns=[
   color string such as `outline="#334155"` to recolor it independently of
   `color` (the fill). Omission, `None`, or `True` keeps the default one-pixel
   theme ring, without changing the marker's size or position.
+
 - **Marker shapes** — `shape="circle"` (default), `"square"`, `"rounded"`,
   `"triangle"`, `"diamond"`, `"cross"`, `"star"` or `"bar"`. These values are
   typed as the exported `MarkerShape` Literal. Triangles are equilateral and point
@@ -924,6 +930,7 @@ columns=[
   use the same shape names, angles and outline options. Sparkline markers keep
   their existing outline-free default. Bar/change sparklines have no marker shape.
   See [notebook 62](../../notebooks/62_marker_shapes.py).
+
 - **Named point series** — `col.points(["actual", "target"], palette=,
   connect=True)` draws several scalar fields without repeated `.point(...)`
   calls. A field-to-name mapping, such as
@@ -939,12 +946,14 @@ columns=[
   points have no span. `col.points("array_column")` retains its existing array
   semantics and defaults. Palette/connection options require the field-list or
   mapping form. The scale, axis and value format remain explicit choices.
+
 - **Stacks** — `stacked_bar(*sources, colors=, labels=, label_align="begin"|
   "center"|"end", normalize="percent", size=, diverge_at=, neutral="split")`.
   `labels=True` writes each segment's value and `labels="percent"` its share;
   `size` is the stack height fraction. `diverge_at="neutral", neutral="split"`
   centres the named segment on the origin and grows the categories either side
   left and right (a Likert chart).
+
 - **Legends** — append `.legend()` to a mark column for a compact color key
   above the table, to the right of the title and subtitle. A group for each
   opted-in column is named exactly like its rendered table heading. Column
@@ -970,6 +979,7 @@ columns=[
   search, pagination or sorting. See
   [`54_legends.py`](../../notebooks/54_legends.py) for one stack, two stacks and
   nine age-band points using real population data.
+
 - **Overlapping points** — opaque, differently coloured dots whose centres fit
   within one CSS pixel share a circle split into equal pie sectors. Halves
   divide vertically; thirds and larger groups meet at the centre. The entire
@@ -978,6 +988,7 @@ columns=[
   Translucent and differently sized points keep their existing rendering.
   Source values, individual outline colours and tooltip identities are retained.
   See [`48_dumbbell_plots.py`](../../notebooks/48_dumbbell_plots.py).
+
 - **Tooltips** — inspect full, comma-grouped values independently of painted
   labels. Dots under the pointer share a multiline tooltip with named series,
   showing at most 10 entries nearest the cursor in screen space. The selected
@@ -1007,9 +1018,11 @@ columns=[
   keyboard focus and touch. They honor `text_delay`, support newlines and remain
   available when sorting is disabled; data-cell tooltip overrides do not replace
   the header description.
+
 - **Boxplot** — `boxplot(minimum, q1, median, q3, maximum, outliers=, whisker=`
   `"extrema"|"iqr")`. The renderer never computes statistics; the five numbers
   arrive from SQL or Python.
+
 - **Distribution** — `distribution(source, x="position", y="density",
   style="band", height=0.5, density_max=None)` draws a flat uncertainty band.
   Density controls opacity, with pale tails and darker high-density regions;
@@ -1026,9 +1039,11 @@ columns=[
   central estimate on the shared x-axis. See
   [ADR-065](../adr/065-distribution-uncertainty-bands.md).
   (ordered positions, not raw samples). Combine with `.point("median")`.
+
 - **Strip input** — a list of categories (`LIST<category>`) is equal-width; a
   list of `{start, end, category}` structs is positioned on a shared x axis, and
   a list of `{position, category}` structs fills each state to the next.
+
 - **Labels** — use the immutable `label` builder to format and style a mark's
   annotation. It shares `fmt`/`format`, `font`, `font_color`, `bold`, `italic`,
   `font_weight`, `font_style` and `figure_style` with text columns. For labels,
@@ -1078,6 +1093,7 @@ columns=[
   fixed labels; automatic labels always omit text when neither candidate fits.
   `.min_width(pixels)` adds a minimum available width. Inside and stacked labels
   choose light/dark text for contrast; an explicit color overrides this choice.
+
 - **Scale** — `.scale(domain=(lo, hi), include_zero=, unit=, transform=`
   `"linear"|"log", axis=, axis_position="top"|"bottom", gridlines=, gradient=)` fixes the
   shared quantitative axis; `.reference_line(value, label=, color=)` adds a rule
@@ -1108,6 +1124,7 @@ columns=[
   For two-sided bars/Likert stacks, `(0, magnitude)` denotes the extent of
   each arm and displays a signed `-magnitude…+magnitude` axis. An explicit
   symmetric signed domain is also accepted; asymmetric signed bounds are rejected.
+
 - **Cell chrome** — `.cell_style(background=, color=, border=, padding=)` styles
   the cell independently of the marks; `background="@column"` takes a per-row
   colour. Translucent backgrounds blend over the row tint; for example,
@@ -1123,6 +1140,7 @@ columns=[
   changes also refresh presentation colours while preserving table state.
   [Notebook 12](../../notebooks/12_color_scales.py) compares light and dark
   surfaces using the same translucent fills.
+
 - **Sources** — a field name, `"@field"`, or a `lambda row: ...`. A callable is
   evaluated Python-side into a hidden helper column, so the browser (and any
   static export) only ever sees field names.

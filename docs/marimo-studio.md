@@ -168,20 +168,25 @@ PyPI; a Browser export would have no way to install it. Once it is published,
 
   Without it, `--sandbox` fails to resolve `evidential`. Remove the
   override once the package is published.
+
 - **Widget CSS is the widget's own.** The view supplies page chrome; the table
   injects its own stylesheet. Keep the view's selectors scoped so they do not
   collide with `.et-*`.
+
 - **Respect the projection budgets.** A projected JSON value must encode within
   1,000,000 bytes, and a projected dataframe within 64 MiB of Arrow IPC. This is
   the same advice as the rest of the library: aggregate or filter in the
   notebook and project the small result, or split a large table into per-item
   frames selected at runtime.
+
 - **One cell, one widget.** A projection targets a cell's output, so put each
   `EvidentialTable` in its own named cell. (A `mo.vstack([a, b])` cell projects as
   one output if you want them together.)
+
 - **Name your cells.** Projections resolve cell function names (e.g.
   `revenue_table`) and variable names (e.g. `kpis`); anonymous cells only get
   positional `cell-N` aliases. Named targets survive edits.
+
 - **Keep the view's `AGENTS.md`/`DESIGN.md` current** so the next agent (or
   person) knows the notebook targets and the runtime.
 

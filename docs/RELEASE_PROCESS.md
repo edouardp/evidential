@@ -40,10 +40,14 @@ print(version)
 - Use an attached branch with a configured upstream, normally `main` tracking
   `origin/main`. The working tree must be clean, including untracked files.
   The script reports the branch and upstream before changing anything.
+
 - Install project tools with `make install` and have a Chromium browser for
   the required Playwright tests. Chrome, Edge or Playwright Chromium works.
+
 - Have the GitHub CLI (`gh`) installed and authenticated.
+
 - Set `$EDITOR` to your preferred editor; it defaults to `vim`.
+
 - Keyring is installed as a locked development dependency by `uv sync`.
   If setting up a production token for the first time, use the project CLI:
 

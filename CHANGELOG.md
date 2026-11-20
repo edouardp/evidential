@@ -6,6 +6,17 @@ project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## Unreleased
 
+## 0.2.7 (2026-11-21)
+
+### Fixed
+
+- Column group headers no longer draw over frozen columns when the frozen
+  columns have no group. The blank group spanner is split at the freeze
+  boundary, so the frozen leaf and its blank spanner stay put while later
+  groups scroll; the frozen ungrouped header cell and leaf also read as one
+  cell without a shadow seam. Named frozen groups keep their normal shadow and
+  rule. Notebook 07 demonstrates the fix.
+
 ## 0.2.6 (2026-11-16)
 
 ### Changed

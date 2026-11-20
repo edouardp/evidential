@@ -98,6 +98,57 @@ def _(EvidentialTable, col, connection, mo):
 @app.cell
 def _(mo):
     mo.md("""
+    ## Frozen columns with a column group
+
+    Scroll right to see **Query** stay in place while **Latest user** and
+    **Users** scroll with the **Spend** group. The blank header above the
+    first three columns splits at the freeze boundary.
+    """)
+    return
+
+
+@app.cell
+def _(EvidentialTable, col, mo):
+    query_spend = mo.ui.anywidget(
+        EvidentialTable(
+            [
+                {
+                    "query_start": "Daily sales",
+                    "user": "Morgan",
+                    "users": 12,
+                    "dollars": 48.60,
+                    "dollars_per_query": 0.81,
+                    "workgroup": "Reporting",
+                },
+                {
+                    "query_start": "Inventory levels",
+                    "user": "Jordan",
+                    "users": 7,
+                    "dollars": 23.40,
+                    "dollars_per_query": 0.65,
+                    "workgroup": "Operations",
+                },
+            ],
+            title="Query spend",
+            freeze_columns=1,
+            row_numbers=False,
+            width="340px",
+            columns=[
+                col.text("query_start", title="Query"),
+                col.text("user", title="Latest user"),
+                col.integer("users", title="Users"),
+                col.group("Spend", [col.bar("dollars"), col.number("dollars_per_query")]),
+                col.text("workgroup"),
+            ],
+        )
+    )
+    query_spend
+    return
+
+
+@app.cell
+def _(mo):
+    mo.md("""
     ## Row links
 
     `link="url_column"` makes each row clickable; `show_link_column=True` also

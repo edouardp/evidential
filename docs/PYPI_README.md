@@ -68,6 +68,10 @@ Read `SKILL.md` in that directory, then its references as needed. The command
 prints the path without changing agent configuration. No repository clone or
 local datasets are required to use the bundled templates.
 
+`uv run python -m evidential` prints a short package summary followed by the
+same path. Tools that opt in to the custom `agent.skills` entry-point group can
+discover the skill through [installed package metadata](https://github.com/edouardp/evidential/blob/main/docs/api/API.md#bundled-agent-skill).
+
 Install the lightweight [discovery skill](https://github.com/edouardp/evidential/blob/main/skills/evidential/SKILL.md) into your
 agent using the skills CLI:
 

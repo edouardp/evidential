@@ -32,6 +32,7 @@ SKILL_FILES = (
 )
 REQUIRED = (
     f"{PACKAGE}/__init__.py",
+    f"{PACKAGE}/__main__.py",
     f"{PACKAGE}/_compat.py",
     f"{PACKAGE}/_column.py",
     f"{PACKAGE}/_column_options.py",

@@ -1380,11 +1380,34 @@ The equivalent command prints the absolute directory path and a newline:
 uv run python -m evidential.skills path
 ```
 
-Run it in the user's project environment so the instructions match its pinned
-library version. It does not copy files or modify agent configuration.
+`uv run python -m evidential` prints a package summary followed by the same
+path. Run either command in the project's environment so the instructions
+match its pinned library version. Both commands leave agent configuration
+untouched.
+
 The repository's `skills/evidential` discovery skill routes agents to this
 bundled copy. Older versions without the module require their matching release
 documentation; discovering a skill does not authorize upgrading a project.
+
+For tools that enumerate installed packages, Evidential publishes the entry
+`evidential = evidential.skills:path` in `agent.skills`. The value resolves to
+a zero-argument callable returning the skill directory as an absolute
+`pathlib.Path`.
+
+```python
+from importlib.metadata import entry_points
+
+for entry_point in entry_points(group="agent.skills", name="evidential"):
+    if entry_point.dist.name == "evidential":
+        get_skill_directory = entry_point.load()
+        skill_directory = get_skill_directory()
+        break
+```
+
+`agent.skills` is a custom group that tools must explicitly query. Other
+distributions can publish the same name, so consumers should check the
+provider. Enumeration reads metadata. Calling `load()` imports the provider,
+so load entries only from distributions you trust.
 
 ## Reference
 

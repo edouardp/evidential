@@ -1,5 +1,8 @@
 """The installed package exposes its version-matched skill without installation side effects."""
 
+import subprocess
+import sys
+from importlib.metadata import distribution
 from pathlib import Path
 
 import pytest
@@ -16,6 +19,21 @@ def test_path_returns_the_bundled_skill_and_its_resources():
     assert (folder / "SKILL.md").is_file()
     assert (folder / "references/graphics.md").is_file()
     assert (folder / "assets/explorer.py").is_file()
+
+
+def test_entry_point_resolves_to_the_bundled_skill():
+    (entry_point,) = distribution("evidential").entry_points.select(group="agent.skills", name="evidential")
+    get_skill_directory = entry_point.load()
+    assert callable(get_skill_directory)
+    assert get_skill_directory() == skills.path()
+
+
+def test_package_module_prints_summary_and_skill_directory():
+    result = subprocess.run([sys.executable, "-m", "evidential"], check=True, capture_output=True, text=True)
+    summary, directory = result.stdout.splitlines()
+    assert "Evidential" in summary and "Marimo" in summary
+    assert directory == str(skills.path())
+    assert result.stderr == ""
 
 
 def test_path_command_prints_only_the_directory(capsys):

@@ -56,11 +56,26 @@ def test_wheel_skill_discovery_works_without_a_checkout(distributions, tmp_path)
     # -I ignores PYTHONPATH and the current directory. Prepend only the wheel's
     # contents, keeping the test interpreter's installed runtime dependencies.
     script = """
-import runpy, sys
+import runpy
+import sys
+from importlib.metadata import entry_points
 from pathlib import Path
-sys.path.insert(0, sys.argv[1])
+
+installed = Path(sys.argv[1])
+sys.path.insert(0, str(installed))
+(entry_point,) = (
+    entry for entry in entry_points(group='agent.skills', name='evidential')
+    if entry.dist.name == 'evidential'
+)
+assert entry_point.dist.locate_file('') == installed
+assert entry_point.value == 'evidential.skills:path'
+get_skill_directory = entry_point.load()
+assert callable(get_skill_directory)
+folder = get_skill_directory()
+assert isinstance(folder, Path) and folder.is_relative_to(installed)
 import evidential
-assert Path(evidential.__file__).is_relative_to(Path(sys.argv[1]))
+assert Path(evidential.__file__).is_relative_to(installed)
+assert folder == evidential.skills.path()
 sys.argv = ['evidential.skills', 'path']
 runpy.run_module('evidential.skills', run_name='__main__')
 """

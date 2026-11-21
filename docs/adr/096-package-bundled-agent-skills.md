@@ -38,9 +38,11 @@ package-data handling includes it in wheels and source distributions.
 
 `evidential.skills.path()` returns its absolute filesystem `pathlib.Path`.
 `python -m evidential.skills path` prints that directory, without modifying
-agent configuration. The interface supports normal wheel installations and
-editable checkouts, consistent with the package's existing filesystem assets.
-No custom dunder discovery protocol or additional runtime dependency is needed.
+agent configuration. `python -m evidential` prints a summary and delegates
+path output to the same command. Installed distribution metadata declares
+`evidential = evidential.skills:path` in the custom `agent.skills` entry-point
+group. Tools can enumerate that group and load the zero-argument path callable.
+These interfaces support normal wheel installations and editable checkouts.
 
 `skills/evidential/` becomes a lightweight discovery skill. It instructs the
 agent to run the command in the user's project environment, read the returned
@@ -57,6 +59,12 @@ entry point remains installable from GitHub/skills.sh, while the full guidance
 is usable offline without a repository checkout. Consumers still need to make
 the skill visible to their agent; importing the package does not register it.
 
+The metadata convention requires explicit consumer support. The generic
+group name can collide with other conventions, and another distribution can
+use the same entry name. Consumers should check the provider before loading
+it, since loading imports Python code. The existing commands and canonical
+`SKILL.md` cover direct discovery without another executable or marker file.
+
 Markdown gates include the package's skill tree in both pre-commit and local
 lint commands. Templates are package data, excluded from runtime coverage and
 type checks, and exercised as marimo notebooks. Artifact checks require every
@@ -70,3 +78,4 @@ now resolve resources through the public API.
 - [Discovery entry point](../../skills/evidential/SKILL.md).
 - [Streamlit's version-matched bundled skills](https://github.com/streamlit/agent-skills#how-it-works).
 - [Agent Skills specification](https://agentskills.io/specification).
+- [Python entry points specification](https://packaging.python.org/en/latest/specifications/entry-points/).

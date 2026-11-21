@@ -59,7 +59,7 @@
     "src/evidential/static/table.css": "94baca8023fd54a0237ea08b4d1f269c4c1fc149af22f7d078301b1636b33fdd",
     "src/evidential/static/table.js": "2a1ca0f30a46af7daf6cb8aef349e8a7c074a77b6ac3276b8bf0bcf95b2b0a47",
     "src/evidential/table.py": "6f2f48820a119cab0c079c579f4b3cc98c63d5ac40b15fbd2a2a9b3dd78efd58",
-    "uv.lock": "3d21ebcfa8f54c7a33e3a4c554f47df1094c8892b512377e054a7c753dad8692"
+    "uv.lock": "a9765a9880d18a664429527f13956b4f4e4b7100252f4cc84904eeb036be885f"
   },
   "images": {
     "docs/api/images/quickstart.png": {
@@ -85,7 +85,7 @@
     "docs/api/images/visualizations.png": {
       "notebook": "notebooks/49_api_screenshots.py",
       "cell": "visualizations",
-      "sha256": "0b16f8c7373fee7e966d245d137f8c417e0bc455dc9017ef3b579ffa569e57ec"
+      "sha256": "5eed67dc4ea5d6d3416b97fe3459da13ad12c717986e43b93b141fc17024a793"
     },
     "docs/api/images/back-to-back.png": {
       "notebook": "notebooks/49_api_screenshots.py",
@@ -100,7 +100,7 @@
     "docs/api/images/groups.png": {
       "notebook": "notebooks/49_api_screenshots.py",
       "cell": "groups",
-      "sha256": "b40daa31726e507a18d9f1a383fd31bbe318548d337d7bbc6ce01b5f3a1f1300"
+      "sha256": "e35bbbc5094d73d55f463a4da7741a2206ad0d844b8db81d15dbb05a3084ac5d"
     },
     "docs/api/images/subcolumns.png": {
       "notebook": "notebooks/49_api_screenshots.py",
@@ -120,7 +120,7 @@
     "docs/api/images/pivot-table.png": {
       "notebook": "notebooks/49_api_screenshots.py",
       "cell": "pivoted_columns",
-      "sha256": "b4bd175de95c647758a2fd7979e3425abd117cd295c9e929e4b37610e6d98676"
+      "sha256": "d965be7385c1d1ab6de1af241c3a729da87f04712f5fcdb657813f7f832418e3"
     },
     "docs/api/images/comparison-table.png": {
       "notebook": "notebooks/49_api_screenshots.py",
@@ -135,7 +135,7 @@
     "docs/api/images/query-table.png": {
       "notebook": "notebooks/49_api_screenshots.py",
       "cell": "ad_hoc_query",
-      "sha256": "091b8de3228190e3074a884228a580a3e3944633ea87cce739667167a85e996e"
+      "sha256": "d41c49aa3e732670f13346d5b4ee574f875311d7250907c619a2736f0e2b1f36"
     },
     "docs/preview.png": {
       "notebook": "notebooks/49_api_screenshots.py",
@@ -275,7 +275,7 @@
     "docs/img/studio-table.png": {
       "notebook": "notebooks/21_studio_dashboard.py",
       "cell": "revenue_table",
-      "sha256": "4eed8ae2ee693d6c00213acb0f2426aa2d77cf5d28fbe012cd03700050cdcc96"
+      "sha256": "8789f4e008493122a61408446e60697d175ea37456028a642111c4e97b5fc8b8"
     },
     "docs/img/layouts/simple.png": {
       "notebook": "notebooks/51_table_layouts.py",

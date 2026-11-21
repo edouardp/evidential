@@ -4,6 +4,8 @@ A small anywidget wrapper around a hand-written renderer that mirrors the
 formatting, conditional visualisation, grouping and interaction of
 `Evidence.dev <https://evidence.dev>`_ tables.
 
+Run ``python -m evidential.skills path`` to locate the bundled development skill.
+
 Quick start::
 
     import duckdb

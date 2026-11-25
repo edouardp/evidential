@@ -223,7 +223,7 @@ def _(EvidentialTable, col, connection, mo):
 
 
 @app.cell(expand_output=True)
-def _(EvidentialTable, col, connection, mo):
+def titles_by_decade(EvidentialTable, col, connection, mo):
     by_decade = mo.ui.anywidget(
         EvidentialTable(
             connection.sql(r"""
@@ -241,6 +241,9 @@ def _(EvidentialTable, col, connection, mo):
                        count(*) FILTER (WHERE media_type = 'Documentary') AS documentary,
                        count(*) FILTER (WHERE media_type = 'Feature Film') AS feature_film,
                        count(*) FILTER (WHERE media_type = 'Short Film') AS short_film,
+                       count(*) FILTER (
+                           WHERE media_type IS NULL OR media_type NOT IN ('Documentary', 'Feature Film', 'Short Film')
+                       ) AS other,
                        count(*) AS films
                 FROM titles_by_decade
                 GROUP BY GROUPING SETS ((decade), ())
@@ -256,6 +259,7 @@ def _(EvidentialTable, col, connection, mo):
                         col.bar("documentary", title="Documentary", format="num0", color="#93c5fd", label=True),
                         col.bar("feature_film", title="Feature Film", format="num0", color="#93c5fd", label=True),
                         col.bar("short_film", title="Short Film", format="num0", color="#93c5fd", label=True),
+                        col.bar("other", title="Other", format="num0", color="#93c5fd", label=True),
                     ],
                 ),
                 col.bar("films", title="Total", format="num0", color="#93c5fd", label=True),
@@ -263,7 +267,7 @@ def _(EvidentialTable, col, connection, mo):
         )
     )
     by_decade
-    return
+    return (by_decade,)
 
 
 @app.cell

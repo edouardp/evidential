@@ -148,28 +148,43 @@ def _(mo):
     mo.md("""
     ## Grouped, collapsible totals
 
-    DuckDB aggregates trips by payment type and weekend. A row layout adds
-    collapsible payment headings with totals for trips, distance and revenue.
+    DuckDB computes payment and overall totals from individual trips, including
+    the average tip rate. The row layout displays those results separately from
+    the weekend detail rows.
     """)
     return
 
 
 @app.cell
 def _(EvidentialTable, col, connection, label, mo, rows):
-    totals = {"trips": "sum", "distance": "sum", "revenue": "sum"}
+    rollup = connection.sql("""
+        SELECT payment, is_weekend,
+               grouping(payment) AS all_payments, grouping(is_weekend) AS all_days,
+               count(*) AS trips, sum(trip_distance) AS distance, sum(total_amount) AS revenue,
+               100 * avg(tip_amount / nullif(fare_amount, 0)) AS avg_tip_pct
+        FROM trips
+        WHERE tpep_pickup_datetime >= TIMESTAMP '2024-01-01'
+        GROUP BY GROUPING SETS ((payment, is_weekend), (payment), ())
+        ORDER BY payment, is_weekend
+    """).to_arrow_table().to_pylist()
+    measures = ("trips", "distance", "revenue", "avg_tip_pct")
+    detail = [
+        {field: record[field] for field in ("payment", "is_weekend", *measures)}
+        for record in rollup if not record["all_days"]
+    ]
+    payment_totals = {record["payment"]: record for record in rollup if record["all_days"] and not record["all_payments"]}
+    overall = next(record for record in rollup if record["all_payments"])
     grouped = mo.ui.anywidget(
         EvidentialTable(
-            connection.sql("""
-                SELECT payment, is_weekend, count(*) AS trips, sum(trip_distance) AS distance,
-                       sum(total_amount) AS revenue, avg(tip_rate) * 100 AS avg_tip_pct
-                FROM trips
-                WHERE tpep_pickup_datetime >= TIMESTAMP '2024-01-01'
-                GROUP BY payment, is_weekend
-                ORDER BY payment, is_weekend
-            """),
+            detail,
             row_layout=rows.group_by("payment")
-                .section(values=totals, collapsible=True)
-                .grand_summary("All trips", values=totals),
+                .section(collapsible=True, collapsed_summary=True)
+                .summary(
+                    position="top",
+                    values={field: lambda members, field=field: payment_totals[members[0]["payment"]][field]
+                            for field in measures},
+                )
+                .grand_summary("All trips", values={field: overall[field] for field in measures}),
             title="Trips by payment type and weekend",
             search=True,
             max_height="460px",

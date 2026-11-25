@@ -1655,9 +1655,9 @@ result and its column descriptions to `EvidentialTable`.
 
 ### Grouped totals
 
-SQL returns one row per item. A row layout adds category headings with
-subtotals and an overall total. `sample_orders()` opens the bundled fixture
-in DuckDB.
+SQL returns one row per item. A row layout adds separate category subtotals
+and an overall total. Collapsing a category shows its subtotal in the
+heading. `sample_orders()` opens the bundled fixture in DuckDB.
 
 ```python
 EvidentialTable(
@@ -1674,7 +1674,8 @@ EvidentialTable(
         col.integer("orders"),
     ],
     row_layout=rows.group_by("category")
-        .section(values={"sales": "sum", "orders": "sum"}, collapsible=True)
+        .section(collapsible=True, collapsed_summary=True)
+        .summary(values={"sales": "sum", "orders": "sum"}, position="top")
         .grand_summary("All categories"),
     settings=settings(title="Grouped totals", page_size="all", width="560px"),
 )

@@ -2,7 +2,7 @@
   "version": 1,
   "inputs": {
     "notebooks/21_studio_dashboard.py": "8f4e85940544eac38b95c21f952659d3da97375dc584616347b24814281dc48b",
-    "notebooks/49_api_screenshots.py": "6a857c47dd222479774674c984b0a1226ec121b25f0996a501cab9c0b11cc2c8",
+    "notebooks/49_api_screenshots.py": "b326a29a27143554461754cb8d3d5eecae59f31d5e8e2637d7fbcc0e01641d50",
     "notebooks/50_graphics_gallery.py": "92a650e6fe8c07edfc5e1fe01e9000cfc94c3720b1068815193504a3bb087727",
     "notebooks/51_table_layouts.py": "7d523aa569e8fe02a1394d0e2e2c43412040ef005e2484a14cbabc6cb797ffb6",
     "notebooks/56_dimension_grid.py": "5a9489d3dead383c9902436e3c8243c86f20d1b491e7d37cc47da051785ef979",
@@ -82,7 +82,7 @@
     "docs/api/images/visualizations.png": {
       "notebook": "notebooks/49_api_screenshots.py",
       "cell": "visualizations",
-      "sha256": "d5e4b7564dfe244680a0c451a92d679ef2e11da18a213c3cc4107ea5bc8d2514"
+      "sha256": "5eed67dc4ea5d6d3416b97fe3459da13ad12c717986e43b93b141fc17024a793"
     },
     "docs/api/images/back-to-back.png": {
       "notebook": "notebooks/49_api_screenshots.py",
@@ -97,7 +97,7 @@
     "docs/api/images/groups.png": {
       "notebook": "notebooks/49_api_screenshots.py",
       "cell": "groups",
-      "sha256": "b9ac4031794f0a9c3350c25c2d6468cbfa16fd0f47fb30d77b0a469774a6dfce"
+      "sha256": "e35bbbc5094d73d55f463a4da7741a2206ad0d844b8db81d15dbb05a3084ac5d"
     },
     "docs/api/images/subcolumns.png": {
       "notebook": "notebooks/49_api_screenshots.py",
@@ -112,27 +112,27 @@
     "docs/api/images/grouped-totals.png": {
       "notebook": "notebooks/49_api_screenshots.py",
       "cell": "grouped_totals",
-      "sha256": "d68a549c41c81e40d325ea8bb7d0ed1ed7688f15d5f4ae7ffe30e75653d6f82f"
+      "sha256": "a64260f98f3160cdc9a98f56f62996875005bbaed06f8b74ff5c213ff4d53e45"
     },
     "docs/api/images/sales-by-year.png": {
       "notebook": "notebooks/49_api_screenshots.py",
       "cell": "sales_by_year",
-      "sha256": "8642c277784432dacc93cc4068b1358b20e80eef52b81e55fc5eb9ff76f126ca"
+      "sha256": "2d95a4378762bfb409091d3cdd6a6778d87d26191e4e35d527c96521fa259c6f"
     },
     "docs/api/images/prior-period-comparison.png": {
       "notebook": "notebooks/49_api_screenshots.py",
       "cell": "prior_comparison",
-      "sha256": "119eb4947f079dff60f757609cdadda8a02b1ca2776bda552b4d3c29b69fea77"
+      "sha256": "1d6177a51a0a445d72bda1d7b0330ccb88fa8818ed80fb5d114f34aeeb61a738"
     },
     "docs/api/images/rules.png": {
       "notebook": "notebooks/49_api_screenshots.py",
       "cell": "rules",
-      "sha256": "541b9a4be9d81dbe8cd48694184b92fa26ac09e69c99d65343c928e9430a8f10"
+      "sha256": "d666f042a1c9b7b9d94b4ee449805834400a39c0c5fae7f33bdc0b1cdf4c1a09"
     },
     "docs/api/images/top-items-by-sales.png": {
       "notebook": "notebooks/49_api_screenshots.py",
       "cell": "ad_hoc_query",
-      "sha256": "c59aa5aefe516b70ad2f1ce50907a769375b7b0162fd449fc73333367f339686"
+      "sha256": "bf68b72c7026ed993b575796d9868112fd26b924090d20a0ed30d36ef989e913"
     },
     "docs/preview.png": {
       "notebook": "notebooks/49_api_screenshots.py",

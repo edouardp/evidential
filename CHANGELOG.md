@@ -8,11 +8,32 @@ project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Removed
 
-- Removed the `comparison_table`, `grouped_table`, `pivot_table`, `query_table`
-  and `simple_table` helpers. Shape data in SQL or a DataFrame and pass the
-  result to `EvidentialTable`. Use `row_layout` to display group headings and
-  summaries over the result.
+- **Breaking change.** Removed `comparison_table`, `grouped_table`,
+  `pivot_table`, and `query_table`. Prepare the result upstream and render it
+  with `EvidentialTable`.
 - Removed the unused `pivot_bg` theme token.
+
+### Migrating from the table builders
+
+Assume `orders(category, sold_on, sales)` is available on DuckDB connection
+`con`. Run the replacement SQL with `con.sql(...)` and pass the relation and
+explicit `columns` to `EvidentialTable`.
+
+| Before | After |
+| --- | --- |
+| `comparison_table(con, "SELECT * FROM orders", ["category"], ["sum(sales) AS sales"], date_column="sold_on", compare_vs="prior year")` | `SELECT category, sum(sales) FILTER (WHERE year(sold_on) = 2024) AS current_sales, sum(sales) FILTER (WHERE year(sold_on) = 2023) AS prior_sales FROM orders WHERE year(sold_on) IN (2023, 2024) GROUP BY category` |
+| `grouped_table(con, "SELECT * FROM orders", ["category"], ["sum(sales) AS sales"])` | `SELECT category, sum(sales) AS sales FROM orders GROUP BY category` then pass `row_layout=rows.Rows().grand_summary()`. |
+| `pivot_table(con, "SELECT *, year(sold_on) AS yr FROM orders", ["category"], ["yr"], ["sum(sales) AS sales"])` | `SELECT category, sum(sales) FILTER (WHERE year(sold_on) = 2024) AS sales_2024, sum(sales) FILTER (WHERE year(sold_on) = 2023) AS sales_2023 FROM orders GROUP BY category` |
+| `query_table(con, "SELECT * FROM orders", where="sales > 0", order="sales DESC", limit=10)` | `SELECT * FROM orders WHERE sales > 0 ORDER BY sales DESC LIMIT 10` |
+
+The comparison and pivot examples use fixed years. Derive the year from your
+data if the report should roll forward. For comparison deltas, calculate
+`current_sales - prior_sales` and divide by `nullif(prior_sales, 0)` for the
+relative change.
+
+`simple_table` is gone. Use `EvidentialTable.from_duckdb(con, sql)`.
+The `evidential.grouped.decorate_grouped_rows` module export is also gone.
+Use `row_layout` to declare display headings and summaries.
 
 ## 0.2.7 (2026-11-21)
 

@@ -36,6 +36,7 @@ def _():
         LiveEvidentialTable,
         col,
         label,
+        rows,
     )
 
     return (
@@ -47,6 +48,7 @@ def _():
         label,
         mo,
         os,
+        rows,
     )
 
 
@@ -464,35 +466,51 @@ def _(mo):
     ## Grouped subtotals
 
     DuckDB computes each regional and overall average from the original
-    country observations using `GROUPING SETS`.
+    country observations using `GROUPING SETS`. A row layout attaches those
+    values to collapsible regions as subtotals and adds the overall summary.
     """)
     return
 
 
 @app.cell
-def _(EvidentialTable, col, connection, mo):
+def regional_subtotals(EvidentialTable, col, connection, mo, rows):
+    rollup = connection.sql("""
+        WITH readings AS (
+            SELECT c.Region AS region, c."Income Group" AS income_group, o.value
+            FROM observations o
+            JOIN country c ON c."Country Code" = o.country_code
+            WHERE o.indicator_code = 'SP.DYN.LE00.IN' AND o.year = 2023
+              AND c.Region IS NOT NULL
+        )
+        SELECT region, income_group,
+               grouping(region) AS all_regions, grouping(income_group) AS all_incomes,
+               avg(value) AS avg_life_expectancy, count(*) AS countries
+        FROM readings
+        GROUP BY GROUPING SETS ((region, income_group), (region), ())
+        ORDER BY region, income_group
+    """).to_arrow_table().to_pylist()
+    measures = ("avg_life_expectancy", "countries")
+    detail = [
+        {field: record[field] for field in ("region", "income_group", *measures)}
+        for record in rollup if not record["all_incomes"]
+    ]
+    region_totals = {record["region"]: record for record in rollup if record["all_incomes"] and not record["all_regions"]}
+    overall = next(record for record in rollup if record["all_regions"])
     grouped = mo.ui.anywidget(
         EvidentialTable(
-            connection.sql("""
-                WITH readings AS (
-                    SELECT c.Region AS region, c."Income Group" AS income_group, o.value
-                    FROM observations o
-                    JOIN country c ON c."Country Code" = o.country_code
-                    WHERE o.indicator_code = 'SP.DYN.LE00.IN' AND o.year = 2023
-                      AND c.Region IS NOT NULL
+            detail,
+            row_layout=rows.group_by("region")
+                .section(collapsible=True, collapsed_summary=True)
+                .summary(
+                    position="top",
+                    values={field: lambda members, field=field: region_totals[members[0]["region"]][field]
+                            for field in measures},
                 )
-                SELECT coalesce(region, 'All countries') AS region,
-                       CASE WHEN grouping(income_group) = 1 THEN 'Total' ELSE income_group END AS income_group,
-                       avg(value) AS avg_life_expectancy,
-                       count(*) AS countries
-                FROM readings
-                GROUP BY GROUPING SETS ((region, income_group), (region), ())
-                ORDER BY grouping(region), region, grouping(income_group) DESC, income_group
-            """),
+                .grand_summary("All countries", values={field: overall[field] for field in measures}),
             title="Average life expectancy by region and income group (2023)",
             max_height="460px",
             columns=[
-                col.text("region").repeat_values(False),
+                col.text("region").hide(),
                 col.text("income_group", title="Income group"),
                 col.bar("avg_life_expectancy", fmt="num1", label=True),
                 col.integer("countries"),
@@ -500,7 +518,7 @@ def _(EvidentialTable, col, connection, mo):
         )
     )
     grouped
-    return
+    return (grouped,)
 
 
 @app.cell

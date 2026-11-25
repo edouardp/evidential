@@ -47,3 +47,14 @@ def test_sales_by_year_shows_explicit_year_columns_and_an_overall_total():
     assert overall["category"] == "Total"
     for field in fields[1:]:
         assert overall[field] == pytest.approx(sum(row[field] for row in categories))
+
+
+def test_grouped_totals_example_places_subtotals_in_the_row_layout():
+    table = _table("grouped_totals_table")
+    assert len(table.raw) == 12
+    for group in table.row_layout["groups"]:
+        assert group["section"]["collapsed_summary"] is True
+        subtotal = group["summary"]
+        assert subtotal["position"] == "top"
+        assert subtotal["cells"]["orders"]["value"] == sum(table.raw[index]["orders"] for index in group["members"])
+    assert table.row_layout["grand_summary"]["cells"]["orders"]["value"] == 10_000

@@ -35,6 +35,7 @@ def _():
         EvidentialTable,
         LiveEvidentialTable,
         col,
+        color,
         label,
         rows,
     )
@@ -44,6 +45,7 @@ def _():
         LiveEvidentialTable,
         Path,
         col,
+        color,
         duckdb,
         label,
         mo,
@@ -589,7 +591,7 @@ def trade_introduction(mo):
 
 
 @app.cell
-def trade_comparison(LiveEvidentialTable, col, connection, label, mo):
+def trade_comparison(LiveEvidentialTable, col, color, connection, label, mo):
     trade_balance = LiveEvidentialTable(
         connection,
         """
@@ -653,9 +655,23 @@ def trade_comparison(LiveEvidentialTable, col, connection, label, mo):
                 .scale(axis=True, gridlines=True)
                 .reference_line(0, color="#64748b"),
             col.percent("exports_imports_ratio", title="Exports/imports", decimals=1)
-               .color(scale=["#fee2e2", "#ffffff", "#bbf7d0"], min=0.6, max=1.4, midpoint=1),
+               .color(
+                   scale=[
+                       color.theme("negative", alpha=0.18),
+                       color.theme("neutral", alpha=0),
+                       color.theme("positive", alpha=0.18),
+                   ],
+                   min=0.6, max=1.4, midpoint=1,
+               ),
             col.number("net_exports", title="Balance\n(US$)", format="compact")
-               .color(scale=["#fee2e2", "#ffffff", "#bbf7d0"], midpoint=0),
+               .color(
+                   scale=[
+                       color.theme("negative", alpha=0.18),
+                       color.theme("neutral", alpha=0),
+                       color.theme("positive", alpha=0.18),
+                   ],
+                   midpoint=0,
+               ),
             col.number("total_trade", title="Reported trade\n(US$)", format="compact"),
             col.sparkline("trade_history",
                           title="Exports/imports\n20-year trend",

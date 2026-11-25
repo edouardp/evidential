@@ -2,7 +2,7 @@
 
 import pytest
 
-from evidential._sql import bind_parameters, quote_identifier
+from evidential._sql import bind_parameters
 
 
 @pytest.mark.parametrize(
@@ -28,7 +28,6 @@ def test_unterminated_literals_are_left_for_the_sql_engine_to_diagnose(literal):
     assert bind_parameters(literal, {"p": 1}) == (literal, [])
 
 
-def test_unknown_parameter_and_embedded_identifier_quote():
+def test_unknown_parameter_is_rejected():
     with pytest.raises(KeyError, match="Unknown SQL parameter"):
         bind_parameters("{missing}", {})
-    assert quote_identifier('a"b') == '"a""b"'

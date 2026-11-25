@@ -6,7 +6,7 @@ Working checklist derived from Evidence's DataTable docs
 
 Tech-stack note: our widget is a **display** anywidget; Evidence's
 query-builder features (dimensions/pivots/measures, date ranges, comparisons)
-are done in SQL. We implement them as Python/DuckDB helpers where feasible.
+are done in SQL. Python can also shape DataFrames and in-memory records.
 
 ## Table options
 
@@ -82,7 +82,6 @@ are done in SQL. We implement them as Python/DuckDB helpers where feasible.
 
 ## Groups & subtotals
 
-- [x] grouped subtotals via DuckDB `GROUPING SETS` (`grouped_table`)
 - [x] collapsible accordion groups
 - [x] subtotal/total positions
 - [x] `group_type="section"` (merged group cells via rowspan) / `accordion`
@@ -90,19 +89,12 @@ are done in SQL. We implement them as Python/DuckDB helpers where feasible.
 - [x] `subtotal_fmt` / `total_fmt`
 - [x] `repeat_values` (our renderer already repeats dimension values)
 - [x] client-side `group_by` (`grouped_records` for in-memory rows)
-- [~] `show_total_column` (done) / `show_subtotal_columns` (pending)
-- [x] `measures_first` (pivoted)
 - [x] `repeat_values` (renderer repeats dimension values)
 
-## Query builder (Python/DuckDB helpers)
+## SQL and summary utilities
 
-- [x] `grouped_table` (dimensions + measures + subtotals/totals)
-- [x] `pivot_table` (pivots → columns, grouped headers, total column, subtotal rows)
-- [x] `query_table` (`where`, `order`, `limit`, `qualify`, `date_range`)
-- [x] `date_range` presets (`last 12 months`, `month to date`, …)
-- [~] `having` (lives inside the base query; not a display-layer clause)
-- [x] `comparison` (prior year/quarter/month/week/day → prior + delta + % columns)
-- [x] `total_agg` (built-in names + Python callables) / `weight_col` (weighted_mean)
+- [x] `date_range_sql` presets (`last 12 months`, `month to date`, …)
+- [x] Built-in and callable summary aggregations
 - [x] `total_fmt` / `subtotal_fmt` per-row formats
 - [x] `order` initial sort (via `default_sort`)
 
@@ -130,8 +122,7 @@ are done in SQL. We implement them as Python/DuckDB helpers where feasible.
 - [x] `notebooks/06_evidence_sample_data.py` (needful_things.orders)
 - [x] `notebooks/07_table_options.py` (table-level display options)
 - [x] `notebooks/08_column_options.py` (column formatting/content types)
-- [x] `notebooks/09_pivots.py` (pivoted columns)
-- [x] `notebooks/10_query_options.py` (query_table/date_range)
+- [x] `notebooks/10_query_options.py` (SQL filters and date ranges)
 - [x] `notebooks/11_comparisons.py` (prior-period comparisons)
 - [x] `notebooks/12_color_scales.py` (colour scales & conditional formatting)
 - [x] `notebooks/13_hierarchical_rows.py` (accordion/section groups)
@@ -158,7 +149,6 @@ are done in SQL. We implement them as Python/DuckDB helpers where feasible.
 - [x] First-class stub (`stub`, `stub_head`)
 - [x] Markdown in titles/subtitles/captions (inline `**bold**`, `*italic*`, `` `code` ``)
 - [x] Location-based styling/formatting/transforms (`cells_body` + `tab_style` / `tab_format` / `text_transform`)
-- [x] Row groups and summary rows (`grouped_table`, `group_type`)
 
 ## Great Tables-inspired (Python gt)
 

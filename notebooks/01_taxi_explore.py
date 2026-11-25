@@ -18,9 +18,9 @@ def _():
     import marimo as mo
     import duckdb
 
-    from evidential import EvidentialTable, col, grouped_table, label
+    from evidential import EvidentialTable, col, label, rows
 
-    return EvidentialTable, col, duckdb, grouped_table, label, mo
+    return EvidentialTable, col, duckdb, label, mo, rows
 
 
 @app.cell
@@ -148,44 +148,43 @@ def _(mo):
     mo.md("""
     ## Grouped, collapsible totals
 
-    `grouped_table` runs a single DuckDB `GROUPING SETS` query and tags each
-    row with the metadata the widget needs to render collapsible groups,
-    subtotals and a grand total. Click a subtotal row to collapse it.
+    DuckDB aggregates trips by payment type and weekend. A row layout adds
+    collapsible payment headings with totals for trips, distance and revenue.
     """)
     return
 
 
 @app.cell
-def _(col, connection, grouped_table, label, mo):
+def _(EvidentialTable, col, connection, label, mo, rows):
+    totals = {"trips": "sum", "distance": "sum", "revenue": "sum"}
     grouped = mo.ui.anywidget(
-        grouped_table(
-            connection,
-            "SELECT * FROM trips WHERE tpep_pickup_datetime >= TIMESTAMP '2024-01-01'",
-            dimensions=["payment", "is_weekend"],
-            measures=[
-                "count(*) AS trips",
-                "round(sum(trip_distance), 0) AS distance",
-                "round(sum(total_amount), 0) AS revenue",
-                "round(avg(tip_rate) * 100, 1) AS avg_tip_pct",
-            ],
-            total_label="All trips",
-            subtotal_position="top",
+        EvidentialTable(
+            connection.sql("""
+                SELECT payment, is_weekend, count(*) AS trips, sum(trip_distance) AS distance,
+                       sum(total_amount) AS revenue, avg(tip_rate) * 100 AS avg_tip_pct
+                FROM trips
+                WHERE tpep_pickup_datetime >= TIMESTAMP '2024-01-01'
+                GROUP BY payment, is_weekend
+                ORDER BY payment, is_weekend
+            """),
+            row_layout=rows.group_by("payment")
+                .section(values=totals, collapsible=True)
+                .grand_summary("All trips", values=totals),
             title="Trips by payment type and weekend",
             search=True,
             max_height="460px",
-            dimension_config={
-                "is_weekend": col.boolean("is_weekend", title="Weekend"),
-            },
-            measure_config={
-                "trips": col.integer("trips"),
-                "distance": col.bar("distance", format='num0', label=label.value()),
-                "revenue": col.currency("revenue", decimals=0),
-                "avg_tip_pct": col.number("avg_tip_pct", fmt="num1", title="Avg tip %"),
-            },
+            columns=[
+                col.text("payment").hide(),
+                col.boolean("is_weekend", title="Weekend"),
+                col.integer("trips"),
+                col.bar("distance", format="num0", label=label.value()),
+                col.currency("revenue", decimals=0),
+                col.number("avg_tip_pct", fmt="num1", title="Avg tip %"),
+            ],
         )
     )
     grouped
-    return
+    return (grouped,)
 
 
 @app.cell

@@ -4,14 +4,6 @@ Evidence's ``totalAgg`` recomputes a measure's subtotal/total from its detail
 values (e.g. the mean of daily sums), rather than re-aggregating the raw column.
 Here that is expressed as a Python callable, so built-ins and user functions
 share one path.
-
-Pass specs to :func:`grouped_table`/:func:`pivot_table` via ``aggregations``::
-
-    grouped_table(con, sql, ["country"], ["sum(revenue) AS revenue"],
-                  aggregations={"revenue": "mean"})
-    grouped_table(..., aggregations={"revenue": statistics.median})
-    grouped_table(..., aggregations={"revenue": "weighted_mean"},
-                  weight_columns={"revenue": "weight"})
 """
 
 from __future__ import annotations
@@ -160,9 +152,9 @@ def apply_aggregations(
 ) -> list[dict[str, Any]]:
     """Recompute subtotal/total cells from the detail rows.
 
-    ``rows`` must be the decorated, display-ordered rows produced by
-    :func:`~evidential.grouped.decorate_grouped_rows` (detail rows have
-    ``render_type == "cell_data"`` and ``__ancestors``).
+    Detail rows have ``render_type == "cell_data"`` and list their containing
+    groups in ``__ancestors``. Subtotals identify their group with
+    ``__group_key``; grand totals have ``render_type == "row_total"``.
     """
     resolved = _expand(aggregations, measure_aliases)
     if not resolved:

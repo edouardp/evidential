@@ -1,48 +1,14 @@
 from __future__ import annotations
 
+import datetime as dt
+
 import duckdb
 import pytest
 
-from evidential import date_range_sql, query_table
-from evidential.duck import connect
+from evidential import date_range_sql
 
 
-@pytest.fixture()
-def orders() -> duckdb.DuckDBPyConnection:
-    connection = connect(extensions=())
-    connection.execute(
-        """
-        CREATE TABLE orders AS SELECT * FROM (VALUES
-            ('A', DATE '2023-01-15', 10.0),
-            ('B', DATE '2024-06-01', 20.0),
-            ('C', DATE '2024-06-15', 30.0)
-        ) AS v(customer, order_date, sales)
-        """
-    )
-    return connection
-
-
-def test_query_table_where_order_limit(orders: duckdb.DuckDBPyConnection) -> None:
-    table = query_table(
-        orders,
-        "SELECT * FROM orders",
-        where="sales >= 20",
-        order="sales DESC",
-        limit=1,
-    )
-    assert [row["customer"] for row in table.rows] == ["C"]
-
-
-def test_query_table_date_range_mapping(orders: duckdb.DuckDBPyConnection) -> None:
-    table = query_table(
-        orders,
-        "SELECT * FROM orders",
-        date_range={"range": "2024-06-01 to 2024-07-01", "date": "order_date"},
-    )
-    assert sorted(row["customer"] for row in table.rows) == ["B", "C"]
-
-
-def test_date_range_presets(orders: duckdb.DuckDBPyConnection) -> None:
+def test_date_range_presets() -> None:
     assert date_range_sql("all time", "d") is None
     assert "AND d <" in date_range_sql("2020-01-01 to 2020-02-01", "d")
     assert date_range_sql("from 2020-01-01", "d").startswith("d >=")
@@ -81,10 +47,9 @@ def test_to_date_includes_todays_timestamps(spec) -> None:
 @pytest.mark.parametrize("spec", ["until 2024-01-01", "2023-12-01 to 2024-01-01"])
 def test_explicit_date_end_includes_entire_day(spec) -> None:
     with duckdb.connect() as connection:
-        table = query_table(
-            connection,
-            "SELECT * FROM (VALUES (TIMESTAMP '2024-01-01 12:00:00'), (TIMESTAMP '2024-01-02 00:00:00')) t(d)",
-            date_range=spec,
-            date_column="d",
-        )
-    assert [row["d"] for row in table.rows] == ["2024-01-01T12:00:00"]
+        condition = date_range_sql(spec, "d")
+        matching = connection.sql(
+            "SELECT d FROM (VALUES (TIMESTAMP '2024-01-01 12:00:00'), (TIMESTAMP '2024-01-02 00:00:00')) t(d) "
+            f"WHERE {condition}"
+        ).fetchall()
+    assert matching == [(dt.datetime(2024, 1, 1, 12),)]

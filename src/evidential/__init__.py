@@ -37,14 +37,11 @@ from ._domain import Domain
 from ._label import Label
 from .aggregations import BUILTIN_AGGREGATIONS, apply_aggregations, resolve_aggregation
 from .client import grouped_records
-from .comparison import comparison_table
 from .configuration import ColumnOptions, MarkerShape, SparklineType, TableOptions, settings
 from .data import make_column
 from .dimension import DimensionGrid
-from .grouped import grouped_table, simple_table
 from .live import LiveEvidentialTable, query_values
-from .pivot import pivot_table
-from .query import date_range_sql, query_table
+from .query import date_range_sql
 from .rows import Rows
 from .rules import (
     cells_body,
@@ -87,11 +84,7 @@ __all__ = [
     "section_row",
     "spacer_row",
     "LiveEvidentialTable",
-    "grouped_table",
     "grouped_records",
-    "pivot_table",
-    "comparison_table",
-    "query_table",
     "date_range_sql",
     "BUILTIN_AGGREGATIONS",
     "resolve_aggregation",
@@ -110,7 +103,6 @@ __all__ = [
     "cols_merge_uncert",
     "cols_merge_n_pct",
     "resolve_rules",
-    "simple_table",
     "query_values",
     "make_column",
     "duck",

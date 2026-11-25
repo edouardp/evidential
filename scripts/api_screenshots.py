@@ -61,11 +61,11 @@ SHOTS: list[tuple[str, str]] = [
     ("groups", "groups"),
     ("subcolumns", "subcolumns"),
     ("merged", "merged"),
-    ("grouped-table", "grouped_totals"),
-    ("pivot-table", "pivoted_columns"),
-    ("comparison-table", "prior_comparison"),
+    ("grouped-totals", "grouped_totals"),
+    ("sales-by-year", "sales_by_year"),
+    ("prior-period-comparison", "prior_comparison"),
     ("rules", "rules"),
-    ("query-table", "ad_hoc_query"),
+    ("top-items-by-sales", "ad_hoc_query"),
 ]
 
 #: (image path, marimo cell name) for screenshots outside the API reference.

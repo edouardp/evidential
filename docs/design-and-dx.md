@@ -138,8 +138,8 @@ than rediscovered. Every decision also has a dated, immutable ADR in
 ### 4.1 Display-only, not a query builder
 
 **Chose.** The widget renders a result set. Shaping — filters, joins, pivots,
-date ranges, prior-period comparisons — is done in SQL (with Python helpers that
-*build* the SQL).
+date ranges, prior-period comparisons — belongs in the SQL or DataFrame that
+prepares the result.
 
 **Why.** Evidence's table is inseparable from its query builder, which is tied
 to its Svelte store and DuckDB-in-the-browser. Marimo already has cell
@@ -149,8 +149,8 @@ want to accept rows that never touched a database.
 
 **Cost.** We cannot offer Evidence's dimension/measure UI, or "change the
 metric" dropdowns, without the user writing SQL. We mitigate this with helpers
-(`grouped_table`, `pivot_table`, `query_table`, `comparison_table`,
-`date_range_sql`) and with `LiveEvidentialTable` for parameterised re-querying.
+(`date_range_sql` for date predicates) and with `LiveEvidentialTable` for
+parameterised re-querying.
 
 **Exception.** Row *selection* is a value the browser sends back ([ADR-032](adr/032-row-selection.md)):
 the table still only paints the rows it is given, but a click can put a key in a
@@ -266,25 +266,17 @@ means the same `color_scale` produces the same result in both systems. Named
 presets (`green`, `blue`, `red`, `orange`, `purple`, `grey`) are provided so a
 heatmap is one word.
 
-### 4.6 Grouping is one SQL query plus a decoration pass
+### 4.6 Data shaping and grouped presentation
 
-**Chose.** `grouped_table` issues a single DuckDB `GROUPING SETS` query, then
-decorates the rows in Python with the metadata the renderer needs
-(`render_type`, `__level`, `__group_key`, `__ancestors`).
+Compute detail rows in SQL or in a DataFrame. Use `row_layout` on the table to
+show collapsible headings and summaries over those rows. For non-additive
+measures such as averages of original observations, compute totals upstream
+using `GROUPING SETS` or separate aggregate queries.
 
-**Why.** Subtotals and a grand total are exactly what `GROUPING SETS` computes,
-and doing it in the database keeps the row set small and the SQL honest. The
-Python pass is metadata-only (no re-aggregation unless the user asks), which
-keeps it fast and easy to test. `grouped_records` reuses the same decoration for
-in-memory data, so the renderer has exactly one grouping model.
-
-**Cost.** `grouped_table` owns the SQL generation, so unusual queries may need
-`query_table` plus manual metadata. The escape hatch exists.
-
-![Collapsible grouped totals rendered from a single GROUPING SETS query](img/grouped-totals.png)
+![Collapsible grouped totals](api/images/grouped-totals.png)
 
 Hierarchical columns are the same idea applied horizontally: `column_groups`
-(or `pivot_table`) puts several columns under one spanner, and the renderer
+puts several columns under one spanner, and the renderer
 clusters each group at its first occurrence, so a leading dimension column keeps
 its place. A **dotted column name** is a shortcut for the same grouping — the
 part before the last dot becomes the group and extra dots nest — so a query can
@@ -459,15 +451,17 @@ EvidentialTable(
 **Level 2 — shape it in SQL and present it richly.**
 
 ```python
-grouped_table(
-    con,
-    "SELECT * FROM trips",
-    dimensions=["payment", "is_weekend"],
-    measures=["count(*) AS trips", "round(sum(total_amount), 0) AS revenue"],
-    total_label="All trips",
-    subtotal_position="top",
-    collapsible=True,
-    measure_config={"revenue": {"fmt": "usd0", "viz": "bar"}},
+EvidentialTable(
+    con.sql("""
+        SELECT payment, is_weekend, count(*) AS trips, sum(total_amount) AS revenue
+        FROM trips
+        GROUP BY payment, is_weekend
+        ORDER BY payment, is_weekend
+    """),
+    columns=[col.text("payment").hide(), col.boolean("is_weekend"), col.integer("trips"), col.currency("revenue")],
+    row_layout=rows.group_by("payment")
+        .section(values={"trips": "sum", "revenue": "sum"}, collapsible=True)
+        .grand_summary("All trips"),
 )
 ```
 
@@ -479,9 +473,8 @@ Each level is additive, and each stays in Python.
 
 Honesty about scope is part of the DX. Known gaps, with the reason:
 
-- **Column comparisons and comparison tooltips.** Prior-period *columns* exist
-  (`comparison_table`), but the hover tooltip that explains a delta is deferred.
-  It needs a rendering channel for comparison metadata we haven't designed.
+- **Comparison tooltips.** A dedicated comparison tooltip needs a rendering
+  channel for comparison metadata.
 - **Excel export.** CSV is easy and done; `.xlsx` pulls in a writer dependency.
 - **Virtualised scrolling.** Pagination caps memory and render cost today
   (`page_size` is clamped at 200). A million-row scroll view is its own project.

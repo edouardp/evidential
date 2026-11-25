@@ -9,8 +9,7 @@ things you actually compose:
 
 1. **Columns** — `col.<kind>("name", ...)` and the chain that refines it.
 2. **Header structures** — groups and sub-columns, built from columns.
-3. **Derived values** — merged columns and the grouped / pivot / comparison
-   helpers, which reuse the same column builder.
+3. **Derived values** — merged columns and display-only row summaries.
 
 Every screenshot in this document comes from
 [`notebooks/49_api_screenshots.py`](../../notebooks/49_api_screenshots.py) and is
@@ -29,7 +28,7 @@ captured with Playwright by
   - [Sub-columns](#sub-columns)
   - [Nesting](#nesting)
 - [Composing merged values](#composing-merged-values)
-- [Grouped, pivot and comparison tables](#grouped-pivot-and-comparison-tables)
+- [Shaping data and displaying groups](#shaping-data-and-displaying-groups)
 - [Table settings](#table-settings)
 - [Visualisations](#visualisations)
 - [Formatting](#formatting)
@@ -102,9 +101,8 @@ works when pandas is installed. The property itself needs no dataframe library.
 
 `LiveEvidentialTable.raw` exposes the latest successful query result without
 running SQL. `set_data()` and successful live refreshes replace the snapshot;
-failed updates preserve it. Pivot, grouping, comparison and query helpers share
-the same property on their returned tables: it exposes their resulting detail
-records, rather than rerunning or reversing their SQL transformations.
+failed updates preserve it. Tables created with `grouped_records` expose
+their detail records through the same property.
 
 To refresh a raw grid with live controls, display it in the reactive cell that
 updates the persistent table:
@@ -422,50 +420,33 @@ The first argument to `col.merge` is the name of the new column; the helper's
 `**options` (including `title`) are merged onto it like any other column option,
 so you can chain on the result too.
 
-## Grouped, pivot and comparison tables
+## Shaping data and displaying groups
 
-The aggregate helpers accept the same `col.*` builders — through
-`dimension_config` / `measure_config` — so everything above applies unchanged.
-They run their aggregation in DuckDB (`GROUPING SETS`), then hand a flat table to
-the renderer.
+Use SQL or a DataFrame to filter, aggregate, reshape, or compare your data
+upstream. Pass the prepared result to `EvidentialTable` with explicit columns.
+The [grouped totals example](../../README.md#grouped-totals) combines SQL
+aggregation with a row layout for collapsible headings and subtotals.
 
-```python
-from evidential import col, grouped_table, pivot_table, comparison_table
+![Grouped totals](images/grouped-totals.png)
 
-grouped_table(
-    connection,
-    "SELECT category, sales FROM needful_things.orders",
-    dimensions=["category"],
-    measures=["round(sum(sales), 0) AS sales", "count(*) AS orders"],
-    dimension_config={"category": col.text("category")},
-    measure_config={
-        "sales": col.currency("sales", decimals=0),
-        "orders": col.integer("orders"),
-    },
-)
-```
+The [sales by year example](../../README.md#sales-by-year) uses SQL filtered
+aggregates to put each year in its own column.
 
-![Grouped totals](images/grouped-table.png)
+![Sales by year](images/sales-by-year.png)
 
-`pivot_table` turns a dimension into columns (each pivot value becomes its own
-column per measure, under a shared header):
+Compute absolute and percentage changes in SQL, then use
+`col.percent("change_pct").delta()` to style the percentage-change column.
 
-![Pivoted columns](images/pivot-table.png)
+![Prior-period comparison](images/prior-period-comparison.png)
 
-`comparison_table` computes each measure for the current and the matching prior
-period, then adds `<measure>_prior`, `<measure>_delta` and `<measure>_pct`. The
-percentage-change column is a `viz="delta"`; a measure's `delta_options` (or
-top-level `neutral_range`, `down_is_good`) describe those derived columns. Use
-`col.merge` when you want to name and style them explicitly.
+Use SQL `ORDER BY` and `LIMIT` to prepare ranked results.
 
-![Prior-period comparison](images/comparison-table.png)
+![Top items by sales](images/top-items-by-sales.png)
 
-`query_table` runs ad-hoc SQL with optional `where` / `order` / `limit` /
-`date_range` and lays the result out with your `columns`:
+`date_range_sql` converts presets and ISO ranges into a DuckDB predicate for
+queries you write. See the [live date-range selector](../../notebooks/10_query_options.py).
 
-![Ad-hoc query](images/query-table.png)
-
-`grouped_records` does the same grouping client-side, from plain rows. For
+`grouped_records` groups in-memory detail rows and computes summaries. For
 report-specific display rows, pass a separate `row_layout`. Headings and
 summaries never become detail records:
 
@@ -1572,9 +1553,8 @@ These page shortcuts apply only inside the expanded dialog, not to inline tables
 
 ### Module functions
 
-Data sources and constructors: `EvidentialTable`, `LiveEvidentialTable`,
-`grouped_table`, `grouped_records`, `pivot_table`, `comparison_table`,
-`query_table`, `simple_table`. Aggregation: `BUILTIN_AGGREGATIONS`,
+Data sources and constructors: `EvidentialTable`, `LiveEvidentialTable` and
+`grouped_records`. Aggregation: `BUILTIN_AGGREGATIONS`,
 `resolve_aggregation`, `apply_aggregations`. Rules: `cells_body`, `tab_style`,
 `tab_format`, `text_transform`, `sub_missing`, `sub_zero`, `sub_small_vals`,
 `sub_large_vals`, `sub_values`, `cols_merge`, `cols_merge_range`,

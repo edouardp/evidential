@@ -1,21 +1,11 @@
-"""Query-decorating helpers.
-
-Evidence's ``where`` / ``having`` / ``order`` / ``limit`` / ``qualify`` /
-``date_range`` props are applied when building SQL. :func:`query_table` wraps a
-base relation with those clauses, and :func:`date_range_sql` renders Evidence's
-date-range presets to a DuckDB boolean expression.
-"""
+"""Standalone DuckDB date-range predicates."""
 
 from __future__ import annotations
 
 import datetime as dt
 import re
-from collections.abc import Mapping
-from typing import Any
 
-from .table import EvidentialTable
-
-__all__ = ["query_table", "date_range_sql"]
+__all__ = ["date_range_sql"]
 
 
 def _quoted(column: str) -> str:
@@ -113,53 +103,3 @@ def date_range_sql(spec: str, column: str) -> str | None:
         return fixed[lower]
 
     raise ValueError(f"Unrecognised date_range: {spec!r}")
-
-
-def query_table(
-    connection: Any,
-    sql: str,
-    *,
-    where: str | None = None,
-    qualify: str | None = None,
-    order: str | None = None,
-    limit: int | None = None,
-    date_range: str | Mapping[str, Any] | None = None,
-    date_column: str | None = None,
-    **table_options: Any,
-) -> EvidentialTable:
-    """Wrap ``sql`` with optional ``WHERE`` / ``QUALIFY`` / ``ORDER`` / ``LIMIT``.
-
-    ``date_range`` (a preset string, or ``{"range": ..., "date": ...}``) adds a
-    date filter; the column comes from ``date_column`` or the mapping's ``date``.
-    """
-    conditions: list[str] = []
-
-    if date_range is not None:
-        spec = date_range
-        column = date_column
-        if isinstance(date_range, Mapping):
-            spec = date_range.get("range", "")
-            column = column or date_range.get("date")
-        if not column:
-            raise ValueError("date_range requires a date column (date_column= or date_range['date'])")
-        condition = date_range_sql(str(spec), str(column))
-        if condition:
-            conditions.append(condition)
-
-    if where:
-        conditions.append(f"({where})")
-
-    clauses: list[str] = []
-    if conditions:
-        clauses.append("WHERE " + " AND ".join(conditions))
-    if qualify:
-        clauses.append("QUALIFY " + qualify)
-    if order:
-        clauses.append("ORDER BY " + order)
-    if limit is not None:
-        clauses.append(f"LIMIT {int(limit)}")
-
-    query = "SELECT * FROM (\n" + sql + "\n) AS __base"
-    if clauses:
-        query += "\n" + "\n".join(clauses)
-    return EvidentialTable(connection.sql(query), **table_options)

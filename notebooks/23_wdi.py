@@ -10,7 +10,7 @@
 
 WDI is a panel: one value per (country, indicator, year). This notebook reads
 the hive-partitioned Parquet bundle and shows the same data several ways — a
-live filterable ranking, a pivot, grouped subtotals, a prior-year comparison,
+live filterable ranking, a wide year-by-year view, grouped subtotals, a prior-year comparison,
 the dimensions, and the footnotes.
 
 Point it at a different bundle with the ``WDI_PARQUET`` environment variable
@@ -35,10 +35,7 @@ def _():
         EvidentialTable,
         LiveEvidentialTable,
         col,
-        comparison_table,
-        grouped_table,
         label,
-        pivot_table,
     )
 
     return (
@@ -46,13 +43,10 @@ def _():
         LiveEvidentialTable,
         Path,
         col,
-        comparison_table,
         duckdb,
-        grouped_table,
         label,
         mo,
         os,
-        pivot_table,
     )
 
 
@@ -100,7 +94,7 @@ def _(mo, parquet):
     by indicator — the **Unit of measure** lives in the `series` dimension.
 
     The sections below surface the same data as a **live ranking**, a **trend**,
-    a **wide pivot**, **grouped subtotals**, a **prior-year comparison**, the
+    a **wide year-by-year view**, **grouped subtotals**, a **prior-year comparison**, the
     **dimensions**, and the **footnotes**.
     """)
     return
@@ -422,33 +416,42 @@ def _(EvidentialTable, col, connection, indicator, mo, region):
 @app.cell
 def _(mo):
     mo.md("""
-    ## Wide view (pivot)
+    ## Life expectancy by year
 
-    `pivot_table` turns the `year` column into one column per year, grouped
-    under spanners.
+    DuckDB's filtered aggregates put each selected year in its own column.
+    The last row shows the highest life expectancy among the selected countries
+    for each year.
     """)
     return
 
 
 @app.cell
-def _(col, connection, mo, pivot_table):
+def _(EvidentialTable, col, connection, mo):
     wide = mo.ui.anywidget(
-        pivot_table(
-            connection,
-            """
-            SELECT c."Short Name" AS country, o.year, o.value
-            FROM observations o
-            JOIN country c ON c."Country Code" = o.country_code
-            WHERE o.indicator_code = 'SP.DYN.LE00.IN'
-              AND o.year IN (1990, 2000, 2010, 2020, 2023)
-              AND c."Short Name" IN ('Japan', 'United States', 'India', 'Nigeria', 'Brazil')
-            """,
-            dimensions=["country"],
-            pivots=["year"],
-            measures=["max(value) AS life_expectancy"],
-            show_total_column=False,
+        EvidentialTable(
+            connection.sql("""
+                SELECT coalesce(c."Short Name", 'Highest among selected countries') AS country,
+                       max(o.value) FILTER (WHERE o.year = 1990) AS "1990",
+                       max(o.value) FILTER (WHERE o.year = 2000) AS "2000",
+                       max(o.value) FILTER (WHERE o.year = 2010) AS "2010",
+                       max(o.value) FILTER (WHERE o.year = 2020) AS "2020",
+                       max(o.value) FILTER (WHERE o.year = 2023) AS "2023"
+                FROM observations o
+                JOIN country c ON c."Country Code" = o.country_code
+                WHERE o.indicator_code = 'SP.DYN.LE00.IN'
+                  AND o.year IN (1990, 2000, 2010, 2020, 2023)
+                  AND c."Short Name" IN ('Japan', 'United States', 'India', 'Nigeria', 'Brazil')
+                GROUP BY GROUPING SETS ((c."Short Name"), ())
+                ORDER BY grouping(c."Short Name"), country
+            """),
             title="Life expectancy at birth, by year",
-            dimension_config={"country": col.text("country")},
+            columns=[
+                col.text("country"),
+                col.group(
+                    "Life expectancy (years)",
+                    [col.number(year, title=year, fmt="num1") for year in ("1990", "2000", "2010", "2020", "2023")],
+                ),
+            ],
         )
     )
     wide
@@ -460,42 +463,40 @@ def _(mo):
     mo.md("""
     ## Grouped subtotals
 
-    `grouped_table` runs one `GROUPING SETS` query to build region → income-group
-    subtotals and a grand total.
+    DuckDB computes each regional and overall average from the original
+    country observations using `GROUPING SETS`.
     """)
     return
 
 
 @app.cell
-def _(col, connection, grouped_table, mo):
+def _(EvidentialTable, col, connection, mo):
     grouped = mo.ui.anywidget(
-        grouped_table(
-            connection,
-            """
-            SELECT c.Region AS region, c."Income Group" AS income_group, o.value
-            FROM observations o
-            JOIN country c ON c."Country Code" = o.country_code
-            WHERE o.indicator_code = 'SP.DYN.LE00.IN'
-              AND o.year = 2023
-              AND c.Region IS NOT NULL
-            """,
-            dimensions=["region", "income_group"],
-            measures=[
-                "round(avg(value), 1) AS avg_life_expectancy",
-                "count(*) AS countries",
-            ],
-            subtotal_position="top",
-            total_label="All countries",
+        EvidentialTable(
+            connection.sql("""
+                WITH readings AS (
+                    SELECT c.Region AS region, c."Income Group" AS income_group, o.value
+                    FROM observations o
+                    JOIN country c ON c."Country Code" = o.country_code
+                    WHERE o.indicator_code = 'SP.DYN.LE00.IN' AND o.year = 2023
+                      AND c.Region IS NOT NULL
+                )
+                SELECT coalesce(region, 'All countries') AS region,
+                       CASE WHEN grouping(income_group) = 1 THEN 'Total' ELSE income_group END AS income_group,
+                       avg(value) AS avg_life_expectancy,
+                       count(*) AS countries
+                FROM readings
+                GROUP BY GROUPING SETS ((region, income_group), (region), ())
+                ORDER BY grouping(region), region, grouping(income_group) DESC, income_group
+            """),
             title="Average life expectancy by region and income group (2023)",
             max_height="460px",
-            dimension_config={
-                "region": col.text("region"),
-                "income_group": col.text("income_group", title="Income group"),
-            },
-            measure_config={
-                "avg_life_expectancy": col.bar("avg_life_expectancy", fmt="num1", label=True),
-                "countries": col.integer("countries"),
-            },
+            columns=[
+                col.text("region").repeat_values(False),
+                col.text("income_group", title="Income group"),
+                col.bar("avg_life_expectancy", fmt="num1", label=True),
+                col.integer("countries"),
+            ],
         )
     )
     grouped
@@ -507,33 +508,42 @@ def _(mo):
     mo.md("""
     ## Prior-year change
 
-    `comparison_table` adds prior / change / % change columns. For life
-    expectancy the change is in **years**, so the delta is formatted as a
-    number rather than a percentage.
+    SQL finds the latest year in the data and computes the current and
+    previous averages for each region. The change is shown in years.
     """)
     return
 
 
 @app.cell
-def _(col, comparison_table, connection, mo):
+def _(EvidentialTable, col, connection, mo):
     changes = mo.ui.anywidget(
-        comparison_table(
-            connection,
-            """
-            SELECT c.Region AS region, make_date(o.year, 1, 1) AS date, o.value
-            FROM observations o
-            JOIN country c ON c."Country Code" = o.country_code
-            WHERE o.indicator_code = 'SP.DYN.LE00.IN'
-              AND o.year >= 2015
-              AND c.Region IS NOT NULL
-            """,
-            dimensions=["region"],
-            measures=["round(avg(value), 2) AS avg_life_expectancy"],
-            date_column="date",
-            compare_vs="prior year",
+        EvidentialTable(
+            connection.sql("""
+                WITH readings AS (
+                    SELECT c.Region AS region, o.year, o.value, max(o.year) OVER () AS latest
+                    FROM observations o
+                    JOIN country c ON c."Country Code" = o.country_code
+                    WHERE o.indicator_code = 'SP.DYN.LE00.IN' AND o.year >= 2015
+                      AND c.Region IS NOT NULL
+                ), averages AS (
+                    SELECT region,
+                           avg(value) FILTER (WHERE year = latest) AS current,
+                           avg(value) FILTER (WHERE year = latest - 1) AS previous
+                    FROM readings
+                    WHERE year >= latest - 1
+                    GROUP BY region
+                )
+                SELECT region, current, previous, current - previous AS change
+                FROM averages
+                ORDER BY region
+            """),
             title="Life expectancy by region — latest year vs the year before",
-            dimension_config={"region": col.text("region")},
-            measure_config={"avg_life_expectancy": col.number("avg_life_expectancy", fmt="num2")},
+            columns=[
+                col.text("region"),
+                col.number("current", fmt="num2", title="Latest year"),
+                col.number("previous", fmt="num2", title="Previous year"),
+                col.number("change", fmt="num2", title="Change (years)"),
+            ],
         )
     )
     changes

@@ -3,7 +3,6 @@
 import pytest
 
 from evidential import EvidentialTable, col
-from evidential.marks import rebind_measure
 
 
 def test_legend_builder_and_raw_declarations_share_validation():
@@ -61,13 +60,6 @@ def test_legend_revalidates_after_changes_and_requires_fixed_categories():
     with pytest.raises(ValueError, match="mark column"):
         EvidentialTable([{"a": 1}], columns=[{"name": "a", "legend": True}])
     assert col.bar("a", color="@fill").legend(False)["legend"] is False
-
-
-def test_pivot_rebinding_preserves_custom_source_names():
-    original = col.bar("sales").legend({"sales": "Sales"})
-    rebound = rebind_measure(original, "sales", "2026.sales")
-    assert rebound["legend"] == {"2026.sales": "Sales"}
-    assert original["legend"] == {"sales": "Sales"}
 
 
 def test_connecting_marks_can_be_omitted_and_switching_to_scalar_removes_the_key():

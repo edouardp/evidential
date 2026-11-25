@@ -33,7 +33,7 @@ flowchart LR
   subgraph Python["Python package (src/evidential)"]
     ET["EvidentialTable / LiveEvidentialTable"]
     DATA["data.py<br/>normalise + infer"]
-    G["grouped.py · pivot.py · client.py"]
+    G["client.py · rows.py"]
     R["rules.py"]
     A["aggregations.py"]
     D["duck.py"]
@@ -64,12 +64,9 @@ src/evidential/        Python package (the anywidget)
   table.py                  EvidentialTable, option keys, column coercion
   data.py                   normalise / infer / jsonify
   dimension.py              DimensionGrid, linked category facets and predicates
-  grouped.py                grouped_table, decorate_grouped_rows, simple_table
   client.py                 grouped_records (in-memory grouping)
   aggregations.py           built-in + callable aggregations
-  pivot.py                  pivot_table
-  comparison.py             comparison_table (prior period)
-  query.py                  query_table, date_range_sql
+  query.py                  date_range_sql
   rules.py                  gt-style cells_body / tab_* / sub_* / cols_merge_*
   live.py                   LiveEvidentialTable, query_values
   duck.py                   DuckDB connections, S3, S3 Tables
@@ -249,39 +246,17 @@ column descriptions from source metadata: a DuckDB table/view relation's
 [ADR-024](adr/024-arrow-field-metadata.md)). A raw `con.sql(...)` relation has no
 source name, so `duck.column_comments` is the explicit path.
 
-### 4.3 `grouped.py` — subtotals from one query
+### 4.3 `rows.py` — display-only row layouts
 
-`grouped_table` parses measures, builds one `GROUPING SETS` query, then hands the
-raw rows to `decorate_grouped_rows`:
+A row layout describes group headings, subtotals, and grand totals separately
+from source records. It compiles those annotations and their detail membership
+for the renderer.
 
-```mermaid
-flowchart TD
-  B["base sql"] --> GS["GROUPING SETS<br/>(d1,d2) · (d1) · ()"]
-  GS --> GR["rows carrying __g0…__gN<br/>(DuckDB grouping() flags)"]
-  GR --> D["decorate_grouped_rows()"]
-  D --> M["render_type · __level · __group_key<br/>__ancestors · __parent_key"]
-  M --> A["apply_aggregations()<br/>(optional: recompute from detail)"]
-  A --> ET["EvidentialTable(rows, columns)"]
-```
+### 4.4 `client.py` — grouping in-memory records
 
-- `_parse_measure` accepts `"sum(x) AS total"`, `(alias, expr)` and
-  `{alias: expr}`.
-- The SQL uses `grouping(dim) AS __gN` to distinguish a real value from a
-  subtotal's blank; `GROUPING SETS` for every prefix of the dimensions plus `()`
-  gives all subtotals and the grand total in one pass.
-- `decorate_grouped_rows` pops the `__gN` flags, computes `__level`,
-  `__group_key` and `__ancestors`, and orders subtotals above/below their group.
-- `total_measures` can substitute a different aggregation for the grand total
-  (`CASE WHEN grouping(d0)=1 THEN …`).
-
-`simple_table` is the thin wrapper for "just run this SQL".
-
-### 4.4 `client.py` — grouping without a database
-
-`grouped_records` sorts in-memory rows, computes subtotals for each prefix of
-`group_by` using `aggregations`, fabricates the same `__gN` flags, and calls the
-**same** `decorate_grouped_rows`. The renderer therefore has exactly one
-grouping model, whether the rows came from DuckDB or a list.
+`grouped_records` sorts input rows, computes subtotals for dimension prefixes,
+and decorates details and summaries with `render_type`, `__level`,
+`__group_key`, and `__ancestors` for the renderer.
 
 ### 4.5 `aggregations.py` — one path for built-ins and callables
 
@@ -294,26 +269,13 @@ signature, so custom functions and built-ins share a path.
 `apply_aggregations` walks the decorated rows: a subtotal's descendants are the
 detail rows whose `__ancestors` contain the subtotal's `__group_key`; the grand
 total uses all detail rows. An ancestor index is built once to avoid scanning
-every detail for every subtotal. For `weighted_mean`, `grouped_table` adds hidden
-`__w_<alias>` weight-sum columns and passes their values through as weights.
+every detail for every subtotal. For `weighted_mean`, callers can identify
+the source fields that supply weights.
 
-### 4.6 `pivot.py`, `comparison.py`, `query.py` — query builders
+### 4.6 `query.py` — SQL date predicates
 
-These build SQL, run it, and hand rows to `EvidentialTable` (or
-`decorate_grouped_rows`).
-
-- `pivot_table` discovers distinct pivot combinations and computes each
-  dimension/pivot level from the original rows with `GROUPING SETS`. A filtered
-  `max` projects the single result for each cell into a pivot column. Headline
-  aggregation overrides expand to those columns; hidden weight sums keep
-  weighted overrides aligned. See [ADR-035](adr/035-correct-pivot-aggregations.md).
-- `comparison_table` anchors on the latest `date_column`, computes current and
-  prior windows with a two-CTE join, and appends `<m>_prior`, `<m>_delta`,
-  `<m>_pct` columns (the last rendered as a `delta`).
-- `query_table` wraps a base query with `where`/`qualify`/`order`/`limit`, and
-  `date_range_sql` renders Evidence's date-range presets
-  (`last 12 months`, `month to date`, `2020-01-01 to 2023-03-01`, …) into a
-  DuckDB boolean expression.
+`date_range_sql` renders presets such as `last 12 months` and explicit date
+ranges into a DuckDB Boolean expression that callers can use in their SQL.
 
 Custom dates are validated as ISO dates or datetimes. A date-only end includes
 the entire final day using an exclusive next-day bound; an explicit datetime
@@ -680,7 +642,7 @@ can observe it:
 ```mermaid
 flowchart TD
   U["jsdom unit tests — `node --test`<br/>formatValue · colour scales · renderer DOM · holdInterval"]
-  P["pytest unit tests<br/>data · grouped · rules · aggregations · pivot · query · live · table"]
+  P["pytest unit tests<br/>data · grouped · rules · aggregations · query · live · table"]
   B["Playwright functional tests<br/>real DOM: sort · search · paginate · fullscreen · bar geometry"]
   U --> P --> B
 ```
@@ -758,12 +720,9 @@ validates its projections. See [marimo-studio.md](marimo-studio.md) and
 | `configuration.py` | public configuration types, defaults, recursive validation |
 | `_column_options.py` | shared Evidence alias and nested-option normalization |
 | `data.py` | normalisation, JSON safety, type inference, blank predicates |
-| `grouped.py` | `grouped_table`, `decorate_grouped_rows`, `simple_table` |
 | `client.py` | `grouped_records` (in-memory grouping) |
 | `aggregations.py` | built-in + callable aggregations |
-| `pivot.py` | `pivot_table` |
-| `comparison.py` | `comparison_table` |
-| `query.py` | `query_table`, `date_range_sql` |
+| `query.py` | `date_range_sql` |
 | `rules.py` | `cells_body`, `tab_*`, `sub_*`, `cols_merge*`, `resolve_rules` |
 | `live.py` | `LiveEvidentialTable`, `query_values` |
 | `duck.py` | DuckDB connections, S3, S3 Tables |

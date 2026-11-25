@@ -36,7 +36,7 @@ const paletteKeys = new Set(["color_scale", "palette"]);
 const themeKeys = {background: "bg", surface: "surface", text: "text", muted: "muted", border: "border",
   row_border: "row-border", header_bg: "header-bg", header_border: "header-border", header_text: "header-text",
   hover: "hover", shading: "shading", total_bg: "total-bg", total_text: "total-text", subtotal_bg: "subtotal-bg",
-  pivot_bg: "pivot-bg", link: "link", negative: "negative", positive: "positive", accent: "accent", font: "font", font_size: "font-size"};
+  link: "link", negative: "negative", positive: "positive", accent: "accent", font: "font", font_size: "font-size"};
 
 export function themeColors(scheme, options = {}, native = value => value) {
   const overrides = options.theme || {}, base = SCHEMES[scheme];
@@ -208,7 +208,7 @@ export class ThemeController {
       border: mix(tokens.muted, 0.3), "row-border": mix(tokens.muted, 0.22),
       "header-bg": tokens.surface, "header-border": mix(tokens.text, 0.4), "header-text": tokens.text,
       hover: mix(tokens.text, 0.08), shading: mix(tokens.text, 0.04),
-      "total-bg": mix(tokens.muted, 0.16), "subtotal-bg": mix(tokens.muted, 0.1), "pivot-bg": mix(tokens.muted, 0.1),
+      "total-bg": mix(tokens.muted, 0.16), "subtotal-bg": mix(tokens.muted, 0.1),
       "total-text": tokens.text, link: tokens.accent, negative: tokens.negative, positive: tokens.positive,
       accent: tokens.accent, reference: tokens.reference, selection: tokens.selection,
       "axis-text": scheme === "light" ? "#000000" : tokens.text,

@@ -3,7 +3,6 @@
 import pytest
 
 from evidential import EvidentialTable, col, settings
-from evidential.marks import rebind_measure
 
 
 @pytest.mark.parametrize("builder", [col.text, col.number, col.bar, col.sparkline])
@@ -30,14 +29,12 @@ def test_invalid_tooltip_types_fail_for_builders_and_raw_specs(value):
             EvidentialTable([{"value": 1}], columns=[{"name": "value", "tooltip": value}])
 
 
-def test_tooltip_binding_needs_a_field_and_rebinds_without_changing_literals():
+def test_tooltip_binding_needs_a_field():
     for column in (col.number("value"), col.bar("value")):
         with pytest.raises(ValueError, match="field name"):
             column.tooltip("@")
         with pytest.raises(ValueError, match="field name"):
             EvidentialTable([{"value": 1}], columns=[{**column, "tooltip": "@"}])
-        assert rebind_measure(column.tooltip("@value"), "value", "2024.value")["tooltip"] == "@2024.value"
-        assert rebind_measure(column.tooltip("value"), "value", "2024.value")["tooltip"] == "value"
 
 
 def test_tooltip_delays_are_seconds_and_column_overrides_are_immutable():

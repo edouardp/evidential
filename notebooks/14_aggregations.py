@@ -21,9 +21,9 @@ def _():
     import marimo as mo
     import duckdb
 
-    from evidential import BUILTIN_AGGREGATIONS, col, grouped_table
+    from evidential import BUILTIN_AGGREGATIONS, col, grouped_records
 
-    return BUILTIN_AGGREGATIONS, Path, col, duckdb, grouped_table, mo
+    return BUILTIN_AGGREGATIONS, Path, col, duckdb, grouped_records, mo
 
 
 @app.cell
@@ -42,28 +42,32 @@ def _(BUILTIN_AGGREGATIONS, mo):
     mo.md(f"""
     # Aggregations for subtotals and totals
 
-    By default a subtotal/total row re-runs the measure's SQL aggregate. The
-    `aggregations` argument instead recomputes it from the **detail values**,
-    matching Evidence's `totalAgg`.
+    SQL computes sales per item. The `aggregations` argument to
+    `grouped_records` controls how those item-level sums are summarized.
 
-    - **Built-in names:** `{", ".join(sorted(set(BUILTIN_AGGREGATIONS))) }`
+    - **Built-in names:** `{", ".join(sorted(BUILTIN_AGGREGATIONS))}`
     - **Custom callables:** any `values -> aggregate` function.
-    - `weight_columns={{measure: column}}` supplies weights for `weighted_mean`.
-
-    Each table below groups sales by category → item; the subtotal is the chosen
-    aggregation over the item-level sums.
     """)
     return
 
 
 @app.cell
-def _(col, connection, grouped_table, mo):
+def _(connection):
+    item_sales = connection.sql("""
+        SELECT category, item, sum(sales) AS sales
+        FROM needful_things.orders
+        GROUP BY category, item
+    """).to_arrow_table()
+    return (item_sales,)
+
+
+@app.cell
+def _(col, grouped_records, item_sales, mo):
     default_sum = mo.ui.anywidget(
-        grouped_table(
-            connection,
-            "SELECT category, item, sales FROM needful_things.orders",
-            dimensions=["category", "item"],
-            measures=["round(sum(sales), 0) AS sales"],
+        grouped_records(
+            item_sales,
+            group_by=["category", "item"],
+            measures=["sales"],
             subtotal_position="top",
             title="Default (sum)",
             max_height="360px",
@@ -75,13 +79,12 @@ def _(col, connection, grouped_table, mo):
 
 
 @app.cell
-def _(col, connection, grouped_table, mo):
+def _(col, grouped_records, item_sales, mo):
     means = mo.ui.anywidget(
-        grouped_table(
-            connection,
-            "SELECT category, item, sales FROM needful_things.orders",
-            dimensions=["category", "item"],
-            measures=["round(sum(sales), 0) AS sales"],
+        grouped_records(
+            item_sales,
+            group_by=["category", "item"],
+            measures=["sales"],
             subtotal_position="top",
             aggregations={"sales": "mean"},
             title='aggregations={"sales": "mean"}',
@@ -94,13 +97,12 @@ def _(col, connection, grouped_table, mo):
 
 
 @app.cell
-def _(col, connection, grouped_table, mo):
+def _(col, grouped_records, item_sales, mo):
     medians = mo.ui.anywidget(
-        grouped_table(
-            connection,
-            "SELECT category, item, sales FROM needful_things.orders",
-            dimensions=["category", "item"],
-            measures=["round(sum(sales), 0) AS sales"],
+        grouped_records(
+            item_sales,
+            group_by=["category", "item"],
+            measures=["sales"],
             subtotal_position="top",
             aggregations={"sales": "median"},
             title='aggregations={"sales": "median"}',
@@ -113,17 +115,16 @@ def _(col, connection, grouped_table, mo):
 
 
 @app.cell
-def _(col, connection, grouped_table, mo):
+def _(col, grouped_records, item_sales, mo):
     # A custom Python callable receives the list of detail values.
     def spread(values):
         return max(values) - min(values)
 
     custom = mo.ui.anywidget(
-        grouped_table(
-            connection,
-            "SELECT category, item, sales FROM needful_things.orders",
-            dimensions=["category", "item"],
-            measures=["round(sum(sales), 0) AS sales"],
+        grouped_records(
+            item_sales,
+            group_by=["category", "item"],
+            measures=["sales"],
             subtotal_position="top",
             aggregations={"sales": spread},
             title="aggregations={'sales': spread} (max - min)",

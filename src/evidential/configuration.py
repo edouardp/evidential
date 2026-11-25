@@ -64,7 +64,6 @@ class Theme(TypedDict, total=False):
     total_bg: str | None
     total_text: str | None
     subtotal_bg: str | None
-    pivot_bg: str | None
     link: str | None
     negative: str | None
     positive: str | None

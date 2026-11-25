@@ -6,7 +6,7 @@
 #     "evidential",
 # ]
 # ///
-"""`query_table` / date ranges, plus `page_size="all"`."""
+"""SQL filters and date ranges, plus `page_size="all"`."""
 
 import marimo
 
@@ -21,9 +21,9 @@ def _():
     import marimo as mo
     import duckdb
 
-    from evidential import LiveEvidentialTable, col, date_range_sql, query_table
+    from evidential import EvidentialTable, LiveEvidentialTable, col, date_range_sql
 
-    return LiveEvidentialTable, Path, col, date_range_sql, duckdb, mo, query_table
+    return EvidentialTable, LiveEvidentialTable, Path, col, date_range_sql, duckdb, mo
 
 
 @app.cell
@@ -42,8 +42,8 @@ def _(mo):
     mo.md("""
     # Query options
 
-    `query_table` wraps a base query with Evidence's `where`, `order`, `limit`,
-    `qualify` and `date_range` props. Date ranges accept presets
+    Filter, sort and limit the result in SQL, then render it with explicit
+    columns. The live date selector below accepts presets
     (`last 12 months`, `previous year`, `month to date`), dynamic windows
     (`Last 90 days`), custom ranges (`2020-01-01 to 2021-01-01`) and partial
     ranges (`from 2020-01-01`).
@@ -52,15 +52,18 @@ def _(mo):
 
 
 @app.cell
-def _(col, connection, mo, query_table):
+def _(EvidentialTable, col, connection, mo):
     recent = mo.ui.anywidget(
-        query_table(
-            connection,
-            "SELECT category, order_datetime, sales FROM needful_things.orders",
-            date_range={"range": "2019-01-01 to 2021-12-31", "date": "order_datetime"},
-            where="sales > 10",
-            order="sales DESC",
-            limit=100,
+        EvidentialTable(
+            connection.sql("""
+                SELECT category, order_datetime, sales
+                FROM needful_things.orders
+                WHERE order_datetime >= DATE '2019-01-01'
+                  AND order_datetime < DATE '2022-01-01'
+                  AND sales > 10
+                ORDER BY sales DESC
+                LIMIT 100
+            """),
             title="2019-2021, sales > $10",
             page_size=10,
             row_shading=True,
@@ -76,12 +79,14 @@ def _(col, connection, mo, query_table):
 
 
 @app.cell
-def _(col, connection, mo, query_table):
+def _(EvidentialTable, col, connection, mo):
     everything = mo.ui.anywidget(
-        query_table(
-            connection,
-            "SELECT category, order_datetime, sales FROM needful_things.orders",
-            order="order_datetime DESC",
+        EvidentialTable(
+            connection.sql("""
+                SELECT category, order_datetime, sales
+                FROM needful_things.orders
+                ORDER BY order_datetime DESC
+            """),
             title="All rows (page_size='all')",
             page_size="all",
             row_lines=False,

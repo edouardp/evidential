@@ -25,9 +25,10 @@ def _():
     import marimo as mo
     import duckdb
 
-    from evidential import EvidentialTable, col, grouped_table, section_row
+    from evidential import EvidentialTable, col, section_row
+    from evidential import rows as layout_rows
 
-    return EvidentialTable, Path, col, duckdb, grouped_table, mo
+    return EvidentialTable, Path, col, duckdb, layout_rows, mo
 
 
 @app.cell
@@ -93,20 +94,21 @@ def _(mo):
 
 
 @app.cell
-def _(col, connection, grouped_table, mo):
+def _(EvidentialTable, col, connection, layout_rows, mo):
     mo.ui.anywidget(
-        grouped_table(
-            connection,
-            "SELECT category, item, sales FROM needful_things.orders",
-            dimensions=["category", "item"],
-            measures=["round(sum(sales), 0) AS sales"],
-            total_label="All items",
-            subtotal_position="top",
+        EvidentialTable(
+            connection.sql("""
+                SELECT category, item, sum(sales) AS sales
+                FROM needful_things.orders
+                GROUP BY category, item
+                ORDER BY category, item
+            """),
+            row_layout=layout_rows.group_by("category").section(values={"sales": "sum"}).grand_summary("All items"),
             group_gap=True,
             row_lines=False,
             title="Grouped by category",
             max_height="420px",
-            measure_config={"sales": col.bar("sales", format='usd0', label=True)},
+            columns=[col.text("category").hide(), col.text("item"), col.bar("sales", format="usd0", label=True)],
         )
     )
     return

@@ -86,22 +86,6 @@ def test_invalid_code_fails_instead_of_silently_keeping_an_old_excerpt(source, m
         docs.example_code(source, "demo")
 
 
-def test_aggregate_helpers_extract_the_actual_call():
-    source = """@app.cell
-def totals(grouped_table, col):
-    grouped_table(
-        con, "SELECT category, sales FROM orders",
-        measures=["sum(sales) AS sales"],
-        measure_config={"sales": col.currency("sales")},
-    )
-    return
-"""
-    code = docs.example_code(source, "totals")
-    assert code.startswith("grouped_table(\n")
-    assert 'measure_config={"sales": col.currency("sales")}' in code
-    ast.parse(code)
-
-
 def test_dimension_grid_excerpt_extracts_the_input_call():
     source = """@app.cell
 def facets(DimensionGrid, mo):

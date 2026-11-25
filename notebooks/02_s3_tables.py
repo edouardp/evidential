@@ -20,9 +20,9 @@ def _():
 
     import marimo as mo
 
-    from evidential import EvidentialTable, col, duck, grouped_table
+    from evidential import EvidentialTable, col, duck, rows
 
-    return EvidentialTable, col, duck, grouped_table, mo, os
+    return EvidentialTable, col, duck, mo, os, rows
 
 
 @app.cell
@@ -126,46 +126,40 @@ def _(EvidentialTable, col, mo, monthly):
 
 
 @app.cell
-def _(col, connection, grouped_table, mo):
+def _(EvidentialTable, col, connection, mo, rows):
     mo.stop(connection is None, mo.md(""))
 
+    totals = {"trips": "sum", "distance": "sum", "revenue": "sum"}
     mo.ui.anywidget(
-        grouped_table(
-            connection,
-            """
-            SELECT
-                CASE payment_type
-                    WHEN 1 THEN 'Credit card'
-                    WHEN 2 THEN 'Cash'
-                    WHEN 3 THEN 'No charge'
-                    WHEN 4 THEN 'Dispute'
-                    ELSE 'Other'
-                END AS payment,
-                date_trunc('month', tpep_pickup_datetime) AS pickup_month,
-                trip_distance,
-                total_amount
-            FROM s3tables.taxi.yellow_trips
-            WHERE tpep_pickup_datetime >= TIMESTAMP '2024-01-01'
-              AND tpep_pickup_datetime < TIMESTAMP '2024-02-01'
-            """,
-            dimensions=["payment", "pickup_month"],
-            measures=[
-                "count(*) AS trips",
-                "round(sum(trip_distance), 0) AS distance",
-                "round(sum(total_amount), 0) AS revenue",
-            ],
-            total_label="All payments",
-            subtotal_position="top",
+        EvidentialTable(
+            connection.sql("""
+                SELECT CASE payment_type
+                           WHEN 1 THEN 'Credit card'
+                           WHEN 2 THEN 'Cash'
+                           WHEN 3 THEN 'No charge'
+                           WHEN 4 THEN 'Dispute'
+                           ELSE 'Other'
+                       END AS payment,
+                       date_trunc('month', tpep_pickup_datetime) AS pickup_month,
+                       count(*) AS trips, sum(trip_distance) AS distance, sum(total_amount) AS revenue
+                FROM s3tables.taxi.yellow_trips
+                WHERE tpep_pickup_datetime >= TIMESTAMP '2024-01-01'
+                  AND tpep_pickup_datetime < TIMESTAMP '2024-02-01'
+                GROUP BY payment, pickup_month
+                ORDER BY payment, pickup_month
+            """),
+            row_layout=rows.group_by("payment")
+                .section(values=totals, collapsible=True)
+                .grand_summary("All payments", values=totals),
             title="Trips by payment type and month",
-            collapsible=True,
-            collapsed=False,
             max_height="520px",
-            dimension_config={"pickup_month": col.date("pickup_month", fmt="mmm-yy", title="Month")},
-            measure_config={
-                "trips": col.integer("trips"),
-                "distance": col.integer("distance"),
-                "revenue": col.bar("revenue", format='usd0', color="#8888ff66", label=True),
-            },
+            columns=[
+                col.text("payment").hide(),
+                col.date("pickup_month", fmt="mmm-yy", title="Month"),
+                col.integer("trips"),
+                col.integer("distance"),
+                col.bar("revenue", format="usd0", color="#8888ff66", label=True),
+            ],
         )
     )
     return

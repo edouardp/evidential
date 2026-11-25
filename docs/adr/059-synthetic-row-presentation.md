@@ -11,6 +11,9 @@ now live in separate layout metadata. The new layout controls annotation style,
 rules, summaries and detail-based pagination; the behavior below is retained by
 the compatibility adapter for historical grouped helpers and divider records.
 
+The SQL table builders referenced in this record were retired by
+[ADR-103](103-retire-sql-table-builders.md).
+
 ## Context and Problem Statement
 
 The *Tabular Design System* describes grouped tables in terms of **synthetic

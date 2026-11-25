@@ -6,6 +6,14 @@ project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## Unreleased
 
+### Removed
+
+- Removed the `comparison_table`, `grouped_table`, `pivot_table`, `query_table`
+  and `simple_table` helpers. Shape data in SQL or a DataFrame and pass the
+  result to `EvidentialTable`. Use `row_layout` to display group headings and
+  summaries over the result.
+- Removed the unused `pivot_bg` theme token.
+
 ## 0.2.7 (2026-11-21)
 
 ### Fixed

@@ -12,7 +12,7 @@ The BrightData IMDb-Media dataset, converted to Parquet with DuckDB (ZSTD,
 Parquet v2, bloom filters on url/title/media_type) and read back with DuckDB,
 shown with EvidentialTable: dotted-name column groups, a colour-scaled rating, a
 bar-charted vote count, media-type chips, column statistics, a link column, a
-pivot by decade, and a row-selection drill-down into the cast.
+breakdown by decade and media type, and a row-selection drill-down into the cast.
 
 Point it at the Parquet with ``IMDB_PARQUET`` (default
 ``~/Downloads/imdb_media.parquet``); with no Parquet it falls back to
@@ -33,9 +33,9 @@ def _():
     import duckdb
     import marimo as mo
 
-    from evidential import EvidentialTable, col, pivot_table
+    from evidential import EvidentialTable, col
 
-    return EvidentialTable, Path, col, duckdb, mo, os, pivot_table
+    return EvidentialTable, Path, col, duckdb, mo, os
 
 
 @app.cell
@@ -223,25 +223,43 @@ def _(EvidentialTable, col, connection, mo):
 
 
 @app.cell(expand_output=True)
-def _(col, connection, mo, pivot_table):
+def _(EvidentialTable, col, connection, mo):
     by_decade = mo.ui.anywidget(
-        pivot_table(
-            connection,
-            r"""
-            SELECT ((try_cast(regexp_extract(details_release_date, '(\d{4})', 1) AS INTEGER) / 10) * 10) AS decade,
-                   media_type
-            FROM media
-            WHERE imdb_rating IS NOT NULL
-              AND try_cast(regexp_extract(details_release_date, '(\d{4})', 1) AS INTEGER) BETWEEN 1950 AND 2029
-            """,
-            dimensions=["decade"],
-            pivots=["media_type"],
-            measures=["count(*) AS films"],
-            total_label="All decades",
+        EvidentialTable(
+            connection.sql(r"""
+                WITH releases AS (
+                    SELECT try_cast(regexp_extract(details_release_date, '(\d{4})', 1) AS INTEGER) AS year,
+                           media_type
+                    FROM media
+                    WHERE imdb_rating IS NOT NULL
+                ), titles_by_decade AS (
+                    SELECT year // 10 * 10 AS decade, media_type
+                    FROM releases
+                    WHERE year BETWEEN 1950 AND 2029
+                )
+                SELECT coalesce(decade::VARCHAR, 'All decades') AS period,
+                       count(*) FILTER (WHERE media_type = 'Documentary') AS documentary,
+                       count(*) FILTER (WHERE media_type = 'Feature Film') AS feature_film,
+                       count(*) FILTER (WHERE media_type = 'Short Film') AS short_film,
+                       count(*) AS films
+                FROM titles_by_decade
+                GROUP BY GROUPING SETS ((decade), ())
+                ORDER BY decade NULLS LAST
+            """),
             title="Titles by decade and media type",
             page_size=12,
-            dimension_config={"decade": col.number("decade", fmt="num", align="left")},
-            measure_config={"films": col.bar("films", format='num0', color="#93c5fd", label=True)},
+            columns=[
+                col.text("period", title="Decade"),
+                col.group(
+                    "Media type",
+                    [
+                        col.bar("documentary", title="Documentary", format="num0", color="#93c5fd", label=True),
+                        col.bar("feature_film", title="Feature Film", format="num0", color="#93c5fd", label=True),
+                        col.bar("short_film", title="Short Film", format="num0", color="#93c5fd", label=True),
+                    ],
+                ),
+                col.bar("films", title="Total", format="num0", color="#93c5fd", label=True),
+            ],
         )
     )
     by_decade

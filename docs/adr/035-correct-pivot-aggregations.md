@@ -1,5 +1,5 @@
 ---
-status: accepted
+status: superseded by ADR-103
 date: 2026-10-13
 deciders: edouard
 ---
@@ -49,6 +49,5 @@ with deterministic suffixes while keeping display groups separate from names.
 
 ## More Information
 
+- Superseded by [ADR-103](103-retire-sql-table-builders.md).
 - Extends [ADR-009](009-grouping-sets-for-grouped-totals.md).
-- Overrides recompute summaries from displayed detail values, as documented in
-  [the aggregation API](../../README.md#aggregations-for-subtotalstotals).

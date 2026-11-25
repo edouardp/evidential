@@ -14,9 +14,8 @@ explorers can require a local data bundle; their introduction describes its loca
 | [`06_evidence_sample_data.py`](06_evidence_sample_data.py) | Evidence's own `needful_things.orders` sample: sparklines, grouped subtotals, raw orders. |
 | [`07_table_options.py`](07_table_options.py) | Table-level options: row numbers, compact, default sort, row colours, theming, links, empty state. |
 | [`08_column_options.py`](08_column_options.py) | Column formatting, compact numbers with significant-figure precision, readable scientific notation with superscript exponents, `fmt_column`, links, HTML, `contentType` shorthands, bar/colour/delta/sparkline. |
-| [`09_pivots.py`](09_pivots.py) | `pivot_table`: pivoted columns, `measures_first`, subtotal rows. |
-| [`10_query_options.py`](10_query_options.py) | `query_table` with `where`/`order`/`limit`/`date_range`, live date-range selector, `page_size="all"`. |
-| [`11_comparisons.py`](11_comparisons.py) | `comparison_table`: prior year / prior quarter with delta and % columns. |
+| [`10_query_options.py`](10_query_options.py) | SQL filtering, ordering and limits, live date-range selector, `page_size="all"`. |
+| [`11_comparisons.py`](11_comparisons.py) | SQL year-over-year and quarter-over-quarter comparisons with delta and percentage columns. |
 | [`12_color_scales.py`](12_color_scales.py) | Every `viz="color"` option side by side: presets, bounds, midpoint, stops, scale column, conditional colours. |
 | [`13_hierarchical_rows.py`](13_hierarchical_rows.py) | Accordion and section (merged-cell) hierarchical groups, collapsed-by-default. |
 | [`14_aggregations.py`](14_aggregations.py) | Built-in and Python-callable aggregations for subtotals/totals. |
@@ -28,7 +27,7 @@ explorers can require a local data bundle; their introduction describes its loca
 | [`20_whitespace_grouping.py`](20_whitespace_grouping.py) | Grouping with white space and group-size stripes. |
 | [`21_studio_dashboard.py`](21_studio_dashboard.py) | An `EvidentialTable` in a marimo Studio view: live dashboard, KPI strip, filter. |
 | [`22_duckdb_metadata.py`](22_duckdb_metadata.py) | Column metadata: DuckDB comments, Parquet/Arrow field metadata and `column_config` descriptions, plus type-driven formats. |
-| [`23_wdi.py`](23_wdi.py) | World Development Indicators Parquet: live filterable ranking, all-years sparklines with 5y-vs-10y % change, trend, pivot, grouped subtotals, prior-year comparison, dimensions and footnotes. |
+| [`23_wdi.py`](23_wdi.py) | World Development Indicators Parquet: live filterable ranking, all-years sparklines with 5y-vs-10y % change, trend, life expectancy by year, grouped subtotals, prior-year comparison, dimensions and footnotes. |
 | [`24_dotted_groups.py`](24_dotted_groups.py) | Column groups from dotted column names: a World Bank WDI pivot aliases indicators as `"GDP Measure.GDP (nominal)"`, grouped automatically. |
 | [`25_column_stats.py`](25_column_stats.py) | Optional per-column statistics under the header (`min`/`max`/`avg`/`null`, `distinct`/`null`), toggled with a checkbox; mixed sub-columns with cycling statistics and centered dot controls. |
 | [`26_multiline_headers.py`](26_multiline_headers.py) | Multi-line column headers: a `\n` forces a break and headers bottom-align. |
@@ -36,7 +35,7 @@ explorers can require a local data bundle; their introduction describes its loca
 | [`28_column_highlights.py`](28_column_highlights.py) | Highlight an entire column or column group with a background colour. |
 | [`29_row_selection.py`](29_row_selection.py) | Click a country row to drive a second table: the year-by-year drill-down re-queries on `table.widget.selected`. |
 | [`30_subcolumns.py`](30_subcolumns.py) | Shared-header sub-columns: economic value/period pairs and a three-part right-aligned value, left-aligned text, centered chip, plus a close recreation of the supplied Economist economic data table. |
-| [`31_imdb_media.py`](31_imdb_media.py) | IMDb-Media CSV: top-rated ranking, dotted-name column groups, column stats, a decade pivot and a row-selection cast drill-down. |
+| [`31_imdb_media.py`](31_imdb_media.py) | IMDb-Media CSV: top-rated ranking, dotted-name column groups, column stats, a SQL breakdown by decade and media type and a row-selection cast drill-down. |
 | [`32_column_builder.py`](32_column_builder.py) | The `col.*` column builder and the `settings(...)` bundle: a configured report plus a default table to experiment with. |
 | [`33_relative_time.py`](33_relative_time.py) | Temporal kinds (`col.date` / `col.time` / `col.datetime`) and `relative=` for localised "3 days ago" rendering. |
 | [`34_centered_bars.py`](34_centered_bars.py) | Centred (diverging) `bar(center=True)`: a zero line, the bar left/right by sign, and the value on the opposite side — The Economist's league-table bar. Also back-to-back bars (`bar(direction="left")`) with a benchmark rule (`reference=`) and per-row colours (`color="@column"`), as a mirrored league table and a tolerance-vs-intolerance chart. |

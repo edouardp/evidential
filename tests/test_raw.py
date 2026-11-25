@@ -13,14 +13,9 @@ from evidential import (
     EvidentialTable,
     LiveEvidentialTable,
     col,
-    comparison_table,
     grouped_records,
-    grouped_table,
-    pivot_table,
-    query_table,
     rows,
     section_row,
-    simple_table,
 )
 from evidential.rules import cells_body, text_transform
 
@@ -111,14 +106,7 @@ def test_raw_is_available_on_all_table_helpers_and_displays_in_marimos_grid():
         ) t(category, date, amount)"""
         tables = [
             EvidentialTable.from_duckdb(connection, sql),
-            simple_table(connection, sql),
-            query_table(connection, sql),
             grouped_records([{"category": "A", "amount": 150}], group_by="category"),
-            grouped_table(connection, sql, dimensions=["category"], measures=["sum(amount) AS amount"]),
-            pivot_table(connection, sql, dimensions=["category"], pivots=["date"], measures=["sum(amount) AS amount"]),
-            comparison_table(
-                connection, sql, dimensions=["category"], date_column="date", measures=["sum(amount) AS amount"]
-            ),
         ]
         for table in tables:
             snapshot = table.raw

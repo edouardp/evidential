@@ -48,7 +48,7 @@ def _(mo):
     mo.md("""
     # Synthetic rows
 
-    The grouped helpers (`grouped_table`, `grouped_records`) generate every
+    `grouped_records` generates every
     subtotal and total for a hierarchy. When a report needs something else — a
     section divider, a differently-named summary, or an average computed from a
     group's own rows — pass a separate `row_layout`:

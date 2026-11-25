@@ -45,8 +45,8 @@ def _(mo):
     `grouped_records` groups a flat table held in Python (a list of dicts, a
     DataFrame, …) into hierarchical rows with subtotals and a total — the
     equivalent of Evidence's legacy `groupBy`. Measures default to the numeric
-    columns and are summed, or use `aggregations` (built-ins/callables) like
-    `grouped_table`.
+    columns and are summed by default. Set `aggregations` to use a built-in
+    operation or a Python callable.
     """)
     return
 

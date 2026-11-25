@@ -134,9 +134,8 @@ Keep titles, subtitles, captions and source notes as table metadata.
 
 ## Other data shapes
 
-For a DuckDB-backed pivot or comparison, inspect the installed signatures of
-`pivot_table` and `comparison_table` rather than guessing their measure schema.
-`grouped_records` supports plain in-memory records; `grouped_table` aggregates
-SQL-backed data. These helpers return tables, with their resulting detail data
-available through `.raw`. A report's displayed row layout is separate from
-those upstream data transformations.
+Prepare wide results and period comparisons in SQL or a DataFrame, then pass
+the result to `EvidentialTable` with explicit columns. Compute non-additive
+totals against the original records upstream. For collapsible headings and
+summaries over prepared detail rows, pass a `row_layout`. Use `grouped_records`
+when you want to group in-memory data and compute its subtotals.

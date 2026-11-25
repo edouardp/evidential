@@ -5,7 +5,7 @@ from unittest.mock import patch
 import duckdb
 import pytest
 
-from evidential import EvidentialTable, LiveEvidentialTable, col, comparison_table, grouped_table, pivot_table
+from evidential import EvidentialTable, LiveEvidentialTable, col
 from evidential.marks import normalize_encoding
 
 
@@ -64,23 +64,6 @@ def test_alias_precedence_matches_constructor_updates_and_data_refresh(options):
     assert updated.columns == direct.columns
     updated.set_data(records)
     assert updated.columns == direct.columns
-
-
-@pytest.mark.parametrize("dimension", ["order group", "select", 'quoted"name'])
-@pytest.mark.parametrize("kind", ["grouped", "pivot", "comparison"])
-def test_query_helpers_quote_dimension_and_measure_identifiers(dimension, kind):
-    quoted = '"' + dimension.replace('"', '""') + '"'
-    sql = f"SELECT 'A' AS {quoted}, 10 AS sales, 2024 AS year, DATE '2024-01-01' AS day"
-    with duckdb.connect() as connection:
-        arguments = (connection, sql, [dimension])
-        measures = [("sales total", "sum(sales)")]
-        if kind == "grouped":
-            table = grouped_table(*arguments, measures=measures)
-        elif kind == "pivot":
-            table = pivot_table(*arguments, pivots=["year"], measures=measures)
-        else:
-            table = comparison_table(*arguments, measures=measures, date_column="day")
-        assert table.raw[0][dimension] == "A"
 
 
 @pytest.mark.parametrize(

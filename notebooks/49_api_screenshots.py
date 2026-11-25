@@ -34,10 +34,7 @@ def _():
         cols_merge_n_pct,
         cols_merge_range,
         cols_merge_uncert,
-        comparison_table,
-        grouped_table,
-        pivot_table,
-        query_table,
+        rows,
         section_row,
         settings,
         tab_style,
@@ -66,13 +63,10 @@ def _():
         cols_merge_n_pct,
         cols_merge_range,
         cols_merge_uncert,
-        comparison_table,
-        grouped_table,
         label,
         mo,
-        pivot_table,
-        query_table,
         sample_orders,
+        rows,
         section_row,
         settings,
         tab_style,
@@ -613,67 +607,107 @@ def grouped_totals_doc(mo):
     mo.md(r"""
     ### Grouped totals
 
-    Group the sample orders by category, with sales and order counts. The helper
-    adds subtotals and a grand total. `sample_orders()` opens the bundled fixture
-    in DuckDB; its definition lives in the notebook.
+    SQL returns one row per item. A row layout adds category headings with
+    subtotals and an overall total. `sample_orders()` opens the bundled fixture
+    in DuckDB.
     """)
     return
 
 
 @app.cell
-def grouped_totals(col, grouped_table, sample_orders, settings):
-    grouped_table(
-        sample_orders(),
-        "SELECT category AS category, sales FROM needful_things.orders",
-        dimensions=["category"],
-        measures=["round(sum(sales), 0) AS sales", "count(*) AS orders"],
-        dimension_config={"category": col.text("category")},
-        measure_config={
-            "sales": col.currency("sales", decimals=0),
-            "orders": col.integer("orders"),
-        },
-        settings=settings(title="Grouped totals", page_size=10, width="560px"),
+def grouped_totals(EvidentialTable, col, rows, sample_orders, settings):
+    EvidentialTable(
+        sample_orders().sql("""
+            SELECT category, item, sum(sales) AS sales, count(*) AS orders
+            FROM needful_things.orders
+            GROUP BY category, item
+            ORDER BY category, item
+        """),
+        columns=[
+            col.text("category").hide(),
+            col.text("item"),
+            col.currency("sales", decimals=0),
+            col.integer("orders"),
+        ],
+        row_layout=rows.group_by("category")
+            .section(values={"sales": "sum", "orders": "sum"}, collapsible=True)
+            .grand_summary("All categories"),
+        settings=settings(title="Grouped totals", page_size="all", width="560px"),
     )
     return
 
 
 @app.cell(hide_code=True)
-def pivoted_columns_doc(mo):
+def sales_by_year_doc(mo):
     mo.md(r"""
-    ### Pivot, compare and query
+    ### Sales by year
 
-    Turn each year into a column group, with one row per category. This example
-    uses the same `sample_orders()` fixture connection as the grouped table.
+    Aggregate with SQL's `FILTER` clause to get one sales column per year.
+    `GROUPING SETS` adds the overall total to the category breakdown.
     """)
     return
 
 
 @app.cell
-def pivoted_columns(col, pivot_table, sample_orders, settings):
-    pivot_table(
-        sample_orders(),
-        "SELECT category, year(order_datetime) AS year, sales FROM needful_things.orders",
-        dimensions=["category"],
-        pivots=["year"],
-        measures=["round(sum(sales), 0) AS sales"],
-        dimension_config={"category": col.text("category")},
-        measure_config={"sales": col.currency("sales", decimals=0)},
-        settings=settings(title="Pivoted columns", page_size=10, width="640px"),
+def sales_by_year(EvidentialTable, col, sample_orders, settings):
+    sales_by_year_table = EvidentialTable(
+        sample_orders().sql("""
+            SELECT CASE WHEN grouping(category) = 1 THEN 'Total' ELSE category END AS category,
+                   sum(sales) FILTER (WHERE year(order_datetime) = 2019) AS sales_2019,
+                   sum(sales) FILTER (WHERE year(order_datetime) = 2020) AS sales_2020,
+                   sum(sales) FILTER (WHERE year(order_datetime) = 2021) AS sales_2021,
+                   sum(sales) AS total
+            FROM needful_things.orders
+            GROUP BY GROUPING SETS ((category), ())
+            ORDER BY grouping(category), category
+        """),
+        columns=[
+            col.text("category"),
+            col.group(
+                "Annual sales",
+                [
+                    col.currency("sales_2019", title="2019", decimals=0),
+                    col.currency("sales_2020", title="2020", decimals=0),
+                    col.currency("sales_2021", title="2021", decimals=0),
+                ],
+            ),
+            col.currency("total", decimals=0),
+        ],
+        settings=settings(title="Sales by year", page_size=10, width="640px"),
     )
-    return
+    sales_by_year_table
+    return (sales_by_year_table,)
 
 
 @app.cell
-def prior_comparison(col, comparison_table, sample_orders, settings):
-    comparison_table(
-        sample_orders(),
-        "SELECT category, order_datetime, sales FROM needful_things.orders",
-        dimensions=["category"],
-        measures=["round(sum(sales), 0) AS sales"],
-        date_column="order_datetime",
-        compare_vs="prior year",
-        measure_config={"sales": col.currency("sales", decimals=0)},
-        settings=settings(title="Prior-period comparison", page_size=10, width="820px"),
+def prior_comparison(EvidentialTable, col, sample_orders, settings):
+    EvidentialTable(
+        sample_orders().sql("""
+            WITH orders AS (
+                SELECT category, sales, year(order_datetime) AS year,
+                       max(year(order_datetime)) OVER () AS latest
+                FROM needful_things.orders
+            ), totals AS (
+                SELECT category,
+                       sum(sales) FILTER (WHERE year = latest) AS current_sales,
+                       sum(sales) FILTER (WHERE year = latest - 1) AS prior_sales
+                FROM orders
+                WHERE year >= latest - 1
+                GROUP BY category
+            )
+            SELECT *, current_sales - prior_sales AS change,
+                   (current_sales - prior_sales) / nullif(prior_sales, 0) AS change_pct
+            FROM totals
+            ORDER BY category
+        """),
+        columns=[
+            col.text("category"),
+            col.currency("current_sales", title="Latest year", decimals=0),
+            col.currency("prior_sales", title="Previous year", decimals=0),
+            col.currency("change", decimals=0),
+            col.percent("change_pct", title="% change", decimals=1).delta(),
+        ],
+        settings=settings(title="Prior-period comparison", page_size=10, width="720px"),
     )
     return
 
@@ -709,14 +743,17 @@ def rules(
 
 
 @app.cell
-def ad_hoc_query(col, query_table, sample_orders, settings):
-    query_table(
-        sample_orders(),
-        "SELECT category, item, round(sum(sales), 0) AS sales FROM needful_things.orders GROUP BY category, item",
-        order="sales DESC",
-        limit=6,
+def ad_hoc_query(EvidentialTable, col, sample_orders, settings):
+    EvidentialTable(
+        sample_orders().sql("""
+            SELECT category, item, sum(sales) AS sales
+            FROM needful_things.orders
+            GROUP BY category, item
+            ORDER BY sales DESC
+            LIMIT 6
+        """),
         columns=[col.text("category"), col.text("item"), col.currency("sales", decimals=0)],
-        settings=settings(title="Ad-hoc query", width="620px"),
+        settings=settings(title="Top items by sales", width="620px"),
     )
     return
 

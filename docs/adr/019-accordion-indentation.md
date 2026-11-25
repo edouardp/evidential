@@ -46,6 +46,6 @@ ancestor columns. Non-dimension columns are never indented, and section mode
 
 - Group chevrons are native buttons with `aria-expanded`; keyboard activation
   restores focus after the table is rebuilt.
-- [Design & DX §4.6](../design-and-dx.md#46-grouping-is-one-sql-query-plus-a-decoration-pass)
+- [Design & DX §4.6](../design-and-dx.md#46-data-shaping-and-grouped-presentation)
 - Related: [ADR-009](009-grouping-sets-for-grouped-totals.md)
 - `notebooks/13_hierarchical_rows.py`

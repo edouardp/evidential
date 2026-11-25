@@ -65,7 +65,7 @@ construction are excluded.
 
 The ancestor index replaces repeated detail scans. Tests verify that descendant
 lookup reads ancestor metadata once per detail row and preserves summary
-values, including weighted and pivot overrides.
+values, including weighted overrides.
 
 ## Reproduce
 

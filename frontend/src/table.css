@@ -17,7 +17,6 @@
   --et-shading: color-mix(in srgb, CanvasText 4%, transparent);
   --et-total-bg: rgba(148, 163, 184, 0.16);
   --et-subtotal-bg: rgba(148, 163, 184, 0.1);
-  --et-pivot-bg: rgba(148, 163, 184, 0.1);
   --et-link: #2563eb;
   --et-negative: #dc2626;
   --et-accent: #2563eb;

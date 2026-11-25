@@ -322,18 +322,17 @@ def test_merge_names_a_cols_merge_spec() -> None:
     assert merged["title"] == "Range"
 
 
-def test_grouped_helpers_accept_the_builder() -> None:
+def test_grouped_records_accepts_the_builder() -> None:
     import duckdb
 
-    from evidential import grouped_table
+    from evidential import grouped_records
 
     connection = duckdb.connect()
     connection.execute("CREATE TABLE t AS SELECT * FROM (VALUES ('a', 1, 10), ('b', 2, 20)) AS v(g, n, sales)")
-    table = grouped_table(
-        connection,
-        "SELECT g, n, sales FROM t",
-        dimensions=["g"],
-        measures=["count(*) AS n", "sum(sales) AS sales"],
+    table = grouped_records(
+        connection.sql("SELECT g, n, sales FROM t"),
+        group_by="g",
+        measures=["sales"],
         dimension_config={"g": col.text("g", title="Group")},
         measure_config={"sales": col.currency("sales", decimals=0)},
     )

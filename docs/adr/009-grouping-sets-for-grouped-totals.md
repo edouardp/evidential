@@ -1,5 +1,5 @@
 ---
-status: accepted
+status: superseded by ADR-103
 date: 2026-10-12
 deciders: edouard
 ---
@@ -43,6 +43,7 @@ decoration for in-memory rows, so the renderer has exactly one model.
 
 ## More Information
 
+- Superseded by [ADR-103](103-retire-sql-table-builders.md).
 - [Technical architecture §4.3](../technical-architecture.md)
 - Related: [ADR-002](002-display-only-widget.md), [ADR-019](019-accordion-indentation.md)
 - Pivot totals extend this decision in [ADR-035](035-correct-pivot-aggregations.md).

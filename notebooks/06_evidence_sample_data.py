@@ -26,9 +26,9 @@ def _():
     import marimo as mo
     import duckdb
 
-    from evidential import EvidentialTable, col, grouped_table
+    from evidential import EvidentialTable, col, rows
 
-    return EvidentialTable, Path, col, duckdb, grouped_table, mo
+    return EvidentialTable, Path, col, duckdb, mo, rows
 
 
 @app.cell
@@ -120,30 +120,35 @@ def _(mo):
     mo.md("""
     ## Grouped subtotals
 
-    `grouped_table` runs a DuckDB `GROUPING SETS` query over the same data to
-    produce collapsible category → item subtotals.
+    SQL computes one row per category and item. The row layout adds category
+    headings that collapse the item rows and show sales and order subtotals.
     """)
     return
 
 
 @app.cell
-def _(col, connection, grouped_table, mo):
+def _(EvidentialTable, col, connection, mo, rows):
+    totals = {"sales": "sum", "orders": "sum"}
     grouped = mo.ui.anywidget(
-        grouped_table(
-            connection,
-            "SELECT category, item, sales FROM needful_things.orders",
-            dimensions=["category", "item"],
-            measures=["round(sum(sales), 0) AS sales", "count(*) AS orders"],
-            total_label="All categories",
-            subtotal_position="top",
+        EvidentialTable(
+            connection.sql("""
+                SELECT category, item, sum(sales) AS sales, count(*) AS orders
+                FROM needful_things.orders
+                GROUP BY category, item
+                ORDER BY category, item
+            """),
+            row_layout=rows.group_by("category")
+                .section(values=totals, collapsible=True)
+                .grand_summary("All categories", values=totals),
             title="Sales by category and item",
             search=True,
             max_height="460px",
-            dimension_config={"category": col.text("category"), "item": col.text("item")},
-            measure_config={
-                "sales": col.bar("sales", format='usd0', label=True).total_fmt("usd2"),
-                "orders": col.integer("orders"),
-            },
+            columns=[
+                col.text("category").hide(),
+                col.text("item"),
+                col.bar("sales", format="usd0", label=True).total_fmt("usd2"),
+                col.integer("orders"),
+            ],
         )
     )
     grouped

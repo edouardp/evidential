@@ -6,6 +6,9 @@ deciders: edouard
 
 # ADR-048: Fluent Construction of Derived Columns
 
+The SQL table builders referenced in this record were retired by
+[ADR-103](103-retire-sql-table-builders.md).
+
 ## Context and Problem Statement
 
 Migrating the notebooks to `columns=[...]` surfaced two shapes the fluent API

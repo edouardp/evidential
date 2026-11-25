@@ -707,38 +707,6 @@ def _factory_column(source: Any, options: dict[str, Any], **base: Any) -> MarkCo
     return _mark_column(source, **metadata)
 
 
-def rebind_measure(column: Mapping[str, Any], source: str, target: str) -> dict[str, Any]:
-    """Copy a measure declaration onto a projected field, retaining other bindings.
-
-    Pivot/prior-period outputs rename a measure. Only references to that measure
-    change; literal labels/colors and independent dimension bindings stay intact.
-    """
-    spec = dict(column)
-    if spec.get("tooltip") == f"@{source}":
-        spec["tooltip"] = f"@{target}"
-    if not spec.get("encodings"):
-        return spec
-    encodings = []
-    for original in spec["encodings"]:
-        encoding = dict(original)
-        for role in ("source", "high", "color_column", "color_negative_column", "outliers"):
-            if encoding.get(role) == source:
-                encoding[role] = target
-        if encoding.get("parts"):
-            encoding["parts"] = {key: target if value == source else value for key, value in encoding["parts"].items()}
-        if encoding.get("sources"):
-            encoding["sources"] = [target if value == source else value for value in encoding["sources"]]
-        if encoding.get("names"):
-            encoding["names"] = {target if key == source else key: value for key, value in encoding["names"].items()}
-        if (encoding.get("label") or {}).get("source") == source:
-            encoding["label"] = {**encoding["label"], "source": target}
-        encodings.append(encoding)
-    spec["encodings"] = encodings
-    if isinstance(spec.get("legend"), Mapping) and source in spec["legend"]:
-        spec["legend"] = {target if key == source else key: value for key, value in spec["legend"].items()}
-    return spec
-
-
 def _resolve_column(
     column: Mapping[str, Any], rows: Sequence[Mapping[str, Any]], hidden: dict[str, list[Any]], used: set[str]
 ) -> dict[str, Any]:

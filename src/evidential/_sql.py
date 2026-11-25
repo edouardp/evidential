@@ -1,4 +1,4 @@
-"""SQL identifier boundaries and token-aware binding for authored queries."""
+"""Token-aware SQL parameter binding for authored queries."""
 
 from __future__ import annotations
 
@@ -9,11 +9,6 @@ from typing import Any
 _PARAMETER = re.compile(r"\$\{(\w+)\}|\$(\w+)|\{(\w+)\}")
 _PROTECTED = re.compile(r"--|/\*|['\"]|\$(?:[A-Za-z_]\w*|)\$")
 _COMMENT_EDGE = re.compile(r"/\*|\*/")
-
-
-def quote_identifier(name: str) -> str:
-    """Quote one field name, rather than treating its contents as SQL syntax."""
-    return '"' + name.replace('"', '""') + '"'
 
 
 def _quote_end(source: str, start: int) -> int:

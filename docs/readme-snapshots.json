@@ -2,7 +2,7 @@
   "version": 1,
   "inputs": {
     "notebooks/21_studio_dashboard.py": "8f4e85940544eac38b95c21f952659d3da97375dc584616347b24814281dc48b",
-    "notebooks/49_api_screenshots.py": "219de292a242152427ca2e62163eb787c5c7355f974909eff90bd0c76ac5606b",
+    "notebooks/49_api_screenshots.py": "6a857c47dd222479774674c984b0a1226ec121b25f0996a501cab9c0b11cc2c8",
     "notebooks/50_graphics_gallery.py": "92a650e6fe8c07edfc5e1fe01e9000cfc94c3720b1068815193504a3bb087727",
     "notebooks/51_table_layouts.py": "7d523aa569e8fe02a1394d0e2e2c43412040ef005e2484a14cbabc6cb797ffb6",
     "notebooks/56_dimension_grid.py": "5a9489d3dead383c9902436e3c8243c86f20d1b491e7d37cc47da051785ef979",
@@ -13,9 +13,9 @@
     "notebooks/sample_data/needful_things/orders.parquet": "b373511b4f7a0547b704022b055655b6d3bafc2505a2a573292b206417fe3eb4",
     "notebooks/sql/50_europe_trade.sql": "c01857da122eb48c819aa14def0bcd4f6fb2e762ea987e55271c58f509746ea6",
     "pyproject.toml": "5c5309aaf984ea66a9ac874af9d64c9888299dd0d4176d28641aca43af9ddada",
-    "scripts/api_screenshots.py": "2da3a2f3101970e33d281f6f746cc5b60fd9e3d7d0e70edecbe30a9bb825ef9f",
-    "scripts/generate_readme.py": "2942558e4363d66603f6aefb2bdd9cc3f1978543d810f787d0b6fc8dc60326c0",
-    "src/evidential/__init__.py": "7cc534b8e5cc0395ba1b6ade43e4556d9af09982dcdb96c8a95647a75e5d9fcb",
+    "scripts/api_screenshots.py": "fc20185986fef70d946d64c8fc04b4a562a6e809c21a66f7437b5d6a176fd88f",
+    "scripts/generate_readme.py": "c73291cbe9768b353851bbed9dbacfaa15e401a40f55a4e9d350ba77bed7fdae",
+    "src/evidential/__init__.py": "326484508e65821bd030f3f009ca7fe3f1ceca8bfffec58644d2fa36e19b7f20",
     "src/evidential/__main__.py": "d4cf01a4fd63f2ce14fdff47d82a3e7f7793e8b88f1cae04d27fa841b459ce9b",
     "src/evidential/_aliases.py": "5e207c4a862754e1ca9f7ea309a0e489bf158a7e380876f8edcf20eeee1438f1",
     "src/evidential/_color.py": "dd53b93a8d2e3d10228b1554cc324e3b7e7a63eb7f1d0cd50376f2e97060a8b7",
@@ -30,24 +30,21 @@
     "src/evidential/_row_layout.py": "da35fc68f39c8d6223a6d027cbe41d957fdd0452cd8b3be288799e903a55ee21",
     "src/evidential/_sparkline.py": "c23ac7ff097217de6b530c69175ec72b864d770f54e19a695df8305ab9ce126c",
     "src/evidential/_spec.py": "ff926b1e2f2b2f6e07bae47cccf389978136086cc00b44f79fa1dd143734b675",
-    "src/evidential/_sql.py": "9a44100de9b1317a30b3ae89636110dee7a13aa3e99ecefb137667696939693c",
+    "src/evidential/_sql.py": "54932706c16058b4af3853000dcc29757c361e7db34e0f2751a407c9bde1f3d0",
     "src/evidential/_text_style.py": "99f38816be21786b8d72e4f19ed1a2a63ee5e4db15f536774ed29f9f9482d005",
-    "src/evidential/aggregations.py": "d212503ffb84312facec388e78ea09f6880977417ae412fb5fe5ee9b6b580f67",
-    "src/evidential/client.py": "6ce1f9e0b9e5e99b1bcc94fd040a290792885b80de89260ad35c8aa72f8c5c3e",
+    "src/evidential/aggregations.py": "955c1f24979573291a3815bb9afa3dffcd32338cbf73668b724a08aaf8c843e9",
+    "src/evidential/client.py": "f9cc985896d85ead582e731af60354cd2db75c1b2b52428d493484f27ba84146",
     "src/evidential/col.py": "1d827527ab6319f5590f1dfef787eabe23a28ab8b2dd37ff4e5257fea16f456d",
     "src/evidential/color.py": "51a964ab798520717c2e03f282b125460008acfc0ece66eab8edd94b0ddd1c0b",
-    "src/evidential/comparison.py": "b2f182404d4f20df94af5e9cde61d2b3b8ea0d6d7bed690c26c19312f9a0d70f",
-    "src/evidential/configuration.py": "ab30e7371c1cbd2ff4558b6af89a47efe0b9ebf1b8b317950f2380dad1f30716",
+    "src/evidential/configuration.py": "c8042025e8cc37fefb38b5b74717c4fd74c1609764dacefb44f3fb5d78f669a8",
     "src/evidential/data.py": "b47ee55fbb1c45f45937c51214cdd920efd7f3a00c3ad166d261df334be8230f",
     "src/evidential/dimension.py": "d330d2597ddd086baa8778fc950f833cc2b8e5b42fc21c488844d85386de4d7c",
     "src/evidential/domain.py": "9e607e105122cffb1a6cc4de27adb15bdc3f73af1184b3506302cb908bf34ba9",
     "src/evidential/duck.py": "fed7bbdc25492a8457ca7b1ba4903dacacf9cb2643a789f2c66d018b8449c8b3",
-    "src/evidential/grouped.py": "65da5eba306f3280a3af99c3cb8398a46a8211b542d2fb1b6fb5f7734a1c65a2",
     "src/evidential/label.py": "7ca27ed5d2fbfa06b417b05825836f593194b3cc30042be956d5a1c9f61ecb10",
     "src/evidential/live.py": "43c348046bdd2fc032cb03da529c8e2db1c780ca82f695c01bc6ba7b8cad0a04",
-    "src/evidential/marks.py": "2d3882c12817ae82b8897068f1ee25fca9d5371abd9a0028b89b2d8fa7e579e8",
-    "src/evidential/pivot.py": "e5783d9d48311b930187b38393f7f396fa41d7867d6bbd8928016e91481df95e",
-    "src/evidential/query.py": "1474b03ca11f438611b59a911221cf34625621b12af3c2871ed94710d5808049",
+    "src/evidential/marks.py": "cdf5411c17040bc3355aa0faeebc6770f999b59a4edb50d56fdf6cd0e30adcb1",
+    "src/evidential/query.py": "e76975497571b07a3d5eb479ee0f1a9a1b881aa474417bdeb4b92a37dde32b9a",
     "src/evidential/rows.py": "cf0822e55268fa6d9cf8aa5e6872ba75324f931e39e7e1d49a476bfb42d10b04",
     "src/evidential/rules.py": "eb0142d511b63a5b4d0725f70599084784ddb82130655c72e8ff36ce816ed104",
     "src/evidential/skills/__init__.py": "903ad38d425784a191858960804254e8c6315a21b3ae80e7689df4fcd8dadf3a",
@@ -55,9 +52,9 @@
     "src/evidential/skills/developing-with-evidential/assets/explorer.py": "4e3b9d9770dfd3b6e40242decf10934da87209075ba5f146575c469eebd9d068",
     "src/evidential/skills/developing-with-evidential/assets/report.py": "55508d1a1ef33ce444fa7745ebace9660f37954ae73e3306a1a3b166e708f5ce",
     "src/evidential/static/dimension-grid.css": "36ed0a4fad3640f01aa46785392be8e6f2d00e75b8cdf935741456e73f44bdb8",
-    "src/evidential/static/dimension-grid.js": "c4e55038184629a649fd6054da587580826d0d538332863a330e29eee4dec7ef",
-    "src/evidential/static/table.css": "94baca8023fd54a0237ea08b4d1f269c4c1fc149af22f7d078301b1636b33fdd",
-    "src/evidential/static/table.js": "2a1ca0f30a46af7daf6cb8aef349e8a7c074a77b6ac3276b8bf0bcf95b2b0a47",
+    "src/evidential/static/dimension-grid.js": "80d070fe38a8744eb329b38a7ff6aff5e76edf1b5485e9e57979becf9d0dc1bd",
+    "src/evidential/static/table.css": "c0caf2b466ec35c565651edd73eab35b9c0fb3abcfbb9f04919f3fe1b7bcbd87",
+    "src/evidential/static/table.js": "90fcfd4ac499a2304975c74b64be1eba79847303fd1fc2d8793c5cb97b5e1425",
     "src/evidential/table.py": "6f2f48820a119cab0c079c579f4b3cc98c63d5ac40b15fbd2a2a9b3dd78efd58",
     "uv.lock": "a9765a9880d18a664429527f13956b4f4e4b7100252f4cc84904eeb036be885f"
   },
@@ -85,7 +82,7 @@
     "docs/api/images/visualizations.png": {
       "notebook": "notebooks/49_api_screenshots.py",
       "cell": "visualizations",
-      "sha256": "5eed67dc4ea5d6d3416b97fe3459da13ad12c717986e43b93b141fc17024a793"
+      "sha256": "d5e4b7564dfe244680a0c451a92d679ef2e11da18a213c3cc4107ea5bc8d2514"
     },
     "docs/api/images/back-to-back.png": {
       "notebook": "notebooks/49_api_screenshots.py",
@@ -100,7 +97,7 @@
     "docs/api/images/groups.png": {
       "notebook": "notebooks/49_api_screenshots.py",
       "cell": "groups",
-      "sha256": "e35bbbc5094d73d55f463a4da7741a2206ad0d844b8db81d15dbb05a3084ac5d"
+      "sha256": "b9ac4031794f0a9c3350c25c2d6468cbfa16fd0f47fb30d77b0a469774a6dfce"
     },
     "docs/api/images/subcolumns.png": {
       "notebook": "notebooks/49_api_screenshots.py",
@@ -112,30 +109,30 @@
       "cell": "merged",
       "sha256": "98589735808ddf5985d73ae947c81d19293dd5ad29e140e662d42eb8a89433e3"
     },
-    "docs/api/images/grouped-table.png": {
+    "docs/api/images/grouped-totals.png": {
       "notebook": "notebooks/49_api_screenshots.py",
       "cell": "grouped_totals",
-      "sha256": "20ed58f276d39fae89585e538a2e78f74a8347533d4d2c5c1d0310b17cbbfdcd"
+      "sha256": "d68a549c41c81e40d325ea8bb7d0ed1ed7688f15d5f4ae7ffe30e75653d6f82f"
     },
-    "docs/api/images/pivot-table.png": {
+    "docs/api/images/sales-by-year.png": {
       "notebook": "notebooks/49_api_screenshots.py",
-      "cell": "pivoted_columns",
-      "sha256": "d965be7385c1d1ab6de1af241c3a729da87f04712f5fcdb657813f7f832418e3"
+      "cell": "sales_by_year",
+      "sha256": "8642c277784432dacc93cc4068b1358b20e80eef52b81e55fc5eb9ff76f126ca"
     },
-    "docs/api/images/comparison-table.png": {
+    "docs/api/images/prior-period-comparison.png": {
       "notebook": "notebooks/49_api_screenshots.py",
       "cell": "prior_comparison",
-      "sha256": "177f29a3836e6016fd03a892902b694866bffb1020f33ec19dd5e25a3ad1a58d"
+      "sha256": "119eb4947f079dff60f757609cdadda8a02b1ca2776bda552b4d3c29b69fea77"
     },
     "docs/api/images/rules.png": {
       "notebook": "notebooks/49_api_screenshots.py",
       "cell": "rules",
-      "sha256": "cd59254eb8af352420af687fbdb4a788039d7f8376259a3152f94b4efa2568ce"
+      "sha256": "541b9a4be9d81dbe8cd48694184b92fa26ac09e69c99d65343c928e9430a8f10"
     },
-    "docs/api/images/query-table.png": {
+    "docs/api/images/top-items-by-sales.png": {
       "notebook": "notebooks/49_api_screenshots.py",
       "cell": "ad_hoc_query",
-      "sha256": "d41c49aa3e732670f13346d5b4ee574f875311d7250907c619a2736f0e2b1f36"
+      "sha256": "c59aa5aefe516b70ad2f1ce50907a769375b7b0162fd449fc73333367f339686"
     },
     "docs/preview.png": {
       "notebook": "notebooks/49_api_screenshots.py",
@@ -375,7 +372,7 @@
     "docs/img/dimension-grid.png": {
       "notebook": "notebooks/56_dimension_grid.py",
       "cell": "orders_grid",
-      "sha256": "7a13b8122f7fe8ce1ee0dee1db83c35075b02ac2d0c04ff4d5959a6a710bda12"
+      "sha256": "09415171d559d82fad2d9134e672df83a9ef923f082ab38f482d0c77d0c9ac5b"
     }
   }
 }

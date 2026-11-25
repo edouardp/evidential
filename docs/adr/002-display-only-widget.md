@@ -6,6 +6,9 @@ deciders: edouard
 
 # ADR-002: Display-Only Widget, Not a Query Builder
 
+The SQL table builders referenced in this record were retired by
+[ADR-103](103-retire-sql-table-builders.md).
+
 ## Context and Problem Statement
 
 Evidence's `DataTable` is inseparable from its SQL query builder: dimensions,

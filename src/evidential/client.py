@@ -2,22 +2,103 @@
 
 Evidence's legacy ``groupBy`` groups a flat table by a column and shows
 section/accordion groups with subtotals. :func:`grouped_records` does that in
-Python for data already loaded in the notebook, producing the same row metadata
-as :func:`~evidential.grouped_table` so the renderer treats them
-identically.
+Python for data already loaded in the notebook.
 """
 
 from __future__ import annotations
 
+import json
 from collections.abc import Mapping, Sequence
 from typing import Any
 
 from .aggregations import resolve_aggregation
 from .data import infer_columns, jsonify, make_column, normalize_data
-from .grouped import decorate_grouped_rows
 from .table import EvidentialTable
 
 __all__ = ["grouped_records"]
+
+
+_SEP = "\x1f"
+
+
+def _key(path: Sequence[Any]) -> str:
+    return _SEP.join(json.dumps(jsonify(value), default=str) for value in path)
+
+
+def _decorate_grouped_rows(
+    rows: Sequence[Mapping[str, Any]],
+    dims: Sequence[str],
+    *,
+    subtotals: bool = True,
+    subtotal_position: str = "bottom",
+    total_position: str = "bottom",
+    total_label: str = "Total",
+    combined: bool = False,
+) -> list[dict[str, Any]]:
+    """Turn grouped detail and summary records into render-ready rows.
+
+    Rows must contain ``__g{index}`` columns indicating which dimensions are present. Returns
+    rows annotated with ``render_type`` (``cell_data``/``row_subtotal``/
+    ``row_total``), ``__level``, ``__group_key``, ``__ancestors`` and
+    ``__parent_key``, ordered so subtotals sit above or below their group.
+    """
+    decorated = [dict(row) for row in rows]
+    n = len(dims)
+    for row in decorated:
+        present = [row.pop(f"__g{index}", 1) == 0 for index in range(n)]
+        row["__present"] = present
+        row["__level"] = sum(present)
+        for index in range(n):
+            if not present[index]:
+                row[dims[index]] = ""
+
+    total_rows = [row for row in decorated if row["__level"] == 0]
+    other_rows = [row for row in decorated if row["__level"] != 0]
+    top = subtotal_position != "bottom"
+
+    def sort_key(row: Mapping[str, Any]) -> list[tuple[int, str]]:
+        key: list[tuple[int, str]] = []
+        for index in range(n):
+            if row["__present"][index]:
+                key.append((1, json.dumps(jsonify(row[dims[index]]), default=str)))
+            else:
+                key.append((0, "") if top else (2, ""))
+        return key
+
+    other_rows.sort(key=sort_key)
+
+    def finalize(row: dict[str, Any]) -> dict[str, Any]:
+        present = row["__present"]
+        path = [row[dims[index]] for index in range(n) if present[index]]
+        level = row["__level"]
+        if level == n:
+            row["render_type"] = "cell_data"
+        elif subtotals:
+            row["render_type"] = "row_subtotal"
+            row["__group_key"] = _key(path)
+            if combined:
+                # The section label and its summary share one row.
+                row["__combined"] = True
+        row["__ancestors"] = [_key(path[:size]) for size in range(1, level)]
+        row["__parent_key"] = _key(path[: level - 1]) if level > 1 else None
+        row.pop("__present", None)
+        return row
+
+    for row in other_rows:
+        finalize(row)
+    for row in total_rows:
+        row["render_type"] = "row_total"
+        row["__level"] = 0
+        row["__group_key"] = "__total__"
+        row["__ancestors"] = []
+        row["__parent_key"] = None
+        row[dims[0]] = total_label
+        row.pop("__present", None)
+
+    ordered = list(other_rows)
+    if total_rows:
+        ordered = (total_rows + ordered) if total_position == "top" else (ordered + total_rows)
+    return ordered
 
 
 def _sort_key(values: Sequence[Any]) -> tuple[str, ...]:
@@ -109,11 +190,10 @@ def grouped_records(
         entry.update(g_flags(0))
         annotated.append(entry)
 
-    ordered = decorate_grouped_rows(
+    ordered = _decorate_grouped_rows(
         annotated,
         dims,
         subtotals=subtotals,
-        total=total,
         subtotal_position=subtotal_position,
         total_position=total_position,
         total_label=total_label,

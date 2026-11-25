@@ -1648,99 +1648,94 @@ A table also has a frame, notes and optional dividers:
 - `null_text`, `.blank_below`, `.blank_above` and `.blank(...)` control missing
   values.
 
-## 8. Group, pivot and compare
+## 8. Shape and summarize data
 
-The aggregate helpers accept the same `col.*` builders, run their aggregation
-in DuckDB, and return a normal `EvidentialTable`.
+Aggregate, reshape, or compare records in SQL or a DataFrame, then pass the
+result and its column descriptions to `EvidentialTable`.
 
-<!-- notebook: notebooks/49_api_screenshots.py#grouped_totals -->
+<!-- notebook: notebooks/49_api_screenshots.py#grouped_totals call -->
 
 ### Grouped totals
 
-Group the sample orders by category, with sales and order counts. The helper
-adds subtotals and a grand total. `sample_orders()` opens the bundled fixture
-in DuckDB; its definition lives in the notebook.
+SQL returns one row per item. A row layout adds category headings with
+subtotals and an overall total. `sample_orders()` opens the bundled fixture
+in DuckDB.
 
 ```python
-grouped_table(
-    sample_orders(),
-    "SELECT category AS category, sales FROM needful_things.orders",
-    dimensions=["category"],
-    measures=["round(sum(sales), 0) AS sales", "count(*) AS orders"],
-    dimension_config={"category": col.text("category")},
-    measure_config={
-        "sales": col.currency("sales", decimals=0),
-        "orders": col.integer("orders"),
-    },
-    settings=settings(title="Grouped totals", page_size=10, width="560px"),
+EvidentialTable(
+    sample_orders().sql("""
+        SELECT category, item, sum(sales) AS sales, count(*) AS orders
+        FROM needful_things.orders
+        GROUP BY category, item
+        ORDER BY category, item
+    """),
+    columns=[
+        col.text("category").hide(),
+        col.text("item"),
+        col.currency("sales", decimals=0),
+        col.integer("orders"),
+    ],
+    row_layout=rows.group_by("category")
+        .section(values={"sales": "sum", "orders": "sum"}, collapsible=True)
+        .grand_summary("All categories"),
+    settings=settings(title="Grouped totals", page_size="all", width="560px"),
 )
 ```
 
-![Grouped totals](https://raw.githubusercontent.com/edouardp/evidential/main/docs/api/images/grouped-table.png)
+![Grouped totals](https://raw.githubusercontent.com/edouardp/evidential/main/docs/api/images/grouped-totals.png)
 
 [Notebook source: `grouped_totals`](https://github.com/edouardp/evidential/blob/main/notebooks/49_api_screenshots.py)
 
 <!-- /notebook -->
 
-### Aggregations for subtotals/totals
+<!-- notebook: notebooks/49_api_screenshots.py#sales_by_year call -->
 
-`aggregations={"sales": "mean"}` recomputes subtotals from detail values with a
-built-in name or a Python callable. Use `weight_columns={"sales": "weight"}`
-for weighted means.
+### Sales by year
 
-<!-- notebook: notebooks/49_api_screenshots.py#pivoted_columns -->
-
-### Pivot, compare and query
-
-Turn each year into a column group, with one row per category. This example
-uses the same `sample_orders()` fixture connection as the grouped table.
+Aggregate with SQL's `FILTER` clause to get one sales column per year.
+`GROUPING SETS` adds the overall total to the category breakdown.
 
 ```python
-pivot_table(
-    sample_orders(),
-    "SELECT category, year(order_datetime) AS year, sales FROM needful_things.orders",
-    dimensions=["category"],
-    pivots=["year"],
-    measures=["round(sum(sales), 0) AS sales"],
-    dimension_config={"category": col.text("category")},
-    measure_config={"sales": col.currency("sales", decimals=0)},
-    settings=settings(title="Pivoted columns", page_size=10, width="640px"),
+EvidentialTable(
+    sample_orders().sql("""
+        SELECT CASE WHEN grouping(category) = 1 THEN 'Total' ELSE category END AS category,
+               sum(sales) FILTER (WHERE year(order_datetime) = 2019) AS sales_2019,
+               sum(sales) FILTER (WHERE year(order_datetime) = 2020) AS sales_2020,
+               sum(sales) FILTER (WHERE year(order_datetime) = 2021) AS sales_2021,
+               sum(sales) AS total
+        FROM needful_things.orders
+        GROUP BY GROUPING SETS ((category), ())
+        ORDER BY grouping(category), category
+    """),
+    columns=[
+        col.text("category"),
+        col.group(
+            "Annual sales",
+            [
+                col.currency("sales_2019", title="2019", decimals=0),
+                col.currency("sales_2020", title="2020", decimals=0),
+                col.currency("sales_2021", title="2021", decimals=0),
+            ],
+        ),
+        col.currency("total", decimals=0),
+    ],
+    settings=settings(title="Sales by year", page_size=10, width="640px"),
 )
 ```
 
-![Pivot, compare and query](https://raw.githubusercontent.com/edouardp/evidential/main/docs/api/images/pivot-table.png)
+![Sales by year](https://raw.githubusercontent.com/edouardp/evidential/main/docs/api/images/sales-by-year.png)
 
-[Notebook source: `pivoted_columns`](https://github.com/edouardp/evidential/blob/main/notebooks/49_api_screenshots.py)
+[Notebook source: `sales_by_year`](https://github.com/edouardp/evidential/blob/main/notebooks/49_api_screenshots.py)
 
 <!-- /notebook -->
 
-```python
-from evidential import comparison_table, query_table
+See the [comparison notebook](https://github.com/edouardp/evidential/blob/main/notebooks/11_comparisons.py) for year-over-year and
+quarter-over-quarter calculations with delta columns, and the
+[query options notebook](https://github.com/edouardp/evidential/blob/main/notebooks/10_query_options.py) for SQL filtering and
+sorting and a live date-range selector.
 
-# Adds <measure>_prior, <measure>_delta and <measure>_pct columns.
-comparison_table(
-    con,
-    "SELECT region, order_date, sales FROM orders",
-    dimensions=["region"],
-    measures=["sum(sales) AS sales"],
-    date_column="order_date",
-    compare_vs="prior year",
-)
-
-# Ad-hoc SQL with Evidence-style where / order / limit / date_range.
-query_table(
-    con,
-    "SELECT * FROM orders",
-    where="sales > 0",
-    order="sales DESC",
-    limit=100,
-    date_range="last 30 days",
-    date_column="order_date",
-)
-```
-
-For rows already in Python, `grouped_records(rows, group_by=..., measures=...)`
-does the same grouping without a database.
+For rows already in Python, `grouped_records(data, group_by=..., measures=...)`
+computes subtotals with built-in names or Python callables.
 
 ### Display-only headings and summaries
 
@@ -1948,7 +1943,7 @@ The public surface is re-exported from `evidential`:
 | `EvidentialTable`, `LiveEvidentialTable` | tables and live queries |
 | `col`, `label`, `domain`, `rows` | column, annotation, scale and row-layout builders |
 | `settings`, `TableOptions`, `ColumnOptions` | typed table and column configuration |
-| `grouped_table`, `grouped_records`, `pivot_table`, `comparison_table`, `query_table` | aggregate and query helpers |
+| `grouped_records` | group in-memory data and compute subtotals |
 | `cells_body`, `tab_style`, `tab_format`, `text_transform`, `sub_*`, `cols_merge_*` | display rules and merged values |
 | `duck`, `query_values`, `date_range_sql` | DuckDB and query utilities |
 

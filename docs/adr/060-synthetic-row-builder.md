@@ -10,6 +10,9 @@ The injected-record model below is historical. See
 [ADR-064](064-display-only-row-layout.md) for the current display-only layout,
 detail-record `RowView`, nested groups and portable summary expressions.
 
+The SQL table builders referenced in this record were retired by
+[ADR-103](103-retire-sql-table-builders.md).
+
 ## Context and Problem Statement
 
 The grouped helpers generate a fixed shape: a subtotal for every prefix of the

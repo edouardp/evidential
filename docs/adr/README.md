@@ -27,7 +27,7 @@ dated, immutable record of the decisions behind them.
 | [006](006-hidden-helper-columns.md) | Hidden Helper Columns for Presentation Logic | Accepted |
 | [007](007-ssf-format-codes.md) | SSF (Excel Format Codes) for Value Formatting | Accepted |
 | [008](008-chroma-js-colours.md) | chroma-js for Colour Scales | Accepted |
-| [009](009-grouping-sets-for-grouped-totals.md) | `GROUPING SETS` for Grouped Totals | Accepted |
+| [009](009-grouping-sets-for-grouped-totals.md) | `GROUPING SETS` for Grouped Totals | Superseded by ADR-103 |
 | [010](010-gt-style-location-rules.md) | gt-Style Location-Based Rules | Accepted |
 | [011](011-live-tables-reactive-cell.md) | Live Tables Use a Persistent Widget and a Reactive Cell | Accepted |
 | [012](012-non-flickering-loading.md) | Non-Flickering Live Updates | Accepted |
@@ -53,7 +53,7 @@ dated, immutable record of the decisions behind them.
 | [032](032-row-selection.md) | Row Selection Drives the Notebook | Accepted |
 | [033](033-stable-empty-table.md) | A Stable Empty Table (Placeholder Rows and an Overlay) | Accepted |
 | [034](034-uv-build-backend.md) | `uv_build` as the Build Backend | Accepted |
-| [035](035-correct-pivot-aggregations.md) | Aggregate Pivot Totals from Original Records | Accepted |
+| [035](035-correct-pivot-aggregations.md) | Aggregate Pivot Totals from Original Records | Superseded by ADR-103 |
 | [036](036-persistent-column-configuration.md) | Preserve Explicit Column Configuration Across Refreshes | Accepted |
 | [037](037-renderer-module-boundaries.md) | Separate Renderer Processing, Cells, and Lifecycles | Accepted |
 | [038](038-typed-configuration-validation.md) | Typed Configuration with Early Runtime Validation | Accepted |
@@ -121,6 +121,7 @@ dated, immutable record of the decisions behind them.
 | [100](100-light-dark-themes.md) | Shared Light and Dark Themes | Accepted |
 | [101](101-widget-css-isolation.md) | Widget CSS Isolation in Embedded Documents | Accepted |
 | [102](102-duckdb-two-relations.md) | DuckDB 2 Relation Results | Accepted |
+| [103](103-retire-sql-table-builders.md) | Retire SQL Table Builders | Accepted |
 
 ## Creating New ADRs
 

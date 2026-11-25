@@ -399,7 +399,6 @@ def test_change_sparkline_football_demo_renders_aggregate_and_match_details(page
 @pytest.mark.parametrize(
     ("notebook", "definition"),
     [
-        ("09_pivots.py", "by_channel"),
         ("11_comparisons.py", "qoq"),
         ("35_negatives.py", "change_table"),
         ("43_cell_presentations.py", "presentations"),

@@ -6,6 +6,9 @@ deciders: edouard
 
 # ADR-067: Remove the Scalar Bar Decorator
 
+The SQL table builders referenced in this record were retired by
+[ADR-103](103-retire-sql-table-builders.md).
+
 ## Context and Problem Statement
 
 ADR-066 made mark factories consistent but retained `.number(...).bar()` as a

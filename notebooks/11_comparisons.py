@@ -6,7 +6,7 @@
 #     "evidential",
 # ]
 # ///
-"""Prior-period comparisons (`comparison_table`) and delta formatting."""
+"""SQL prior-period comparisons and delta formatting."""
 
 import marimo
 
@@ -21,9 +21,9 @@ def _():
     import marimo as mo
     import duckdb
 
-    from evidential import col, comparison_table
+    from evidential import EvidentialTable, col
 
-    return Path, col, comparison_table, duckdb, mo
+    return EvidentialTable, Path, col, duckdb, mo
 
 
 @app.cell
@@ -42,10 +42,9 @@ def _(mo):
     mo.md("""
     # Prior-period comparisons
 
-    `comparison_table` computes each measure for the current period and the
-    matching prior period, anchored on the latest date in the data, then adds
-    `<measure>_prior`, `<measure>_delta` (absolute change) and `<measure>_pct`
-    (percentage change, shown as a delta).
+    SQL finds the latest year or quarter in the sample and uses filtered
+    aggregates for that period and the preceding one. The table renders
+    explicitly named sales and change columns.
 
     ## Year over year
     """)
@@ -53,26 +52,52 @@ def _(mo):
 
 
 @app.cell
-def _(col, comparison_table, connection, mo):
-    yoy = mo.ui.anywidget(
-        comparison_table(
-            connection,
-            "SELECT category, order_datetime, sales FROM needful_things.orders",
-            dimensions=["category"],
-            measures=["round(sum(sales), 0) AS sales", "count(*) AS orders"],
-            date_column="order_datetime",
-            compare_vs="prior year",
+def _(connection):
+    yearly = connection.sql("""
+        WITH periods AS (
+            SELECT category, sales, year(order_datetime) AS year,
+                   max(year(order_datetime)) OVER () AS latest
+            FROM needful_things.orders
+        ), totals AS (
+            SELECT category,
+                   sum(sales) FILTER (WHERE year = latest) AS sales,
+                   sum(sales) FILTER (WHERE year = latest - 1) AS prior_sales,
+                   count(*) FILTER (WHERE year = latest) AS orders,
+                   count(*) FILTER (WHERE year = latest - 1) AS prior_orders,
+                   count(*) FILTER (WHERE year = latest AND sales < 10) AS small_orders,
+                   count(*) FILTER (WHERE year = latest - 1 AND sales < 10) AS prior_small_orders
+            FROM periods
+            WHERE year >= latest - 1
+            GROUP BY category
+        )
+        SELECT *, sales - prior_sales AS change,
+               (sales - prior_sales) / nullif(prior_sales, 0) AS change_pct,
+               (small_orders - prior_small_orders) / nullif(prior_small_orders, 0) AS small_orders_pct
+        FROM totals
+        ORDER BY category
+    """).to_arrow_table()
+    return (yearly,)
+
+
+@app.cell
+def _(EvidentialTable, col, mo, yearly):
+    mo.ui.anywidget(
+        EvidentialTable(
+            yearly,
             title="Sales by category vs prior year",
             page_size=10,
             row_shading=True,
-            dimension_config={"category": col.text("category")},
-            measure_config={
-                "sales": col.currency("sales", decimals=0),
-                "orders": col.integer("orders"),
-            },
+            columns=[
+                col.text("category"),
+                col.currency("sales", title="Sales", decimals=0),
+                col.currency("prior_sales", title="Prior-year sales", decimals=0),
+                col.currency("change", decimals=0),
+                col.percent("change_pct", title="% change", decimals=1).delta(),
+                col.integer("orders"),
+                col.integer("prior_orders"),
+            ],
         )
     )
-    yoy
     return
 
 
@@ -87,23 +112,40 @@ def _(mo):
 
 
 @app.cell
-def _(col, comparison_table, connection, mo):
+def _(EvidentialTable, col, connection, mo):
     qoq = mo.ui.anywidget(
-        comparison_table(
-            connection,
-            "SELECT category, channel_group, order_datetime, sales FROM needful_things.orders",
-            dimensions=["category", "channel_group"],
-            measures=["round(sum(sales), 0) AS sales"],
-            date_column="order_datetime",
-            compare_vs="prior quarter",
+        EvidentialTable(
+            connection.sql("""
+                WITH periods AS (
+                    SELECT category, channel_group, sales,
+                           date_diff('quarter', order_datetime, max(order_datetime) OVER ()) AS periods_ago
+                    FROM needful_things.orders
+                ), totals AS (
+                    SELECT category, channel_group,
+                           sum(sales) FILTER (WHERE periods_ago = 0) AS sales,
+                           sum(sales) FILTER (WHERE periods_ago = 1) AS prior_sales
+                    FROM periods
+                    WHERE periods_ago IN (0, 1)
+                    GROUP BY category, channel_group
+                )
+                SELECT *, (sales - prior_sales) / nullif(prior_sales, 0) AS change_pct
+                FROM totals
+                ORDER BY category, channel_group
+            """),
             title="Sales vs prior quarter",
             page_size=10,
             row_shading=True,
-            measure_config={"sales": col.bar("sales", format='usd0', label=True)},
+            columns=[
+                col.text("category"),
+                col.text("channel_group"),
+                col.bar("sales", format="usd0", label=True),
+                col.bar("prior_sales", format="usd0", label=True),
+                col.percent("change_pct", title="% change", decimals=1).delta(),
+            ],
         )
     )
     qoq
-    return
+    return (qoq,)
 
 
 @app.cell
@@ -118,31 +160,28 @@ def _(mo):
 
     ### Neutral range
 
-    `neutral_range` accepts an inclusive range — a `"-0.1:0.1"` string, a
-    `[lo, hi]` pair, or a single ±value — and can be set at the top level of
-    `measure_config` / `column_config` next to `fmt`. Here changes within ±25%
-    read as neutral (widened from the usual ±10% so this data shows the dash).
+    Set `neutral_range` on the delta column. Here changes within ±25% read
+    as neutral.
     """)
     return
 
 
 @app.cell
-def _(col, comparison_table, connection, mo):
-    neutral = mo.ui.anywidget(
-        comparison_table(
-            connection,
-            "SELECT category, order_datetime, sales FROM needful_things.orders",
-            dimensions=["category"],
-            measures=["round(sum(sales), 0) AS sales"],
-            date_column="order_datetime",
-            compare_vs="prior year",
-            title='neutral_range="-0.25:0.25" — changes within ±25% show a dash',
+def _(EvidentialTable, col, mo, yearly):
+    mo.ui.anywidget(
+        EvidentialTable(
+            yearly,
+            title="Sales changes within ±25% show a dash",
             page_size=10,
             row_shading=True,
-            measure_config={"sales": col.currency("sales", decimals=0).delta(neutral_range="-0.25:0.25")},
+            columns=[
+                col.text("category"),
+                col.currency("sales", decimals=0),
+                col.currency("prior_sales", decimals=0),
+                col.percent("change_pct", title="% change", decimals=1).delta(neutral_range="-0.25:0.25"),
+            ],
         )
     )
-    neutral
     return
 
 
@@ -158,22 +197,21 @@ def _(mo):
 
 
 @app.cell
-def _(col, comparison_table, connection, mo):
-    down_is_good = mo.ui.anywidget(
-        comparison_table(
-            connection,
-            "SELECT category, order_datetime, sales FROM needful_things.orders",
-            dimensions=["category"],
-            measures=["count(*) FILTER (WHERE sales < 10) AS small_orders"],
-            date_column="order_datetime",
-            compare_vs="prior year",
-            title="`small_orders with down_is_good=True — a fall is green`",
+def _(EvidentialTable, col, mo, yearly):
+    mo.ui.anywidget(
+        EvidentialTable(
+            yearly,
+            title="Small orders: a fall is green",
             page_size=10,
             row_shading=True,
-            measure_config={"small_orders": col.integer("small_orders").delta(down_is_good=True)},
+            columns=[
+                col.text("category"),
+                col.integer("small_orders"),
+                col.integer("prior_small_orders"),
+                col.percent("small_orders_pct", title="% change", decimals=1).delta(down_is_good=True),
+            ],
         )
     )
-    down_is_good
     return
 
 

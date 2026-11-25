@@ -82,8 +82,6 @@ outer indentation. There is no second, shortened copy of the column code.
 The snippet is a configuration excerpt; follow its notebook source link for
 imports, data preparation, settings and a complete runnable example.
 
-Aggregate helpers such as `grouped_table` and `pivot_table` configure columns
-through dimension/measure mappings. Their complete call is extracted instead.
 An `image-only` suffix on the opening marker suppresses the code excerpt, as
 used by the introductory hero. A `call` suffix selects the complete table call,
 including its table settings and inline `row_layout`, for layout examples.

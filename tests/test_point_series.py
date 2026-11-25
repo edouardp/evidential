@@ -3,7 +3,6 @@
 import pytest
 
 from evidential import EvidentialTable, col
-from evidential.marks import rebind_measure
 
 
 def test_named_points_copy_bindings_and_derive_legend_names_without_mutating_data():
@@ -53,7 +52,7 @@ def test_point_series_rejects_invalid_palettes(palette):
         col.points(["a", "b"], palette=palette)
 
 
-def test_point_series_validation_covers_raw_configs_all_log_fields_and_rebinding():
+def test_point_series_validation_covers_raw_configs_all_log_fields():
     series = col.points({"a": "A", "b": "B"}, connect=True).scale(transform="log")
     with pytest.raises(ValueError, match="positive.*'b'"):
         EvidentialTable([{"a": None, "b": -1}], columns=[series])
@@ -67,9 +66,6 @@ def test_point_series_validation_covers_raw_configs_all_log_fields_and_rebinding
                 }
             ],
         )
-    rebound = rebind_measure(series, "a", "2024.a")
-    assert rebound["encodings"][0]["sources"] == ["2024.a", "b"]
-    assert rebound["encodings"][0]["names"] == {"2024.a": "A", "b": "B"}
     with pytest.raises(ValueError, match="field list or mapping"):
         col.points("samples", palette="viridis")
     with pytest.raises(TypeError, match="connect"):

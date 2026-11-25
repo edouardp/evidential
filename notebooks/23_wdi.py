@@ -657,18 +657,22 @@ def trade_comparison(LiveEvidentialTable, col, color, connection, label, mo):
             col.percent("exports_imports_ratio", title="Exports/imports", decimals=1)
                .color(
                    scale=[
-                       color.theme("negative", alpha=0.28),
-                       color.theme("muted", alpha=0.10),
-                       color.theme("positive", alpha=0.28),
+                       color.theme("negative", alpha=0.18),
+                       color.theme("negative", alpha=0.18),
+                       color.theme("neutral", alpha=0),
+                       color.theme("positive", alpha=0.18),
+                       color.theme("positive", alpha=0.18),
                    ],
                    min=0.6, max=1.4, midpoint=1,
                ),
             col.number("net_exports", title="Balance\n(US$)", format="compact")
                .color(
                    scale=[
-                       color.theme("negative", alpha=0.28),
-                       color.theme("muted", alpha=0.10),
-                       color.theme("positive", alpha=0.28),
+                       color.theme("negative", alpha=0.18),
+                       color.theme("negative", alpha=0.18),
+                       color.theme("neutral", alpha=0),
+                       color.theme("positive", alpha=0.18),
+                       color.theme("positive", alpha=0.18),
                    ],
                    midpoint=0,
                ),
